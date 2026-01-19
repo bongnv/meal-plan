@@ -15,7 +15,7 @@ Client-side web application with no backend server. All data stored locally in b
 - Syncs data across devices via OneDrive API
 - Users authenticate with Microsoft account
 - Data stored as JSON files in OneDrive app folder
-- Conflict resolution: last-write-wins or user prompt
+- Conflict resolution: auto-merge with user prompt for conflicts
 
 ## Tech Stack
 

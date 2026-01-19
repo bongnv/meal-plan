@@ -21,3 +21,20 @@
 - When multiple approaches are possible, present options to the user
 - Only proceed with changes after receiving user confirmation
 - Avoid making assumptions about user preferences
+
+## Development Approach
+- Follow Test-Driven Development (TDD) methodology:
+  - Write tests first before implementing features
+  - Present the test code to the user for confirmation
+  - Only proceed with implementation after tests are approved
+
+## Quality Assurance
+- After completing each task, run the following checks:
+  - `npm run format` - Format code
+  - `npm run lint` - Check for linting errors
+  - `npm run test` - Run tests
+  - `npm run build` - Verify build succeeds
+- Fix any issues before marking the task as complete
+- For slow commands, export output to files in `tmp/` folder for later examination instead of re-running
+  - Example: `npm run build > tmp/build-output.log 2>&1`
+  - The `tmp/` folder is gitignored
