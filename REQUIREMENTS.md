@@ -5,11 +5,28 @@ A client-side web application for managing recipes, planning meals, and organizi
 
 ## Core Features
 
+### 0. Dashboard/Home Page
+- [ ] 0.1. Overview dashboard as the landing page
+- [ ] 0.2. Display quick stats:
+  - Total number of recipes
+  - Upcoming meals this week
+  - Active grocery lists
+- [ ] 0.3. Quick actions:
+  - Create new recipe
+  - Plan a meal
+  - View recipes
+  - Generate grocery list
+- [ ] 0.4. Recent activity feed:
+  - Recently added recipes
+  - Recently planned meals
+- [ ] 0.5. This week's meal plan preview (if available)
+- [ ] 0.6. Navigation links to main sections (Recipes, Meal Plans, Grocery Lists)
+
 ### 1. Recipe Management
 - [x] 1.1. Create, edit, and delete recipes
 - [ ] 1.2. Store recipe details:
   - Name and description
-  - Ingredients with quantities
+  - Ingredients with quantities (selected from ingredient library with autocomplete)
   - Preparation instructions
   - Servings
   - Prep/cook time
@@ -37,3 +54,17 @@ A client-side web application for managing recipes, planning meals, and organizi
 - [ ] 3.4. Organize items by category (produce, dairy, meat, pantry, etc.)
 - [ ] 3.5. Check off items while shopping
 - [ ] 3.6. Save frequently bought items for quick access
+
+### 4. Settings/Configuration
+- [ ] 4.1. Ingredient Library Management:
+  - View all defined ingredients
+  - Add new ingredients with name, category, and standard unit
+  - Edit existing ingredients
+  - Delete unused ingredients
+  - Categories: produce, dairy, meat, pantry, frozen, bakery, other
+- [ ] 4.2. Data Management:
+  - Export all data (recipes, meal plans, ingredients)
+  - Import data from backup
+  - Clear all data with confirmation
+- [ ] 4.3. Application Settings:
+  - Default servings for new recipes

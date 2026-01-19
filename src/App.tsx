@@ -1,13 +1,24 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+
+import { RecipeProvider } from './contexts/RecipeContext'
+import { CreateRecipePage } from './pages/CreateRecipePage'
+import { EditRecipePage } from './pages/EditRecipePage'
+import { RecipesPage } from './pages/RecipesPage'
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-gray-900">Meal Plan</h1>
-        <p className="mt-4 text-gray-600">
-          Your recipe and meal planning companion
-        </p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <RecipeProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Routes>
+            <Route path="/" element={<Navigate to="/recipes" replace />} />
+            <Route path="/recipes" element={<RecipesPage />} />
+            <Route path="/recipes/new" element={<CreateRecipePage />} />
+            <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
+          </Routes>
+        </div>
+      </RecipeProvider>
+    </BrowserRouter>
   )
 }
 

@@ -36,20 +36,37 @@
   - Use Radix UI components for form elements
   - Support both create and edit modes
   - Form fields: name, description, servings, totalTime, tags
-  - Dynamic ingredient list with add/remove buttons
+  - Dynamic ingredient list with add/remove buttons:
+    - Use autocomplete/combobox to select from IngredientItem library
+    - Display ingredient name with quantity input
+    - Allow adding new ingredients on-the-fly (creates temporary ingredient)
   - Dynamic instruction steps with add/remove/reorder
   - Form validation using Zod schema
   - Apply Tailwind CSS styling with responsive design
+  - Routing: `/recipes/new` for create, `/recipes/:id/edit` for edit
+  - Note: Full ingredient autocomplete will be implemented after ingredient management is built
 
-- [ ] 5. Build Recipe list component (TDD)
+- [x] 5. Build Recipe list component (TDD)
   - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
-  - Test cases: render recipes, empty state, edit button, delete button
+  - Test cases: render recipes, empty state, card interactions, edit/delete buttons
   - Create `RecipeList` component in `src/components/recipes/RecipeList.tsx`
-  - Display recipes in a grid or list view
-  - Show recipe card with name, description, tags, and action buttons
-  - Include edit and delete buttons for each recipe
-  - Handle empty state when no recipes exist
-  - Apply Tailwind CSS styling with responsive design
+  - Use responsive card grid layout:
+    - 3 columns on desktop (lg: 1024px+)
+    - 1 column on mobile (< 1024px)
+  - Each recipe card displays:
+    - Recipe name (prominent heading)
+    - Brief description (truncated to 2-3 lines)
+    - Tags as colored badge pills
+    - Meta info: servings (👤 icon) and total time (⏱ icon)
+    - Action buttons: View, Edit, Delete (accessible icon buttons)
+  - Card interactions:
+    - Hover effects: subtle elevation/shadow
+    - Click card to view recipe details
+    - Touch-friendly tap targets for mobile
+  - Empty state: centered message with "Create Your First Recipe" CTA button
+  - Apply Tailwind CSS with responsive grid classes
+  - Future-ready: include placeholder area for recipe images
+  - Routing: `/recipes` for list view, navigate to create/edit/detail routes
 
 - [ ] 6. Build Recipe detail view (TDD)
   - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
@@ -59,6 +76,7 @@
   - Show ingredients list, instructions, cooking times
   - Include edit and delete action buttons
   - Apply Tailwind CSS styling with responsive design
+  - Routing: `/recipes/:id` for detail view
 
 - [ ] 7. Implement delete confirmation (TDD)
   - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`
@@ -68,10 +86,21 @@
   - Show confirmation message before deleting recipe
   - Handle cancel and confirm actions
   - Apply Tailwind CSS styling
+- [ ] 8. Build Ingredient Library Management (TDD)
+  - Write unit tests for IngredientStorage service
+  - Create `IngredientStorageService` similar to RecipeStorageService
+  - Write tests for IngredientContext
+  - Create `IngredientContext` for managing ingredient library
+  - Write component tests for IngredientList and IngredientForm
+  - Build IngredientList component (table/list view with edit/delete)
+  - Build IngredientForm component (add/edit ingredient with name, category, unit)
+  - Create settings page at `/settings/ingredients`
+  - Apply Tailwind CSS styling with responsive design
 
-- [ ] 8. Add routing and integration tests
-  - Configure routes for recipe list, create, edit, and detail views
-  - Use React Router or similar routing solution
-  - Handle navigation between views
-  - Write integration tests for full recipe CRUD flow
-
+- [ ] 9. Update Recipe form with ingredient autocomplete
+  - Install Radix UI Combobox/Select component (if not already installed)
+  - Update RecipeForm to use autocomplete for ingredient selection
+  - Connect to IngredientContext to fetch available ingredients
+  - Update tests to handle autocomplete interactions
+  - Allow creating new ingredients inline (optional)
+  - Display ingredient name instead of ID in the form
