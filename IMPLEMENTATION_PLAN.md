@@ -29,13 +29,13 @@
     - `deleteRecipe(id)` - remove from state + persist
   - Integrate with RecipeStorageService for persistence
 
-- [ ] 4. Build Recipe form component (TDD)
+- [x] 4. Build Recipe form component (TDD)
   - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
   - Test cases: render, create mode, edit mode, validation, form submission
   - Create `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`
   - Use Radix UI components for form elements
   - Support both create and edit modes
-  - Form fields: name, description, servings, prepTime, cookTime, tags
+  - Form fields: name, description, servings, totalTime, tags
   - Dynamic ingredient list with add/remove buttons
   - Dynamic instruction steps with add/remove/reorder
   - Form validation using Zod schema

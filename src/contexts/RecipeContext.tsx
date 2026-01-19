@@ -48,7 +48,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     (id: string): Recipe | null => {
       return recipes.find(recipe => recipe.id === id) || null
     },
-    [recipes],
+    [recipes]
   )
 
   // Add new recipe to state and persist
@@ -66,7 +66,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       setRecipes(updatedRecipes)
       storageService.saveRecipes(updatedRecipes)
     },
-    [recipes, storageService],
+    [recipes, storageService]
   )
 
   // Update existing recipe in state and persist
@@ -88,7 +88,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       setRecipes(updatedRecipes)
       storageService.saveRecipes(updatedRecipes)
     },
-    [recipes, storageService],
+    [recipes, storageService]
   )
 
   // Delete recipe from state and persist
@@ -102,7 +102,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         storageService.saveRecipes(updatedRecipes)
       }
     },
-    [recipes, storageService],
+    [recipes, storageService]
   )
 
   return (

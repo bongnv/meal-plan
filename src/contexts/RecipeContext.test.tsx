@@ -39,7 +39,7 @@ describe('RecipeContext', () => {
     }
 
     vi.mocked(RecipeStorageService).mockImplementation(
-      () => mockStorageService as unknown as RecipeStorageService,
+      () => mockStorageService as unknown as RecipeStorageService
     )
   })
 
@@ -166,7 +166,7 @@ describe('RecipeContext', () => {
       expect(result.current.recipes[0].createdAt).toBeTruthy()
       expect(result.current.recipes[0].updatedAt).toBeTruthy()
       expect(mockStorageService.saveRecipes).toHaveBeenCalledWith(
-        result.current.recipes,
+        result.current.recipes
       )
     })
 
@@ -231,10 +231,10 @@ describe('RecipeContext', () => {
       expect(result.current.recipes).toHaveLength(1)
       expect(result.current.recipes[0].name).toBe('Updated Recipe')
       expect(result.current.recipes[0].updatedAt).not.toBe(
-        existingRecipe.updatedAt,
+        existingRecipe.updatedAt
       )
       expect(mockStorageService.saveRecipes).toHaveBeenCalledWith(
-        result.current.recipes,
+        result.current.recipes
       )
     })
 
@@ -282,7 +282,7 @@ describe('RecipeContext', () => {
       expect(result.current.recipes).toHaveLength(1)
       expect(result.current.recipes[0].id).toBe('recipe-2')
       expect(mockStorageService.saveRecipes).toHaveBeenCalledWith(
-        result.current.recipes,
+        result.current.recipes
       )
     })
 
