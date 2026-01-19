@@ -1,0 +1,72 @@
+# Meal Plan - Implementation Plan
+
+## 1.1 Create, Edit, and Delete Recipes
+
+### Implementation Steps
+
+- [x] 1. Define Recipe data types
+  - Create TypeScript interfaces for Recipe structure in `src/types/recipe.ts`
+  - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
+  - Define Ingredient interface with name, quantity, unit fields
+
+- [ ] 2. Create LocalStorage service for recipes (TDD)
+  - Write unit tests first in `src/utils/storage/recipeStorage.test.ts`
+  - Test cases: getAllRecipes, getRecipeById, saveRecipe, deleteRecipe, error handling
+  - Implement `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`
+  - Methods: `getAllRecipes()`, `getRecipeById(id)`, `saveRecipe(recipe)`, `deleteRecipe(id)`
+  - Use LocalStorage API with proper error handling
+
+- [ ] 3. Set up Recipe Context (TDD)
+  - Write unit tests first in `src/contexts/RecipeContext.test.tsx`
+  - Test cases: addRecipe, updateRecipe, deleteRecipe, loadRecipes, state updates
+  - Create `RecipeContext` in `src/contexts/RecipeContext.tsx`
+  - Provide state and actions: recipes list, loading state, error state
+  - Actions: `addRecipe()`, `updateRecipe()`, `deleteRecipe()`, `loadRecipes()`
+  - Integrate with RecipeStorageService
+
+- [ ] 4. Build Recipe form component (TDD)
+  - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
+  - Test cases: render, create mode, edit mode, validation, form submission
+  - Create `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`
+  - Use Radix UI components for form elements
+  - Support both create and edit modes
+  - Form fields: name, description, servings, prepTime, cookTime, tags
+  - Dynamic ingredient list with add/remove buttons
+  - Dynamic instruction steps with add/remove/reorder
+  - Form validation using Zod schema
+  - Apply Tailwind CSS styling with responsive design
+
+- [ ] 5. Build Recipe list component (TDD)
+  - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
+  - Test cases: render recipes, empty state, edit button, delete button
+  - Create `RecipeList` component in `src/components/recipes/RecipeList.tsx`
+  - Display recipes in a grid or list view
+  - Show recipe card with name, description, tags, and action buttons
+  - Include edit and delete buttons for each recipe
+  - Handle empty state when no recipes exist
+  - Apply Tailwind CSS styling with responsive design
+
+- [ ] 6. Build Recipe detail view (TDD)
+  - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
+  - Test cases: render recipe details, edit action, delete action
+  - Create `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`
+  - Display full recipe information
+  - Show ingredients list, instructions, cooking times
+  - Include edit and delete action buttons
+  - Apply Tailwind CSS styling with responsive design
+
+- [ ] 7. Implement delete confirmation (TDD)
+  - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`
+  - Test cases: render dialog, cancel action, confirm action
+  - Create `ConfirmDialog` component in `src/components/common/ConfirmDialog.tsx`
+  - Use Radix UI Dialog component
+  - Show confirmation message before deleting recipe
+  - Handle cancel and confirm actions
+  - Apply Tailwind CSS styling
+
+- [ ] 8. Add routing and integration tests
+  - Configure routes for recipe list, create, edit, and detail views
+  - Use React Router or similar routing solution
+  - Handle navigation between views
+  - Write integration tests for full recipe CRUD flow
+

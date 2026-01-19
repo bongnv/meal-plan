@@ -6,7 +6,7 @@ A client-side web application for managing recipes, planning meals, and organizi
 ## Core Features
 
 ### 1. Recipe Management
-- [ ] 1.1. Create, edit, and delete recipes
+- [x] 1.1. Create, edit, and delete recipes
 - [ ] 1.2. Store recipe details:
   - Name and description
   - Ingredients with quantities
