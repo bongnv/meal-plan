@@ -22,11 +22,9 @@ A client-side web application for managing recipes, planning meals, and organizi
 - Calendar view with flexible date range display
 - Drag-and-drop recipes onto specific days/meals
 - Multiple meal slots per day (breakfast, lunch, dinner, snacks)
-- Support different plan types:
-  - Recipe-based meals
-  - Dine out
-  - Pizza/takeout
-  - Custom entries
+- Support two meal entry types:
+  - Recipe-based meals (from recipe library)
+  - Custom entries (free-form text for dining out, takeout, etc.)
 - Adjust servings for planned meals
 - Copy/duplicate meal plans to other days
 - View nutritional summaries (if recipe data includes it)
