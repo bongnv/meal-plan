@@ -9,20 +9,25 @@
   - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
   - Define Ingredient interface with name, quantity, unit fields
 
-- [ ] 2. Create LocalStorage service for recipes (TDD)
+- [x] 2. Create LocalStorage service for recipes (TDD)
   - Write unit tests first in `src/utils/storage/recipeStorage.test.ts`
-  - Test cases: getAllRecipes, getRecipeById, saveRecipe, deleteRecipe, error handling
+  - Test cases: loadRecipes, saveRecipes, generateId, error handling
   - Implement `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`
-  - Methods: `getAllRecipes()`, `getRecipeById(id)`, `saveRecipe(recipe)`, `deleteRecipe(id)`
-  - Use LocalStorage API with proper error handling
+  - Methods: `loadRecipes()` - load all recipes from localStorage, `saveRecipes(recipes)` - save entire collection
+  - Note: React Context will manage in-memory CRUD operations for efficiency
 
 - [ ] 3. Set up Recipe Context (TDD)
   - Write unit tests first in `src/contexts/RecipeContext.test.tsx`
-  - Test cases: addRecipe, updateRecipe, deleteRecipe, loadRecipes, state updates
+  - Test cases: loadRecipes on mount, getRecipeById (in-memory), addRecipe, updateRecipe, deleteRecipe, state updates
   - Create `RecipeContext` in `src/contexts/RecipeContext.tsx`
-  - Provide state and actions: recipes list, loading state, error state
-  - Actions: `addRecipe()`, `updateRecipe()`, `deleteRecipe()`, `loadRecipes()`
-  - Integrate with RecipeStorageService
+  - Load recipes once on mount using RecipeStorageService
+  - Maintain in-memory state: recipes list, loading state, error state
+  - Actions operate on in-memory state and persist via RecipeStorageService:
+    - `getRecipeById(id)` - find in memory
+    - `addRecipe(recipe)` - add to state + persist
+    - `updateRecipe(recipe)` - update state + persist
+    - `deleteRecipe(id)` - remove from state + persist
+  - Integrate with RecipeStorageService for persistence
 
 - [ ] 4. Build Recipe form component (TDD)
   - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`

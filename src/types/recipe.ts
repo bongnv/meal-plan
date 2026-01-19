@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export enum IngredientCategory {
   Produce = 'produce',
   Dairy = 'dairy',
@@ -5,33 +7,44 @@ export enum IngredientCategory {
   Pantry = 'pantry',
   Frozen = 'frozen',
   Bakery = 'bakery',
-  Other = 'other'
+  Other = 'other',
 }
 
-export interface IngredientItem {
-  id: string;
-  name: string;
-  category: IngredientCategory;
-  standardUnit: string;
-}
+// Zod schemas
+export const IngredientItemSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  category: z.nativeEnum(IngredientCategory),
+  standardUnit: z.string().min(1),
+})
 
-export interface RecipeIngredient {
-  ingredientId: string;
-  quantity: number;
-}
+export const RecipeIngredientSchema = z.object({
+  ingredientId: z.string(),
+  quantity: z.number().positive(),
+})
 
-export interface Recipe {
-  id: string;
-  name: string;
-  description: string;
-  ingredients: RecipeIngredient[];
-  instructions: string[];
-  servings: number;
-  totalTime: number; // in minutes
-  tags: string[];
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export const RecipeSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  description: z.string(),
+  ingredients: z.array(RecipeIngredientSchema),
+  instructions: z.array(z.string()),
+  servings: z.number().int().positive(),
+  totalTime: z.number().int().nonnegative(),
+  tags: z.array(z.string()),
+  imageUrl: z.string().url().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
 
-export type RecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
+export const RecipeInputSchema = RecipeSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+})
+
+// TypeScript types inferred from schemas
+export type IngredientItem = z.infer<typeof IngredientItemSchema>
+export type RecipeIngredient = z.infer<typeof RecipeIngredientSchema>
+export type Recipe = z.infer<typeof RecipeSchema>
+export type RecipeInput = z.infer<typeof RecipeInputSchema>
