@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { RecipeStorageService } from './recipeStorage'
+
+import { RecipeStorageService } from './RecipeStorage'
 import { Recipe, RecipeIngredient } from '../../types/recipe'
 
 describe('RecipeStorageService', () => {
