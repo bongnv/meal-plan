@@ -68,7 +68,22 @@
   - Future-ready: include placeholder area for recipe images
   - Routing: `/recipes` for list view, navigate to create/edit/detail routes
 
-- [ ] 6. Build Recipe detail view (TDD)
+- [ ] 6. Implement Navigation Bar (TDD)
+  - Write tests for NavigationBar component
+  - Create persistent navigation bar component with links:
+    - Home/Dashboard (/)
+    - Recipes (/recipes)
+    - Ingredients (/settings/ingredients)
+  - Add active route highlighting (different style for current page)
+  - Make responsive:
+    - Desktop: Horizontal navigation with full labels
+    - Mobile: Bottom navigation bar or hamburger menu
+  - Integrate into App.tsx layout
+  - Style with Tailwind CSS
+  - Test navigation between all routes
+  - Ensure accessibility (keyboard navigation, ARIA labels)
+
+- [ ] 7. Build Recipe detail view (TDD)
   - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
   - Test cases: render recipe details, edit action, delete action
   - Create `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`
@@ -78,7 +93,7 @@
   - Apply Tailwind CSS styling with responsive design
   - Routing: `/recipes/:id` for detail view
 
-- [ ] 7. Implement delete confirmation (TDD)
+- [ ] 8. Implement delete confirmation (TDD)
   - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`
   - Test cases: render dialog, cancel action, confirm action
   - Create `ConfirmDialog` component in `src/components/common/ConfirmDialog.tsx`
@@ -86,18 +101,24 @@
   - Show confirmation message before deleting recipe
   - Handle cancel and confirm actions
   - Apply Tailwind CSS styling
-- [ ] 8. Build Ingredient Library Management (TDD)
+- [x] 9. Build Ingredient Library Management (TDD)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
   - Write tests for IngredientContext
   - Create `IngredientContext` for managing ingredient library
   - Write component tests for IngredientList and IngredientForm
-  - Build IngredientList component (table/list view with edit/delete)
+  - Build IngredientList component with responsive card layout:
+    - Desktop (≥1024px): Table layout with columns [Name | Category | Unit | Actions]
+    - Mobile (<1024px): Stacked card view showing all fields vertically
+    - Table features: hover effects, sortable columns (optional), edit/delete action buttons
+    - Empty state: message with "Add Your First Ingredient" CTA button
+    - Include search/filter bar above table for large ingredient libraries
+    - Touch-friendly tap targets for mobile cards
   - Build IngredientForm component (add/edit ingredient with name, category, unit)
   - Create settings page at `/settings/ingredients`
   - Apply Tailwind CSS styling with responsive design
 
-- [ ] 9. Update Recipe form with ingredient autocomplete
+- [ ] 10. Update Recipe form with ingredient autocomplete
   - Install Radix UI Combobox/Select component (if not already installed)
   - Update RecipeForm to use autocomplete for ingredient selection
   - Connect to IngredientContext to fetch available ingredients

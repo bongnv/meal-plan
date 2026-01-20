@@ -10,12 +10,32 @@ export enum IngredientCategory {
   Other = 'other',
 }
 
+export enum StandardUnit {
+  // Weight
+  Gram = 'g',
+  Kilogram = 'kg',
+  // Volume
+  Milliliter = 'ml',
+  Liter = 'l',
+  // Count
+  Piece = 'piece',
+  // Recipe measurements
+  Tablespoon = 'tbsp',
+  Teaspoon = 'tsp',
+  Cup = 'cup',
+  // Specific
+  Clove = 'clove',
+  Slice = 'slice',
+  Bunch = 'bunch',
+  Pinch = 'pinch',
+}
+
 // Zod schemas
 export const IngredientItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   category: z.nativeEnum(IngredientCategory),
-  standardUnit: z.string().min(1),
+  standardUnit: z.nativeEnum(StandardUnit),
 })
 
 export const RecipeIngredientSchema = z.object({

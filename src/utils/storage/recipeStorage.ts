@@ -42,10 +42,6 @@ export class RecipeStorageService {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes))
     } catch (error) {
       console.error('Error saving recipes to localStorage:', error)
-      // Handle quota exceeded or other storage errors
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.warn('LocalStorage quota exceeded. Data not saved.')
-      }
     }
   }
 
