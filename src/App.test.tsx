@@ -1,3 +1,4 @@
+import { MantineProvider } from '@mantine/core'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -24,38 +25,38 @@ const mockRecipeContext = {
   deleteRecipe: vi.fn(),
 }
 
+const renderApp = (initialRoute: string = '/') => {
+  return render(
+    <MantineProvider>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <App />
+      </MemoryRouter>
+    </MantineProvider>
+  )
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
   })
 
   it('should render home page at root route', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <App />
-      </MemoryRouter>
-    )
+    renderApp('/')
 
-    expect(screen.getByText(/meal plan/i)).toBeInTheDocument()
+    // Check for navigation header
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
+    // Check for home page content
     expect(screen.getByText(/home page - coming soon/i)).toBeInTheDocument()
   })
 
   it('should render create recipe page at /recipes/new', () => {
-    render(
-      <MemoryRouter initialEntries={['/recipes/new']}>
-        <App />
-      </MemoryRouter>
-    )
+    renderApp('/recipes/new')
 
     expect(screen.getByText(/create recipe page/i)).toBeInTheDocument()
   })
 
   it('should render edit recipe page at /recipes/:id/edit', () => {
-    render(
-      <MemoryRouter initialEntries={['/recipes/123/edit']}>
-        <App />
-      </MemoryRouter>
-    )
+    renderApp('/recipes/123/edit')
 
     expect(screen.getByText(/edit recipe page/i)).toBeInTheDocument()
   })

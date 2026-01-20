@@ -64,11 +64,11 @@
     - Click card to view recipe details
     - Touch-friendly tap targets for mobile
   - Empty state: centered message with "Create Your First Recipe" CTA button
-  - Apply Tailwind CSS with responsive grid classes
+  - Apply Mantine CSS with responsive grid classes
   - Future-ready: include placeholder area for recipe images
   - Routing: `/recipes` for list view, navigate to create/edit/detail routes
 
-- [ ] 6. Implement Navigation Bar (TDD)
+- [x] 6. Implement Navigation Bar (TDD)
   - Write tests for NavigationBar component
   - Create persistent navigation bar component with links:
     - Home/Dashboard (/)
@@ -90,7 +90,7 @@
   - Display full recipe information
   - Show ingredients list, instructions, cooking times
   - Include edit and delete action buttons
-  - Apply Tailwind CSS styling with responsive design
+  - Apply Mantine CSS styling with responsive design
   - Routing: `/recipes/:id` for detail view
 
 - [ ] 8. Implement delete confirmation (TDD)

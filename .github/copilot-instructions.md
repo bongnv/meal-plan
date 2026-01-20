@@ -30,11 +30,8 @@
   - Only proceed with implementation after tests are approved
 
 ## Quality Assurance
-- After completing each task, run the following checks:
-  - `npm run format` - Format code
-  - `npm run lint` - Check for linting errors
-  - `npm run test` - Run tests
-  - `npm run build` - Verify build succeeds
+- After completing each task, run quality checks and save output to `tmp/` folder
+- Save test/lint/build output to files for examination to avoid running multiple times
+- Read from the saved log files to examine results instead of re-running commands
+- Only re-run commands when requires fresh output
 - Fix any issues before marking the task as complete
-- For slow commands, export output to files in `tmp/` folder for later examination instead of re-running
-  - Example: `npm run test > tmp/test-output.log 2>&1`
