@@ -2,8 +2,8 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IngredientProvider, useIngredients } from './IngredientContext'
-import { IngredientStorageService } from '../utils/storage/IngredientStorage'
 import * as idGenerator from '../utils/idGenerator'
+import { IngredientStorageService } from '../utils/storage/IngredientStorage'
 
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 

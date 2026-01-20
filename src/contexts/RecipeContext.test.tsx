@@ -2,8 +2,8 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { RecipeProvider, useRecipes } from './RecipeContext'
-import { RecipeStorageService } from '../utils/storage/recipeStorage'
 import * as idGenerator from '../utils/idGenerator'
+import { RecipeStorageService } from '../utils/storage/recipeStorage'
 
 import type { Recipe } from '../types/recipe'
 

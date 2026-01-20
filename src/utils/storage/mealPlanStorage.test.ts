@@ -183,14 +183,14 @@ describe('MealPlanStorageService', () => {
     })
 
     it('should throw error when validating invalid meal plans', () => {
-      // @ts-expect-error - intentionally invalid data
-      const invalidMealPlans: MealPlan[] = [
+      const invalidMealPlans = [
         {
           id: '1',
           // missing required fields
         },
       ]
 
+      // @ts-expect-error - intentionally invalid data
       expect(() => service.saveMealPlans(invalidMealPlans)).toThrow()
     })
 
