@@ -56,7 +56,7 @@ A client-side web application for managing recipes, planning meals, and organizi
 - [ ] 3.6. Save frequently bought items for quick access
 
 ### 4. Settings/Configuration
-- [ ] 4.1. Ingredient Library Management:
+- [x] 4.1. Ingredient Library Management:
   - View all defined ingredients
   - Add new ingredients with name, category, and standard unit
   - Edit existing ingredients

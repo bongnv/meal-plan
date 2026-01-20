@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest'
 import { IngredientList } from './IngredientList'
 import { render, screen } from '../../test/test-utils'
 
-
 import type { Ingredient } from '../../types/ingredient'
 
 describe('IngredientList', () => {

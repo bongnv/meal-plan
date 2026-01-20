@@ -126,7 +126,7 @@
   - Create settings page at `/settings/ingredients`
   - Apply Mantine styling with responsive design
 
-- [ ] 11. Integrate Recipe form with Ingredient Library (TDD)
+- [x] 11. Integrate Recipe form with Ingredient Library (TDD)
   - Update RecipeForm tests to handle ingredient autocomplete
   - Replace text input with Mantine Select/Autocomplete for ingredient selection
   - Connect RecipeForm to IngredientContext to fetch available ingredients

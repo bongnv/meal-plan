@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CreateRecipePage } from './CreateRecipePage'
+import * as IngredientContext from '../../contexts/IngredientContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
 
 const mockRecipeContext = {
@@ -14,6 +15,18 @@ const mockRecipeContext = {
   addRecipe: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
+}
+
+const mockIngredientContext = {
+  ingredients: [
+    { id: '1', name: 'Tomato', category: 'Vegetables' as const, unit: 'piece' as const },
+  ],
+  loading: false,
+  error: null,
+  getIngredientById: vi.fn(),
+  addIngredient: vi.fn(),
+  updateIngredient: vi.fn(),
+  deleteIngredient: vi.fn(),
 }
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -28,6 +41,11 @@ describe('CreateRecipePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
   })
 
   it('should render create recipe page with form', () => {

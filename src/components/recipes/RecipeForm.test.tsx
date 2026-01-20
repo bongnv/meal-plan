@@ -5,8 +5,31 @@ import { BrowserRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { RecipeForm } from './RecipeForm'
+import * as IngredientContextModule from '../../contexts/IngredientContext'
 
+import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
+
+// Mock the useIngredients hook
+vi.mock('../../contexts/IngredientContext', () => ({
+  useIngredients: vi.fn(),
+}))
+
+const mockIngredients: Ingredient[] = [
+  { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
+  { id: '2', name: 'Onion', category: 'Vegetables', unit: 'piece' },
+  { id: '3', name: 'Chicken Breast', category: 'Meat', unit: 'gram' },
+]
+
+const defaultMockIngredientContext = {
+  ingredients: mockIngredients,
+  loading: false,
+  error: null,
+  getIngredientById: (id: string) => mockIngredients.find(i => i.id === id),
+  addIngredient: vi.fn(),
+  updateIngredient: vi.fn(),
+  deleteIngredient: vi.fn(),
+}
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
@@ -23,6 +46,10 @@ describe('RecipeForm', () => {
   beforeEach(() => {
     mockOnSubmit.mockClear()
     mockOnCancel.mockClear()
+    // Set up default mock for useIngredients
+    vi.mocked(IngredientContextModule.useIngredients).mockReturnValue(
+      defaultMockIngredientContext
+    )
   })
 
   describe('Create mode', () => {
@@ -58,7 +85,10 @@ describe('RecipeForm', () => {
       })
       await user.click(addIngredientButton)
 
-      expect(screen.getByLabelText(/ingredient name/i)).toBeInTheDocument()
+      // Should have a Select component with label "Ingredient"
+      expect(
+        screen.getByRole('textbox', { name: /ingredient/i })
+      ).toBeInTheDocument()
       expect(screen.getByLabelText(/quantity/i)).toBeInTheDocument()
     })
 
@@ -78,9 +108,7 @@ describe('RecipeForm', () => {
       const removeButton = screen.getByRole('button', { name: /remove/i })
       await user.click(removeButton)
 
-      expect(
-        screen.queryByLabelText(/ingredient name/i)
-      ).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/^ingredient$/i)).not.toBeInTheDocument()
     })
 
     it('should allow adding instructions', async () => {
@@ -154,7 +182,15 @@ describe('RecipeForm', () => {
 
       // Add an ingredient
       await user.click(screen.getByRole('button', { name: /add ingredient/i }))
-      await user.type(screen.getByLabelText(/ingredient name/i), 'flour')
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      // Select Tomato from dropdown
+      await waitFor(() => {
+        expect(screen.getByText(/tomato \(piece\)/i)).toBeInTheDocument()
+      })
+      await user.click(screen.getByText(/tomato \(piece\)/i))
       await user.type(screen.getByLabelText(/quantity/i), '2')
 
       // Add an instruction
@@ -173,7 +209,7 @@ describe('RecipeForm', () => {
             totalTime: 30,
             ingredients: expect.arrayContaining([
               expect.objectContaining({
-                ingredientId: 'flour',
+                ingredientId: '1',
                 quantity: 2,
               }),
             ]),
@@ -328,6 +364,97 @@ describe('RecipeForm', () => {
       // Just verify tags are displayed
       expect(screen.getByText('dinner')).toBeInTheDocument()
       expect(screen.getByText('easy')).toBeInTheDocument()
+    })
+  })
+
+  describe('Ingredient Selection', () => {
+    it('should display ingredient select dropdown', async () => {
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      const user = userEvent.setup()
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Should show ingredient select instead of text input
+      expect(
+        screen.getByRole('textbox', { name: /ingredient/i })
+      ).toBeInTheDocument()
+    })
+
+    it('should allow selecting ingredient from library', async () => {
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      const user = userEvent.setup()
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+
+      // Should see Tomato in the dropdown
+      await waitFor(() => {
+        expect(screen.getByText(/tomato \(piece\)/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display selected ingredient unit', async () => {
+      const recipeWithIngredient: Recipe = {
+        id: '1',
+        name: 'Test',
+        description: 'Test',
+        servings: 4,
+        totalTime: 30,
+        ingredients: [{ ingredientId: '1', quantity: 2 }],
+        instructions: [],
+        tags: [],
+      }
+
+      renderWithProviders(
+        <RecipeForm
+          recipe={recipeWithIngredient}
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      // Should display the ingredient from the library
+      await waitFor(() => {
+        expect(screen.getByText(/tomato/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should support creating new ingredient inline', async () => {
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      const user = userEvent.setup()
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+
+      // Should have option to create new ingredient
+      await waitFor(() => {
+        expect(
+          screen.getByText(/\+ create new ingredient/i)
+        ).toBeInTheDocument()
+      })
     })
   })
 })
