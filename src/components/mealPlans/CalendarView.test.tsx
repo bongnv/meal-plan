@@ -1,11 +1,20 @@
 import { MantineProvider } from '@mantine/core'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CalendarView } from './CalendarView'
 
 import type { MealPlan } from '../../types/mealPlan'
+
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <MantineProvider>
+      <MemoryRouter>{component}</MemoryRouter>
+    </MantineProvider>
+  )
+}
 
 describe('CalendarView', () => {
   const mockMealPlans: MealPlan[] = [
@@ -56,11 +65,7 @@ describe('CalendarView', () => {
   }
 
   const renderCalendarView = (props = {}) => {
-    return render(
-      <MantineProvider>
-        <CalendarView {...defaultProps} {...props} />
-      </MantineProvider>
-    )
+    return renderWithProviders(<CalendarView {...defaultProps} {...props} />)
   }
 
   beforeEach(() => {
@@ -299,8 +304,12 @@ describe('CalendarView', () => {
       const onEditMeal = vi.fn()
       renderCalendarView({ onEditMeal })
       
-      const mealElement = screen.getByText(/spaghetti carbonara/i)
-      await user.click(mealElement)
+      // Click on the parent container of the meal (not the link itself)
+      const mealLink = screen.getByText(/spaghetti carbonara/i)
+      const mealContainer = mealLink.closest('[style*="cursor: pointer"]')
+      expect(mealContainer).toBeTruthy()
+      
+      await user.click(mealContainer!)
       
       expect(onEditMeal).toHaveBeenCalledTimes(1)
       expect(onEditMeal).toHaveBeenCalledWith(mockMealPlans[0])

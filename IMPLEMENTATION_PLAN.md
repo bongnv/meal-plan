@@ -288,12 +288,40 @@
 - [x] I2.9. Add view switcher and finalize Meal Planning page (TDD)
   - Write page tests in `src/pages/mealPlans/MealPlansPage.test.tsx`
   - Test cases: view switching, calendar/list rendering, add meal button
-  - Add view switcher to MealPlansPage:
-    - Use Mantine SegmentedControl or Tabs for Calendar/List toggle
-    - Place in page header (top-right on desktop, below title on mobile)
-    - Persist view preference in component state or URL query params
+  - Add view switcher to CalendarView (integrated):
+    - Use Mantine SegmentedControl for Month/List toggle
+    - Place in CalendarView header next to navigation controls
+    - Persist view preference in component state
+  - List view improvements:
+    - Integrated into CalendarView with dynamic `maxHeight` scrolling
+    - Each card shows: meal type icon, type badge, meal name, servings (for recipes), edit/delete actions
+    - Fixed header keeps view switcher visible while scrolling content
   - Apply Mantine layout and responsive design polish
   - Test switching between views, navigation, and creating meals
+  - Removed MealPlanList component (merged functionality into CalendarView list view)
+
+- [x] I2.9.1. Make Today button work for list view (TDD)
+  - Today button scrolls list view to show today's meals
+  - Highlight today's date header in list view
+  - Smooth scroll to today's section when button clicked
+  - Work seamlessly in both month and list views
+  - Test Today button in list view
+  - Test Today button when today has no meals
+  - Implementation: useEffect watches currentDate changes and scrolls to today in list view
+
+- [x] I2.9.2. Add recipe detail view from meal plan card (TDD)
+  - Click recipe name in meal plan cards to view recipe details
+  - Navigate to recipe detail page (`/recipes/:id`)
+  - Test clicking recipe names in both month and list views
+  - Ensure recipe links work in all contexts
+  - Implementation: Recipe names are Anchor components with onClick navigation
+
+- [x] I2.9.3. Add edit action to month view meal cards (TDD)
+  - Add edit button/icon to each meal in month view calendar cells
+  - Click action opens MealPlanForm in edit mode
+  - Show edit icon alongside meal in calendar cells (delete removed to save space)
+  - Test edit action opens form with pre-filled data
+  - Implementation: Small edit IconButton shown on hover/always visible in month view cells
 
 - [ ] I2.10. Implement meal plan copy functionality (TDD)
   - Add "Copy to..." action to meal entries

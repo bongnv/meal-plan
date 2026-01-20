@@ -280,18 +280,11 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Find and click on an existing meal in the calendar (not in the sidebar)
-      // There are two instances of "Spaghetti Carbonara": one in sidebar, one in calendar
-      // We want the one in the calendar which is clickable
-      const mealElements = screen.getAllByText('Spaghetti Carbonara')
-      // The calendar meal is the one that's clickable and has a parent with cursor pointer
-      const mealInCalendar = mealElements.find(el => {
-        const parent = el.closest('[style*="cursor: pointer"]')
-        return parent !== null
-      })
-      
-      expect(mealInCalendar).toBeDefined()
-      await user.click(mealInCalendar!)
+      // Find and click the edit button for the meal in the calendar
+      // The calendar has edit/delete icons for each meal
+      const editButtons = screen.getAllByRole('button', { name: /edit/i })
+      // First edit button should be for the lunch meal on 2026-01-20
+      await user.click(editButtons[0])
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -303,15 +296,9 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal in calendar (not sidebar)
-      const mealElements = screen.getAllByText('Spaghetti Carbonara')
-      const mealInCalendar = mealElements.find(el => {
-        const parent = el.closest('[style*="cursor: pointer"]')
-        return parent !== null
-      })
-      
-      expect(mealInCalendar).toBeDefined()
-      await user.click(mealInCalendar!)
+      // Click the edit button for the meal in the calendar
+      const editButtons = screen.getAllByRole('button', { name: /edit/i })
+      await user.click(editButtons[0])
 
       await waitFor(() => {
         // Check that the form shows the existing data
@@ -325,15 +312,9 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal in calendar (not sidebar)
-      const mealElements = screen.getAllByText('Spaghetti Carbonara')
-      const mealInCalendar = mealElements.find(el => {
-        const parent = el.closest('[style*="cursor: pointer"]')
-        return parent !== null
-      })
-      
-      expect(mealInCalendar).toBeDefined()
-      await user.click(mealInCalendar!)
+      // Click the edit button for the meal in the calendar
+      const editButtons = screen.getAllByRole('button', { name: /edit/i })
+      await user.click(editButtons[0])
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -362,15 +343,9 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal in calendar (not sidebar)
-      const mealElements = screen.getAllByText('Spaghetti Carbonara')
-      const mealInCalendar = mealElements.find(el => {
-        const parent = el.closest('[style*="cursor: pointer"]')
-        return parent !== null
-      })
-      
-      expect(mealInCalendar).toBeDefined()
-      await user.click(mealInCalendar!)
+      // Click the edit button for the meal in the calendar
+      const editButtons = screen.getAllByRole('button', { name: /edit/i })
+      await user.click(editButtons[0])
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()

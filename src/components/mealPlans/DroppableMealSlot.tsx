@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
-import { Box, Button, Group, Text } from '@mantine/core'
+import { Box, Button, Group, Text, Anchor } from '@mantine/core'
+import { useNavigate } from 'react-router-dom'
 
 import { getMealPlanTypeInfo, isRecipeMealPlan } from '../../types/mealPlan'
 
@@ -23,6 +24,7 @@ export function DroppableMealSlot({
   onAddMeal,
   onEditMeal,
 }: DroppableMealSlotProps) {
+  const navigate = useNavigate()
   const { isOver, setNodeRef } = useDroppable({
     id: `${dateString}-${mealType}`,
     data: {
@@ -54,9 +56,17 @@ export function DroppableMealSlot({
         <Box onClick={() => onEditMeal(meal)} style={{ cursor: 'pointer', padding: '4px' }}>
           <Group gap={4} wrap="nowrap">
             <Text size="xs" style={{ flexShrink: 0 }}>🍽</Text>
-            <Text size="xs" lineClamp={1} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <Anchor
+              size="xs"
+              lineClamp={1}
+              style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/recipes/${meal.recipeId}`)
+              }}
+            >
               {recipe?.name || 'Unknown Recipe'}
-            </Text>
+            </Anchor>
           </Group>
         </Box>
       )
