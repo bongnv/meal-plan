@@ -165,16 +165,14 @@
 
 - [ ] I2.3. Set up Meal Plan Context (TDD)
   - Write unit tests first in `src/contexts/MealPlanContext.test.tsx`
-  - Test cases: loadMealPlans on mount, getMealPlansByDate, addMealPlan, updateMealPlan, deleteMealPlan, copyMealPlan
+  - Test cases: loadMealPlans on mount, addMealPlan, updateMealPlan, deleteMealPlan
   - Create `MealPlanContext` in `src/contexts/MealPlanContext.tsx`
   - Load meal plans once on mount using MealPlanStorageService
   - Maintain in-memory state: mealPlans array, loading state, error state
   - Actions operate on in-memory state and persist via MealPlanStorageService:
-    - `getMealPlansByDateRange(startDate, endDate)` - filter in memory
     - `addMealPlan(mealPlan)` - add to state + persist
     - `updateMealPlan(mealPlan)` - update state + persist (for adjusting servings, etc.)
     - `deleteMealPlan(id)` - remove from state + persist
-    - `copyMealPlan(id, targetDate)` - duplicate to another date + persist
   - Integrate with MealPlanStorageService for persistence
 
 - [ ] I2.4. Build Calendar view component (TDD)

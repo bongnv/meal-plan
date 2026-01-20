@@ -52,10 +52,13 @@ Client-side web application with no backend server. All data stored locally in b
 **Layer 2: State Management**
 - React Context for application state
 - Manages recipes, meal plans, and grocery lists
+- Handles error handling and user feedback
 
 **Layer 3: Storage Layer**
 - LocalStorage Manager: immediate persistence
 - OneDrive Sync: background sync across devices
+- Storage services do NOT catch errors - they propagate to the context layer
+- Context layer is responsible for error handling and user feedback
 
 ### Data Flow
 1. User interacts with UI components

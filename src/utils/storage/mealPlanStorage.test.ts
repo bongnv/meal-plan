@@ -108,19 +108,13 @@ describe('MealPlanStorageService', () => {
       expect(mealPlans).toEqual(mockMealPlans)
     })
 
-    it('should return empty array if localStorage data is corrupted', () => {
+    it('should throw error if localStorage data is corrupted', () => {
       localStorage.setItem('mealPlans', 'invalid json')
 
-      const mealPlans = service.loadMealPlans()
-      expect(mealPlans).toEqual([])
+      expect(() => service.loadMealPlans()).toThrow()
     })
 
-    it('should return empty array if data fails Zod validation', () => {
-      // Mock console.error to avoid vitest console issues
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error if data fails Zod validation', () => {
       const invalidMealPlans = [
         {
           id: '1',
@@ -131,16 +125,10 @@ describe('MealPlanStorageService', () => {
 
       localStorage.setItem('mealPlans', JSON.stringify(invalidMealPlans))
 
-      const mealPlans = service.loadMealPlans()
-      expect(mealPlans).toEqual([])
-      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(() => service.loadMealPlans()).toThrow()
     })
 
-    it('should return empty array if recipe meal plan is missing required fields', () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error if recipe meal plan is missing required fields', () => {
       const invalidMealPlans = [
         {
           id: '1',
@@ -153,19 +141,16 @@ describe('MealPlanStorageService', () => {
 
       localStorage.setItem('mealPlans', JSON.stringify(invalidMealPlans))
 
-      const mealPlans = service.loadMealPlans()
-      expect(mealPlans).toEqual([])
-      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(() => service.loadMealPlans()).toThrow()
     })
 
-    it('should handle localStorage errors gracefully', () => {
+    it('should throw error when localStorage.getItem throws', () => {
       // Mock localStorage.getItem to throw an error
       vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
         throw new Error('localStorage error')
       })
 
-      const mealPlans = service.loadMealPlans()
-      expect(mealPlans).toEqual([])
+      expect(() => service.loadMealPlans()).toThrow('localStorage error')
     })
   })
 
@@ -197,11 +182,7 @@ describe('MealPlanStorageService', () => {
       expect(JSON.parse(stored!)).toEqual([])
     })
 
-    it('should validate meal plans before saving', () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error when validating invalid meal plans', () => {
       // @ts-expect-error - intentionally invalid data
       const invalidMealPlans: MealPlan[] = [
         {
@@ -210,11 +191,7 @@ describe('MealPlanStorageService', () => {
         },
       ]
 
-      service.saveMealPlans(invalidMealPlans)
-
-      expect(consoleErrorSpy).toHaveBeenCalled()
-      const stored = localStorage.getItem('mealPlans')
-      expect(stored).toBeNull()
+      expect(() => service.saveMealPlans(invalidMealPlans)).toThrow()
     })
 
     it('should overwrite existing meal plans', () => {
@@ -246,11 +223,7 @@ describe('MealPlanStorageService', () => {
       expect(JSON.parse(stored!)).toEqual(secondBatch)
     })
 
-    it('should handle localStorage errors gracefully', () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error when localStorage.setItem throws', () => {
       // Mock localStorage.setItem to throw an error
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new Error('localStorage error')
@@ -267,8 +240,7 @@ describe('MealPlanStorageService', () => {
         },
       ]
 
-      expect(() => service.saveMealPlans(mockMealPlans)).not.toThrow()
-      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(() => service.saveMealPlans(mockMealPlans)).toThrow('localStorage error')
     })
   })
 })

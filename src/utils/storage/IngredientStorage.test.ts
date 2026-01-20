@@ -43,50 +43,32 @@ describe('IngredientStorageService', () => {
       expect(ingredients).toEqual(mockIngredients)
     })
 
-    it('should return empty array if localStorage data is corrupted', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('should throw error if localStorage data is corrupted', () => {
       localStorage.setItem('ingredients', 'invalid json')
 
-      const ingredients = service.loadIngredients()
-
-      expect(ingredients).toEqual([])
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error loading ingredients from localStorage:',
-        expect.any(Error)
-      )
-      consoleSpy.mockRestore()
+      expect(() => service.loadIngredients()).toThrow()
     })
 
-    it('should handle localStorage errors gracefully', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('should throw error when localStorage.getItem throws', () => {
       const getItemSpy = vi
         .spyOn(Storage.prototype, 'getItem')
         .mockImplementation(() => {
           throw new Error('localStorage error')
         })
 
-      const ingredients = service.loadIngredients()
+      expect(() => service.loadIngredients()).toThrow('localStorage error')
 
-      expect(ingredients).toEqual([])
-      expect(consoleSpy).toHaveBeenCalled()
-
-      consoleSpy.mockRestore()
       getItemSpy.mockRestore()
     })
 
-    it('should validate ingredients with Zod schema', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('should throw error when Zod validation fails', () => {
       const invalidIngredients = [
         { id: '1', name: '', category: 'Vegetables', unit: 'piece' }, // Invalid: empty name
       ]
 
       localStorage.setItem('ingredients', JSON.stringify(invalidIngredients))
 
-      const ingredients = service.loadIngredients()
-
-      expect(ingredients).toEqual([])
-      expect(consoleSpy).toHaveBeenCalled()
-      consoleSpy.mockRestore()
+      expect(() => service.loadIngredients()).toThrow()
     })
   })
 

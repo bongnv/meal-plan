@@ -11,22 +11,17 @@ const STORAGE_KEY = 'mealPlans'
 export class MealPlanStorageService {
   /**
    * Load all meal plans from localStorage
-   * Returns empty array if no meal plans found or on error
+   * Returns empty array if no meal plans found
    * Validates data with Zod schema
    */
   loadMealPlans(): MealPlan[] {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (!stored) {
-        return []
-      }
-      const parsed = JSON.parse(stored)
-      const validated = z.array(MealPlanSchema).parse(parsed)
-      return validated
-    } catch (error) {
-      console.error('Error loading meal plans from localStorage:', error)
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) {
       return []
     }
+    const parsed = JSON.parse(stored)
+    const validated = z.array(MealPlanSchema).parse(parsed)
+    return validated
   }
 
   /**
@@ -35,11 +30,7 @@ export class MealPlanStorageService {
    * Validates data with Zod schema before saving
    */
   saveMealPlans(mealPlans: MealPlan[]): void {
-    try {
-      const validated = z.array(MealPlanSchema).parse(mealPlans)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(validated))
-    } catch (error) {
-      console.error('Error saving meal plans to localStorage:', error)
-    }
+    const validated = z.array(MealPlanSchema).parse(mealPlans)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated))
   }
 }

@@ -61,19 +61,13 @@ describe('RecipeStorageService', () => {
       expect(recipes).toEqual(mockRecipes)
     })
 
-    it('should return empty array if localStorage data is corrupted', () => {
+    it('should throw error if localStorage data is corrupted', () => {
       localStorage.setItem('recipes', 'invalid json')
 
-      const recipes = service.loadRecipes()
-      expect(recipes).toEqual([])
+      expect(() => service.loadRecipes()).toThrow()
     })
 
-    it('should return empty array if data fails Zod validation', () => {
-      // Mock console.error to avoid vitest console issues
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error if data fails Zod validation', () => {
       const invalidRecipes = [
         {
           id: '1',
@@ -84,19 +78,16 @@ describe('RecipeStorageService', () => {
 
       localStorage.setItem('recipes', JSON.stringify(invalidRecipes))
 
-      const recipes = service.loadRecipes()
-      expect(recipes).toEqual([])
-      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(() => service.loadRecipes()).toThrow()
     })
 
-    it('should handle localStorage errors gracefully', () => {
+    it('should throw error when localStorage.getItem throws', () => {
       // Mock localStorage.getItem to throw an error
       vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
         throw new Error('localStorage error')
       })
 
-      const recipes = service.loadRecipes()
-      expect(recipes).toEqual([])
+      expect(() => service.loadRecipes()).toThrow('localStorage error')
     })
   })
 
@@ -157,7 +148,7 @@ describe('RecipeStorageService', () => {
       expect(recipes).not.toEqual(initialRecipes)
     })
 
-    it('should handle localStorage errors gracefully', () => {
+    it('should throw error when localStorage.setItem throws', () => {
       // Mock localStorage.setItem to throw an error
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new Error('localStorage error')
@@ -176,8 +167,7 @@ describe('RecipeStorageService', () => {
         },
       ]
 
-      // Should not throw
-      expect(() => service.saveRecipes(mockRecipes)).not.toThrow()
+      expect(() => service.saveRecipes(mockRecipes)).toThrow('localStorage error')
     })
 
     it('should save empty array', () => {
@@ -187,12 +177,7 @@ describe('RecipeStorageService', () => {
       expect(recipes).toEqual([])
     })
 
-    it('should not save invalid recipes that fail Zod validation', () => {
-      // Mock console.error to avoid vitest console issues
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {})
-
+    it('should throw error when saving invalid recipes that fail Zod validation', () => {
       const invalidRecipes = [
         {
           id: '1',
@@ -202,12 +187,7 @@ describe('RecipeStorageService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any
 
-      service.saveRecipes(invalidRecipes)
-
-      // Should not have been saved
-      const recipes = service.loadRecipes()
-      expect(recipes).toEqual([])
-      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(() => service.saveRecipes(invalidRecipes)).toThrow()
     })
   })
 })
