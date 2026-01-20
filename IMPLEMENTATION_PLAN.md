@@ -83,15 +83,17 @@
   - Test navigation between all routes
   - Ensure accessibility (keyboard navigation, ARIA labels)
 
-- [ ] 7. Build Recipe detail view (TDD)
+- [x] 7. Build Recipe detail view (TDD)
   - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
   - Test cases: render recipe details, edit action, delete action
   - Create `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`
+  - Create `RecipeDetailPage` in `src/pages/recipes/RecipeDetailPage.tsx`
   - Display full recipe information
   - Show ingredients list, instructions, cooking times
   - Include edit and delete action buttons
   - Apply Mantine CSS styling with responsive design
-  - Routing: `/recipes/:id` for detail view
+  - Routing: `/recipes/:id` for detail view (added to App.tsx)
+  - Card click navigation: clicking recipe card navigates to detail view
 
 - [ ] 8. Implement delete confirmation (TDD)
   - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`

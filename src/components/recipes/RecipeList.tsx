@@ -68,6 +68,7 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
               'box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out',
             cursor: 'pointer',
           }}
+          onClick={() => navigate(`/recipes/${recipe.id}`)}
           onMouseEnter={e => {
             e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)'
             e.currentTarget.style.transform = 'translateY(-2px)'
@@ -134,7 +135,10 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
                 color="blue"
                 size="lg"
                 aria-label="View recipe"
-                onClick={() => navigate(`/recipes/${recipe.id}`)}
+                onClick={e => {
+                  e.stopPropagation()
+                  navigate(`/recipes/${recipe.id}`)
+                }}
               >
                 <IconEye size={18} />
               </ActionIcon>
@@ -143,7 +147,10 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
                 color="orange"
                 size="lg"
                 aria-label="Edit recipe"
-                onClick={() => onEdit(recipe.id)}
+                onClick={e => {
+                  e.stopPropagation()
+                  onEdit(recipe.id)
+                }}
               >
                 <IconEdit size={18} />
               </ActionIcon>
@@ -152,7 +159,10 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
                 color="red"
                 size="lg"
                 aria-label="Delete recipe"
-                onClick={() => onDelete(recipe.id)}
+                onClick={e => {
+                  e.stopPropagation()
+                  onDelete(recipe.id)
+                }}
               >
                 <IconTrash size={18} />
               </ActionIcon>

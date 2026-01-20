@@ -24,10 +24,7 @@
 - Avoid making assumptions about user preferences
 
 ## Development Approach
-- Follow Test-Driven Development (TDD) methodology:
-  - Write tests first before implementing features
-  - Present the test code to the user for confirmation
-  - Only proceed with implementation after tests are approved
+- Follow Test-Driven Development (TDD) methodology, write tests first before implementing features
 
 ## Quality Assurance
 - After completing each task, run quality checks and save output to `tmp/` folder

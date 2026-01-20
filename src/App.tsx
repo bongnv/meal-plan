@@ -5,6 +5,7 @@ import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
 import { EditRecipePage } from './pages/recipes/EditRecipePage'
+import { RecipeDetailPage } from './pages/recipes/RecipeDetailPage'
 import { RecipesPage } from './pages/recipes/RecipesPage'
 import { IngredientsPage } from './pages/settings/IngredientsPage'
 
@@ -81,6 +82,7 @@ function App() {
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/new" element={<CreateRecipePage />} />
           <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
+          <Route path="/recipes/:id" element={<RecipeDetailPage />} />
           <Route path="/settings/ingredients" element={<IngredientsPage />} />
         </Routes>
       </AppShell.Main>
