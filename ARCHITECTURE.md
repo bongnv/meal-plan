@@ -38,7 +38,7 @@ Client-side web application with no backend server. All data stored locally in b
 - **MSAL.js** for Microsoft authentication
 
 ### Utilities
-- **date-fns** for date handling
+- **Day.js** for date handling (required by Mantine Dates)
 - **Zod** for data validation
 
 ## Architecture

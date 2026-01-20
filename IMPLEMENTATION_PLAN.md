@@ -209,7 +209,7 @@
     - Connect to MealPlanContext for data
     - Show calendar view as default view
 
-- [ ] I2.6. Build Meal Plan form/editor component (TDD)
+- [x] I2.6. Build Meal Plan form/editor component (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanForm.test.tsx`
   - Test cases: render, meal type toggle, recipe selection, custom entry, servings adjustment, form submission
   - Create `MealPlanForm` component in `src/components/mealPlans/MealPlanForm.tsx`
@@ -229,6 +229,10 @@
   - Form validation using Zod schema with zodResolver
   - Apply Mantine styling with modal or drawer presentation
   - Support both add and edit modes
+  - **Integrate MealPlanForm into MealPlansPage**:
+    - Update `src/pages/mealPlans/MealPlansPage.tsx` to manage form modal state
+    - Connect to MealPlanContext for add/update operations
+    - Open form on calendar cell click with date and meal slot pre-selected
 
 - [ ] I2.7. Implement drag-and-drop for meal planning (TDD)
   - Write interaction tests for drag-and-drop
