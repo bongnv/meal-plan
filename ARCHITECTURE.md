@@ -28,8 +28,7 @@ Client-side web application with no backend server. All data stored locally in b
 - LocalStorage persistence layer
 
 ### UI Components
-- **Tailwind CSS** for styling
-- **Radix UI** for accessible components
+- **Mantine** for comprehensive component library with built-in styling and form handling
 - **dnd-kit** for drag-and-drop meal planning
 
 ### Data & Storage
@@ -46,8 +45,8 @@ Client-side web application with no backend server. All data stored locally in b
 ### Application Layers
 
 **Layer 1: UI Components**
-- React components with Tailwind CSS and Radix UI
-- User interaction and display
+- React components with Tailwind CSS and shadcn/ui
+- User interaction and dMantine component library
 
 **Layer 2: State Management**
 - React Context for application state

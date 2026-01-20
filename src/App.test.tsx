@@ -1,17 +1,17 @@
-import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 
 import App from './App'
+import { render, screen } from './test/test-utils'
 
 describe('App', () => {
-  it('renders the recipe list page by default', () => {
+  it('renders the app with heading', () => {
     render(<App />)
-    // Should render the recipes page header
-    expect(screen.getByText('My Recipes')).toBeInTheDocument()
+    expect(screen.getByText('Meal Plan')).toBeInTheDocument()
   })
 
-  it('renders the new recipe button', () => {
+  it('renders the heading as h1', () => {
     render(<App />)
-    expect(screen.getByText('+ New Recipe')).toBeInTheDocument()
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading).toHaveTextContent('Meal Plan')
   })
 })

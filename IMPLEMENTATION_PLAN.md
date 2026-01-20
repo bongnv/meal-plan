@@ -4,19 +4,19 @@
 
 ### Implementation Steps
 
-- [x] 1. Define Recipe data types
+- [ ] 1. Define Recipe data types
   - Create TypeScript interfaces for Recipe structure in `src/types/recipe.ts`
   - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
   - Define Ingredient interface with name, quantity, unit fields
 
-- [x] 2. Create LocalStorage service for recipes (TDD)
+- [ ] 2. Create LocalStorage service for recipes (TDD)
   - Write unit tests first in `src/utils/storage/recipeStorage.test.ts`
   - Test cases: loadRecipes, saveRecipes, generateId, error handling
   - Implement `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`
   - Methods: `loadRecipes()` - load all recipes from localStorage, `saveRecipes(recipes)` - save entire collection
   - Note: React Context will manage in-memory CRUD operations for efficiency
 
-- [x] 3. Set up Recipe Context (TDD)
+- [ ] 3. Set up Recipe Context (TDD)
   - Write unit tests first in `src/contexts/RecipeContext.test.tsx`
   - Test cases: loadRecipes on mount, getRecipeById (in-memory), addRecipe, updateRecipe, deleteRecipe, state updates
   - Create `RecipeContext` in `src/contexts/RecipeContext.tsx`
@@ -29,7 +29,7 @@
     - `deleteRecipe(id)` - remove from state + persist
   - Integrate with RecipeStorageService for persistence
 
-- [x] 4. Build Recipe form component (TDD)
+- [ ] 4. Build Recipe form component (TDD)
   - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
   - Test cases: render, create mode, edit mode, validation, form submission
   - Create `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`
@@ -46,7 +46,7 @@
   - Routing: `/recipes/new` for create, `/recipes/:id/edit` for edit
   - Note: Full ingredient autocomplete will be implemented after ingredient management is built
 
-- [x] 5. Build Recipe list component (TDD)
+- [ ] 5. Build Recipe list component (TDD)
   - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
   - Test cases: render recipes, empty state, card interactions, edit/delete buttons
   - Create `RecipeList` component in `src/components/recipes/RecipeList.tsx`
@@ -79,7 +79,7 @@
     - Desktop: Horizontal navigation with full labels
     - Mobile: Bottom navigation bar or hamburger menu
   - Integrate into App.tsx layout
-  - Style with Tailwind CSS
+  - Style with Mantine CSS
   - Test navigation between all routes
   - Ensure accessibility (keyboard navigation, ARIA labels)
 
@@ -97,11 +97,20 @@
   - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`
   - Test cases: render dialog, cancel action, confirm action
   - Create `ConfirmDialog` component in `src/components/common/ConfirmDialog.tsx`
-  - Use Radix UI Dialog component
+  - Use Mantine Modal component
   - Show confirmation message before deleting recipe
   - Handle cancel and confirm actions
-  - Apply Tailwind CSS styling
-- [x] 9. Build Ingredient Library Management (TDD)
+  - Apply Mantine styling
+  
+- [ ] 9. Complete Mantine Migration
+  - [ ] Migrate RecipeList, IngredientList, HomePage, RecipesPage to use Mantine components
+  - [ ] Migrate IngredientForm to use @mantine/form hook and components
+  - [ ] Migrate RecipeForm to use @mantine/form hook and components
+  - [ ] Replace NavigationBar with Mantine NavLink components
+  - [ ] Update component tests to use MantineProvider wrapper
+  - [ ] Quality checks (lint passing, build successful)
+  
+- [ ] 10. Build Ingredient Library Management (TDD)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
   - Write tests for IngredientContext
