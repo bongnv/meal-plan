@@ -92,25 +92,78 @@ describe('CalendarView', () => {
   })
 
   describe('View Modes', () => {
-    it('should support week view mode', async () => {
+    it('should display month view by default (35-42 days in calendar grid)', () => {
+      renderCalendarView()
+      
+      // Month view shows a full month grid (typically 35-42 cells for 7 columns x 5-6 rows)
+      const calendarDays = screen.getAllByRole('gridcell')
+      expect(calendarDays.length).toBeGreaterThanOrEqual(28)
+      expect(calendarDays.length).toBeLessThanOrEqual(42)
+    })
+
+    it('should show 7 day header row', () => {
+      renderCalendarView()
+      
+      // Should have day headers: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+      expect(screen.getByText('Sun')).toBeInTheDocument()
+      expect(screen.getByText('Mon')).toBeInTheDocument()
+      expect(screen.getByText('Tue')).toBeInTheDocument()
+      expect(screen.getByText('Wed')).toBeInTheDocument()
+      expect(screen.getByText('Thu')).toBeInTheDocument()
+      expect(screen.getByText('Fri')).toBeInTheDocument()
+      expect(screen.getByText('Sat')).toBeInTheDocument()
+    })
+
+    it('should switch to list view when List is selected', async () => {
       const user = userEvent.setup()
       renderCalendarView()
       
-      const weekOption = screen.getByLabelText('Week')
-      await user.click(weekOption)
+      // Month view is default - day headers should be visible
+      expect(screen.getByText('Sun')).toBeInTheDocument()
       
-      // Should show 7 days in week view
-      const calendarDays = screen.getAllByRole('gridcell')
-      expect(calendarDays.length).toBe(7)
+      // Click on List view option
+      await user.click(screen.getByLabelText('List'))
+      
+      // Day headers should not be present in list view
+      expect(screen.queryByText('Sun')).not.toBeInTheDocument()
+      
+      // List view should show date headers in long format
+      expect(screen.getByText(/Thursday, January 15, 2026/)).toBeInTheDocument()
     })
 
-    it('should support month view mode', async () => {
+    it('should switch back to month view', async () => {
+      const user = userEvent.setup()
       renderCalendarView()
       
-      const monthOption = screen.getByLabelText('Month')
+      // Switch to list view
+      await user.click(screen.getByLabelText('List'))
+      expect(screen.queryByText('Sun')).not.toBeInTheDocument()
       
-      // Month view is active (default)
-      expect(monthOption).toBeChecked()
+      // Switch back to month view
+      await user.click(screen.getByLabelText('Month'))
+      
+      // Day headers should be visible again
+      expect(screen.getByText('Sun')).toBeInTheDocument()
+    })
+
+    it('should display meals in list view with drag-and-drop support', async () => {
+      const user = userEvent.setup()
+      renderCalendarView()
+      
+      // Switch to list view
+      await user.click(screen.getByLabelText('List'))
+      
+      // Meals should be displayed
+      expect(screen.getByText(/Spaghetti Carbonara/)).toBeInTheDocument()
+      expect(screen.getByText(/Italian Restaurant/)).toBeInTheDocument()
+    })
+
+    it('should show view mode switcher with Month and List options', () => {
+      renderCalendarView()
+      
+      // View switcher should be present
+      expect(screen.getByLabelText('Month')).toBeInTheDocument()
+      expect(screen.getByLabelText('List')).toBeInTheDocument()
     })
   })
 

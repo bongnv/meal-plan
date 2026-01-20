@@ -257,9 +257,19 @@
   - Test drag from recipe list to calendar, drag between calendar slots
   - Test search/filter functionality works while dragging
 
-- [ ] I2.8. Build Meal Plan list/timeline view (TDD)
+- [ ] I2.7.1. Implement drag-to-remove meal plans (TDD)
+  - Write interaction tests for dragging meals back to recipe list
+  - Make recipe sidebar a droppable zone for meal plan removal
+  - Detect when a meal plan (recipe-based) is dragged from calendar
+  - Visual feedback when dragging meal over recipe list (removal indicator)
+  - Drop action on recipe list removes meal plan from that date
+  - Confirmation prompt (optional) before removing meal
+  - Test dragging recipe meal to list, dragging custom meal (should not be removable via this method)
+  - Test accessibility with keyboard alternative for removal
+
+- [x] I2.8. Build Meal Plan list/timeline view (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanList.test.tsx`
-  - Test cases: render meal plans, grouped by date, edit/delete actions, copy action
+  - Test cases: render meal plans, grouped by date, edit/delete actions
   - Create `MealPlanList` component in `src/components/mealPlans/MealPlanList.tsx`
   - Alternative view to calendar: linear timeline of planned meals
   - Group meals by date with date headers
@@ -267,7 +277,7 @@
     - Meal type icon (🥗 lunch, 🍽️ dinner)
     - Recipe name (with link to recipe detail) or custom meal type icon + text
     - Servings count (for recipe meals)
-    - Action buttons: Edit, Delete, Copy to another date
+    - Action buttons: Edit, Delete
   - Filter/sort options: Show future meals only, show all, sort by date
   - Apply Mantine styling with responsive card/list layout
   - Empty state: "No meals planned yet" with CTA to add first meal
@@ -275,14 +285,13 @@
     - Update `src/pages/mealPlans/MealPlansPage.tsx` to conditionally render list view
     - Connect to MealPlanContext for data
 
-- [ ] I2.9. Add view switcher and finalize Meal Planning page (TDD)
+- [x] I2.9. Add view switcher and finalize Meal Planning page (TDD)
   - Write page tests in `src/pages/mealPlans/MealPlansPage.test.tsx`
   - Test cases: view switching, calendar/list rendering, add meal button
   - Add view switcher to MealPlansPage:
     - Use Mantine SegmentedControl or Tabs for Calendar/List toggle
     - Place in page header (top-right on desktop, below title on mobile)
     - Persist view preference in component state or URL query params
-  - Add floating action button or header button to create new meal plan
   - Apply Mantine layout and responsive design polish
   - Test switching between views, navigation, and creating meals
 

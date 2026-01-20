@@ -22,7 +22,7 @@ interface FormState {
 }
 
 export function MealPlansPage() {
-  const { mealPlans, addMealPlan, updateMealPlan } = useMealPlans()
+  const { mealPlans, addMealPlan, updateMealPlan, deleteMealPlan } = useMealPlans()
   const { recipes, getRecipeById } = useRecipes()
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
   
@@ -32,16 +32,11 @@ export function MealPlansPage() {
     mealType: 'lunch',
   })
 
-  const handleAddMeal = (params: { date: string; mealType?: MealType }) => {
+  const handleAddMeal = (params: { date: string }) => {
     // Determine the meal type based on what already exists
-    let mealType: MealType = 'lunch'
-    if (params.mealType) {
-      mealType = params.mealType
-    } else {
-      // Check if lunch exists, if so default to dinner
-      const lunchExists = mealPlans.some(mp => mp.date === params.date && mp.mealType === 'lunch')
-      mealType = lunchExists ? 'dinner' : 'lunch'
-    }
+    // Check if lunch exists, if so default to dinner
+    const lunchExists = mealPlans.some(mp => mp.date === params.date && mp.mealType === 'lunch')
+    const mealType: MealType = lunchExists ? 'dinner' : 'lunch'
 
     setFormState({
       opened: true,
@@ -140,22 +135,21 @@ export function MealPlansPage() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <Container size="xl" fluid>
-        <Title order={1} mb="md">
-          Meal Plans
-        </Title>
+        <Title order={1} mb="md">Meal Plans</Title>
 
         <Grid gutter="md">
-          {/* Calendar View */}
+          {/* Main Content Area - Calendar View with integrated view switcher */}
           <Grid.Col span={{ base: 12, lg: 9 }}>
             <CalendarView
               mealPlans={mealPlans}
               getRecipeById={getRecipeById}
               onAddMeal={handleAddMeal}
               onEditMeal={handleEditMeal}
+              onDeleteMeal={(mealPlan) => deleteMealPlan(mealPlan.id)}
             />
           </Grid.Col>
 
-          {/* Recipe Sidebar - moved to the right */}
+          {/* Recipe Sidebar - always visible */}
           <Grid.Col span={{ base: 12, lg: 3 }}>
             <Box style={{ position: 'sticky', top: 16 }}>
               <RecipeSidebar />

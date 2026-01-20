@@ -111,18 +111,48 @@ describe('MealPlansPage', () => {
       expect(screen.getByRole('heading', { name: /meal plans/i })).toBeInTheDocument()
     })
 
-    it('should render the CalendarView component', () => {
+    it('should render the calendar view with navigation controls', () => {
       renderWithProviders(<MealPlansPage />)
 
-      // CalendarView should be present (check for week/month view controls)
-      expect(screen.getByLabelText('Week')).toBeInTheDocument()
-      expect(screen.getByLabelText('Month')).toBeInTheDocument()
+      // Calendar grid should be present (check for navigation)
+      expect(screen.getByRole('button', { name: /today/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
+    })
+
+    it('should render the recipe sidebar', () => {
+      renderWithProviders(<MealPlansPage />)
+
+      // Recipe sidebar should always be visible
+      expect(screen.getByPlaceholderText(/search recipes/i)).toBeInTheDocument()
     })
 
     it('should not show the form modal initially', () => {
       renderWithProviders(<MealPlansPage />)
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    it('should show view mode switcher in CalendarView header', () => {
+      renderWithProviders(<MealPlansPage />)
+
+      // View switcher should be in CalendarView header
+      expect(screen.getByLabelText('Month')).toBeInTheDocument()
+      expect(screen.getByLabelText('List')).toBeInTheDocument()
+    })
+
+    it('should keep recipe sidebar visible when switching to list view', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<MealPlansPage />)
+
+      // Recipe sidebar should be present initially
+      expect(screen.getByPlaceholderText(/search recipes/i)).toBeInTheDocument()
+
+      // Switch to list view (within CalendarView)
+      await user.click(screen.getByLabelText('List'))
+
+      // Recipe sidebar should still be present (not hidden in list view anymore)
+      expect(screen.getByPlaceholderText(/search recipes/i)).toBeInTheDocument()
     })
   })
 
