@@ -15,6 +15,7 @@ interface MealPlanContextType {
   mealPlans: MealPlan[]
   loading: boolean
   error: string | null
+  getMealPlanById: (id: string) => MealPlan | undefined
   addMealPlan: (mealPlan: Omit<MealPlan, 'id'>) => void
   updateMealPlan: (mealPlan: MealPlan) => void
   deleteMealPlan: (id: string) => void
@@ -40,6 +41,11 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
   }, [storageService])
+
+  // Get meal plan by ID from in-memory state
+  const getMealPlanById = (id: string): MealPlan | undefined => {
+    return mealPlans.find(mp => mp.id === id)
+  }
 
   // Add meal plan to in-memory state and persist
   const addMealPlan = (mealPlan: Omit<MealPlan, 'id'>): void => {
@@ -98,6 +104,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
         mealPlans,
         loading,
         error,
+        getMealPlanById,
         addMealPlan,
         updateMealPlan,
         deleteMealPlan,

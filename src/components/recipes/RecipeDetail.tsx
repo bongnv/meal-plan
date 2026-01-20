@@ -10,15 +10,12 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip,
 } from '@mantine/core'
 import {
   IconUsers,
   IconClock,
   IconPlus,
   IconMinus,
-  IconEdit,
-  IconTrash,
 } from '@tabler/icons-react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
@@ -27,13 +24,12 @@ import type { Recipe } from '../../types/recipe'
 
 interface RecipeDetailProps {
   recipe: Recipe
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  initialServings?: number // Override default servings (e.g., from meal plan)
 }
 
-export function RecipeDetail({ recipe, onEdit, onDelete }: RecipeDetailProps) {
+export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
   const { getIngredientById } = useIngredients()
-  const [servings, setServings] = useState(recipe.servings)
+  const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()
   )
@@ -73,41 +69,10 @@ export function RecipeDetail({ recipe, onEdit, onDelete }: RecipeDetailProps) {
   return (
     <Box>
       <Stack gap="lg">
-        {/* Recipe Header */}
+        {/* Recipe Description */}
         <Box>
-          <Group justify="space-between" align="flex-start">
-            <Box style={{ flex: 1 }}>
-              <Title order={1} mb="md">
-                {recipe.name}
-              </Title>
-            </Box>
-            <Group gap="xs">
-              <Tooltip label="Edit recipe">
-                <ActionIcon
-                  variant="light"
-                  color="blue"
-                  size="lg"
-                  onClick={() => onEdit(recipe.id)}
-                  aria-label="Edit recipe"
-                >
-                  <IconEdit size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Delete recipe">
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  size="lg"
-                  onClick={() => onDelete(recipe.id)}
-                  aria-label="Delete recipe"
-                >
-                  <IconTrash size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-          </Group>
-          <Text size="lg" c="dimmed" mb="md">
-            {recipe.description}
+          <Text size="lg" mb="md">
+            {recipe.description || 'No description'}
           </Text>
 
           {/* Meta Information */}

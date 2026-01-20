@@ -64,6 +64,9 @@ describe('MealPlansPage', () => {
   const mockAddMealPlan = vi.fn()
   const mockUpdateMealPlan = vi.fn()
   const mockDeleteMealPlan = vi.fn()
+  const mockGetMealPlanById = vi.fn((id: string) =>
+    mockMealPlans.find(mp => mp.id === id)
+  )
   const mockGetRecipeById = vi.fn((id: string) => 
     mockRecipes.find(r => r.id === id)
   )
@@ -72,6 +75,7 @@ describe('MealPlansPage', () => {
     mealPlans: mockMealPlans,
     loading: false,
     error: null,
+    getMealPlanById: mockGetMealPlanById,
     addMealPlan: mockAddMealPlan,
     updateMealPlan: mockUpdateMealPlan,
     deleteMealPlan: mockDeleteMealPlan,

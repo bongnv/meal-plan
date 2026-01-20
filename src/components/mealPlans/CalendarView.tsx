@@ -241,7 +241,6 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                           meal={undefined}
                           getRecipeById={getRecipeById}
                           onAddMeal={onAddMeal}
-                          onEditMeal={onEditMeal}
                         />
                       ) : (
                         <>
@@ -255,7 +254,6 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                                     meal={lunchMeal}
                                     getRecipeById={getRecipeById}
                                     onAddMeal={onAddMeal}
-                                    onEditMeal={onEditMeal}
                                   />
                                 </Box>
                                 <ActionIcon
@@ -281,7 +279,6 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                                     meal={dinnerMeal}
                                     getRecipeById={getRecipeById}
                                     onAddMeal={onAddMeal}
-                                    onEditMeal={onEditMeal}
                                   />
                                 </Box>
                                 <ActionIcon
@@ -307,11 +304,11 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
           </Box>
         </>
       ) : (
-        /* List/Agenda View with dynamic height */
+        /* List/Agenda View */
         <Box 
           ref={listScrollRef}
           style={{ 
-            maxHeight: 'calc(100vh - 200px)',
+            maxHeight: 'calc(100vh - 230px)',
             overflowY: 'auto',
             overflowX: 'hidden'
           }}
@@ -373,7 +370,6 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                                     meal={meal}
                                     getRecipeById={getRecipeById}
                                     onAddMeal={onAddMeal}
-                                    onEditMeal={onEditMeal}
                                   />
                                   {isRecipe && 'servings' in meal && (
                                     <Text size="sm" c="dimmed">

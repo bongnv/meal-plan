@@ -323,6 +323,37 @@
   - Test edit action opens form with pre-filled data
   - Implementation: Small edit IconButton shown on hover/always visible in month view cells
 
+- [ ] I2.9.4. Add delete button to MealPlanForm (TDD)
+  - Add delete button to meal plan edit form (only shown when editing existing meal)
+  - Button should be positioned in form footer (e.g., left side, with Cancel/Save on right)
+  - Click shows confirmation modal before deleting
+  - After deletion, close form and refresh calendar view
+  - Write tests for delete button visibility (edit mode only, not create mode)
+  - Test delete confirmation flow
+  - Test form closes after successful deletion
+
+- [x] I2.9.5. Create Meal Plan Detail View page (TDD)
+  - Create new page component: `src/pages/mealPlans/MealPlanDetailPage.tsx`
+  - Route: `/meal-plans/:id`
+  - Update CalendarView to navigate to meal plan detail when clicking on meal (not edit button)
+  - Display meal plan information:
+    - Date and meal type (Lunch/Dinner)
+    - Notes field from meal plan
+    - Recipe details (if recipe-based meal):
+      - Recipe name, description
+      - Servings from meal plan (not default recipe servings)
+      - Ingredients scaled to meal plan servings
+      - Instructions
+      - Tags
+    - Custom meal text (if non-recipe meal)
+  - Show edit/delete action buttons
+  - Back button to return to meal plans page
+  - Similar layout to RecipeDetailPage but with meal plan context
+  - Write tests for MealPlanDetailPage component
+  - Test navigation from CalendarView to detail page
+  - Test servings display from meal plan vs recipe
+  - Test edit/delete actions from detail page
+
 - [ ] I2.10. Implement meal plan copy functionality (TDD)
   - Add "Copy to..." action to meal entries
   - Modal or popover with date picker to select target date

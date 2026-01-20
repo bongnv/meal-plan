@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core'
-import { Box, Button, Group, Text, Anchor } from '@mantine/core'
+import { Box, Button, Group, Text } from '@mantine/core'
 import { useNavigate } from 'react-router-dom'
 
 import { getMealPlanTypeInfo, isRecipeMealPlan } from '../../types/mealPlan'
@@ -13,7 +13,6 @@ interface DroppableMealSlotProps {
   meal: MealPlan | undefined
   getRecipeById: (id: string) => Recipe | undefined
   onAddMeal: (params: { date: string }) => void
-  onEditMeal: (mealPlan: MealPlan) => void
 }
 
 export function DroppableMealSlot({
@@ -22,7 +21,6 @@ export function DroppableMealSlot({
   meal,
   getRecipeById,
   onAddMeal,
-  onEditMeal,
 }: DroppableMealSlotProps) {
   const navigate = useNavigate()
   const { isOver, setNodeRef } = useDroppable({
@@ -33,6 +31,12 @@ export function DroppableMealSlot({
       mealType,
     },
   })
+
+  const handleMealClick = () => {
+    if (meal) {
+      navigate(`/meal-plans/${meal.id}`)
+    }
+  }
 
   const renderContent = () => {
     if (!meal) {
@@ -53,20 +57,16 @@ export function DroppableMealSlot({
     if (isRecipeMealPlan(meal)) {
       const recipe = getRecipeById(meal.recipeId)
       return (
-        <Box onClick={() => onEditMeal(meal)} style={{ cursor: 'pointer', padding: '4px' }}>
+        <Box onClick={handleMealClick} style={{ cursor: 'pointer', padding: '4px' }}>
           <Group gap={4} wrap="nowrap">
             <Text size="xs" style={{ flexShrink: 0 }}>🍽</Text>
-            <Anchor
+            <Text
               size="xs"
               lineClamp={1}
               style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/recipes/${meal.recipeId}`)
-              }}
             >
               {recipe?.name || 'Unknown Recipe'}
-            </Anchor>
+            </Text>
           </Group>
         </Box>
       )
@@ -74,7 +74,7 @@ export function DroppableMealSlot({
 
     const typeInfo = getMealPlanTypeInfo(meal.type)
     return (
-      <Box onClick={() => onEditMeal(meal)} style={{ cursor: 'pointer', padding: '4px' }}>
+      <Box onClick={handleMealClick} style={{ cursor: 'pointer', padding: '4px' }}>
         <Group gap={4} wrap="nowrap">
           {typeInfo && <Text size="xs" style={{ flexShrink: 0 }}>{typeInfo.icon}</Text>}
           <Text size="xs" lineClamp={1} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>

@@ -1,4 +1,5 @@
-import { Button, Container, Group, Loader, Stack, Text } from '@mantine/core'
+import { ActionIcon, Button, Container, Group, Loader, Stack, Text, Title, Tooltip, Box } from '@mantine/core'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { modals } from '@mantine/modals'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -83,11 +84,38 @@ export function RecipeDetailPage() {
           </Button>
         </Group>
 
-        <RecipeDetail
-          recipe={recipe}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        {/* Recipe Header */}
+        <Box>
+          <Group justify="space-between" align="flex-start" mb="lg">
+            <Title order={1}>{recipe.name}</Title>
+            <Group gap="xs">
+              <Tooltip label="Edit recipe">
+                <ActionIcon
+                  variant="light"
+                  color="blue"
+                  size="lg"
+                  onClick={() => handleEdit(recipe.id)}
+                  aria-label="Edit recipe"
+                >
+                  <IconEdit size={18} />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label="Delete recipe">
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  size="lg"
+                  onClick={handleDelete}
+                  aria-label="Delete recipe"
+                >
+                  <IconTrash size={18} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </Group>
+        </Box>
+
+        <RecipeDetail recipe={recipe} />
       </Stack>
     </Container>
   )

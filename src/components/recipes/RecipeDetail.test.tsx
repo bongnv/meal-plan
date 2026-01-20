@@ -1,6 +1,5 @@
 import { MantineProvider } from '@mantine/core'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -79,17 +78,9 @@ describe('RecipeDetail', () => {
   })
 
   describe('Recipe Information Display', () => {
-    it('should render recipe name', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
-      )
-
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
-    })
-
     it('should render recipe description', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(
@@ -99,7 +90,7 @@ describe('RecipeDetail', () => {
 
     it('should display servings information', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText(/4 servings/i)).toBeInTheDocument()
@@ -107,7 +98,7 @@ describe('RecipeDetail', () => {
 
     it('should display total time', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText(/30 min/i)).toBeInTheDocument()
@@ -115,7 +106,7 @@ describe('RecipeDetail', () => {
 
     it('should display all tags', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText('Italian')).toBeInTheDocument()
@@ -127,7 +118,7 @@ describe('RecipeDetail', () => {
   describe('Ingredients Display', () => {
     it('should render ingredients section heading', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText('Ingredients')).toBeInTheDocument()
@@ -135,7 +126,7 @@ describe('RecipeDetail', () => {
 
     it('should display all ingredients with quantities and units', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       // Check each ingredient is displayed with its quantity
@@ -165,8 +156,6 @@ describe('RecipeDetail', () => {
       renderWithProviders(
         <RecipeDetail
           recipe={recipeWithMissingIngredient}
-          onEdit={vi.fn()}
-          onDelete={vi.fn()}
         />
       )
 
@@ -184,7 +173,7 @@ describe('RecipeDetail', () => {
   describe('Instructions Display', () => {
     it('should render instructions section heading', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText('Instructions')).toBeInTheDocument()
@@ -192,7 +181,7 @@ describe('RecipeDetail', () => {
 
     it('should display all instruction steps', () => {
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
       expect(screen.getByText(/Boil pasta in salted water/i)).toBeInTheDocument()
@@ -204,64 +193,6 @@ describe('RecipeDetail', () => {
     })
   })
 
-  describe('Action Buttons', () => {
-    it('should render Edit button', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
-      )
-
-      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
-    })
-
-    it('should render Delete button', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
-      )
-
-      expect(
-        screen.getByRole('button', { name: /delete/i })
-      ).toBeInTheDocument()
-    })
-
-    it('should call onEdit when Edit button is clicked', async () => {
-      const mockOnEdit = vi.fn()
-      const user = userEvent.setup()
-
-      renderWithProviders(
-        <RecipeDetail
-          recipe={mockRecipe}
-          onEdit={mockOnEdit}
-          onDelete={vi.fn()}
-        />
-      )
-
-      const editButton = screen.getByRole('button', { name: /edit/i })
-      await user.click(editButton)
-
-      expect(mockOnEdit).toHaveBeenCalledWith(mockRecipe.id)
-      expect(mockOnEdit).toHaveBeenCalledTimes(1)
-    })
-
-    it('should call onDelete when Delete button is clicked', async () => {
-      const mockOnDelete = vi.fn()
-      const user = userEvent.setup()
-
-      renderWithProviders(
-        <RecipeDetail
-          recipe={mockRecipe}
-          onEdit={vi.fn()}
-          onDelete={mockOnDelete}
-        />
-      )
-
-      const deleteButton = screen.getByRole('button', { name: /delete/i })
-      await user.click(deleteButton)
-
-      expect(mockOnDelete).toHaveBeenCalledWith(mockRecipe.id)
-      expect(mockOnDelete).toHaveBeenCalledTimes(1)
-    })
-  })
-
   describe('Edge Cases', () => {
     it('should render recipe without image', () => {
       const recipeWithoutImage = { ...mockRecipe, imageUrl: undefined }
@@ -269,12 +200,10 @@ describe('RecipeDetail', () => {
       renderWithProviders(
         <RecipeDetail
           recipe={recipeWithoutImage}
-          onEdit={vi.fn()}
-          onDelete={vi.fn()}
         />
       )
 
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
     })
 
     it('should render recipe with empty tags array', () => {
@@ -283,12 +212,10 @@ describe('RecipeDetail', () => {
       renderWithProviders(
         <RecipeDetail
           recipe={recipeWithoutTags}
-          onEdit={vi.fn()}
-          onDelete={vi.fn()}
         />
       )
 
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
     })
 
     it('should display loading state when ingredients are loading', () => {
@@ -298,10 +225,10 @@ describe('RecipeDetail', () => {
       })
 
       renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} onEdit={vi.fn()} onDelete={vi.fn()} />
+        <RecipeDetail recipe={mockRecipe} />
       )
 
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
     })
   })
 })

@@ -3,6 +3,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChefHat, IconCarrot, IconSettings, IconCalendar } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
+import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
 import { EditRecipePage } from './pages/recipes/EditRecipePage'
@@ -112,6 +113,7 @@ function App() {
           <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
           <Route path="/recipes/:id" element={<RecipeDetailPage />} />
           <Route path="/meal-plans" element={<MealPlansPage />} />
+          <Route path="/meal-plans/:id" element={<MealPlanDetailPage />} />
           <Route path="/settings/ingredients" element={<IngredientsPage />} />
         </Routes>
       </AppShell.Main>
