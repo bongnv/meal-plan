@@ -2,9 +2,10 @@ import { useState } from 'react'
 
 import { ActionIcon, Badge, Button, Container, Group, Stack, Text, Title, Loader, Box, Tooltip } from '@mantine/core'
 import { modals } from '@mantine/modals'
-import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { IconEdit, IconTrash, IconCopy } from '@tabler/icons-react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
 import { useMealPlans } from '../../contexts/MealPlanContext'
@@ -19,6 +20,7 @@ export function MealPlanDetailPage() {
   const { getMealPlanById, updateMealPlan, deleteMealPlan, loading: mealPlansLoading } = useMealPlans()
   const { recipes, getRecipeById } = useRecipes()
   const [editModalOpened, setEditModalOpened] = useState(false)
+  const [copyModalOpened, setCopyModalOpened] = useState(false)
 
   if (mealPlansLoading) {
     return (
@@ -145,6 +147,17 @@ export function MealPlanDetailPage() {
                 </Text>
               </Box>
               <Group gap="xs">
+                <Tooltip label="Copy meal">
+                  <ActionIcon
+                    variant="light"
+                    color="green"
+                    size="lg"
+                    onClick={() => setCopyModalOpened(true)}
+                    aria-label="Copy meal"
+                  >
+                    <IconCopy size={18} />
+                  </ActionIcon>
+                </Tooltip>
                 <Tooltip label="Edit meal">
                   <ActionIcon
                     variant="light"
@@ -186,6 +199,9 @@ export function MealPlanDetailPage() {
                     </Text>
                   </Box>
                   <Group gap="xs">
+                    <Button variant="light" color="green" onClick={() => setCopyModalOpened(true)}>
+                      Copy
+                    </Button>
                     <Button variant="light" color="blue" onClick={handleEdit}>
                       Edit
                     </Button>
@@ -212,6 +228,13 @@ export function MealPlanDetailPage() {
           </Box>
         )}
       </Stack>
+
+      {/* Copy Modal */}
+      <CopyMealPlanModal
+        opened={copyModalOpened}
+        mealPlanId={mealPlan.id}
+        onClose={() => setCopyModalOpened(false)}
+      />
     </Container>
   )
 }

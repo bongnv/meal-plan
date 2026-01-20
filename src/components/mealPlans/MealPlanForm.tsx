@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   Autocomplete,
@@ -12,8 +12,10 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, zodResolver } from '@mantine/form'
+import { IconCopy } from '@tabler/icons-react'
 import { z } from 'zod'
 
+import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
@@ -52,6 +54,7 @@ export const MealPlanForm = ({
   initialMeal,
 }: MealPlanFormProps) => {
   const isEditing = !!initialMeal
+  const [copyModalOpened, setCopyModalOpened] = useState(false)
 
   const handleDelete = () => {
     if (initialMeal && onDelete) {
@@ -262,13 +265,25 @@ export const MealPlanForm = ({
             {...form.getInputProps('note')}
           />
 
-          <Group justify={isEditing ? "space-between" : "flex-end"} mt="md">
-            {isEditing && onDelete && (
-              <Button variant="subtle" color="red" onClick={handleDelete}>
-                Delete
-              </Button>
-            )}
-            <Group>
+          <Group justify="space-between" mt="md">
+            <Group gap="xs">
+              {isEditing && onDelete && (
+                <Button variant="subtle" color="red" onClick={handleDelete}>
+                  Delete
+                </Button>
+              )}
+            </Group>
+            <Group gap="xs">
+              {isEditing && initialMeal && (
+                <Button 
+                  variant="subtle" 
+                  color="green"
+                  leftSection={<IconCopy size={16} />}
+                  onClick={() => setCopyModalOpened(true)}
+                >
+                  Copy
+                </Button>
+              )}
               <Button variant="subtle" onClick={onClose}>
                 Cancel
               </Button>
@@ -277,6 +292,15 @@ export const MealPlanForm = ({
           </Group>
         </Stack>
       </form>
+
+      {/* Copy meal plan modal */}
+      {isEditing && initialMeal && (
+        <CopyMealPlanModal
+          opened={copyModalOpened}
+          onClose={() => setCopyModalOpened(false)}
+          mealPlanId={initialMeal.id}
+        />
+      )}
     </Modal>
   )
 }

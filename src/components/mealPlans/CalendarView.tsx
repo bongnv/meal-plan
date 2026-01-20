@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { ActionIcon, Badge, Box, Button, Card, Group, Modal, Paper, SegmentedControl, Stack, Text, Title } from '@mantine/core'
-import { IconChevronLeft, IconChevronRight, IconEdit, IconTrash } from '@tabler/icons-react'
+import { IconChevronLeft, IconChevronRight, IconCopy, IconEdit, IconTrash } from '@tabler/icons-react'
 
+import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { DroppableMealSlot } from './DroppableMealSlot'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
@@ -29,6 +30,8 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [deleteConfirmation, setDeleteConfirmation] = useState<MealPlan | null>(null)
+  const [copyModalOpened, setCopyModalOpened] = useState(false)
+  const [selectedMealForCopy, setSelectedMealForCopy] = useState<MealPlan | null>(null)
   const listScrollRef = useRef<HTMLDivElement>(null)
   const todayDateRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -352,33 +355,43 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                       
                       return (
                         <Card key={meal.id} shadow="sm" padding="md" withBorder>
-                          <Stack gap="sm">
-                            <Group justify="space-between" wrap="nowrap">
-                              <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
-                                <Text size="xl" style={{ flexShrink: 0 }}>
-                                  {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
-                                </Text>
-                                <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-                                  <Group gap="xs" wrap="wrap">
-                                    <Badge variant="light" size="sm">
-                                      {meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}
-                                    </Badge>
-                                  </Group>
-                                  <DroppableMealSlot
-                                    dateString={meal.date}
-                                    mealType={meal.mealType}
-                                    meal={meal}
-                                    getRecipeById={getRecipeById}
-                                    onAddMeal={onAddMeal}
-                                  />
-                                  {isRecipe && 'servings' in meal && (
-                                    <Text size="sm" c="dimmed">
-                                      {meal.servings} servings
-                                    </Text>
-                                  )}
-                                </Stack>
-                              </Group>
-                              <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                          <Group justify="space-between" wrap="nowrap" align="flex-start">
+                            <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
+                              <Text size="xl" style={{ flexShrink: 0 }}>
+                                {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
+                              </Text>
+                              <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+                                <Group gap="xs" wrap="wrap">
+                                  <Badge variant="light" size="sm">
+                                    {meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}
+                                  </Badge>
+                                </Group>
+                                <DroppableMealSlot
+                                  dateString={meal.date}
+                                  mealType={meal.mealType}
+                                  meal={meal}
+                                  getRecipeById={getRecipeById}
+                                  onAddMeal={onAddMeal}
+                                />
+                                {isRecipe && 'servings' in meal && (
+                                  <Text size="sm" c="dimmed">
+                                    {meal.servings} servings
+                                  </Text>
+                                )}
+                              </Stack>
+                            </Group>
+                            <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="green"
+                                  onClick={() => {
+                                    setSelectedMealForCopy(meal)
+                                    setCopyModalOpened(true)
+                                  }}
+                                  aria-label="Copy"
+                                >
+                                  <IconCopy size={18} />
+                                </ActionIcon>
                                 <ActionIcon
                                   variant="subtle"
                                   color="blue"
@@ -396,8 +409,7 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                                   <IconTrash size={18} />
                                 </ActionIcon>
                               </Group>
-                            </Group>
-                          </Stack>
+                          </Group>
                         </Card>
                       )
                     })}
@@ -429,6 +441,18 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
           </Group>
         </Stack>
       </Modal>
+
+      {/* Copy meal plan modal */}
+      {selectedMealForCopy && (
+        <CopyMealPlanModal
+          opened={copyModalOpened}
+          onClose={() => {
+            setCopyModalOpened(false)
+            setSelectedMealForCopy(null)
+          }}
+          mealPlanId={selectedMealForCopy.id}
+        />
+      )}
     </Stack>
   )
 }

@@ -51,6 +51,36 @@ export function isCustomMealPlan(mealPlan: MealPlan): mealPlan is CustomMealPlan
   return mealPlan.type !== 'recipe'
 }
 
+// Copy functionality types
+export type CopyFrequency = 'one-time' | 'weekly' | 'specific-weekday' | 'custom-interval'
+
+export type CopyEndCondition = 'until-date' | 'after-occurrences'
+
+export type ConflictResolution = 'replace' | 'skip' | 'cancel'
+
+export interface CopyOptions {
+  frequency: CopyFrequency
+  targetDate: Date // Initial target date (for one-time or start date for recurring)
+  weeklyInterval?: number // For weekly: every X weeks (default 1)
+  specificWeekday?: number // For specific-weekday: 0-6 (Sunday-Saturday)
+  customIntervalDays?: number // For custom-interval: every X days
+  endCondition?: CopyEndCondition // Required for recurring patterns
+  endDate?: Date // For until-date
+  occurrences?: number // For after-occurrences
+}
+
+export interface CopyPreviewItem {
+  date: string // ISO date string
+  hasConflict: boolean
+  existingMeal?: MealPlan // The conflicting meal if any
+}
+
+export interface CopyResult {
+  targetDates: string[] // ISO date strings
+  conflicts: CopyPreviewItem[]
+  preview: CopyPreviewItem[]
+}
+
 // Zod Schemas for validation
 
 export const MealTypeSchema = z.enum(['lunch', 'dinner'])

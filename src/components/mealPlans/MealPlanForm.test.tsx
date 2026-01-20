@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { MealPlanForm } from './MealPlanForm'
+import { MealPlanProvider } from '../../contexts/MealPlanContext'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -32,7 +33,13 @@ const mockRecipes: Recipe[] = [
 ]
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<MantineProvider>{component}</MantineProvider>)
+  return render(
+    <MantineProvider>
+      <MealPlanProvider>
+        {component}
+      </MealPlanProvider>
+    </MantineProvider>
+  )
 }
 
 describe('MealPlanForm', () => {

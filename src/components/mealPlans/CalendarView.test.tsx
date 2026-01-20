@@ -5,13 +5,16 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CalendarView } from './CalendarView'
+import { MealPlanProvider } from '../../contexts/MealPlanContext'
 
 import type { MealPlan } from '../../types/mealPlan'
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MantineProvider>
-      <MemoryRouter>{component}</MemoryRouter>
+      <MealPlanProvider>
+        <MemoryRouter>{component}</MemoryRouter>
+      </MealPlanProvider>
     </MantineProvider>
   )
 }

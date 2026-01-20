@@ -79,6 +79,8 @@ describe('MealPlansPage', () => {
     addMealPlan: mockAddMealPlan,
     updateMealPlan: mockUpdateMealPlan,
     deleteMealPlan: mockDeleteMealPlan,
+    copyMealPlan: vi.fn(),
+    generateCopyPreview: vi.fn(),
   }
 
   const mockRecipeContext = {

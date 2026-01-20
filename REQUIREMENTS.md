@@ -43,7 +43,7 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Recipe-based meals (from recipe library)
   - Custom entries (free-form text for dining out, takeout, etc.)
 - [ ] R2.7. Adjust servings for planned meals
-- [ ] R2.8. Copy/duplicate meal plans to other days
+- [x] R2.8. Copy/duplicate meal plans to other days
 
 ### R3. Grocery Planning
 - [ ] R3.1. Auto-generate shopping list from planned meals for a selected time period (next week, next 2 weeks, custom date range)

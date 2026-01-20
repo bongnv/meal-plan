@@ -23,6 +23,7 @@ export function DroppableMealSlot({
   onAddMeal,
 }: DroppableMealSlotProps) {
   const navigate = useNavigate()
+  
   const { isOver, setNodeRef } = useDroppable({
     id: `${dateString}-${mealType}`,
     data: {
@@ -57,7 +58,10 @@ export function DroppableMealSlot({
     if (isRecipeMealPlan(meal)) {
       const recipe = getRecipeById(meal.recipeId)
       return (
-        <Box onClick={handleMealClick} style={{ cursor: 'pointer', padding: '4px' }}>
+        <Box
+          onClick={handleMealClick}
+          style={{ cursor: 'pointer', padding: '4px' }}
+        >
           <Group gap={4} wrap="nowrap">
             <Text size="xs" style={{ flexShrink: 0 }}>🍽</Text>
             <Text
@@ -74,7 +78,10 @@ export function DroppableMealSlot({
 
     const typeInfo = getMealPlanTypeInfo(meal.type)
     return (
-      <Box onClick={handleMealClick} style={{ cursor: 'pointer', padding: '4px' }}>
+      <Box
+        onClick={handleMealClick}
+        style={{ cursor: 'pointer', padding: '4px' }}
+      >
         <Group gap={4} wrap="nowrap">
           {typeInfo && <Text size="xs" style={{ flexShrink: 0 }}>{typeInfo.icon}</Text>}
           <Text size="xs" lineClamp={1} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>

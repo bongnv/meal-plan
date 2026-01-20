@@ -354,15 +354,38 @@
   - Test servings display from meal plan vs recipe
   - Test edit/delete actions from detail page
 
-- [ ] I2.10. Implement meal plan copy functionality (TDD)
-  - Add "Copy to..." action to meal entries
-  - Modal or popover with date picker to select target date
-  - Option to copy single meal or entire day's meals
-  - Prevent overwriting existing meals (show warning/confirmation)
-  - Update MealPlanContext with copy logic
-  - Test copying to same date, future date, past date, with conflicts
+- [x] I2.10. Implement meal plan copy functionality with recurring patterns (TDD)
+  - Add "Copy to..." action to meal entries (calendar and list views)
+  - Modal/form with copy options:
+    - Target date selection
+    - Frequency options:
+      - One-time (single date)
+      - Weekly (every X weeks, e.g., every 1 week, every 2 weeks)
+      - Specific weekday (every Monday, Tuesday, etc.)
+      - Custom interval (every X days)
+    - End condition (for recurring):
+      - Until specific date
+      - After X occurrences
+    - Preview: Show list of all affected dates before confirming
+  - Conflict handling:
+    - Detect conflicts (dates/slots that already have meals)
+    - Options: Replace existing, Skip conflicting dates, or Cancel entire operation
+    - Show conflict summary before confirming
+  - Update MealPlanContext with copy logic:
+    - `copyMealPlan(id, targetDates)` - copy to multiple dates
+    - Handle batch creation with conflict resolution
+  - Test cases:
+    - One-time copy to single date
+    - Weekly recurring (every week for 4 weeks)
+    - Bi-weekly recurring (every 2 weeks)
+    - Specific weekday pattern (every Tuesday)
+    - Custom interval (every 3 days)
+    - End by date vs end after N occurrences
+    - Conflict detection and resolution
+    - Copy to past date, future date, same date
+    - Preview accuracy before execution
 
-- [ ] I2.11. Add servings adjustment for planned meals (TDD)
+- [x] I2.11. Add servings adjustment for planned meals (TDD)
   - Edit planned meal to adjust servings different from recipe default
   - Update meal plan entry with custom servings value
   - Display adjusted servings in calendar and list views
