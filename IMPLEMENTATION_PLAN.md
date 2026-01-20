@@ -9,7 +9,7 @@
   - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
   - Define Ingredient interface with name, quantity, unit fields
 
-- [ ] 2. Create LocalStorage service for recipes (TDD)
+- [x] 2. Create LocalStorage service for recipes (TDD)
   - Write unit tests first in `src/utils/storage/recipeStorage.test.ts`
   - Test cases: loadRecipes, saveRecipes, generateId, error handling
   - Implement `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`
