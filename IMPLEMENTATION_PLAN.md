@@ -16,7 +16,7 @@
   - Methods: `loadRecipes()` - load all recipes from localStorage, `saveRecipes(recipes)` - save entire collection
   - Note: React Context will manage in-memory CRUD operations for efficiency
 
-- [ ] 3. Set up Recipe Context (TDD)
+- [x] 3. Set up Recipe Context (TDD)
   - Write unit tests first in `src/contexts/RecipeContext.test.tsx`
   - Test cases: loadRecipes on mount, getRecipeById (in-memory), addRecipe, updateRecipe, deleteRecipe, state updates
   - Create `RecipeContext` in `src/contexts/RecipeContext.tsx`
