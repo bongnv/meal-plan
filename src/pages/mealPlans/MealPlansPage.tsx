@@ -161,6 +161,7 @@ export function MealPlansPage() {
           recipes={recipes}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
+          onDelete={(id) => deleteMealPlan(id)}
           opened={formState.opened}
           date={formState.date}
           mealType={formState.mealType}

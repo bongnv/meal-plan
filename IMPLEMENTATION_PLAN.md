@@ -323,7 +323,7 @@
   - Test edit action opens form with pre-filled data
   - Implementation: Small edit IconButton shown on hover/always visible in month view cells
 
-- [ ] I2.9.4. Add delete button to MealPlanForm (TDD)
+- [x] I2.9.4. Add delete button to MealPlanForm (TDD)
   - Add delete button to meal plan edit form (only shown when editing existing meal)
   - Button should be positioned in form footer (e.g., left side, with Cancel/Save on right)
   - Click shows confirmation modal before deleting

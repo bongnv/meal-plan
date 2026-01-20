@@ -1,14 +1,16 @@
-import { ActionIcon, Badge, Button, Container, Group, Stack, Text, Title, Loader, Box, Tooltip } from '@mantine/core'
-import { IconEdit, IconTrash } from '@tabler/icons-react'
-import { modals } from '@mantine/modals'
-import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 
-import { RecipeDetail } from '../../components/recipes/RecipeDetail'
+import { ActionIcon, Badge, Button, Container, Group, Stack, Text, Title, Loader, Box, Tooltip } from '@mantine/core'
+import { modals } from '@mantine/modals'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { useNavigate, useParams } from 'react-router-dom'
+
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
+import { RecipeDetail } from '../../components/recipes/RecipeDetail'
 import { useMealPlans } from '../../contexts/MealPlanContext'
 import { useRecipes } from '../../contexts/RecipeContext'
 import { isRecipeMealPlan, isCustomMealPlan, getMealPlanTypeInfo } from '../../types/mealPlan'
+
 import type { MealPlan } from '../../types/mealPlan'
 
 export function MealPlanDetailPage() {
@@ -112,6 +114,10 @@ export function MealPlanDetailPage() {
         opened={editModalOpened}
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
+        onDelete={(id) => {
+          deleteMealPlan(id)
+          navigate('/meal-plans')
+        }}
         date={mealPlan.date}
         mealType={mealPlan.mealType}
         initialMeal={mealPlan}

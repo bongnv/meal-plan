@@ -1,6 +1,6 @@
 import { ActionIcon, Button, Container, Group, Loader, Stack, Text, Title, Tooltip, Box } from '@mantine/core'
-import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { modals } from '@mantine/modals'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'

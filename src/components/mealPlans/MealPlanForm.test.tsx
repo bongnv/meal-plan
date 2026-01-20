@@ -39,6 +39,16 @@ describe('MealPlanForm', () => {
   const mockOnSubmit = vi.fn()
   const mockOnClose = vi.fn()
 
+  const mockRecipeMealPlan: MealPlan = {
+    id: 'meal-1',
+    date: '2026-01-20',
+    mealType: 'lunch',
+    type: 'recipe',
+    recipeId: '1',
+    servings: 4,
+    note: 'Test meal',
+  }
+
   const defaultProps = {
     recipes: mockRecipes,
     onSubmit: mockOnSubmit,
@@ -532,6 +542,76 @@ describe('MealPlanForm', () => {
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i })
       await user.click(cancelButton)
+
+      expect(mockOnSubmit).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Delete Button', () => {
+    it('should not show delete button in create mode', () => {
+      renderWithProviders(<MealPlanForm {...defaultProps} />)
+
+      const deleteButton = screen.queryByRole('button', { name: /delete/i })
+      expect(deleteButton).not.toBeInTheDocument()
+    })
+
+    it('should show delete button in edit mode', () => {
+      const editProps = {
+        ...defaultProps,
+        initialMeal: mockRecipeMealPlan,
+        onDelete: vi.fn(),
+      }
+      renderWithProviders(<MealPlanForm {...editProps} />)
+
+      const deleteButton = screen.getByRole('button', { name: /delete/i })
+      expect(deleteButton).toBeInTheDocument()
+    })
+
+    it('should call onDelete when delete button is clicked', async () => {
+      const mockOnDelete = vi.fn()
+      const editProps = {
+        ...defaultProps,
+        initialMeal: mockRecipeMealPlan,
+        onDelete: mockOnDelete,
+      }
+      const user = userEvent.setup()
+      renderWithProviders(<MealPlanForm {...editProps} />)
+
+      const deleteButton = screen.getByRole('button', { name: /delete/i })
+      await user.click(deleteButton)
+
+      expect(mockOnDelete).toHaveBeenCalledWith(mockRecipeMealPlan.id)
+      expect(mockOnDelete).toHaveBeenCalledTimes(1)
+    })
+
+    it('should close form after deletion', async () => {
+      const mockOnDelete = vi.fn()
+      const editProps = {
+        ...defaultProps,
+        initialMeal: mockRecipeMealPlan,
+        onDelete: mockOnDelete,
+      }
+      const user = userEvent.setup()
+      renderWithProviders(<MealPlanForm {...editProps} />)
+
+      const deleteButton = screen.getByRole('button', { name: /delete/i })
+      await user.click(deleteButton)
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not submit form when deleting', async () => {
+      const mockOnDelete = vi.fn()
+      const editProps = {
+        ...defaultProps,
+        initialMeal: mockRecipeMealPlan,
+        onDelete: mockOnDelete,
+      }
+      const user = userEvent.setup()
+      renderWithProviders(<MealPlanForm {...editProps} />)
+
+      const deleteButton = screen.getByRole('button', { name: /delete/i })
+      await user.click(deleteButton)
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
     })

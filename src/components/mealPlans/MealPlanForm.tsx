@@ -23,6 +23,7 @@ interface MealPlanFormProps {
   recipes: Recipe[]
   onSubmit: (mealPlan: Partial<MealPlan>) => void
   onClose: () => void
+  onDelete?: (id: string) => void
   opened: boolean
   date: string
   mealType: MealType
@@ -44,12 +45,20 @@ export const MealPlanForm = ({
   recipes,
   onSubmit,
   onClose,
+  onDelete,
   opened,
   date,
   mealType,
   initialMeal,
 }: MealPlanFormProps) => {
   const isEditing = !!initialMeal
+
+  const handleDelete = () => {
+    if (initialMeal && onDelete) {
+      onDelete(initialMeal.id)
+      onClose()
+    }
+  }
 
   // Prepare unified meal options: recipes + custom meal types
   const mealOptions = useMemo(() => {
@@ -253,11 +262,18 @@ export const MealPlanForm = ({
             {...form.getInputProps('note')}
           />
 
-          <Group justify="flex-end" mt="md">
-            <Button variant="subtle" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Meal</Button>
+          <Group justify={isEditing ? "space-between" : "flex-end"} mt="md">
+            {isEditing && onDelete && (
+              <Button variant="subtle" color="red" onClick={handleDelete}>
+                Delete
+              </Button>
+            )}
+            <Group>
+              <Button variant="subtle" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Meal</Button>
+            </Group>
           </Group>
         </Stack>
       </form>
