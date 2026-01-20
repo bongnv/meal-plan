@@ -95,23 +95,14 @@
   - Routing: `/recipes/:id` for detail view (added to App.tsx)
   - Card click navigation: clicking recipe card navigates to detail view
 
-- [ ] 8. Implement delete confirmation (TDD)
-  - Write component tests first in `src/components/common/ConfirmDialog.test.tsx`
-  - Test cases: render dialog, cancel action, confirm action
-  - Create `ConfirmDialog` component in `src/components/common/ConfirmDialog.tsx`
-  - Use Mantine Modal component
+- [x] 8. Implement delete confirmation for recipes and ingredients
+  - Use Mantine Modal component for confirmation dialogs
   - Show confirmation message before deleting recipe
+  - Show confirmation message before deleting ingredient
   - Handle cancel and confirm actions
   - Apply Mantine styling
   
-- [ ] 9. Complete Mantine Migration
-  - [ ] Migrate RecipeList, IngredientList, HomePage, RecipesPage to use Mantine components
-  - [ ] Migrate IngredientForm to use @mantine/form hook and components
-  - [ ] Replace NavigationBar with Mantine NavLink components
-  - [ ] Update component tests to use MantineProvider wrapper
-  - [ ] Quality checks (lint passing, build successful)
-  
-- [x] 10. Build Ingredient Library Management (TDD)
+- [x] 9. Build Ingredient Library Management (TDD)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
   - Write tests for IngredientContext
@@ -128,7 +119,7 @@
   - Create settings page at `/settings/ingredients`
   - Apply Mantine styling with responsive design
 
-- [x] 11. Integrate Recipe form with Ingredient Library (TDD)
+- [x] 10. Integrate Recipe form with Ingredient Library (TDD)
   - Update RecipeForm tests to handle ingredient autocomplete
   - Replace text input with Mantine Select/Autocomplete for ingredient selection
   - Connect RecipeForm to IngredientContext to fetch available ingredients

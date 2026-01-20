@@ -1,4 +1,5 @@
-import { Button, Container, Group, Title } from '@mantine/core'
+import { Button, Container, Group, Text, Title } from '@mantine/core'
+import { modals } from '@mantine/modals'
 import { useNavigate } from 'react-router-dom'
 
 import { RecipeList } from '../../components/recipes/RecipeList'
@@ -13,8 +14,22 @@ export const RecipesPage = () => {
   }
 
   const handleDelete = (id: string) => {
-    // TODO: Add confirmation dialog (step 8)
-    deleteRecipe(id)
+    const recipe = recipes.find((r) => r.id === id)
+    if (recipe) {
+      modals.openConfirmModal({
+        title: 'Delete Recipe',
+        centered: true,
+        children: (
+          <Text size="sm">
+            Are you sure you want to delete "{recipe.name}"? This action cannot
+            be undone.
+          </Text>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: () => deleteRecipe(id),
+      })
+    }
   }
 
   return (

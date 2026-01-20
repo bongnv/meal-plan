@@ -29,6 +29,7 @@ Client-side web application with no backend server. All data stored locally in b
 
 ### UI Components
 - **Mantine** for comprehensive component library with built-in styling and form handling
+  - Prefer native Mantine solutions (@mantine/modals, @mantine/notifications, etc.) over custom implementations
 - **dnd-kit** for drag-and-drop meal planning
 
 ### Data & Storage

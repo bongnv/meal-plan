@@ -1,6 +1,15 @@
 import { useState } from 'react'
 
-import { Button, Container, Group, Modal, Paper, Title } from '@mantine/core'
+import {
+  Button,
+  Container,
+  Group,
+  Modal,
+  Paper,
+  Text,
+  Title,
+} from '@mantine/core'
+import { modals } from '@mantine/modals'
 import { IconPlus } from '@tabler/icons-react'
 
 import { IngredientForm } from '../../components/ingredients/IngredientForm'
@@ -43,8 +52,21 @@ export function IngredientsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this ingredient?')) {
-      await deleteIngredient(id)
+    const ingredient = ingredients.find((i) => i.id === id)
+    if (ingredient) {
+      modals.openConfirmModal({
+        title: 'Delete Ingredient',
+        centered: true,
+        children: (
+          <Text size="sm">
+            Are you sure you want to delete "{ingredient.name}"? This action
+            cannot be undone.
+          </Text>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: async () => await deleteIngredient(id),
+      })
     }
   }
 
