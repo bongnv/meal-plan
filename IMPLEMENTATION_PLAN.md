@@ -142,3 +142,132 @@
   - Persist filter state in URL query parameters (optional)
   - Empty state when no recipes match filters
   - Test all filter combinations and edge cases
+## I2. Meal Planning (R2)
+
+### Implementation Steps
+
+- [x] I2.1. Define Meal Plan data types
+  - Create TypeScript interfaces for Meal Plan structure in `src/types/mealPlan.ts`
+  - Include fields: id, date, mealType ('lunch' | 'dinner'), type (MealPlanType), note (optional)
+  - MealPlanType: 'recipe' | 'dining-out' | 'takeout' | 'leftovers' | 'skipping' | 'other'
+  - For recipe-based meals: recipeId (recipe name fetched from RecipeContext), servings
+  - For custom meals (dining-out, takeout, leftovers, skipping, other): 
+    - customText (optional free-form string for additional details)
+    - Icon mapping: dining-out (🍽️), takeout (🥡), leftovers (♻️), skipping (⏭️), other (📝)
+
+- [ ] I2.2. Create LocalStorage service for meal plans (TDD)
+  - Write unit tests first in `src/utils/storage/mealPlanStorage.test.ts`
+  - Add Zod schemas for validation in `src/types/mealPlan.ts`
+  - Test cases: loadMealPlans, saveMealPlans, generateId, date-based queries, error handling
+  - Implement `MealPlanStorageService` in `src/utils/storage/mealPlanStorage.ts`
+  - Methods: `loadMealPlans()` - load all meal plans, `saveMealPlans(mealPlans)` - save entire collection
+  - Helper methods: `getMealPlansByDateRange(startDate, endDate)`, `getMealPlansByDate(date)`
+  - Note: React Context will manage in-memory CRUD operations for efficiency
+
+- [ ] I2.3. Set up Meal Plan Context (TDD)
+  - Write unit tests first in `src/contexts/MealPlanContext.test.tsx`
+  - Test cases: loadMealPlans on mount, getMealPlansByDate, addMealPlan, updateMealPlan, deleteMealPlan, copyMealPlan
+  - Create `MealPlanContext` in `src/contexts/MealPlanContext.tsx`
+  - Load meal plans once on mount using MealPlanStorageService
+  - Maintain in-memory state: mealPlans array, loading state, error state
+  - Actions operate on in-memory state and persist via MealPlanStorageService:
+    - `getMealPlansByDateRange(startDate, endDate)` - filter in memory
+    - `addMealPlan(mealPlan)` - add to state + persist
+    - `updateMealPlan(mealPlan)` - update state + persist (for adjusting servings, etc.)
+    - `deleteMealPlan(id)` - remove from state + persist
+    - `copyMealPlan(id, targetDate)` - duplicate to another date + persist
+  - Integrate with MealPlanStorageService for persistence
+
+- [ ] I2.4. Build Calendar view component (TDD)
+  - Write component tests first in `src/components/mealPlans/CalendarView.test.tsx`
+  - Test cases: render calendar, date navigation, view modes (week/month/quarter/year), date selection
+  - Create `CalendarView` component in `src/components/mealPlans/CalendarView.tsx`
+  - Use Mantine DatePicker or custom calendar grid for date selection
+  - Support flexible date range display modes:
+    - Week view (7 days)
+    - Month view (28-31 days)
+    - Quarter view (3 months)
+    - Year view (12 months, simplified)
+  - Navigation controls: Previous/Next period, Today button, date range selector
+  - Each calendar day cell shows:
+    - Date number
+    - Meal slots for lunch and dinner
+    - For recipe meals: recipe name (truncated)
+    - For custom meals: meal type icon + custom text (truncated)
+    - Empty slots show "+ Add Meal" affordance
+  - Highlight today's date
+  - Apply Mantine CSS styling with responsive grid layout
+  - Mobile: vertical scrolling list view instead of grid for better usability
+
+- [ ] I2.5. Build Meal Plan form/editor component (TDD)
+  - Write component tests first in `src/components/mealPlans/MealPlanForm.test.tsx`
+  - Test cases: render, meal type toggle, recipe selection, custom entry, servings adjustment, form submission
+  - Create `MealPlanForm` component in `src/components/mealPlans/MealPlanForm.tsx`
+  - Meal type toggle: Recipe-based vs Custom entry
+  - Recipe-based meal:
+    - Recipe selector with autocomplete (search recipes by name)
+    - Display recipe details (ingredients, cook time)
+    - Servings adjustment input (default to recipe's servings)
+  - Custom entry:
+    - Category selector with predefined options: Dining Out, Takeout, Leftovers, Skipping Meal, Other
+    - Show corresponding icon for each option
+    - Optional text input for additional details (e.g., restaurant name, notes)
+    - Text input placeholder adapts to selected category
+  - Meal slot selector: Lunch or Dinner
+  - Date selector (defaults to selected date from calendar)
+  - Form validation using Zod schema with zodResolver
+  - Apply Mantine styling with modal or drawer presentation
+  - Support both add and edit modes
+
+- [ ] I2.6. Implement drag-and-drop for meal planning (TDD)
+  - Write interaction tests for drag-and-drop
+  - Use `@dnd-kit/core` or `react-dnd` library for drag-and-drop
+  - Make recipes draggable from recipe list or sidebar
+  - Make calendar meal slots droppable targets
+  - Visual feedback during drag (ghost element, drop zone highlighting)
+  - Drop action creates new meal plan entry with recipe
+  - Support dragging existing meals to different dates/slots (move operation)
+  - Keyboard alternative for accessibility
+  - Touch gesture support for mobile devices
+  - Test drag from recipe list to calendar, drag between calendar slots
+
+- [ ] I2.7. Build Meal Plan list/timeline view (TDD)
+  - Write component tests first in `src/components/mealPlans/MealPlanList.test.tsx`
+  - Test cases: render meal plans, grouped by date, edit/delete actions, copy action
+  - Create `MealPlanList` component in `src/components/mealPlans/MealPlanList.tsx`
+  - Alternative view to calendar: linear timeline of planned meals
+  - Group meals by date with date headers
+  - Each meal entry shows:
+    - Meal type icon (🥗 lunch, 🍽️ dinner)
+    - Recipe name (with link to recipe detail) or custom meal type icon + text
+    - Servings count (for recipe meals)
+    - Action buttons: Edit, Delete, Copy to another date
+  - Filter/sort options: Show future meals only, show all, sort by date
+  - Apply Mantine styling with responsive card/list layout
+  - Empty state: "No meals planned yet" with CTA to add first meal
+
+- [ ] I2.8. Create Meal Planning page (TDD)
+  - Write page tests in `src/pages/mealPlans/MealPlansPage.test.tsx`
+  - Create `MealPlansPage` in `src/pages/mealPlans/MealPlansPage.tsx`
+  - Page layout with view switcher: Calendar view or List view (tabs/toggle)
+  - Integrate CalendarView and MealPlanList components
+  - Add floating action button or header button to create new meal plan
+  - Connect to MealPlanContext for data
+  - Apply Mantine layout and responsive design
+  - Routing: `/meal-plans` for main page
+  - Add navigation link to Meal Plans in main navigation
+
+- [ ] I2.9. Implement meal plan copy functionality (TDD)
+  - Add "Copy to..." action to meal entries
+  - Modal or popover with date picker to select target date
+  - Option to copy single meal or entire day's meals
+  - Prevent overwriting existing meals (show warning/confirmation)
+  - Update MealPlanContext with copy logic
+  - Test copying to same date, future date, past date, with conflicts
+
+- [ ] I2.10. Add servings adjustment for planned meals (TDD)
+  - Edit planned meal to adjust servings different from recipe default
+  - Update meal plan entry with custom servings value
+  - Display adjusted servings in calendar and list views
+  - Ensure grocery list generation (future) uses adjusted servings
+  - Test servings increase, decrease, fractional values

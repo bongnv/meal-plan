@@ -38,14 +38,12 @@ A client-side web application for managing recipes, planning meals, and organizi
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead
 - [ ] R2.2. Calendar view with flexible date range display
 - [ ] R2.3. Drag-and-drop recipes onto specific days/meals
-- [ ] R2.4. Multiple meal slots per day (breakfast, lunch, dinner, snacks)
-- [ ] R2.5. Meal plans can be saved and reused for future planning periods
+- [ ] R2.4. Multiple meal slots per day (lunch, dinner)
 - [ ] R2.6. Support two meal entry types:
   - Recipe-based meals (from recipe library)
   - Custom entries (free-form text for dining out, takeout, etc.)
 - [ ] R2.7. Adjust servings for planned meals
 - [ ] R2.8. Copy/duplicate meal plans to other days
-- [ ] R2.9. View nutritional summaries (if recipe data includes it)
 
 ### R3. Grocery Planning
 - [ ] R3.1. Auto-generate shopping list from planned meals for a selected time period (next week, next 2 weeks, custom date range)
