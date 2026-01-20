@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
 import { IngredientProvider } from './contexts/IngredientContext'
+import { MealPlanProvider } from './contexts/MealPlanContext'
 import { RecipeProvider } from './contexts/RecipeContext'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <IngredientProvider>
             <RecipeProvider>
-              <App />
+              <MealPlanProvider>
+                <App />
+              </MealPlanProvider>
             </RecipeProvider>
           </IngredientProvider>
         </BrowserRouter>

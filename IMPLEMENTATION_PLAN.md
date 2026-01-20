@@ -184,7 +184,7 @@
   - Update navigation to include Meal Plans link
   - Test navigation between meal plans and other pages
 
-- [ ] I2.5. Build Calendar view component (TDD)
+- [x] I2.5. Build Calendar view component (TDD)
   - Write component tests first in `src/components/mealPlans/CalendarView.test.tsx`
   - Test cases: render calendar, date navigation, view modes (week/month/quarter/year), date selection
   - Create `CalendarView` component in `src/components/mealPlans/CalendarView.tsx`
@@ -204,6 +204,10 @@
   - Highlight today's date
   - Apply Mantine CSS styling with responsive grid layout
   - Mobile: vertical scrolling list view instead of grid for better usability
+  - **Integrate CalendarView into MealPlansPage**:
+    - Update `src/pages/mealPlans/MealPlansPage.tsx` to render CalendarView
+    - Connect to MealPlanContext for data
+    - Show calendar view as default view
 
 - [ ] I2.6. Build Meal Plan form/editor component (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanForm.test.tsx`
@@ -215,10 +219,11 @@
     - Display recipe details (ingredients, cook time)
     - Servings adjustment input (default to recipe's servings)
   - Custom entry:
-    - Category selector with predefined options: Dining Out, Takeout, Leftovers, Skipping Meal, Other
-    - Show corresponding icon for each option
-    - Optional text input for additional details (e.g., restaurant name, notes)
-    - Text input placeholder adapts to selected category
+    - Autocomplete input with predefined options: Dining Out, Takeout, Leftovers, Skipping Meal
+    - Show corresponding icon for each predefined option
+    - If user types custom text not in predefined list, automatically set type to "other" with their text as customText
+    - Support free-text entry (e.g., "Pizza Night", "Birthday Dinner") which falls into "other" category
+    - Optional note field for all meal types (recipe and custom)
   - Meal slot selector: Lunch or Dinner
   - Date selector (defaults to selected date from calendar)
   - Form validation using Zod schema with zodResolver
@@ -251,17 +256,20 @@
   - Filter/sort options: Show future meals only, show all, sort by date
   - Apply Mantine styling with responsive card/list layout
   - Empty state: "No meals planned yet" with CTA to add first meal
+  - **Integrate MealPlanList into MealPlansPage**:
+    - Update `src/pages/mealPlans/MealPlansPage.tsx` to conditionally render list view
+    - Connect to MealPlanContext for data
 
-- [ ] I2.9. Create Meal Planning page (TDD)
+- [ ] I2.9. Add view switcher and finalize Meal Planning page (TDD)
   - Write page tests in `src/pages/mealPlans/MealPlansPage.test.tsx`
-  - Create `MealPlansPage` in `src/pages/mealPlans/MealPlansPage.tsx`
-  - Page layout with view switcher: Calendar view or List view (tabs/toggle)
-  - Integrate CalendarView and MealPlanList components
+  - Test cases: view switching, calendar/list rendering, add meal button
+  - Add view switcher to MealPlansPage:
+    - Use Mantine SegmentedControl or Tabs for Calendar/List toggle
+    - Place in page header (top-right on desktop, below title on mobile)
+    - Persist view preference in component state or URL query params
   - Add floating action button or header button to create new meal plan
-  - Connect to MealPlanContext for data
-  - Apply Mantine layout and responsive design
-  - Routing: `/meal-plans` for main page
-  - Add navigation link to Meal Plans in main navigation
+  - Apply Mantine layout and responsive design polish
+  - Test switching between views, navigation, and creating meals
 
 - [ ] I2.10. Implement meal plan copy functionality (TDD)
   - Add "Copy to..." action to meal entries

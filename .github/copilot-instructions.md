@@ -17,6 +17,7 @@
 - When a feature is planned in IMPLEMENTATION_PLAN.md, mark the corresponding checkbox in REQUIREMENTS.md as completed
 - Break down features into numbered, actionable implementation steps
 - Each implementation step should have a checkbox to track completion
+- When building UI components (views, pages, forms), integrate them into their parent pages/views immediately upon completion, rather than waiting until all components are built.
 
 ## Decision Making
 - When multiple approaches are possible, present options to the user
