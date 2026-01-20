@@ -7,6 +7,7 @@ import {
 } from 'react'
 
 import { RecipeStorageService } from '../utils/storage/recipeStorage'
+import { generateId } from '../utils/idGenerator'
 
 import type { Recipe } from '../types/recipe'
 
@@ -51,7 +52,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     try {
       const newRecipe: Recipe = {
         ...recipe,
-        id: storageService.generateId(),
+        id: generateId(),
       }
       const updatedRecipes = [...recipes, newRecipe]
       setRecipes(updatedRecipes)

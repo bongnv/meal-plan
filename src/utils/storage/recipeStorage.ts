@@ -10,16 +10,6 @@ const STORAGE_KEY = 'recipes'
  */
 export class RecipeStorageService {
   /**
-   * Generate a unique ID for a recipe
-   * Format: timestamp-random
-   */
-  generateId(): string {
-    const timestamp = Date.now()
-    const random = Math.random().toString(36).substring(2, 9)
-    return `${timestamp}-${random}`
-  }
-
-  /**
    * Load all recipes from localStorage
    * Returns empty array if no recipes found or on error
    * Validates data with Zod schema

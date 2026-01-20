@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
 import { RecipeStorageService } from './recipeStorage'
+import { generateId } from '../idGenerator'
 
 import type { Recipe } from '../../types/recipe'
 
@@ -20,8 +21,8 @@ describe('RecipeStorageService', () => {
 
   describe('generateId', () => {
     it('should generate a unique ID', () => {
-      const id1 = service.generateId()
-      const id2 = service.generateId()
+      const id1 = generateId()
+      const id2 = generateId()
 
       expect(id1).toBeTruthy()
       expect(id2).toBeTruthy()
@@ -29,7 +30,7 @@ describe('RecipeStorageService', () => {
     })
 
     it('should generate IDs in the format of timestamp-random', () => {
-      const id = service.generateId()
+      const id = generateId()
       expect(id).toMatch(/^\d+-[a-z0-9]+$/)
     })
   })

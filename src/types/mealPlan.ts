@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export type MealType = 'lunch' | 'dinner'
 
 export type MealPlanType = 'recipe' | 'dining-out' | 'takeout' | 'leftovers' | 'skipping' | 'other'
@@ -48,3 +50,33 @@ export function isRecipeMealPlan(mealPlan: MealPlan): mealPlan is RecipeMealPlan
 export function isCustomMealPlan(mealPlan: MealPlan): mealPlan is CustomMealPlan {
   return mealPlan.type !== 'recipe'
 }
+
+// Zod Schemas for validation
+
+export const MealTypeSchema = z.enum(['lunch', 'dinner'])
+
+export const MealPlanTypeSchema = z.enum(['recipe', 'dining-out', 'takeout', 'leftovers', 'skipping', 'other'])
+
+const BaseMealPlanSchema = z.object({
+  id: z.string(),
+  date: z.string(), // ISO date string (YYYY-MM-DD)
+  mealType: MealTypeSchema,
+  type: MealPlanTypeSchema,
+  note: z.string().optional(),
+})
+
+export const RecipeMealPlanSchema = BaseMealPlanSchema.extend({
+  type: z.literal('recipe'),
+  recipeId: z.string(),
+  servings: z.number().positive(),
+})
+
+export const CustomMealPlanSchema = BaseMealPlanSchema.extend({
+  type: z.enum(['dining-out', 'takeout', 'leftovers', 'skipping', 'other']),
+  customText: z.string().optional(),
+})
+
+export const MealPlanSchema = z.discriminatedUnion('type', [
+  RecipeMealPlanSchema,
+  CustomMealPlanSchema,
+])

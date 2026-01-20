@@ -3,17 +3,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { RecipeProvider, useRecipes } from './RecipeContext'
 import { RecipeStorageService } from '../utils/storage/recipeStorage'
+import * as idGenerator from '../utils/idGenerator'
 
 import type { Recipe } from '../types/recipe'
 
-// Mock the storage service
+// Mock the storage service and ID generator
 vi.mock('../utils/storage/recipeStorage')
+vi.mock('../utils/idGenerator')
 
 describe('RecipeContext', () => {
   let mockStorageService: {
     loadRecipes: ReturnType<typeof vi.fn>
     saveRecipes: ReturnType<typeof vi.fn>
-    generateId: ReturnType<typeof vi.fn>
   }
 
   const mockRecipes: Recipe[] = [
@@ -43,12 +44,13 @@ describe('RecipeContext', () => {
     mockStorageService = {
       loadRecipes: vi.fn().mockReturnValue(mockRecipes),
       saveRecipes: vi.fn(),
-      generateId: vi.fn().mockReturnValue('new-id-123'),
     }
 
     vi.mocked(RecipeStorageService).mockImplementation(
       () => mockStorageService as unknown as RecipeStorageService
     )
+
+    vi.mocked(idGenerator.generateId).mockReturnValue('new-id-123')
   })
 
   describe('Provider initialization', () => {

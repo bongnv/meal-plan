@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IngredientStorageService } from './IngredientStorage'
+import { generateId } from '../idGenerator'
 
 import type { Ingredient } from '../../types/ingredient'
 
@@ -14,8 +15,8 @@ describe('IngredientStorageService', () => {
 
   describe('generateId', () => {
     it('should generate unique IDs', () => {
-      const id1 = service.generateId()
-      const id2 = service.generateId()
+      const id1 = generateId()
+      const id2 = generateId()
 
       expect(id1).not.toBe(id2)
       expect(id1).toMatch(/^\d+-[a-z0-9]+$/)

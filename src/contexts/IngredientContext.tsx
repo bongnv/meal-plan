@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
 import { IngredientStorageService } from '../utils/storage/IngredientStorage'
+import { generateId } from '../utils/idGenerator'
 
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 
@@ -55,7 +56,7 @@ export function IngredientProvider({
     try {
       const newIngredient: Ingredient = {
         ...ingredientData,
-        id: storage.generateId(),
+        id: generateId(),
       }
       const updatedIngredients = [...ingredients, newIngredient]
       storage.saveIngredients(updatedIngredients)

@@ -3,14 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IngredientProvider, useIngredients } from './IngredientContext'
 import { IngredientStorageService } from '../utils/storage/IngredientStorage'
+import * as idGenerator from '../utils/idGenerator'
 
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 
-// Mock the storage service
+// Mock the storage service and ID generator
 vi.mock('../utils/storage/ingredientStorage')
+vi.mock('../utils/idGenerator')
 
 const mockIngredientStorageService = {
-  generateId: vi.fn(),
   loadIngredients: vi.fn(),
   saveIngredients: vi.fn(),
 }
@@ -21,7 +22,7 @@ describe('IngredientContext', () => {
     vi.mocked(IngredientStorageService).mockImplementation(
       () => mockIngredientStorageService as unknown as IngredientStorageService
     )
-    mockIngredientStorageService.generateId.mockReturnValue('test-id-123')
+    vi.mocked(idGenerator.generateId).mockReturnValue('test-id-123')
     mockIngredientStorageService.loadIngredients.mockReturnValue([])
     mockIngredientStorageService.saveIngredients.mockResolvedValue(undefined)
   })

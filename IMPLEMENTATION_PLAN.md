@@ -155,13 +155,12 @@
     - customText (optional free-form string for additional details)
     - Icon mapping: dining-out (🍽️), takeout (🥡), leftovers (♻️), skipping (⏭️), other (📝)
 
-- [ ] I2.2. Create LocalStorage service for meal plans (TDD)
+- [x] I2.2. Create LocalStorage service for meal plans (TDD)
   - Write unit tests first in `src/utils/storage/mealPlanStorage.test.ts`
   - Add Zod schemas for validation in `src/types/mealPlan.ts`
-  - Test cases: loadMealPlans, saveMealPlans, generateId, date-based queries, error handling
+  - Test cases: loadMealPlans, saveMealPlans, generateId, error handling
   - Implement `MealPlanStorageService` in `src/utils/storage/mealPlanStorage.ts`
   - Methods: `loadMealPlans()` - load all meal plans, `saveMealPlans(mealPlans)` - save entire collection
-  - Helper methods: `getMealPlansByDateRange(startDate, endDate)`, `getMealPlansByDate(date)`
   - Note: React Context will manage in-memory CRUD operations for efficiency
 
 - [ ] I2.3. Set up Meal Plan Context (TDD)

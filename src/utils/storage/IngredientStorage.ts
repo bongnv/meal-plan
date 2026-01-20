@@ -8,13 +8,6 @@ const STORAGE_KEY = 'ingredients'
 
 export class IngredientStorageService {
   /**
-   * Generate a unique ID for an ingredient
-   */
-  generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  /**
    * Load all ingredients from localStorage
    */
   loadIngredients(): Ingredient[] {
