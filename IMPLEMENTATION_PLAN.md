@@ -1,22 +1,22 @@
 # Meal Plan - Implementation Plan
 
-## 1.1 Create, Edit, and Delete Recipes
+## I1. Create, Edit, and Delete Recipes (R1.1)
 
 ### Implementation Steps
 
-- [x] 1. Define Recipe data types
+- [x] I1.I1.1. Define Recipe data types
   - Create TypeScript interfaces for Recipe structure in `src/types/recipe.ts`
   - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
   - Define Ingredient interface with name, quantity, unit fields
 
-- [x] 2. Create LocalStorage service for recipes (TDD)
+- [x] I1.2. Create LocalStorage service for recipes (TDD)
   - Write unit tests first in `src/utils/storage/recipeStorage.test.ts`
   - Test cases: loadRecipes, saveRecipes, generateId, error handling
   - Implement `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`
   - Methods: `loadRecipes()` - load all recipes from localStorage, `saveRecipes(recipes)` - save entire collection
   - Note: React Context will manage in-memory CRUD operations for efficiency
 
-- [x] 3. Set up Recipe Context (TDD)
+- [x] I1.I1.3. Set up Recipe Context (TDD)
   - Write unit tests first in `src/contexts/RecipeContext.test.tsx`
   - Test cases: loadRecipes on mount, getRecipeById (in-memory), addRecipe, updateRecipe, deleteRecipe, state updates
   - Create `RecipeContext` in `src/contexts/RecipeContext.tsx`
@@ -29,7 +29,7 @@
     - `deleteRecipe(id)` - remove from state + persist
   - Integrate with RecipeStorageService for persistence
 
-- [x] 4. Build Recipe form component (TDD)
+- [x] I1.I1.4. Build Recipe form component (TDD)
   - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
   - Test cases: render, create mode, edit mode, validation, form submission
   - Create `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`
@@ -46,7 +46,7 @@
   - Routing: `/recipes/new` for create, `/recipes/:id/edit` for edit
   - Note: Full ingredient autocomplete will be implemented after ingredient management is built
 
-- [x] 5. Build Recipe list component (TDD)
+- [x] I1.I1.5. Build Recipe list component (TDD)
   - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
   - Test cases: render recipes, empty state, card interactions, edit/delete buttons
   - Create `RecipeList` component in `src/components/recipes/RecipeList.tsx`
@@ -68,7 +68,7 @@
   - Future-ready: include placeholder area for recipe images
   - Routing: `/recipes` for list view, navigate to create/edit/detail routes
 
-- [x] 6. Implement Navigation Bar (TDD)
+- [x] I1.I1.6. Implement Navigation Bar (TDD)
   - Write tests for NavigationBar component
   - Create persistent navigation bar component with links:
     - Home/Dashboard (/)
@@ -83,7 +83,7 @@
   - Test navigation between all routes
   - Ensure accessibility (keyboard navigation, ARIA labels)
 
-- [x] 7. Build Recipe detail view (TDD)
+- [x] I1.I1.7. Build Recipe detail view (TDD)
   - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
   - Test cases: render recipe details, edit action, delete action
   - Create `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`
@@ -95,14 +95,14 @@
   - Routing: `/recipes/:id` for detail view (added to App.tsx)
   - Card click navigation: clicking recipe card navigates to detail view
 
-- [x] 8. Implement delete confirmation for recipes and ingredients
+- [x] I1.8. Implement delete confirmation for recipes and ingredients
   - Use Mantine Modal component for confirmation dialogs
   - Show confirmation message before deleting recipe
   - Show confirmation message before deleting ingredient
   - Handle cancel and confirm actions
   - Apply Mantine styling
   
-- [x] 9. Build Ingredient Library Management (TDD)
+- [x] I1.9. Build Ingredient Library Management (TDD) (R4.1)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
   - Write tests for IngredientContext
@@ -119,7 +119,7 @@
   - Create settings page at `/settings/ingredients`
   - Apply Mantine styling with responsive design
 
-- [x] 10. Integrate Recipe form with Ingredient Library (TDD)
+- [x] I1.10. Integrate Recipe form with Ingredient Library (TDD)
   - Update RecipeForm tests to handle ingredient autocomplete
   - Replace text input with Mantine Select/Autocomplete for ingredient selection
   - Connect RecipeForm to IngredientContext to fetch available ingredients
@@ -129,3 +129,16 @@
   - Show ingredient unit alongside the autocomplete
   - Update RecipeForm to map ingredient IDs to names when displaying
   - Test ingredient selection, search, and inline creation flows
+
+- [x] I1.11. Implement Recipe search and filter (TDD) (R1.3)
+  - Write tests for search and filter functionality
+  - Add search input to RecipesPage for filtering by recipe name
+  - Implement tag-based filtering with Mantine MultiSelect or Chip components
+  - Add ingredient-based search/filter capability
+  - Add time-based filtering with range selector or predefined options (e.g., "< 30 min", "30-60 min", "> 60 min")
+  - Create useRecipeFilter hook or utility function for filtering logic
+  - Support multiple simultaneous filters (name + tags + ingredients + totalTime)
+  - Show filter results count and "Clear filters" option
+  - Persist filter state in URL query parameters (optional)
+  - Empty state when no recipes match filters
+  - Test all filter combinations and edge cases
