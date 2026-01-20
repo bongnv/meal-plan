@@ -4,8 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { EditRecipePage } from './EditRecipePage'
-import * as RecipeContext from '../../contexts/RecipeContext'
 import * as IngredientContext from '../../contexts/IngredientContext'
+import * as RecipeContext from '../../contexts/RecipeContext'
 
 import type { Recipe } from '../../types/recipe'
 
@@ -41,7 +41,14 @@ const mockRecipeContext = {
 }
 
 const mockIngredientContext = {
-  ingredients: [{ id: '1', name: 'Tomato', category: 'Vegetables' as const, unit: 'piece' as const }],
+  ingredients: [
+    {
+      id: '1',
+      name: 'Tomato',
+      category: 'Vegetables' as const,
+      unit: 'piece' as const,
+    },
+  ],
   loading: false,
   error: null,
   getIngredientById: vi.fn(),
@@ -66,7 +73,9 @@ describe('EditRecipePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
     mockRecipeContext.getRecipeById.mockReturnValue(mockRecipe)
   })
 

@@ -46,7 +46,7 @@
   - Routing: `/recipes/new` for create, `/recipes/:id/edit` for edit
   - Note: Full ingredient autocomplete will be implemented after ingredient management is built
 
-- [ ] 5. Build Recipe list component (TDD)
+- [x] 5. Build Recipe list component (TDD)
   - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
   - Test cases: render recipes, empty state, card interactions, edit/delete buttons
   - Create `RecipeList` component in `src/components/recipes/RecipeList.tsx`

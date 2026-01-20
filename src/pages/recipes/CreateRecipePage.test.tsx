@@ -19,7 +19,12 @@ const mockRecipeContext = {
 
 const mockIngredientContext = {
   ingredients: [
-    { id: '1', name: 'Tomato', category: 'Vegetables' as const, unit: 'piece' as const },
+    {
+      id: '1',
+      name: 'Tomato',
+      category: 'Vegetables' as const,
+      unit: 'piece' as const,
+    },
   ],
   loading: false,
   error: null,
@@ -41,8 +46,12 @@ describe('CreateRecipePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
     vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
       mockIngredientContext
     )
