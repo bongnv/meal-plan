@@ -37,5 +37,4 @@
   - `npm run build` - Verify build succeeds
 - Fix any issues before marking the task as complete
 - For slow commands, export output to files in `tmp/` folder for later examination instead of re-running
-  - Example: `npm run build > tmp/build-output.log 2>&1`
-  - The `tmp/` folder is gitignored
+  - Example: `npm run test > tmp/test-output.log 2>&1`

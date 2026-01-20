@@ -29,20 +29,20 @@
     - `deleteRecipe(id)` - remove from state + persist
   - Integrate with RecipeStorageService for persistence
 
-- [ ] 4. Build Recipe form component (TDD)
+- [x] 4. Build Recipe form component (TDD)
   - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
   - Test cases: render, create mode, edit mode, validation, form submission
   - Create `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`
-  - Use Radix UI components for form elements
+  - Use Mantine UI components for form elements
   - Support both create and edit modes
   - Form fields: name, description, servings, totalTime, tags
   - Dynamic ingredient list with add/remove buttons:
-    - Use autocomplete/combobox to select from IngredientItem library
-    - Display ingredient name with quantity input
-    - Allow adding new ingredients on-the-fly (creates temporary ingredient)
-  - Dynamic instruction steps with add/remove/reorder
-  - Form validation using Zod schema
-  - Apply Tailwind CSS styling with responsive design
+    - Use simple text input for ingredient name (temporary until ingredient management is built)
+    - Quantity input with decimal support
+    - Add/remove ingredient buttons
+  - Dynamic instruction steps with add/remove buttons
+  - Form validation using Zod schema with zodResolver
+  - Apply Mantine styling with responsive design
   - Routing: `/recipes/new` for create, `/recipes/:id/edit` for edit
   - Note: Full ingredient autocomplete will be implemented after ingredient management is built
 
@@ -105,12 +105,11 @@
 - [ ] 9. Complete Mantine Migration
   - [ ] Migrate RecipeList, IngredientList, HomePage, RecipesPage to use Mantine components
   - [ ] Migrate IngredientForm to use @mantine/form hook and components
-  - [ ] Migrate RecipeForm to use @mantine/form hook and components
   - [ ] Replace NavigationBar with Mantine NavLink components
   - [ ] Update component tests to use MantineProvider wrapper
   - [ ] Quality checks (lint passing, build successful)
   
-- [ ] 10. Build Ingredient Library Management (TDD)
+- [x] 10. Build Ingredient Library Management (TDD)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
   - Write tests for IngredientContext
@@ -125,12 +124,15 @@
     - Touch-friendly tap targets for mobile cards
   - Build IngredientForm component (add/edit ingredient with name, category, unit)
   - Create settings page at `/settings/ingredients`
-  - Apply Tailwind CSS styling with responsive design
+  - Apply Mantine styling with responsive design
 
-- [ ] 10. Update Recipe form with ingredient autocomplete
-  - Install Radix UI Combobox/Select component (if not already installed)
-  - Update RecipeForm to use autocomplete for ingredient selection
-  - Connect to IngredientContext to fetch available ingredients
-  - Update tests to handle autocomplete interactions
-  - Allow creating new ingredients inline (optional)
-  - Display ingredient name instead of ID in the form
+- [ ] 11. Integrate Recipe form with Ingredient Library (TDD)
+  - Update RecipeForm tests to handle ingredient autocomplete
+  - Replace text input with Mantine Select/Autocomplete for ingredient selection
+  - Connect RecipeForm to IngredientContext to fetch available ingredients
+  - Display ingredient name with autocomplete dropdown
+  - Support creating new ingredients inline from the form
+  - Update form validation to ensure ingredient selection
+  - Show ingredient unit alongside the autocomplete
+  - Update RecipeForm to map ingredient IDs to names when displaying
+  - Test ingredient selection, search, and inline creation flows

@@ -24,6 +24,9 @@ beforeAll(() => {
     unobserve() {}
     disconnect() {}
   }
+
+  // Mock scrollIntoView for Mantine Combobox component
+  Element.prototype.scrollIntoView = () => {}
 })
 
 // Cleanup after each test

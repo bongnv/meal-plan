@@ -1,33 +1,6 @@
 import { z } from 'zod'
 
-/**
- * Predefined units for ingredients
- * Ensures consistency for grocery list consolidation
- */
-export const UNITS = [
-  'cup',
-  'tablespoon',
-  'teaspoon',
-  'gram',
-  'kilogram',
-  'milliliter',
-  'liter',
-  'piece',
-  'clove',
-  'slice',
-  'bunch',
-  'pinch',
-  'dash',
-  'can',
-  'package',
-] as const
-
-export type Unit = (typeof UNITS)[number]
-
-/**
- * Zod schema for Unit validation
- */
-export const UnitSchema = z.enum(UNITS)
+import { Unit, UnitSchema } from './ingredient'
 
 /**
  * Ingredient interface
@@ -95,3 +68,23 @@ export const RecipeSchema = z.object({
   tags: z.array(z.string()),
   imageUrl: z.string().optional(),
 })
+
+/**
+ * Zod schema for Recipe form validation (without id)
+ */
+export const RecipeFormSchema = z.object({
+  name: z.string().min(1, 'Recipe name is required'),
+  description: z.string().min(1, 'Description is required'),
+  ingredients: z
+    .array(RecipeIngredientSchema)
+    .min(1, 'At least one ingredient is required'),
+  instructions: z
+    .array(z.string().min(1))
+    .min(1, 'At least one instruction is required'),
+  servings: z.number().min(1, 'Servings must be at least 1'),
+  totalTime: z.number().min(1, 'Total time must be at least 1 minute'),
+  tags: z.array(z.string()),
+  imageUrl: z.string().optional(),
+})
+
+export type RecipeFormValues = z.infer<typeof RecipeFormSchema>
