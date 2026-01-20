@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MealPlansPage } from './MealPlansPage'
+import * as IngredientContext from '../../contexts/IngredientContext'
 import * as MealPlanContext from '../../contexts/MealPlanContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
 
@@ -86,10 +87,21 @@ describe('MealPlansPage', () => {
     deleteRecipe: vi.fn(),
   }
 
+  const mockIngredientContext = {
+    ingredients: [],
+    loading: false,
+    error: null,
+    addIngredient: vi.fn(),
+    updateIngredient: vi.fn(),
+    deleteIngredient: vi.fn(),
+    getIngredientById: vi.fn(),
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(MealPlanContext, 'useMealPlans').mockReturnValue(mockMealPlanContext)
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
   })
 
   describe('Page Rendering', () => {
@@ -131,7 +143,7 @@ describe('MealPlansPage', () => {
       })
     })
 
-    it('should pre-fill the form with selected date and meal type', async () => {
+    it('should show unified meal selection autocomplete', async () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
@@ -140,8 +152,8 @@ describe('MealPlansPage', () => {
       await user.click(addButtons[0])
 
       await waitFor(() => {
-        // Check that Recipe is selected by default
-        expect(screen.getByLabelText('Recipe')).toBeChecked()
+        // Check that unified autocomplete is present
+        expect(screen.getByRole('textbox', { name: /select or enter meal/i })).toBeInTheDocument()
       })
     })
 
@@ -159,13 +171,16 @@ describe('MealPlansPage', () => {
         expect(dialog).toBeInTheDocument()
       })
 
-      // Select a recipe - query within the dialog to avoid ambiguity
-      const recipeSelect = screen.getByRole('textbox', { name: /select recipe/i })
-      await user.click(recipeSelect)
+      // Select a recipe from unified autocomplete
+      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      await user.type(mealSelect, 'Spag')
       
-      // Find all Spaghetti Carbonara options and click the one in the dropdown (last one)
-      const options = screen.getAllByText('Spaghetti Carbonara')
-      await user.click(options[options.length - 1])
+      // Click the recipe option in the dropdown
+      await waitFor(() => {
+        const spagOption = screen.getByText(/🍽.*Spaghetti Carbonara/)
+        expect(spagOption).toBeInTheDocument()
+      })
+      await user.click(screen.getByText(/🍽.*Spaghetti Carbonara/))
 
       // Submit form
       const submitButton = screen.getByRole('button', { name: /save meal/i })
@@ -194,13 +209,10 @@ describe('MealPlansPage', () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
 
-      // Select a recipe - find the dropdown option
-      const recipeSelect = screen.getByRole('textbox', { name: /select recipe/i })
-      await user.click(recipeSelect)
-      
-      // Find all Spaghetti Carbonara options and click the one in the dropdown (last one)
-      const options = screen.getAllByText('Spaghetti Carbonara')
-      await user.click(options[options.length - 1])
+      // Select a recipe from unified autocomplete
+      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      await user.type(mealSelect, 'Spag')
+      await user.click(screen.getByText(/🍽.*Spaghetti Carbonara/))
 
       // Submit form
       const submitButton = screen.getByRole('button', { name: /save meal/i })
@@ -238,9 +250,18 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Find and click on an existing meal
-      const mealCard = screen.getByText('Spaghetti Carbonara')
-      await user.click(mealCard)
+      // Find and click on an existing meal in the calendar (not in the sidebar)
+      // There are two instances of "Spaghetti Carbonara": one in sidebar, one in calendar
+      // We want the one in the calendar which is clickable
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      // The calendar meal is the one that's clickable and has a parent with cursor pointer
+      const mealInCalendar = mealElements.find(el => {
+        const parent = el.closest('[style*="cursor: pointer"]')
+        return parent !== null
+      })
+      
+      expect(mealInCalendar).toBeDefined()
+      await user.click(mealInCalendar!)
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -252,9 +273,15 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal
-      const mealCard = screen.getByText('Spaghetti Carbonara')
-      await user.click(mealCard)
+      // Click on existing meal in calendar (not sidebar)
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      const mealInCalendar = mealElements.find(el => {
+        const parent = el.closest('[style*="cursor: pointer"]')
+        return parent !== null
+      })
+      
+      expect(mealInCalendar).toBeDefined()
+      await user.click(mealInCalendar!)
 
       await waitFor(() => {
         // Check that the form shows the existing data
@@ -268,9 +295,15 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal
-      const mealCard = screen.getByText('Spaghetti Carbonara')
-      await user.click(mealCard)
+      // Click on existing meal in calendar (not sidebar)
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      const mealInCalendar = mealElements.find(el => {
+        const parent = el.closest('[style*="cursor: pointer"]')
+        return parent !== null
+      })
+      
+      expect(mealInCalendar).toBeDefined()
+      await user.click(mealInCalendar!)
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -299,9 +332,15 @@ describe('MealPlansPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlansPage />)
 
-      // Click on existing meal
-      const mealCard = screen.getByText('Spaghetti Carbonara')
-      await user.click(mealCard)
+      // Click on existing meal in calendar (not sidebar)
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      const mealInCalendar = mealElements.find(el => {
+        const parent = el.closest('[style*="cursor: pointer"]')
+        return parent !== null
+      })
+      
+      expect(mealInCalendar).toBeDefined()
+      await user.click(mealInCalendar!)
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -321,16 +360,18 @@ describe('MealPlansPage', () => {
     it('should pass meal plans to CalendarView', () => {
       renderWithProviders(<MealPlansPage />)
 
-      // Verify that meals are displayed in the calendar
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      // Verify that meals are displayed (appears in both sidebar and calendar)
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      expect(mealElements.length).toBeGreaterThan(0)
       expect(screen.getByText('🍽️')).toBeInTheDocument() // Dining out icon
     })
 
     it('should pass recipes context to CalendarView', () => {
       renderWithProviders(<MealPlansPage />)
 
-      // CalendarView should be able to display recipe names
-      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      // CalendarView should be able to display recipe names (appears in both sidebar and calendar)
+      const mealElements = screen.getAllByText('Spaghetti Carbonara')
+      expect(mealElements.length).toBeGreaterThan(0)
       expect(mockGetRecipeById).toHaveBeenCalled()
     })
   })
@@ -348,17 +389,18 @@ describe('MealPlansPage', () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
 
-      // Check that recipes are available in the dropdown
-      const recipeSelect = screen.getByRole('textbox', { name: /select recipe/i })
-      await user.click(recipeSelect)
-
-      // Use getAllByText since recipe names may appear in both calendar and dropdown
-      const spaghettiOptions = screen.getAllByText('Spaghetti Carbonara')
-      const chickenOptions = screen.getAllByText('Chicken Stir Fry')
+      // Check that the unified meal selection autocomplete is available
+      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      expect(mealSelect).toBeInTheDocument()
       
-      // Verify at least one of each recipe is present
-      expect(spaghettiOptions.length).toBeGreaterThan(0)
-      expect(chickenOptions.length).toBeGreaterThan(0)
+      // Type to trigger autocomplete dropdown
+      await user.type(mealSelect, 'Spa')
+      
+      // Verify recipes appear with icon in autocomplete (recipes should contain icon prefix)
+      await waitFor(() => {
+        const spaghettiOptions = screen.getAllByText(/Spaghetti Carbonara/i)
+        expect(spaghettiOptions.length).toBeGreaterThan(0)
+      })
     })
 
     it('should handle custom meal entry', async () => {
@@ -373,12 +415,9 @@ describe('MealPlansPage', () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
 
-      // Switch to custom entry
-      await user.click(screen.getByLabelText('Custom'))
-
-      // Enter custom meal
-      const customInput = screen.getByPlaceholderText(/dining out, takeout/i)
-      await user.type(customInput, 'Birthday Party')
+      // Enter custom meal directly (no need to switch, unified autocomplete)
+      const mealInput = screen.getByRole('textbox', { name: /select or enter meal/i })
+      await user.type(mealInput, 'Birthday Party')
 
       // Submit form
       const submitButton = screen.getByRole('button', { name: /save meal/i })

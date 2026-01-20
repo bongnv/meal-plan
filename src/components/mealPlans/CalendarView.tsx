@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ActionIcon, Box, Button, Group, Paper, SegmentedControl, Stack, Text, Title } from '@mantine/core'
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 
-import { getMealPlanTypeInfo, isRecipeMealPlan } from '../../types/mealPlan'
+import { DroppableMealSlot } from './DroppableMealSlot'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -13,7 +13,7 @@ type ViewMode = 'week' | 'month'
 interface CalendarViewProps {
   mealPlans: MealPlan[]
   getRecipeById: (id: string) => Recipe | undefined
-  onAddMeal: (params: { date: string; mealType: MealType }) => void
+  onAddMeal: (params: { date: string }) => void
   onEditMeal: (mealPlan: MealPlan) => void
 }
 
@@ -117,55 +117,6 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal }
     setCurrentDate(new Date())
   }
 
-  // Render meal content
-  const renderMealContent = (meal: MealPlan | undefined, dateString: string, mealType: MealType) => {
-    if (!meal) {
-      return (
-        <Button
-          size="compact-xs"
-          variant="subtle"
-          color="gray"
-          onClick={() => onAddMeal({ date: dateString, mealType })}
-          fullWidth
-          styles={{ root: { height: 'auto', padding: '4px' } }}
-        >
-          + Add Meal
-        </Button>
-      )
-    }
-
-    if (isRecipeMealPlan(meal)) {
-      const recipe = getRecipeById(meal.recipeId)
-      return (
-        <Box
-          onClick={() => onEditMeal(meal)}
-          style={{ cursor: 'pointer', padding: '4px' }}
-        >
-          <Text size="xs" lineClamp={1}>
-            {recipe?.name || 'Unknown Recipe'}
-          </Text>
-        </Box>
-      )
-    }
-
-    const typeInfo = getMealPlanTypeInfo(meal.type)
-    return (
-      <Box
-        onClick={() => onEditMeal(meal)}
-        style={{ cursor: 'pointer', padding: '4px' }}
-      >
-        <Group gap={4}>
-          {typeInfo && <Text size="xs">{typeInfo.icon}</Text>}
-          {meal.customText && (
-            <Text size="xs" lineClamp={1}>
-              {meal.customText}
-            </Text>
-          )}
-        </Group>
-      </Box>
-    )
-  }
-
   // Format month/year header
   const getHeaderText = () => {
     const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' }
@@ -254,15 +205,40 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal }
                 </Text>
 
                 <Stack gap={4}>
-                  <Text size="xs" c="dimmed" fw={500}>
-                    Lunch
-                  </Text>
-                  {renderMealContent(lunchMeal, dateString, 'lunch')}
-
-                  <Text size="xs" c="dimmed" fw={500} mt="xs">
-                    Dinner
-                  </Text>
-                  {renderMealContent(dinnerMeal, dateString, 'dinner')}
+                  {/* Only show meals that exist, or show add button if both empty */}
+                  {!lunchMeal && !dinnerMeal ? (
+                    <DroppableMealSlot
+                      dateString={dateString}
+                      mealType="lunch"
+                      meal={undefined}
+                      getRecipeById={getRecipeById}
+                      onAddMeal={onAddMeal}
+                      onEditMeal={onEditMeal}
+                    />
+                  ) : (
+                    <>
+                      {lunchMeal && (
+                        <DroppableMealSlot
+                          dateString={dateString}
+                          mealType="lunch"
+                          meal={lunchMeal}
+                          getRecipeById={getRecipeById}
+                          onAddMeal={onAddMeal}
+                          onEditMeal={onEditMeal}
+                        />
+                      )}
+                      {dinnerMeal && (
+                        <DroppableMealSlot
+                          dateString={dateString}
+                          mealType="dinner"
+                          meal={dinnerMeal}
+                          getRecipeById={getRecipeById}
+                          onAddMeal={onAddMeal}
+                          onEditMeal={onEditMeal}
+                        />
+                      )}
+                    </>
+                  )}
                 </Stack>
               </Stack>
             </Paper>

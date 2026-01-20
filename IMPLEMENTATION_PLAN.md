@@ -234,10 +234,20 @@
     - Connect to MealPlanContext for add/update operations
     - Open form on calendar cell click with date and meal slot pre-selected
 
-- [ ] I2.7. Implement drag-and-drop for meal planning (TDD)
+- [x] I2.7. Implement drag-and-drop for meal planning with searchable recipe list (TDD)
   - Write interaction tests for drag-and-drop
   - Use `@dnd-kit/core` or `react-dnd` library for drag-and-drop
-  - Make recipes draggable from recipe list or sidebar
+  - **Build recipe sidebar/list with search and filtering**:
+    - Create draggable recipe list component in meal planning view
+    - Integrate `useRecipeFilter` hook for filtering recipes
+    - Add search input for filtering by recipe name
+    - Add tag filter using MultiSelect component
+    - Add ingredient filter using MultiSelect component
+    - Add time range filter with SegmentedControl
+    - Show filtered recipe count
+    - Display recipes as draggable cards with recipe name, tags, and time
+    - Collapsible sidebar on desktop, bottom sheet on mobile
+  - Make recipes draggable from the filtered recipe list
   - Make calendar meal slots droppable targets
   - Visual feedback during drag (ghost element, drop zone highlighting)
   - Drop action creates new meal plan entry with recipe
@@ -245,6 +255,7 @@
   - Keyboard alternative for accessibility
   - Touch gesture support for mobile devices
   - Test drag from recipe list to calendar, drag between calendar slots
+  - Test search/filter functionality works while dragging
 
 - [ ] I2.8. Build Meal Plan list/timeline view (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanList.test.tsx`

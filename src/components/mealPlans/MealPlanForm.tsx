@@ -7,7 +7,6 @@ import {
   Modal,
   NumberInput,
   SegmentedControl,
-  Select,
   Stack,
   Textarea,
 } from '@mantine/core'
@@ -15,7 +14,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { useForm, zodResolver } from '@mantine/form'
 import { z } from 'zod'
 
-import { CUSTOM_MEAL_TYPES, getMealPlanTypeInfo } from '../../types/mealPlan'
+import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -32,50 +31,12 @@ interface MealPlanFormProps {
 
 const mealPlanSchema = z
   .object({
-    entryType: z.enum(['recipe', 'custom']),
     date: z.string().min(1, 'Date is required'),
     mealType: z.enum(['lunch', 'dinner']),
-    recipeId: z.string().optional(),
+    mealSelection: z.string().min(1, 'Meal selection is required'),
     servings: z.number().optional(),
-    customMeal: z.string().optional(),
     note: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.entryType === 'recipe') {
-        return !!data.recipeId
-      }
-      return true
-    },
-    {
-      message: 'Recipe is required',
-      path: ['recipeId'],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.entryType === 'recipe') {
-        return data.servings !== undefined && data.servings > 0
-      }
-      return true
-    },
-    {
-      message: 'Servings is required',
-      path: ['servings'],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.entryType === 'custom') {
-        return !!data.customMeal && data.customMeal.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Custom meal is required',
-      path: ['customMeal'],
-    }
-  )
 
 type FormValues = z.infer<typeof mealPlanSchema>
 
@@ -90,31 +51,32 @@ export const MealPlanForm = ({
 }: MealPlanFormProps) => {
   const isEditing = !!initialMeal
 
-  // Prepare custom meal options
-  const customMealOptions = useMemo(() => {
-    return CUSTOM_MEAL_TYPES.filter((t) => t.value !== 'other').map((type) => ({
-      value: type.label,
-      label: `${type.icon} ${type.label}`,
+  // Prepare unified meal options: recipes + custom meal types
+  const mealOptions = useMemo(() => {
+    const recipeOpts = recipes.map((recipe) => ({
+      value: `recipe:${recipe.id}`,
+      label: `🍽 ${recipe.name}`,
+      recipeId: recipe.id,
+      type: 'recipe' as const,
     }))
-  }, [])
 
-  // Prepare recipe options
-  const recipeOptions = useMemo(() => {
-    return recipes.map((recipe) => ({
-      value: recipe.id,
-      label: recipe.name,
+    const customOpts = CUSTOM_MEAL_TYPES.filter((t) => t.value !== 'other').map((type) => ({
+      value: `custom:${type.value}`,
+      label: `${type.icon} ${type.label}`,
+      customType: type.value,
+      type: 'custom' as const,
     }))
+
+    return [...recipeOpts, ...customOpts]
   }, [recipes])
 
   const form = useForm<FormValues>({
     validate: zodResolver(mealPlanSchema),
     initialValues: {
-      entryType: 'recipe',
       date,
       mealType,
-      recipeId: '',
+      mealSelection: '',
       servings: undefined,
-      customMeal: '',
       note: '',
     },
   })
@@ -124,27 +86,39 @@ export const MealPlanForm = ({
     if (initialMeal) {
       const isRecipeMeal = initialMeal.type === 'recipe'
 
-      form.setValues({
-        entryType: isRecipeMeal ? 'recipe' : 'custom',
-        date: initialMeal.date,
-        mealType: initialMeal.mealType,
-        recipeId: isRecipeMeal ? initialMeal.recipeId : '',
-        servings: isRecipeMeal ? initialMeal.servings : undefined,
-        customMeal: isRecipeMeal
-          ? ''
-          : initialMeal.type === 'other'
-            ? initialMeal.customText || ''
-            : getMealPlanTypeInfo(initialMeal.type)?.label || '',
-        note: initialMeal.note || '',
-      })
+      if (isRecipeMeal) {
+        form.setValues({
+          date: initialMeal.date,
+          mealType: initialMeal.mealType,
+          mealSelection: `recipe:${initialMeal.recipeId}`,
+          servings: initialMeal.servings,
+          note: initialMeal.note || '',
+        })
+      } else if (initialMeal.type === 'other') {
+        // Free text custom meal
+        form.setValues({
+          date: initialMeal.date,
+          mealType: initialMeal.mealType,
+          mealSelection: initialMeal.customText || '',
+          servings: undefined,
+          note: initialMeal.note || '',
+        })
+      } else {
+        // Predefined custom type
+        form.setValues({
+          date: initialMeal.date,
+          mealType: initialMeal.mealType,
+          mealSelection: `custom:${initialMeal.type}`,
+          servings: undefined,
+          note: initialMeal.note || '',
+        })
+      }
     } else {
       form.setValues({
-        entryType: 'recipe',
         date,
         mealType,
-        recipeId: '',
+        mealSelection: '',
         servings: undefined,
-        customMeal: '',
         note: '',
       })
     }
@@ -153,67 +127,58 @@ export const MealPlanForm = ({
 
   // Auto-set servings when recipe is selected
   useEffect(() => {
-    if (form.values.recipeId) {
-      const recipe = recipes.find((r) => r.id === form.values.recipeId)
+    if (form.values.mealSelection.startsWith('recipe:')) {
+      const recipeId = form.values.mealSelection.replace('recipe:', '')
+      const recipe = recipes.find((r) => r.id === recipeId)
       if (recipe && form.values.servings === undefined) {
         form.setFieldValue('servings', recipe.servings)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.values.recipeId])
+  }, [form.values.mealSelection])
 
   const handleSubmit = (values: FormValues) => {
-    if (values.entryType === 'recipe') {
+    const selection = values.mealSelection.trim()
+
+    // Check if it's a recipe
+    if (selection.startsWith('recipe:')) {
+      const recipeId = selection.replace('recipe:', '')
       const mealPlan: Partial<MealPlan> = {
         ...(initialMeal?.id && { id: initialMeal.id }),
         date: values.date,
         mealType: values.mealType,
         type: 'recipe',
-        recipeId: values.recipeId!,
+        recipeId,
         servings: values.servings!,
         note: values.note || undefined,
       }
       onSubmit(mealPlan)
-    } else {
-      // Custom meal - check if it's a predefined option or free text
-      const customValue = values.customMeal!.trim()
-      
-      // Find predefined type by matching the label (with or without icon)
-      const predefinedType = CUSTOM_MEAL_TYPES.find(
-        (t) => {
-          // Match either "Label" or "🍽️ Label"
-          return customValue === t.label || customValue === `${t.icon} ${t.label}`
-        }
-      )
-
-      if (predefinedType && predefinedType.value !== 'other') {
-        // Use predefined type
-        const mealPlan: Partial<MealPlan> = {
-          ...(initialMeal?.id && { id: initialMeal.id }),
-          date: values.date,
-          mealType: values.mealType,
-          type: predefinedType.value as
-            | 'dining-out'
-            | 'takeout'
-            | 'leftovers'
-            | 'skipping',
-          note: values.note || undefined,
-        }
-        onSubmit(mealPlan)
-      } else {
-        // Free text - use "other" type
-        // Strip icon if present (e.g., "🍽️ Custom Text" -> "Custom Text")
-        const textOnly = customValue.replace(/^[\u{1F000}-\u{1F9FF}]\s*/u, '')
-        const mealPlan: Partial<MealPlan> = {
-          ...(initialMeal?.id && { id: initialMeal.id }),
-          date: values.date,
-          mealType: values.mealType,
-          type: 'other',
-          customText: textOnly,
-          note: values.note || undefined,
-        }
-        onSubmit(mealPlan)
+    }
+    // Check if it's a predefined custom type
+    else if (selection.startsWith('custom:')) {
+      const customType = selection.replace('custom:', '')
+      const mealPlan: Partial<MealPlan> = {
+        ...(initialMeal?.id && { id: initialMeal.id }),
+        date: values.date,
+        mealType: values.mealType,
+        type: customType as 'dining-out' | 'takeout' | 'leftovers' | 'skipping',
+        note: values.note || undefined,
       }
+      onSubmit(mealPlan)
+    }
+    // Otherwise it's free text
+    else {
+      // Strip icon if present (e.g., "🍽️ Custom Text" -> "Custom Text")
+      const textOnly = selection.replace(/^[\u{1F000}-\u{1F9FF}]\s*/u, '')
+      const mealPlan: Partial<MealPlan> = {
+        ...(initialMeal?.id && { id: initialMeal.id }),
+        date: values.date,
+        mealType: values.mealType,
+        type: 'other',
+        customText: textOnly,
+        note: values.note || undefined,
+      }
+      onSubmit(mealPlan)
     }
 
     onClose()
@@ -228,38 +193,32 @@ export const MealPlanForm = ({
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          <SegmentedControl
-            {...form.getInputProps('entryType')}
-            data={[
-              { label: 'Recipe', value: 'recipe' },
-              { label: 'Custom', value: 'custom' },
-            ]}
-            fullWidth
+          <Autocomplete
+            label="Select or Enter Meal"
+            placeholder="Search recipes, or enter Dining Out, Takeout, etc..."
+            data={mealOptions.map(opt => opt.label)}
+            {...form.getInputProps('mealSelection')}
+            onChange={(value) => {
+              form.setFieldValue('mealSelection', value)
+              // Find the matching option to set proper value format
+              const matchedOption = mealOptions.find(opt => opt.label === value)
+              if (matchedOption) {
+                form.setFieldValue('mealSelection', matchedOption.value)
+              }
+            }}
+            value={(() => {
+              const selection = form.values.mealSelection
+              const matchedOption = mealOptions.find(opt => opt.value === selection)
+              return matchedOption ? matchedOption.label : selection
+            })()}
           />
 
-          {form.values.entryType === 'recipe' ? (
-            <>
-              <Select
-                label="Select Recipe"
-                placeholder="Choose a recipe"
-                data={recipeOptions}
-                searchable
-                {...form.getInputProps('recipeId')}
-              />
-
-              <NumberInput
-                label="Servings"
-                placeholder="Number of servings"
-                min={1}
-                {...form.getInputProps('servings')}
-              />
-            </>
-          ) : (
-            <Autocomplete
-              label="Custom Meal"
-              placeholder="Dining Out, Takeout, Leftovers, or enter your own..."
-              data={customMealOptions}
-              {...form.getInputProps('customMeal')}
+          {form.values.mealSelection.startsWith('recipe:') && (
+            <NumberInput
+              label="Servings"
+              placeholder="Number of servings"
+              min={1}
+              {...form.getInputProps('servings')}
             />
           )}
 
