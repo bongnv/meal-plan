@@ -4,7 +4,7 @@
 
 ### Implementation Steps
 
-- [ ] 1. Define Recipe data types
+- [x] 1. Define Recipe data types
   - Create TypeScript interfaces for Recipe structure in `src/types/recipe.ts`
   - Include fields: id, name, description, ingredients, instructions, servings, prepTime, cookTime, tags, imageUrl (optional)
   - Define Ingredient interface with name, quantity, unit fields
