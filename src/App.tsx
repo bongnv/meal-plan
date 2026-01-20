@@ -1,8 +1,9 @@
 import { AppShell, Group, Title, Anchor, Burger, NavLink } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconChefHat, IconCarrot, IconSettings } from '@tabler/icons-react'
+import { IconChefHat, IconCarrot, IconSettings, IconCalendar } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
+import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
 import { EditRecipePage } from './pages/recipes/EditRecipePage'
 import { RecipeDetailPage } from './pages/recipes/RecipeDetailPage'
@@ -26,6 +27,7 @@ function App() {
 
   const navItems = [
     { path: '/recipes', label: 'Recipes', icon: IconChefHat },
+    { path: '/meal-plans', label: 'Meal Plans', icon: IconCalendar },
   ]
 
   const settingsItems = [
@@ -109,6 +111,7 @@ function App() {
           <Route path="/recipes/new" element={<CreateRecipePage />} />
           <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
           <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+          <Route path="/meal-plans" element={<MealPlansPage />} />
           <Route path="/settings/ingredients" element={<IngredientsPage />} />
         </Routes>
       </AppShell.Main>

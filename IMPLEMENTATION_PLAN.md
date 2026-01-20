@@ -175,7 +175,16 @@
     - `deleteMealPlan(id)` - remove from state + persist
   - Integrate with MealPlanStorageService for persistence
 
-- [ ] I2.4. Build Calendar view component (TDD)
+- [x] I2.4. Add routing for Meal Planning pages
+  - Add "Meal Plans" navigation item to App.tsx navbar with Calendar icon
+  - Create placeholder pages for meal planning views:
+    - `src/pages/mealPlans/MealPlansPage.tsx` - Main meal planning page at `/meal-plans`
+  - Add routes to App.tsx:
+    - `/meal-plans` - Main meal planning page (calendar/list view)
+  - Update navigation to include Meal Plans link
+  - Test navigation between meal plans and other pages
+
+- [ ] I2.5. Build Calendar view component (TDD)
   - Write component tests first in `src/components/mealPlans/CalendarView.test.tsx`
   - Test cases: render calendar, date navigation, view modes (week/month/quarter/year), date selection
   - Create `CalendarView` component in `src/components/mealPlans/CalendarView.tsx`
@@ -196,7 +205,7 @@
   - Apply Mantine CSS styling with responsive grid layout
   - Mobile: vertical scrolling list view instead of grid for better usability
 
-- [ ] I2.5. Build Meal Plan form/editor component (TDD)
+- [ ] I2.6. Build Meal Plan form/editor component (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanForm.test.tsx`
   - Test cases: render, meal type toggle, recipe selection, custom entry, servings adjustment, form submission
   - Create `MealPlanForm` component in `src/components/mealPlans/MealPlanForm.tsx`
@@ -216,7 +225,7 @@
   - Apply Mantine styling with modal or drawer presentation
   - Support both add and edit modes
 
-- [ ] I2.6. Implement drag-and-drop for meal planning (TDD)
+- [ ] I2.7. Implement drag-and-drop for meal planning (TDD)
   - Write interaction tests for drag-and-drop
   - Use `@dnd-kit/core` or `react-dnd` library for drag-and-drop
   - Make recipes draggable from recipe list or sidebar
@@ -228,7 +237,7 @@
   - Touch gesture support for mobile devices
   - Test drag from recipe list to calendar, drag between calendar slots
 
-- [ ] I2.7. Build Meal Plan list/timeline view (TDD)
+- [ ] I2.8. Build Meal Plan list/timeline view (TDD)
   - Write component tests first in `src/components/mealPlans/MealPlanList.test.tsx`
   - Test cases: render meal plans, grouped by date, edit/delete actions, copy action
   - Create `MealPlanList` component in `src/components/mealPlans/MealPlanList.tsx`
@@ -243,7 +252,7 @@
   - Apply Mantine styling with responsive card/list layout
   - Empty state: "No meals planned yet" with CTA to add first meal
 
-- [ ] I2.8. Create Meal Planning page (TDD)
+- [ ] I2.9. Create Meal Planning page (TDD)
   - Write page tests in `src/pages/mealPlans/MealPlansPage.test.tsx`
   - Create `MealPlansPage` in `src/pages/mealPlans/MealPlansPage.tsx`
   - Page layout with view switcher: Calendar view or List view (tabs/toggle)
@@ -254,7 +263,7 @@
   - Routing: `/meal-plans` for main page
   - Add navigation link to Meal Plans in main navigation
 
-- [ ] I2.9. Implement meal plan copy functionality (TDD)
+- [ ] I2.10. Implement meal plan copy functionality (TDD)
   - Add "Copy to..." action to meal entries
   - Modal or popover with date picker to select target date
   - Option to copy single meal or entire day's meals
@@ -262,7 +271,7 @@
   - Update MealPlanContext with copy logic
   - Test copying to same date, future date, past date, with conflicts
 
-- [ ] I2.10. Add servings adjustment for planned meals (TDD)
+- [ ] I2.11. Add servings adjustment for planned meals (TDD)
   - Edit planned meal to adjust servings different from recipe default
   - Update meal plan entry with custom servings value
   - Display adjusted servings in calendar and list views
