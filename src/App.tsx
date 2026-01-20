@@ -1,6 +1,6 @@
 import { AppShell, Group, Title, Anchor, Burger, NavLink } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconChefHat, IconCarrot } from '@tabler/icons-react'
+import { IconChefHat, IconCarrot, IconSettings } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
@@ -20,8 +20,15 @@ function App() {
     return location.pathname.startsWith(path)
   }
 
+  const isSettingsActive = () => {
+    return location.pathname.startsWith('/settings')
+  }
+
   const navItems = [
     { path: '/recipes', label: 'Recipes', icon: IconChefHat },
+  ]
+
+  const settingsItems = [
     { path: '/settings/ingredients', label: 'Ingredients', icon: IconCarrot },
   ]
 
@@ -66,6 +73,25 @@ function App() {
             onClick={close}
           />
         ))}
+        
+        <NavLink
+          label="Settings"
+          leftSection={<IconSettings size={20} stroke={1.5} />}
+          active={isSettingsActive()}
+          defaultOpened={isSettingsActive()}
+        >
+          {settingsItems.map(item => (
+            <NavLink
+              key={item.path}
+              component={Link}
+              to={item.path}
+              label={item.label}
+              leftSection={<item.icon size={20} stroke={1.5} />}
+              active={isActive(item.path)}
+              onClick={close}
+            />
+          ))}
+        </NavLink>
       </AppShell.Navbar>
 
       <AppShell.Main>
