@@ -1,5 +1,5 @@
-import { ICloudStorageProvider } from './ICloudStorageProvider';
 import { CloudProvider } from './CloudProvider';
+import { ICloudStorageProvider } from './ICloudStorageProvider';
 
 /**
  * Factory for managing cloud storage providers

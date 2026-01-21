@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
+import { CloudProvider } from './CloudProvider';
 import { CloudStorageFactory } from './CloudStorageFactory';
 import { ICloudStorageProvider } from './ICloudStorageProvider';
-import { CloudProvider } from './CloudProvider';
 
 // Mock provider implementation for testing
 class MockCloudProvider implements ICloudStorageProvider {
@@ -27,14 +28,14 @@ class MockCloudProvider implements ICloudStorageProvider {
     return this.accountInfo;
   }
 
-  async uploadFile(filename: string, data: string): Promise<void> {
+  async uploadFile(_filename: string, _data: string): Promise<void> {
     if (!this.connected) {
       throw new Error('Not connected');
     }
     // Mock upload - do nothing
   }
 
-  async downloadFile(filename: string): Promise<string> {
+  async downloadFile(_filename: string): Promise<string> {
     if (!this.connected) {
       throw new Error('Not connected');
     }

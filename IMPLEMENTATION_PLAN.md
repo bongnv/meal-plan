@@ -413,7 +413,7 @@
   - Document provider implementation requirements
   - Note: Each provider encapsulates its own authentication logic (MSAL for OneDrive, OAuth for Google Drive, etc.)
 
-- [ ] I3.2. Create OneDrive storage provider implementation (TDD)
+- [x] I3.2. Create OneDrive storage provider implementation (TDD)
   - Install MSAL.js library (`@azure/msal-browser`)
   - Create Azure AD app registration for the application
   - Write unit tests for OneDrive provider in `src/utils/storage/providers/OneDriveProvider.test.ts`
@@ -429,9 +429,9 @@
     - `lastModified` - timestamp for conflict detection
     - `version` - data schema version
   - Implement interface methods using Microsoft Graph API:
-    - `uploadFile()` - gzip compress JSON before upload
-    - `downloadFile()` - download and decompress gzipped JSON
-  - Use browser's native CompressionStream API or pako library for gzip
+    - `uploadFile()` - gzip compress JSON before upload using CompressionStream API
+    - `downloadFile()` - download and decompress gzipped JSON using DecompressionStream API
+  - Use browser's native CompressionStream/DecompressionStream API
   - Handle API errors, network failures, rate limiting
   - Support offline mode with queued operations
   - Register with CloudStorageFactory
@@ -577,6 +577,24 @@
   - Show confirmation after all conflicts resolved
   - Use Mantine Modal component
   - Test conflict resolution flow end-to-end
+
+- [ ] I3.7.1. Build session expired reconnect dialog (TDD)
+  - Write component tests in `src/components/sync/ReconnectDialog.test.tsx`
+  - Test cases: render dialog, reconnect action, cancel action, global positioning
+  - Create `ReconnectDialog` component in `src/components/sync/ReconnectDialog.tsx`
+  - **Global component**: Rendered at app level (App.tsx), not page-specific
+  - Display when sync operations fail with "Session expired" error from background auto-sync
+  - Show clear message: "Your OneDrive session has expired. Please reconnect to continue syncing."
+  - Two action buttons:
+    - "Reconnect" - disconnects current session and initiates new connection flow
+    - "Cancel" - dismisses dialog and disables auto-sync (can manually reconnect later from settings)
+  - Managed by SyncContext state (showReconnectDialog flag)
+  - Can appear on any page since background sync runs globally
+  - After successful reconnection, retry the failed sync operation
+  - Use Mantine Modal component with appropriate styling
+  - Test reconnection success and failure scenarios
+  - Test cancel behavior (should not show dialog again until user attempts sync)
+  - Test that dialog appears correctly regardless of current route
 
 - [ ] I3.8. Integrate automatic background sync (TDD)
   - Write integration tests for auto-sync behavior
