@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { RecipeProvider, useRecipes } from './RecipeContext'
 import * as idGenerator from '../utils/idGenerator'
-import { RecipeStorageService } from '../utils/storage/recipeStorage'
 
 import type { Recipe } from '../types/recipe'
 

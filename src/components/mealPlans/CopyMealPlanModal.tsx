@@ -117,7 +117,7 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
         <DatePickerInput
           label="Target Date"
           value={targetDate}
-          onChange={setTargetDate}
+          onChange={(value: string | null) => setTargetDate(value ? new Date(value) : null)}
           required
         />
 
@@ -193,7 +193,7 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
               <DatePickerInput
                 label="End Date"
                 value={endDate}
-                onChange={setEndDate}
+                onChange={(value: string | null) => setEndDate(value ? new Date(value) : null)}
                 minDate={targetDate || undefined}
                 required
               />

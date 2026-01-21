@@ -535,7 +535,7 @@
   - Write component tests in `src/components/sync/FileSelectionModal.test.tsx`
   - Test cases: render modal, list folders/files, create new file, select file, validation, shared files
   - Create `FileSelectionModal` component in `src/components/sync/FileSelectionModal.tsx`
-  - **Triggered when user clicks "Connect to OneDrive"** (shown immediately, before authentication)
+  - **Triggered when user clicks "Connect to OneDrive"**
   - **Goal**: Support both app folder (single-user) and regular folders (multi-user sharing)
   - Update `ICloudStorageProvider` interface:
     - Add `listFoldersAndFiles(folderPath?)` - unified method to list both folders and files
@@ -551,29 +551,20 @@
     - Filter and separate folders vs files (`.json.gz` files only)
     - Add sharing metadata: `isShared` (based on `item.shared` property)
     - Support navigation into subfolders
-  - Update `SyncContext`:
-    - Change `connectProvider` signature: `(provider: CloudProvider, fileInfo: FileInfo) => Promise<void>`
-    - Both parameters are **required**
-    - Remove `setSelectedFilename` action (not needed separately)
-    - Change state from `selectedFilename: string | null` to `selectedFile: FileInfo | null`
-    - Persist full `FileInfo` object to localStorage as JSON
-    - `syncNow()` uses `selectedFile.path` for upload/download operations
   - Modal UI structure:
     - **Header**: Breadcrumb navigation showing current path (e.g., "OneDrive > Documents > MealPlanner")
     - **Folder Browser Section**:
-      - Grid/list of folders in current location
+      - List of folders in current location
       - Each folder shows: name, shared badge if applicable
       - Click folder → navigate into it, updates breadcrumb
       - "Up" button to go to parent folder
     - **File List Section** (in current folder):
       - List of `.json.gz` files
-      - Two subsections: "Your Files" and "Shared With You"
       - Each file shows: filename, sharing badge (if isShared)
       - Radio button selection or clickable list items
       - "Select" button (enabled when file selected)
       - Empty state: "No files in this folder"
-    - **Create New File Section** (collapsed by default):
-      - Expandable "Create New File" accordion
+    - **Create Modal** (collapsed by default):
       - Text input for filename (auto-append `.json.gz` extension)
       - Default suggestion: `meal-plan-data.json.gz`
       - Validation: non-empty, no special characters except hyphen/underscore, unique in folder
@@ -584,18 +575,14 @@
   - Workflow:
     - User clicks "Connect to OneDrive" button
     - Modal opens and immediately authenticates (triggers provider auth flow)
-    - After auth success, loads folder/file list starting at root or last-used folder (from localStorage)
+    - After auth success, loads folder/file list starting at root
     - User browses folders to find existing file or creates new file
-    - User clicks "Select File" button
+    - User clicks "Select File"/"Create File" button
     - Modal calls `connectProvider(provider, fileInfo)` with both parameters
     - `connectProvider` stores connection state, account info, and file info in one atomic operation
     - Persist `FileInfo` to localStorage
     - Close modal
     - Trigger initial sync
-  - Default folder strategy:
-    - First time: Start at root, suggest creating `/MealPlanner` folder
-    - Show option to "Use App Folder" (single-user, more private)
-    - Remember last folder location in localStorage
   - Apply Mantine Modal, TextInput, Accordion, Button, Breadcrumbs components
   - Handle loading states: authentication, fetching folder/file list
   - Handle API errors gracefully (show error message, allow retry)

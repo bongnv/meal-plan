@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IngredientProvider, useIngredients } from './IngredientContext'
 import * as idGenerator from '../utils/idGenerator'
-import { IngredientStorageService } from '../utils/storage/IngredientStorage'
 
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 

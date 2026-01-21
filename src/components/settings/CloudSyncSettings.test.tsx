@@ -36,7 +36,7 @@ const mockReset = vi.fn()
 let mockSyncContextValue = {
   connectedProvider: null as CloudProvider | null,
   accountInfo: null as { name: string; email: string } | null,
-  syncStatus: 'idle' as const,
+  syncStatus: 'idle' as 'idle' | 'syncing' | 'error',
   lastSyncTime: null as number | null,
   selectedFile: null as FileInfo | null,
   conflicts: [],

@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { MealPlanProvider, useMealPlans } from './MealPlanContext'
 import * as idGenerator from '../utils/idGenerator'
-import { MealPlanStorageService } from '../utils/storage/mealPlanStorage'
 
 import type { MealPlan } from '../types/mealPlan'
 

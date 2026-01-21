@@ -239,14 +239,14 @@ export const MealPlanForm = ({
             placeholder="Select date"
             valueFormat="YYYY-MM-DD"
             value={form.values.date ? new Date(form.values.date) : null}
-            onChange={(value) => {
+            onChange={(value: string | null) => {
               if (value) {
-                const isoString = value.toISOString()
-                const formattedDate = isoString.split('T')[0]
-                form.setFieldValue('date', formattedDate)
+                form.setFieldValue('date', value)
+              } else {
+                form.setFieldValue('date', '')
               }
             }}
-            error={form.errors.date}
+            error={form.errors.date as string}
           />
 
           <SegmentedControl
