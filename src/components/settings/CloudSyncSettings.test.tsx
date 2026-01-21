@@ -1,43 +1,88 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
+import { MantineProvider } from '@mantine/core'
 import { CloudSyncSettings } from './CloudSyncSettings'
 import { SyncProvider } from '../../contexts/SyncContext'
+import { RecipeProvider } from '../../contexts/RecipeContext'
+import { MealPlanProvider } from '../../contexts/MealPlanContext'
+import { IngredientProvider } from '../../contexts/IngredientContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
+
+// Create AllProviders wrapper
+const AllProviders = ({ children }: { children: ReactNode }) => (
+  <MantineProvider>
+    <RecipeProvider>
+      <MealPlanProvider>
+        <IngredientProvider>
+          <SyncProvider>{children}</SyncProvider>
+        </IngredientProvider>
+      </MealPlanProvider>
+    </RecipeProvider>
+  </MantineProvider>
+)
 
 // Mock SyncContext
 const mockConnectProvider = vi.fn()
 const mockDisconnectProvider = vi.fn()
+const mockSyncNow = vi.fn()
+const mockImportFromRemote = vi.fn()
+const mockUploadToRemote = vi.fn()
+const mockResolveConflict = vi.fn()
 const mockReset = vi.fn()
+
+let mockSyncContextValue = {
+  connectedProvider: null as CloudProvider | null,
+  accountInfo: null as { name: string; email: string } | null,
+  syncStatus: 'idle' as const,
+  lastSyncTime: null as number | null,
+  selectedFile: null as FileInfo | null,
+  conflicts: [],
+  connectProvider: mockConnectProvider,
+  disconnectProvider: mockDisconnectProvider,
+  syncNow: mockSyncNow,
+  importFromRemote: mockImportFromRemote,
+  uploadToRemote: mockUploadToRemote,
+  resolveConflict: mockResolveConflict,
+  reset: mockReset,
+}
 
 vi.mock('../../contexts/SyncContext', async () => {
   const actual = await vi.importActual('../../contexts/SyncContext')
   return {
     ...actual,
-    useSyncContext: () => ({
-      connectedProvider: null,
-      accountInfo: null,
-      syncStatus: 'idle' as const,
-      lastSyncTime: null,
-      selectedFile: null,
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      reset: mockReset,
-    }),
+    useSyncContext: () => mockSyncContextValue,
   }
 })
 
 describe('CloudSyncSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset to disconnected state
+    mockSyncContextValue = {
+      connectedProvider: null,
+      accountInfo: null,
+      syncStatus: 'idle' as const,
+      lastSyncTime: null,
+      selectedFile: null,
+      conflicts: [],
+      connectProvider: mockConnectProvider,
+      disconnectProvider: mockDisconnectProvider,
+      syncNow: mockSyncNow,
+      importFromRemote: mockImportFromRemote,
+      uploadToRemote: mockUploadToRemote,
+      resolveConflict: mockResolveConflict,
+      reset: mockReset,
+    }
   })
 
   it('should render connect button when not connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByRole('button', { name: /connect to onedrive/i })).toBeInTheDocument()
@@ -45,9 +90,9 @@ describe('CloudSyncSettings', () => {
 
   it('should not show disconnect button when not connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.queryByRole('button', { name: /disconnect/i })).not.toBeInTheDocument()
@@ -63,25 +108,8 @@ describe('CloudSyncSettings - Connected State', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    
-    // Mock connected state
-    vi.mocked(vi.importActual('../../contexts/SyncContext')).then((actual: any) => {
-      actual.useSyncContext = () => ({
-        connectedProvider: CloudProvider.ONEDRIVE,
-        accountInfo: { name: 'John Doe', email: 'john@example.com' },
-        syncStatus: 'idle' as const,
-        lastSyncTime: Date.now() - 60000, // 1 minute ago
-        selectedFile: mockFileInfo,
-        connectProvider: mockConnectProvider,
-        disconnectProvider: mockDisconnectProvider,
-        reset: mockReset,
-      })
-    })
-  })
-
-  it('should display account information when connected', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
+    // Set to connected state
+    mockSyncContextValue = {
       connectedProvider: CloudProvider.ONEDRIVE,
       accountInfo: { name: 'John Doe', email: 'john@example.com' },
       syncStatus: 'idle' as const,
@@ -90,128 +118,62 @@ describe('CloudSyncSettings - Connected State', () => {
       conflicts: [],
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
+      syncNow: mockSyncNow,
+      importFromRemote: mockImportFromRemote,
+      uploadToRemote: mockUploadToRemote,
+      resolveConflict: mockResolveConflict,
       reset: mockReset,
-    })
+    }
+  })
 
+  it('should display account information when connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByText(/john doe/i)).toBeInTheDocument()
     expect(screen.getByText(/john@example\.com/i)).toBeInTheDocument()
   })
 
-  it('should display file information when connected', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should display file information when connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByText(/meal-plan-data\.json\.gz/i)).toBeInTheDocument()
   })
 
-  it('should display folder path when connected', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should display folder path when connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByText(/\/MealPlanner/i)).toBeInTheDocument()
   })
 
-  it('should show disconnect button when connected', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should show disconnect button when connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument()
   })
 
   it('should call disconnectProvider when disconnect button clicked', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
     const user = userEvent.setup()
     
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     const disconnectButton = screen.getByRole('button', { name: /disconnect/i })
@@ -222,57 +184,23 @@ describe('CloudSyncSettings - Connected State', () => {
     })
   })
 
-  it('should show change file button when connected', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should show change file button when connected', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByRole('button', { name: /change file/i })).toBeInTheDocument()
   })
 
   it('should call disconnectProvider when change file button clicked', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
     const user = userEvent.setup()
     
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     const changeFileButton = screen.getByRole('button', { name: /change file/i })
@@ -283,55 +211,23 @@ describe('CloudSyncSettings - Connected State', () => {
     })
   })
 
-  it('should show reset button', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should show reset button', () => {
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument()
   })
 
-  it('should disable controls when syncing', async () => {
-    const { useSyncContext } = await import('../../contexts/SyncContext')
-    vi.mocked(useSyncContext).mockReturnValue({
-      connectedProvider: CloudProvider.ONEDRIVE,
-      accountInfo: { name: 'John Doe', email: 'john@example.com' },
-      syncStatus: 'syncing' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectProvider: mockDisconnectProvider,
-      syncNow: vi.fn(),
-      importFromRemote: vi.fn(),
-      uploadToRemote: vi.fn(),
-      resolveConflict: vi.fn(),
-      reset: mockReset,
-    })
-
+  it('should disable controls when syncing', () => {
+    mockSyncContextValue.syncStatus = 'syncing'
+    
     render(
-      <SyncProvider>
+      <AllProviders>
         <CloudSyncSettings />
-      </SyncProvider>
+      </AllProviders>
     )
 
     expect(screen.getByRole('button', { name: /disconnect/i })).toBeDisabled()
@@ -339,3 +235,4 @@ describe('CloudSyncSettings - Connected State', () => {
     expect(screen.getByRole('button', { name: /reset/i })).toBeDisabled()
   })
 })
+

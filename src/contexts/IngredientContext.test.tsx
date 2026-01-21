@@ -8,20 +8,22 @@ import { IngredientStorageService } from '../utils/storage/IngredientStorage'
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 
 // Mock the storage service and ID generator
-vi.mock('../utils/storage/ingredientStorage')
-vi.mock('../utils/idGenerator')
-
 const mockIngredientStorageService = {
   loadIngredients: vi.fn(),
   saveIngredients: vi.fn(),
 }
 
+vi.mock('../utils/storage/IngredientStorage', () => ({
+  IngredientStorageService: vi.fn(function() { return mockIngredientStorageService }),
+}))
+
+vi.mock('../utils/idGenerator', () => ({
+  generateId: vi.fn(),
+}))
+
 describe('IngredientContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(IngredientStorageService).mockImplementation(
-      () => mockIngredientStorageService as unknown as IngredientStorageService
-    )
     vi.mocked(idGenerator.generateId).mockReturnValue('test-id-123')
     mockIngredientStorageService.loadIngredients.mockReturnValue([])
     mockIngredientStorageService.saveIngredients.mockResolvedValue(undefined)

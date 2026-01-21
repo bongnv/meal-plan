@@ -8,8 +8,17 @@ import { MealPlanStorageService } from '../utils/storage/mealPlanStorage'
 import type { MealPlan } from '../types/mealPlan'
 
 // Mock the storage service and ID generator
-vi.mock('../utils/storage/mealPlanStorage')
-vi.mock('../utils/idGenerator')
+const mockStorageServiceInstance = {
+  loadMealPlans: vi.fn(),
+  saveMealPlans: vi.fn(),
+}
+
+vi.mock('../utils/storage/mealPlanStorage', () => ({
+  MealPlanStorageService: vi.fn(function() { return mockStorageServiceInstance }),
+}))
+vi.mock('../utils/idGenerator', () => ({
+  generateId: vi.fn(),
+}))
 
 describe('MealPlanContext', () => {
   let mockStorageService: {
@@ -43,14 +52,9 @@ describe('MealPlanContext', () => {
   ]
 
   beforeEach(() => {
-    mockStorageService = {
-      loadMealPlans: vi.fn().mockReturnValue(mockMealPlans),
-      saveMealPlans: vi.fn(),
-    }
-
-    vi.mocked(MealPlanStorageService).mockImplementation(
-      () => mockStorageService as unknown as MealPlanStorageService
-    )
+    mockStorageService = mockStorageServiceInstance
+    mockStorageService.loadMealPlans = vi.fn().mockReturnValue(mockMealPlans)
+    mockStorageService.saveMealPlans = vi.fn()
 
     // Generate unique IDs for each call
     let idCounter = 0

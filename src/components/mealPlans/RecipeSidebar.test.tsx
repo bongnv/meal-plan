@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
@@ -144,17 +144,36 @@ describe('RecipeSidebar', () => {
     const user = userEvent.setup()
     render(<RecipeSidebar />)
 
+    // Initially all 3 recipes should be visible
+    expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+    expect(screen.getByText('Chicken Curry')).toBeInTheDocument()
+    expect(screen.getByText('Quick Salad')).toBeInTheDocument()
+
     const tagFilter = screen.getByPlaceholderText(/filter by tags/i)
+    
+    // Click to open dropdown
     await user.click(tagFilter)
+    
+    // Type to filter options
+    await user.type(tagFilter, 'quick')
+    
+    // Wait a bit for dropdown to update
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    
+    // Press down arrow and then enter to select
+    await user.keyboard('{ArrowDown}{Enter}')
 
-    // Select "quick" tag - use getAllByText and click the one in the dropdown
-    const quickOptions = screen.getAllByText('quick')
-    // The dropdown option should be different from the badges, click the last one (dropdown item)
-    await user.click(quickOptions[quickOptions.length - 1])
-
+    // Wait for filtering to complete - check that "Chicken Curry" disappears
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Chicken Curry')).not.toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+    
+    // Verify the other two are still there
     expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
     expect(screen.getByText('Quick Salad')).toBeInTheDocument()
-    expect(screen.queryByText('Chicken Curry')).not.toBeInTheDocument()
   })
 
   it('should display ingredient filter', () => {

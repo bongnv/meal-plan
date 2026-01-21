@@ -40,13 +40,14 @@ describe('OneDriveProvider', () => {
   beforeEach(() => {
     // Create mock MSAL instance
     mockMsalInstance = {
+      initialize: vi.fn().mockResolvedValue(undefined),
       loginPopup: vi.fn(),
       logoutPopup: vi.fn(),
-      getAllAccounts: vi.fn(),
+      getAllAccounts: vi.fn().mockReturnValue([]),
       acquireTokenSilent: vi.fn(),
     } as any;
 
-    (PublicClientApplication as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => mockMsalInstance);
+    (PublicClientApplication as unknown as ReturnType<typeof vi.fn>).mockImplementation(function() { return mockMsalInstance });
 
     // Create mock Graph Client
     const mockApi = vi.fn().mockReturnThis();
@@ -124,14 +125,14 @@ describe('OneDriveProvider', () => {
       await provider.connect();
 
       expect(mockMsalInstance.loginPopup).toHaveBeenCalledTimes(1);
-      expect(provider.isConnected()).toBe(true);
+      expect(await provider.isConnected()).toBe(true);
     });
 
     it('should throw error if authentication fails', async () => {
       mockMsalInstance.loginPopup.mockRejectedValue(new Error('Auth failed'));
 
       await expect(provider.connect()).rejects.toThrow('Auth failed');
-      expect(provider.isConnected()).toBe(false);
+      expect(await provider.isConnected()).toBe(false);
     });
   });
 
@@ -154,7 +155,7 @@ describe('OneDriveProvider', () => {
       await provider.disconnect();
 
       expect(mockMsalInstance.logoutPopup).toHaveBeenCalledTimes(1);
-      expect(provider.isConnected()).toBe(false);
+      expect(await provider.isConnected()).toBe(false);
     });
   });
 
@@ -176,7 +177,7 @@ describe('OneDriveProvider', () => {
       
       await provider.connect();
       
-      expect(provider.isConnected()).toBe(true);
+      expect(await provider.isConnected()).toBe(true);
     });
   });
 

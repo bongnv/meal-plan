@@ -8,8 +8,17 @@ import { RecipeStorageService } from '../utils/storage/recipeStorage'
 import type { Recipe } from '../types/recipe'
 
 // Mock the storage service and ID generator
-vi.mock('../utils/storage/recipeStorage')
-vi.mock('../utils/idGenerator')
+const mockStorageServiceInstance = {
+  loadRecipes: vi.fn(),
+  saveRecipes: vi.fn(),
+}
+
+vi.mock('../utils/storage/recipeStorage', () => ({
+  RecipeStorageService: vi.fn(function() { return mockStorageServiceInstance }),
+}))
+vi.mock('../utils/idGenerator', () => ({
+  generateId: vi.fn(),
+}))
 
 describe('RecipeContext', () => {
   let mockStorageService: {
@@ -41,14 +50,9 @@ describe('RecipeContext', () => {
   ]
 
   beforeEach(() => {
-    mockStorageService = {
-      loadRecipes: vi.fn().mockReturnValue(mockRecipes),
-      saveRecipes: vi.fn(),
-    }
-
-    vi.mocked(RecipeStorageService).mockImplementation(
-      () => mockStorageService as unknown as RecipeStorageService
-    )
+    mockStorageService = mockStorageServiceInstance
+    mockStorageService.loadRecipes = vi.fn().mockReturnValue(mockRecipes)
+    mockStorageService.saveRecipes = vi.fn()
 
     vi.mocked(idGenerator.generateId).mockReturnValue('new-id-123')
   })
