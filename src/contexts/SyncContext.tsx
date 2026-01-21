@@ -199,7 +199,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
    */
   const resolveConflict = async (
     conflictId: string,
-    resolution: 'local' | 'remote'
+    _resolution: 'local' | 'remote'
   ): Promise<void> => {
     // TODO: Implement conflict resolution logic in I3.4
     // For now, just remove the conflict from the list

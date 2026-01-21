@@ -40,6 +40,7 @@ describe('OneDriveProvider', () => {
   beforeEach(() => {
     // Create mock MSAL instance
     mockMsalInstance = {
+      initialize: vi.fn().mockResolvedValue(undefined),
       loginPopup: vi.fn(),
       logoutPopup: vi.fn(),
       getAllAccounts: vi.fn(),
@@ -159,8 +160,8 @@ describe('OneDriveProvider', () => {
   });
 
   describe('isConnected', () => {
-    it('should return false when not connected', () => {
-      expect(provider.isConnected()).toBe(false);
+    it('should return false when not connected', async () => {
+      expect(await provider.isConnected()).toBe(false);
     });
 
     it('should return true when connected', async () => {

@@ -1,6 +1,6 @@
 import { AppShell, Group, Title, Anchor, Burger, NavLink } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconChefHat, IconCarrot, IconSettings, IconCalendar } from '@tabler/icons-react'
+import { IconChefHat, IconCarrot, IconSettings, IconCalendar, IconCloud } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
@@ -10,6 +10,7 @@ import { EditRecipePage } from './pages/recipes/EditRecipePage'
 import { RecipeDetailPage } from './pages/recipes/RecipeDetailPage'
 import { RecipesPage } from './pages/recipes/RecipesPage'
 import { IngredientsPage } from './pages/settings/IngredientsPage'
+import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
@@ -33,6 +34,7 @@ function App() {
 
   const settingsItems = [
     { path: '/settings/ingredients', label: 'Ingredients', icon: IconCarrot },
+    { path: '/settings/cloud-sync', label: 'Cloud Sync', icon: IconCloud },
   ]
 
   return (
@@ -115,6 +117,7 @@ function App() {
           <Route path="/meal-plans" element={<MealPlansPage />} />
           <Route path="/meal-plans/:id" element={<MealPlanDetailPage />} />
           <Route path="/settings/ingredients" element={<IngredientsPage />} />
+          <Route path="/settings/cloud-sync" element={<CloudSyncSettings />} />
         </Routes>
       </AppShell.Main>
     </AppShell>

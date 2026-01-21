@@ -25,7 +25,7 @@ class MockCloudStorageProvider implements ICloudStorageProvider {
     this.connected = false
   }
 
-  isConnected(): boolean {
+  async isConnected(): Promise<boolean> {
     return this.connected
   }
 
@@ -121,7 +121,7 @@ describe('SyncContext', () => {
       })
 
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE)
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
       })
 
       expect(mockProvider.connectMock).toHaveBeenCalledOnce()
@@ -143,7 +143,7 @@ describe('SyncContext', () => {
 
       await expect(async () => {
         await act(async () => {
-          await result.current.connectProvider(CloudProvider.ONEDRIVE)
+          await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
         })
       }).rejects.toThrow('Connection failed')
 
@@ -160,7 +160,7 @@ describe('SyncContext', () => {
 
       await expect(async () => {
         await act(async () => {
-          await result.current.connectProvider(CloudProvider.ONEDRIVE)
+          await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
         })
       }).rejects.toThrow('Provider "onedrive" not found')
     })
@@ -174,7 +174,7 @@ describe('SyncContext', () => {
 
       // First connect
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE)
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
       })
 
       expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
@@ -229,7 +229,7 @@ describe('SyncContext', () => {
 
       // Connect first with filename
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, 'data.json.gz')
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: 'file-1', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       // Trigger sync
@@ -282,7 +282,7 @@ describe('SyncContext', () => {
 
       // Connect first with filename
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, 'data.json.gz')
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: 'file-1', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       // Trigger manual sync
@@ -290,7 +290,7 @@ describe('SyncContext', () => {
         await result.current.syncNow()
       })
 
-      expect(mockProvider.downloadFileMock).toHaveBeenCalledWith('data.json.gz')
+      expect(mockProvider.downloadFileMock).toHaveBeenCalledWith('/data.json.gz')
       expect(result.current.syncStatus).toBe('success')
       expect(result.current.lastSyncTime).not.toBeNull()
     })
@@ -304,7 +304,7 @@ describe('SyncContext', () => {
 
       // Connect first with filename
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, 'data.json.gz')
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: 'file-1', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       // Trigger sync and expect error
@@ -336,7 +336,7 @@ describe('SyncContext', () => {
 
       // Connect first with filename
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, 'data.json.gz')
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: 'file-1', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       // Then sync
@@ -369,7 +369,7 @@ describe('SyncContext', () => {
 
       // Connect and set some state
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE)
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
       })
 
       expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
@@ -399,7 +399,7 @@ describe('SyncContext', () => {
 
       // Connect to first provider
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE)
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
       })
 
       expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
@@ -412,7 +412,7 @@ describe('SyncContext', () => {
 
       // Connect to second provider
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.GOOGLE_DRIVE)
+        await result.current.connectProvider(CloudProvider.GOOGLE_DRIVE, { id: 'file-2', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       expect(result.current.connectedProvider).toBe(CloudProvider.GOOGLE_DRIVE)
@@ -433,7 +433,7 @@ describe('SyncContext', () => {
 
       // Connect with filename
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, 'data.json.gz')
+        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: 'file-1', name: 'data.json.gz', path: '/data.json.gz' })
       })
 
       // Try to sync while offline

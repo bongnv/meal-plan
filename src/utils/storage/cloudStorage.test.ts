@@ -17,8 +17,15 @@ class MockCloudProvider implements ICloudStorageProvider {
     this.connected = false;
   }
 
-  isConnected(): boolean {
+  async isConnected(): Promise<boolean> {
     return this.connected;
+  }
+
+  async listFiles(): Promise<Array<{ name: string; lastModified: Date; size: number }>> {
+    if (!this.connected) {
+      throw new Error('Not connected');
+    }
+    return [];
   }
 
   async getAccountInfo(): Promise<{ name: string; email: string }> {
@@ -54,20 +61,20 @@ describe('ICloudStorageProvider interface contract', () => {
   it('should implement connect method', async () => {
     expect(provider.connect).toBeDefined();
     await provider.connect();
-    expect(provider.isConnected()).toBe(true);
+    expect(await provider.isConnected()).toBe(true);
   });
 
   it('should implement disconnect method', async () => {
     await provider.connect();
-    expect(provider.isConnected()).toBe(true);
+    expect(await provider.isConnected()).toBe(true);
     
     await provider.disconnect();
-    expect(provider.isConnected()).toBe(false);
+    expect(await provider.isConnected()).toBe(false);
   });
 
-  it('should implement isConnected method', () => {
+  it('should implement isConnected method', async () => {
     expect(provider.isConnected).toBeDefined();
-    expect(provider.isConnected()).toBe(false);
+    expect(await provider.isConnected()).toBe(false);
   });
 
   it('should implement getAccountInfo method', async () => {

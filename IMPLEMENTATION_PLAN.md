@@ -594,7 +594,19 @@
     - Remember last folder location in localStorage
   - Apply Mantine Modal, TextInput, Accordion, Button, Breadcrumbs components
   - Handle loading states: authentication, fetching folder/file list
-  - Handle API errors gracefully (show error message, allow re - opens FileSelectionModal
+  - Handle API errors gracefully (show error message, allow retry)
+  - Test folder navigation, file selection, create file scenarios
+  - Test shared file detection and display
+  - Test authentication within modal before listing
+
+- [x] I3.5. Build cloud storage sync settings UI (TDD)
+  - Write component tests in `src/components/settings/CloudSyncSettings.test.tsx`
+  - Test cases: render, connect to provider, disconnect, account info display, file info display, change file, folder path display
+  - Create `CloudSyncSettings` component in `src/components/settings/CloudSyncSettings.tsx`
+  - Add to settings page (create new settings page or add to existing)
+  - UI elements:
+    - Provider connection:
+      - "Connect to OneDrive" button (only provider available) - opens FileSelectionModal
       - Future providers (Google Drive, Dropbox) will be added when implemented
     - When connected, show:
       - "Disconnect" button
@@ -603,24 +615,6 @@
       - **Selected file info**: `selectedFile.name`, last synced date
       - **Sharing status**: Badge showing "Shared" if `selectedFile.isShared` is true
       - **"Change File" button** - calls `disconnectProvider()` then reopens FileSelectionModal to switch files/folders
-    - Note: Auto-sync is enabled when connected
-    - "Reset" button (with confirmation dialog) - clears all data and disconnects
-  - Apply Mantine styling
-  - Disable controls when sync is in progress
-
-- [ ] I3.6. Build sync status indicator in header (TDD)
-  - Add to settings page (create new settings page or add to existing)
-  - UI elements:
-    - Provider connection:
-      - "Connect to OneDrive" button (only provider available)
-      - Future providers (Google Drive, Dropbox) will be added when implemented
-    - When connected, show:
-      - "Disconnect" button
-      - Connected account info (name, email)
-      - **Current folder path**: Display folder path (e.g., "/MealPlanner" or "App Folder")
-      - **Selected file info**: filename, last synced date, file size
-      - **Sharing status**: Badge showing "Shared" if file is shared
-      - **"Change File" button** - reopens FileSelectionModal to switch files/folders
     - Note: Auto-sync is enabled when connected
     - "Reset" button (with confirmation dialog) - clears all data and disconnects
   - Apply Mantine styling
