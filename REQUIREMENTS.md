@@ -60,9 +60,25 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Edit existing ingredients
   - Delete unused ingredients
   - Categories: produce, dairy, meat, pantry, frozen, bakery, other
-- [ ] R4.2. Data Management:
-  - Export all data (recipes, meal plans, ingredients)
-  - Import data from backup
-  - Clear all data with confirmation
+- [ ] R4.2. Data Management (OneDrive Sync):
+  - Microsoft account authentication using MSAL.js
+  - Enable/disable sync in settings
+    - Manual sync trigger (sync now button)
+    - Automatic background sync
+    - Sync status indicator (last synced time, sync in progress, errors)
+    - Conflict resolution:
+      - Auto-merge when possible (non-conflicting changes to different records)
+      - Show conflicts when local and OneDrive data differ for same records
+      - Manual resolution options: Keep local or Keep OneDrive
+    - Offline capability: queue changes for sync when online
+    - Reset and re-import: clear local data and re-import from OneDrive
 - [ ] R4.3. Application Settings:
   - Default servings for new recipes
+
+### R5. Welcome/Onboarding
+- [ ] R5.1. First-time user experience:
+  - Show welcome screen on first visit
+  - Initial setup options:
+    - Start fresh with empty data
+    - Load existing data from OneDrive (requires authentication)
+  - Skip welcome screen after initial setup complete

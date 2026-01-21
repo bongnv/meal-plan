@@ -391,3 +391,205 @@
   - Display adjusted servings in calendar and list views
   - Ensure grocery list generation (future) uses adjusted servings
   - Test servings increase, decrease, fractional values
+
+## I3. Cloud Storage Sync (R4.2)
+
+### Implementation Steps
+
+- [x] I3.1. Define cloud storage abstraction layer (TDD)
+  - Write interface tests in `src/utils/storage/cloudStorage.test.ts`
+  - Test cases: interface contract, provider registration, provider switching
+  - Create `ICloudStorageProvider` interface in `src/utils/storage/ICloudStorageProvider.ts`
+  - Interface methods:
+    - `connect()` - initiate provider-specific authentication flow
+    - `disconnect()` - disconnect app from provider (clear tokens/credentials)
+    - `isConnected()` - check if provider is connected
+    - `getAccountInfo()` - get user account info (name, email) for display in UI
+    - `uploadFile(filename, data)` - upload gzip-compressed JSON data to cloud
+    - `downloadFile(filename)` - download and decompress JSON data from cloud
+  - Create `CloudStorageFactory` for managing providers
+  - Support provider registration and selection
+  - Design for future providers: Google Drive, Dropbox, etc.
+  - Document provider implementation requirements
+  - Note: Each provider encapsulates its own authentication logic (MSAL for OneDrive, OAuth for Google Drive, etc.)
+
+- [ ] I3.2. Create OneDrive storage provider implementation (TDD)
+  - Install MSAL.js library (`@azure/msal-browser`)
+  - Create Azure AD app registration for the application
+  - Write unit tests for OneDrive provider in `src/utils/storage/providers/OneDriveProvider.test.ts`
+  - Test cases: upload data, download data, check for updates, interface compliance, error handling
+  - Implement `OneDriveProvider` in `src/utils/storage/providers/OneDriveProvider.ts`
+  - Implement `ICloudStorageProvider` interface
+  - Use Microsoft Graph API for OneDrive operations
+  - Store all data in single JSON file in OneDrive app folder (special app-specific folder)
+  - File structure: `data.json.gz` containing:
+    - `recipes` - array of all recipes
+    - `mealPlans` - array of all meal plans
+    - `ingredients` - array of all ingredients
+    - `lastModified` - timestamp for conflict detection
+    - `version` - data schema version
+  - Implement interface methods using Microsoft Graph API:
+    - `uploadFile()` - gzip compress JSON before upload
+    - `downloadFile()` - download and decompress gzipped JSON
+  - Use browser's native CompressionStream API or pako library for gzip
+  - Handle API errors, network failures, rate limiting
+  - Support offline mode with queued operations
+  - Register with CloudStorageFactory
+
+- [ ] I3.3. Create Sync Context for state management (TDD)
+  - Write unit tests for SyncContext in `src/contexts/SyncContext.test.tsx`
+  - Test cases: connect/disconnect provider, manual sync, auto sync, conflict detection, offline retry, provider switching
+  - Create `SyncContext` in `src/contexts/SyncContext.tsx`
+  - State management:
+    - `connectedProvider` - currently connected cloud storage provider ('onedrive' | 'googledrive' | 'dropbox' | null)
+    - `accountInfo` - connected account info (name, email) for UI display
+    - `syncStatus` - idle | syncing | success | error
+    - `lastSyncTime` - timestamp of last successful sync
+    - `conflicts` - array of detected conflicts
+  - Actions:
+    - `connectProvider(provider)` - connect to specified provider (initiates auth and enables auto-sync)
+    - `disconnectProvider()` - disconnect from current provider (disables auto-sync)
+    - `syncNow()` - trigger manual sync
+    - `resolveConflict(type, resolution)` - resolve conflict with 'local' or 'remote'
+    - `reset()` - clear local data and disconnect provider (shows welcome screen)
+  - Work with `ICloudStorageProvider` interface (provider-agnostic)
+  - Use CloudStorageFactory to get current provider
+  - Implement automatic background sync (triggers after local data changes when connected)
+  - Handle offline detection: retry sync when back online
+
+- [ ] I3.4. Implement sync logic with record-level three-way merge (TDD)
+  - Write unit tests for sync logic in `src/utils/sync/syncManager.test.ts`
+  - Test cases: initial sync, remote-only changes (create/delete/update), local-only changes (create/delete/update), non-conflicting changes on both sides (different records), conflicting changes (same record updated on both sides), conflict resolution
+  - Create `SyncManager` in `src/utils/sync/syncManager.ts`
+  - Work with `ICloudStorageProvider` interface (no provider-specific code)
+  - Store base version (full snapshot of last synced state) in localStorage as `syncBase`:
+    - Structure: `{ recipes: Recipe[], mealPlans: MealPlan[], ingredients: Ingredient[], lastModified: timestamp }`
+    - Updated after every successful sync
+  - Sync algorithm (timestamp-based conflict detection with record-level auto-merge):
+    1. Get base version from localStorage (`syncBase` with `base.lastModified`)
+    2. Get local data from React context state (`local.lastModified` = timestamp from state) - this is our snapshot
+    3. Download `data.json.gz` from OneDrive, decompress and parse remote data (`remote.lastModified`)
+    4. **Check timestamps to detect changes**:
+       - Remote changed: `base.lastModified < remote.lastModified`
+       - Local changed: `base.lastModified < local.lastModified`
+    5. **Simple cases (no record comparison needed)**:
+       - If only remote changed: Use remote data → update local and `syncBase`
+       - If only local changed: Upload local data → update `syncBase`
+       - If neither changed: No action needed
+    6. **Conflict case (both changed)**: Do record-level comparison to auto-merge:
+       - Compare base vs remote records (by ID):
+         - **Remote Created**: Record exists in remote but not in base
+         - **Remote Deleted**: Record exists in base but not in remote
+         - **Remote Updated**: Record exists in both but different
+       - Compare base vs local records (by ID):
+         - **Local Created**: Record exists in local but not in base
+         - **Local Deleted**: Record exists in base but not in local
+         - **Local Updated**: Record exists in both but different
+       - **Auto-merge non-conflicting changes**:
+         - Remote created → Add to merged
+         - Remote deleted → Remove from merged
+         - Remote updated (not updated locally) → Use remote version
+         - Local created → Add to merged
+         - Local deleted → Remove from merged
+         - Local updated (not updated remotely) → Use local version
+       - **Detect conflicts** (require manual resolution):
+         - Same record updated on both local and remote
+         - Same record deleted on one side, updated on other
+    7. If conflicts detected:
+       - Store conflicts temporarily
+       - Show ConflictResolutionModal (blocks UI with modal overlay)
+       - Wait for user to select "Keep Local" or "Keep OneDrive Version"
+    8. Before applying merge:
+       - **Race condition check**: Read current `state.lastModified` from React context state
+       - If `state.lastModified > local.lastModified`: User made changes during sync
+         - Abort current sync operation
+         - Retry sync after debounce period (30 seconds)
+       - If `state.lastModified == local.lastModified`: Safe to apply merge
+    9. After validation passes:
+       - Set `merged.lastModified = now`
+       - Apply merged data to local state (React contexts)
+       - Persist merged data to localStorage
+       - Compress and upload merged data to OneDrive
+       - Update `syncBase` with merged data (including `lastModified`)
+  - Offline handling:
+    - Detect when offline (no network)
+    - Retry sync automatically when back online
+    - Local changes persist in LocalStorage until synced
+  - Test all merge scenarios:
+    - Creation only (local/remote/both)
+    - Deletion only (local/remote/both)
+    - Update only (local/remote/same record/different records)
+    - Mixed operations (create + update + delete)
+  - Verify works with any ICloudStorageProvider implementation
+
+- [ ] I3.5. Build cloud storage sync settings UI (TDD)
+  - Write component tests in `src/components/settings/CloudSyncSettings.test.tsx`
+  - Test cases: render, connect to provider, disconnect, account info display
+  - Create `CloudSyncSettings` component in `src/components/settings/CloudSyncSettings.tsx`
+  - Add to settings page (create new settings page or add to existing)
+  - UI elements:
+    - Provider connection:
+      - "Connect to OneDrive" button (only provider available)
+      - Future providers (Google Drive, Dropbox) will be added when implemented
+    - When connected, show:
+      - "Disconnect" button
+      - Connected account info (name, email)
+    - Note: Auto-sync is enabled when connected
+    - "Reset" button (with confirmation dialog) - clears all data and disconnects
+  - Apply Mantine styling
+  - Disable controls when sync is in progress
+
+- [ ] I3.6. Build sync status indicator in header (TDD)
+  - Write component tests in `src/components/header/SyncStatusIndicator.test.tsx`
+  - Test cases: render states, click to sync, tooltip display, error states, offline detection
+  - Create `SyncStatusIndicator` component in `src/components/header/SyncStatusIndicator.tsx`
+  - Add to app header/navigation bar
+  - Visual states:
+    - Idle: cloud icon (normal color) with "Last synced X minutes ago" tooltip
+    - Syncing: cloud icon with spinner/animation
+    - Success: cloud icon with checkmark (brief display)
+    - Error: cloud icon with error indicator (red)
+    - Offline: cloud icon with offline indicator
+    - Not connected: no indicator shown
+  - **Clickable sync indicator**:
+    - Click icon to trigger manual sync
+    - Disabled/not clickable during active sync (shows spinner)
+    - Tooltip shows: "Click to sync now" when idle, "Syncing..." when in progress
+  - Sync error messages display in toast notification
+  - Right-click or long-press opens sync settings (optional)
+  - Apply Mantine styling with IconButton
+  - Test all state transitions and user interactions
+
+- [ ] I3.7. Build conflict resolution UI (TDD)
+  - Write component tests in `src/components/settings/ConflictResolutionModal.test.tsx`
+  - Test cases: render conflicts, show details, resolve with local, resolve with remote
+  - Create `ConflictResolutionModal` component in `src/components/settings/ConflictResolutionModal.tsx`
+  - Display when conflicts are detected during sync
+  - Show list of conflicting items:
+    - Item type (recipe, meal plan, ingredient)
+    - Item name/identifier
+    - Last modified time for local and cloud versions
+  - For each conflict, show two options:
+    - "Keep Local" button
+    - "Keep Cloud" button (provider-agnostic label)
+  - Resolve conflicts one at a time or in batch
+  - Apply resolution and complete sync
+  - Show confirmation after all conflicts resolved
+  - Use Mantine Modal component
+  - Test conflict resolution flow end-to-end
+
+- [ ] I3.8. Integrate automatic background sync (TDD)
+  - Write integration tests for auto-sync behavior
+  - Test cases: sync after recipe add/update/delete, sync after meal plan changes, debouncing
+  - Integrate sync triggers into existing contexts:
+    - RecipeContext: trigger sync after addRecipe, updateRecipe, deleteRecipe
+    - MealPlanContext: trigger sync after addMealPlan, updateMealPlan, deleteMealPlan
+    - IngredientContext: trigger sync after addIngredient, updateIngredient, deleteIngredient
+  - Implement debouncing to avoid excessive syncs:
+    - Wait 1 minute after last change before syncing
+    - User makes multiple changes → sync once after idle period
+  - Use `lastModified` from React state to detect changes
+  - Only sync when provider is connected
+  - Handle sync failures gracefully with retry logic
+  - Show sync status in header indicator
+  - Test sync triggers and debouncing behavior
