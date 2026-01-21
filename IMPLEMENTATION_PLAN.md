@@ -414,29 +414,33 @@
   - Note: Each provider encapsulates its own authentication logic (MSAL for OneDrive, OAuth for Google Drive, etc.)
 
 - [x] I3.2. Create OneDrive storage provider implementation (TDD)
-  - Install MSAL.js library (`@azure/msal-browser`)
+  - Install MSAL.js library (`@azure/msal-browser`) and MS Graph Client (`@microsoft/microsoft-graph-client`)
   - Create Azure AD app registration for the application
   - Write unit tests for OneDrive provider in `src/utils/storage/providers/OneDriveProvider.test.ts`
   - Test cases: upload data, download data, check for updates, interface compliance, error handling
   - Implement `OneDriveProvider` in `src/utils/storage/providers/OneDriveProvider.ts`
   - Implement `ICloudStorageProvider` interface
-  - Use Microsoft Graph API for OneDrive operations
-  - Store all data in single JSON file in OneDrive app folder (special app-specific folder)
-  - File structure: `data.json.gz` containing:
+  - Use Microsoft Graph Client library for OneDrive operations (better retry logic, auth handling, TypeScript support)
+  - **Support variable filenames** (UI for file selection implemented in I3.4.1):
+    - Accept filename as parameter in uploadFile/downloadFile methods
+    - Store files in OneDrive app folder (special app-specific folder)
+    - No hardcoded filename - provider is filename-agnostic
+  - File structure: `[filename].json.gz` containing:
     - `recipes` - array of all recipes
     - `mealPlans` - array of all meal plans
     - `ingredients` - array of all ingredients
     - `lastModified` - timestamp for conflict detection
     - `version` - data schema version
-  - Implement interface methods using Microsoft Graph API:
+  - Implement interface methods using MS Graph Client:
     - `uploadFile()` - gzip compress JSON before upload using CompressionStream API
     - `downloadFile()` - download and decompress gzipped JSON using DecompressionStream API
+    - `listFiles()` - list available data files in app folder for file selection
   - Use browser's native CompressionStream/DecompressionStream API
-  - Handle API errors, network failures, rate limiting
+  - Handle API errors, network failures, rate limiting (Graph Client handles retry automatically)
   - Support offline mode with queued operations
   - Register with CloudStorageFactory
 
-- [ ] I3.3. Create Sync Context for state management (TDD)
+- [x] I3.3. Create Sync Context for state management (TDD)
   - Write unit tests for SyncContext in `src/contexts/SyncContext.test.tsx`
   - Test cases: connect/disconnect provider, manual sync, auto sync, conflict detection, offline retry, provider switching
   - Create `SyncContext` in `src/contexts/SyncContext.tsx`
@@ -456,6 +460,7 @@
   - Use CloudStorageFactory to get current provider
   - Implement automatic background sync (triggers after local data changes when connected)
   - Handle offline detection: retry sync when back online
+  - Persist `selectedFilename` in localStorage to remember user's choice across sessions
 
 - [ ] I3.4. Implement sync logic with record-level three-way merge (TDD)
   - Write unit tests for sync logic in `src/utils/sync/syncManager.test.ts`
@@ -522,10 +527,88 @@
     - Mixed operations (create + update + delete)
   - Verify works with any ICloudStorageProvider implementation
 
-- [ ] I3.5. Build cloud storage sync settings UI (TDD)
-  - Write component tests in `src/components/settings/CloudSyncSettings.test.tsx`
-  - Test cases: render, connect to provider, disconnect, account info display
-  - Create `CloudSyncSettings` component in `src/components/settings/CloudSyncSettings.tsx`
+- [ ] I3.4.1. Build file/folder selection UI with multi-user support (TDD)
+  - Write component tests in `src/components/sync/FileSelectionModal.test.tsx`
+  - Test cases: render modal, list folders/files, create new file, select file, validation, shared files
+  - Create `FileSelectionModal` component in `src/components/sync/FileSelectionModal.tsx`
+  - **Triggered when user clicks "Connect to OneDrive"** (shown immediately, before authentication)
+  - **Goal**: Support both app folder (single-user) and regular folders (multi-user sharing)
+  - Update `ICloudStorageProvider` interface:
+    - Add `listFoldersAndFiles(folderPath?)` - unified method to list both folders and files
+    - Returns: `{ folders: FolderInfo[], files: FileInfo[] }`
+    - `FolderInfo`: `{ id, name, path, isShared }`
+    - `FileInfo`: `{ id, name, path, isShared }`
+    - If `folderPath` not provided, lists from root
+    - Include both owned items and items shared with user
+    - **Note**: This method requires authentication, so modal must authenticate first before listing
+  - Update `OneDriveProvider` implementation:
+    - Implement `listFoldersAndFiles()` using MS Graph API
+    - Query: `GET /me/drive/root:{folderPath}:/children` (or `/me/drive/root/children` for root)
+    - Filter and separate folders vs files (`.json.gz` files only)
+    - Add sharing metadata: `isShared` (based on `item.shared` property)
+    - Support navigation into subfolders
+  - Update `SyncContext`:
+    - Change `connectProvider` signature: `(provider: CloudProvider, fileInfo: FileInfo) => Promise<void>`
+    - Both parameters are **required**
+    - Remove `setSelectedFilename` action (not needed separately)
+    - Change state from `selectedFilename: string | null` to `selectedFile: FileInfo | null`
+    - Persist full `FileInfo` object to localStorage as JSON
+    - `syncNow()` uses `selectedFile.path` for upload/download operations
+  - Modal UI structure:
+    - **Header**: Breadcrumb navigation showing current path (e.g., "OneDrive > Documents > MealPlanner")
+    - **Folder Browser Section**:
+      - Grid/list of folders in current location
+      - Each folder shows: name, shared badge if applicable
+      - Click folder → navigate into it, updates breadcrumb
+      - "Up" button to go to parent folder
+    - **File List Section** (in current folder):
+      - List of `.json.gz` files
+      - Two subsections: "Your Files" and "Shared With You"
+      - Each file shows: filename, sharing badge (if isShared)
+      - Radio button selection or clickable list items
+      - "Select" button (enabled when file selected)
+      - Empty state: "No files in this folder"
+    - **Create New File Section** (collapsed by default):
+      - Expandable "Create New File" accordion
+      - Text input for filename (auto-append `.json.gz` extension)
+      - Default suggestion: `meal-plan-data.json.gz`
+      - Validation: non-empty, no special characters except hyphen/underscore, unique in folder
+      - "Create" button creates `FileInfo` object for new file (doesn't actually create file yet)
+    - **Footer**:
+      - "Cancel" button - closes modal without connecting
+      - "Select File" or "Create File" button - enabled when file selected/created
+  - Workflow:
+    - User clicks "Connect to OneDrive" button
+    - Modal opens and immediately authenticates (triggers provider auth flow)
+    - After auth success, loads folder/file list starting at root or last-used folder (from localStorage)
+    - User browses folders to find existing file or creates new file
+    - User clicks "Select File" button
+    - Modal calls `connectProvider(provider, fileInfo)` with both parameters
+    - `connectProvider` stores connection state, account info, and file info in one atomic operation
+    - Persist `FileInfo` to localStorage
+    - Close modal
+    - Trigger initial sync
+  - Default folder strategy:
+    - First time: Start at root, suggest creating `/MealPlanner` folder
+    - Show option to "Use App Folder" (single-user, more private)
+    - Remember last folder location in localStorage
+  - Apply Mantine Modal, TextInput, Accordion, Button, Breadcrumbs components
+  - Handle loading states: authentication, fetching folder/file list
+  - Handle API errors gracefully (show error message, allow re - opens FileSelectionModal
+      - Future providers (Google Drive, Dropbox) will be added when implemented
+    - When connected, show:
+      - "Disconnect" button
+      - Connected account info (name, email)
+      - **Current folder path**: Display `selectedFile.path` folder portion (e.g., "/MealPlanner")
+      - **Selected file info**: `selectedFile.name`, last synced date
+      - **Sharing status**: Badge showing "Shared" if `selectedFile.isShared` is true
+      - **"Change File" button** - calls `disconnectProvider()` then reopens FileSelectionModal to switch files/folders
+    - Note: Auto-sync is enabled when connected
+    - "Reset" button (with confirmation dialog) - clears all data and disconnects
+  - Apply Mantine styling
+  - Disable controls when sync is in progress
+
+- [ ] I3.6. Build sync status indicator in header (TDD)
   - Add to settings page (create new settings page or add to existing)
   - UI elements:
     - Provider connection:
@@ -534,6 +617,10 @@
     - When connected, show:
       - "Disconnect" button
       - Connected account info (name, email)
+      - **Current folder path**: Display folder path (e.g., "/MealPlanner" or "App Folder")
+      - **Selected file info**: filename, last synced date, file size
+      - **Sharing status**: Badge showing "Shared" if file is shared
+      - **"Change File" button** - reopens FileSelectionModal to switch files/folders
     - Note: Auto-sync is enabled when connected
     - "Reset" button (with confirmation dialog) - clears all data and disconnects
   - Apply Mantine styling
@@ -609,5 +696,5 @@
   - Use `lastModified` from React state to detect changes
   - Only sync when provider is connected
   - Handle sync failures gracefully with retry logic
-  - Show sync status in header indicator
-  - Test sync triggers and debouncing behavior
+  - Test shared file access scenarios
+  - Ensure backward compatibility with app folder files

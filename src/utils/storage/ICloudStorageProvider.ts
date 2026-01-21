@@ -20,10 +20,11 @@ export interface ICloudStorageProvider {
 
   /**
    * Check if provider is currently connected
+   * Async to allow checking cached tokens without blocking
    * 
    * @returns true if authenticated and ready to sync
    */
-  isConnected(): boolean;
+  isConnected(): Promise<boolean>;
 
   /**
    * Get user account information for display in UI
@@ -50,4 +51,19 @@ export interface ICloudStorageProvider {
    * @throws Error if download fails, file not found, or not connected
    */
   downloadFile(filename: string): Promise<string>;
+
+  /**
+   * List available data files in cloud storage
+   * 
+   * Used for file selection UI to show existing files.
+   * Should list files in the app-specific folder.
+   * 
+   * @returns Array of file metadata
+   * @throws Error if listing fails or not connected
+   */
+  listFiles(): Promise<Array<{
+    name: string;
+    lastModified: Date;
+    size: number;
+  }>>;
 }
