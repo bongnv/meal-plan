@@ -14,6 +14,8 @@ interface IngredientContextValue {
   addIngredient: (ingredient: IngredientFormValues) => Promise<void>
   updateIngredient: (ingredient: Ingredient) => Promise<void>
   deleteIngredient: (id: string) => Promise<void>
+  replaceAllIngredients: (ingredients: Ingredient[]) => void
+  getLastModified: () => number
 }
 
 const IngredientContext = createContext<IngredientContextValue | undefined>(
@@ -28,6 +30,7 @@ export function IngredientProvider({
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastModified, setLastModified] = useState<number>(Date.now())
 
   // Load ingredients on mount
   useEffect(() => {
@@ -61,6 +64,7 @@ export function IngredientProvider({
       const updatedIngredients = [...ingredients, newIngredient]
       storage.saveIngredients(updatedIngredients)
       setIngredients(updatedIngredients)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       setError('Failed to add ingredient')
@@ -76,6 +80,7 @@ export function IngredientProvider({
       )
       storage.saveIngredients(updatedIngredients)
       setIngredients(updatedIngredients)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       setError('Failed to update ingredient')
@@ -89,11 +94,31 @@ export function IngredientProvider({
       const updatedIngredients = ingredients.filter(i => i.id !== id)
       storage.saveIngredients(updatedIngredients)
       setIngredients(updatedIngredients)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       setError('Failed to delete ingredient')
       throw err
     }
+  }
+
+  // Replace all ingredients (used for sync)
+  const replaceAllIngredients = (newIngredients: Ingredient[]): void => {
+    const storage = new IngredientStorageService()
+    try {
+      storage.saveIngredients(newIngredients)
+      setIngredients(newIngredients)
+      setLastModified(Date.now())
+      setError(null)
+    } catch (err) {
+      console.error('Failed to replace ingredients:', err)
+      setError('Failed to replace ingredients')
+    }
+  }
+
+  // Get last modified timestamp
+  const getLastModified = (): number => {
+    return lastModified
   }
 
   return (
@@ -106,6 +131,8 @@ export function IngredientProvider({
         addIngredient,
         updateIngredient,
         deleteIngredient,
+        replaceAllIngredients,
+        getLastModified,
       }}
     >
       {children}

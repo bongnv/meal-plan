@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { CloudProvider } from './CloudProvider';
 import { CloudStorageFactory } from './CloudStorageFactory';
-import { ICloudStorageProvider } from './ICloudStorageProvider';
+import { ICloudStorageProvider, type FileInfo } from './ICloudStorageProvider';
 
 // Mock provider implementation for testing
 class MockCloudProvider implements ICloudStorageProvider {
@@ -35,14 +35,14 @@ class MockCloudProvider implements ICloudStorageProvider {
     return this.accountInfo;
   }
 
-  async uploadFile(_filename: string, _data: string): Promise<void> {
+  async uploadFile(_fileInfo: FileInfo, _data: string): Promise<void> {
     if (!this.connected) {
       throw new Error('Not connected');
     }
     // Mock upload - do nothing
   }
 
-  async downloadFile(_filename: string): Promise<string> {
+  async downloadFile(_fileInfo: FileInfo): Promise<string> {
     if (!this.connected) {
       throw new Error('Not connected');
     }
@@ -95,24 +95,28 @@ describe('ICloudStorageProvider interface contract', () => {
     expect(provider.uploadFile).toBeDefined();
     
     const testData = JSON.stringify({ test: 'data' });
-    await expect(provider.uploadFile('test.json.gz', testData)).resolves.not.toThrow();
+    const fileInfo: FileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
+    await expect(provider.uploadFile(fileInfo, testData)).resolves.not.toThrow();
   });
 
   it('should throw error when uploading while disconnected', async () => {
-    await expect(provider.uploadFile('test.json.gz', 'data')).rejects.toThrow('Not connected');
+    const fileInfo: FileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
+    await expect(provider.uploadFile(fileInfo, 'data')).rejects.toThrow('Not connected');
   });
 
   it('should implement downloadFile method', async () => {
     await provider.connect();
     expect(provider.downloadFile).toBeDefined();
     
-    const data = await provider.downloadFile('data.json.gz');
+    const fileInfo: FileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+    const data = await provider.downloadFile(fileInfo);
     expect(data).toBeDefined();
     expect(typeof data).toBe('string');
   });
 
   it('should throw error when downloading while disconnected', async () => {
-    await expect(provider.downloadFile('data.json.gz')).rejects.toThrow('Not connected');
+    const fileInfo: FileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+    await expect(provider.downloadFile(fileInfo)).rejects.toThrow('Not connected');
   });
 });
 

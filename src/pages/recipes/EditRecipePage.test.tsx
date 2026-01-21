@@ -38,6 +38,8 @@ const mockRecipeContext = {
   addRecipe: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
+  replaceAllRecipes: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 const mockIngredientContext = {
@@ -55,6 +57,8 @@ const mockIngredientContext = {
   addIngredient: vi.fn(),
   updateIngredient: vi.fn(),
   deleteIngredient: vi.fn(),
+  replaceAllIngredients: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 const renderWithProviders = (component: React.ReactElement) => {

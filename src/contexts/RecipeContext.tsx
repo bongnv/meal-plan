@@ -19,6 +19,8 @@ interface RecipeContextType {
   addRecipe: (recipe: Omit<Recipe, 'id'>) => void
   updateRecipe: (recipe: Recipe) => void
   deleteRecipe: (id: string) => void
+  replaceAllRecipes: (recipes: Recipe[]) => void
+  getLastModified: () => number
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined)
@@ -27,6 +29,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastModified, setLastModified] = useState<number>(Date.now())
   const [storageService] = useState(() => new RecipeStorageService())
 
   // Load recipes on mount
@@ -57,6 +60,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       const updatedRecipes = [...recipes, newRecipe]
       setRecipes(updatedRecipes)
       storageService.saveRecipes(updatedRecipes)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to add recipe:', err)
@@ -75,6 +79,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       updatedRecipes[index] = recipe
       setRecipes(updatedRecipes)
       storageService.saveRecipes(updatedRecipes)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to update recipe:', err)
@@ -91,11 +96,30 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       }
       setRecipes(updatedRecipes)
       storageService.saveRecipes(updatedRecipes)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to delete recipe:', err)
       setError('Failed to delete recipe')
     }
+  }
+
+  // Replace all recipes (used for sync)
+  const replaceAllRecipes = (newRecipes: Recipe[]): void => {
+    try {
+      setRecipes(newRecipes)
+      storageService.saveRecipes(newRecipes)
+      setLastModified(Date.now())
+      setError(null)
+    } catch (err) {
+      console.error('Failed to replace recipes:', err)
+      setError('Failed to replace recipes')
+    }
+  }
+
+  // Get last modified timestamp
+  const getLastModified = (): number => {
+    return lastModified
   }
 
   const value: RecipeContextType = {
@@ -106,6 +130,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     addRecipe,
     updateRecipe,
     deleteRecipe,
+    replaceAllRecipes,
+    getLastModified,
   }
 
   return (

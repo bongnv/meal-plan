@@ -77,6 +77,8 @@ const defaultMockRecipeContext = {
   addRecipe: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
+  replaceAllRecipes: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 const defaultMockIngredientContext = {
@@ -89,6 +91,8 @@ const defaultMockIngredientContext = {
   addIngredient: vi.fn(),
   updateIngredient: vi.fn(),
   deleteIngredient: vi.fn(),
+  replaceAllIngredients: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 describe('RecipeSidebar', () => {

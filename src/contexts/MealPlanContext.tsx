@@ -21,6 +21,8 @@ interface MealPlanContextType {
   deleteMealPlan: (id: string) => void
   copyMealPlan: (id: string, options: CopyOptions, conflictResolution?: ConflictResolution) => string[]
   generateCopyPreview: (id: string, options: CopyOptions) => CopyResult
+  replaceAllMealPlans: (mealPlans: MealPlan[]) => void
+  getLastModified: () => number
 }
 
 const MealPlanContext = createContext<MealPlanContextType | undefined>(undefined)
@@ -29,6 +31,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastModified, setLastModified] = useState<number>(Date.now())
   const [storageService] = useState(() => new MealPlanStorageService())
 
   // Load meal plans on mount
@@ -59,6 +62,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       const updatedMealPlans = [...mealPlans, newMealPlan]
       setMealPlans(updatedMealPlans)
       storageService.saveMealPlans(updatedMealPlans)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to add meal plan:', err)
@@ -77,6 +81,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       updatedMealPlans[index] = mealPlan
       setMealPlans(updatedMealPlans)
       storageService.saveMealPlans(updatedMealPlans)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to update meal plan:', err)
@@ -93,6 +98,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       }
       setMealPlans(updatedMealPlans)
       storageService.saveMealPlans(updatedMealPlans)
+      setLastModified(Date.now())
       setError(null)
     } catch (err) {
       console.error('Failed to delete meal plan:', err)
@@ -272,6 +278,24 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Replace all meal plans (used for sync)
+  const replaceAllMealPlans = (newMealPlans: MealPlan[]): void => {
+    try {
+      setMealPlans(newMealPlans)
+      storageService.saveMealPlans(newMealPlans)
+      setLastModified(Date.now())
+      setError(null)
+    } catch (err) {
+      console.error('Failed to replace meal plans:', err)
+      setError('Failed to replace meal plans')
+    }
+  }
+
+  // Get last modified timestamp
+  const getLastModified = (): number => {
+    return lastModified
+  }
+
   return (
     <MealPlanContext.Provider
       value={{
@@ -284,6 +308,8 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
         deleteMealPlan,
         copyMealPlan,
         generateCopyPreview,
+        replaceAllMealPlans,
+        getLastModified,
       }}
     >
       {children}

@@ -23,6 +23,8 @@ const mockRecipeContext = {
   addRecipe: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
+  replaceAllRecipes: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 const renderApp = (initialRoute: string = '/') => {

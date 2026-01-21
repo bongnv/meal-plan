@@ -1,4 +1,13 @@
 /**
+ * File information for cloud storage operations
+ */
+export interface FileInfo {
+  id: string
+  name: string
+  path: string
+}
+
+/**
  * Interface for cloud storage providers
  * 
  * All cloud storage providers (OneDrive, Google Drive, Dropbox, etc.) must implement this interface.
@@ -37,20 +46,20 @@ export interface ICloudStorageProvider {
   /**
    * Upload gzip-compressed JSON data to cloud storage
    * 
-   * @param filename - Name of the file to upload (e.g., 'data.json.gz')
+   * @param fileInfo - File metadata (id, name, path)
    * @param data - Compressed data as string
    * @throws Error if upload fails or not connected
    */
-  uploadFile(filename: string, data: string): Promise<void>;
+  uploadFile(fileInfo: FileInfo, data: string): Promise<void>;
 
   /**
    * Download and decompress JSON data from cloud storage
    * 
-   * @param filename - Name of the file to download (e.g., 'data.json.gz')
+   * @param fileInfo - File metadata (id, name, path)
    * @returns Decompressed data as string
    * @throws Error if download fails, file not found, or not connected
    */
-  downloadFile(filename: string): Promise<string>;
+  downloadFile(fileInfo: FileInfo): Promise<string>;
 
   /**
    * List available data files in cloud storage

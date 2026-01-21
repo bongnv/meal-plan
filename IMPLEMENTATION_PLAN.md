@@ -451,10 +451,12 @@
     - `lastSyncTime` - timestamp of last successful sync
     - `conflicts` - array of detected conflicts
   - Actions:
-    - `connectProvider(provider)` - connect to specified provider (initiates auth and enables auto-sync)
+    - `connectProvider(provider, fileInfo)` - connect to specified provider (initiates auth and enables auto-sync)
     - `disconnectProvider()` - disconnect from current provider (disables auto-sync)
-    - `syncNow()` - trigger manual sync
-    - `resolveConflict(type, resolution)` - resolve conflict with 'local' or 'remote'
+    - `syncNow()` - trigger manual sync with three-way merge
+    - `importFromRemote()` - import data from remote, overwriting all local data
+    - `uploadToRemote()` - upload local data to remote (first-time upload or overwrite)
+    - `resolveConflict(resolution)` - resolve all conflicts with 'local' or 'remote'
     - `reset()` - clear local data and disconnect provider (shows welcome screen)
   - Work with `ICloudStorageProvider` interface (provider-agnostic)
   - Use CloudStorageFactory to get current provider
@@ -462,7 +464,7 @@
   - Handle offline detection: retry sync when back online
   - Persist `selectedFilename` in localStorage to remember user's choice across sessions
 
-- [ ] I3.4. Implement sync logic with record-level three-way merge (TDD)
+- [x] I3.4. Implement sync logic with record-level three-way merge (TDD)
   - Write unit tests for sync logic in `src/utils/sync/syncManager.test.ts`
   - Test cases: initial sync, remote-only changes (create/delete/update), local-only changes (create/delete/update), non-conflicting changes on both sides (different records), conflicting changes (same record updated on both sides), conflict resolution
   - Create `SyncManager` in `src/utils/sync/syncManager.ts`
@@ -501,9 +503,11 @@
          - Same record updated on both local and remote
          - Same record deleted on one side, updated on other
     7. If conflicts detected:
-       - Store conflicts temporarily
-       - Show ConflictResolutionModal (blocks UI with modal overlay)
-       - Wait for user to select "Keep Local" or "Keep OneDrive Version"
+       - Store partial merged data and conflicts in conflictContext state
+       - Update syncStatus to 'error' and set conflicts array for UI display
+       - **Future enhancement**: Show ConflictResolutionModal (modal overlay)
+       - **Future enhancement**: User selects "Keep Local" or "Keep Remote" for all conflicts
+       - **Current**: Throw error with conflict details for UI to handle
     8. Before applying merge:
        - **Race condition check**: Read current `state.lastModified` from React context state
        - If `state.lastModified > local.lastModified`: User made changes during sync

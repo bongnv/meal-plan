@@ -40,12 +40,11 @@ describe('OneDriveProvider', () => {
   beforeEach(() => {
     // Create mock MSAL instance
     mockMsalInstance = {
-      initialize: vi.fn().mockResolvedValue(undefined),
       loginPopup: vi.fn(),
       logoutPopup: vi.fn(),
       getAllAccounts: vi.fn(),
       acquireTokenSilent: vi.fn(),
-    };
+    } as any;
 
     (PublicClientApplication as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => mockMsalInstance);
 
@@ -229,14 +228,16 @@ describe('OneDriveProvider', () => {
       });
 
       await provider.connect();
-      await provider.uploadFile('data.json.gz', '{"test":"data"}');
+      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+      await provider.uploadFile(fileInfo, '{"test":"data"}');
 
       expect(mockApi).toHaveBeenCalledWith('/me/drive/special/approot:/data.json.gz:/content');
       expect(mockPut).toHaveBeenCalledWith(expect.any(ArrayBuffer));
     });
 
     it('should throw error when not connected', async () => {
-      await expect(provider.uploadFile('test.json.gz', 'data')).rejects.toThrow(
+      const fileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
+      await expect(provider.uploadFile(fileInfo, 'data')).rejects.toThrow(
         'Not connected'
       );
     });
@@ -262,7 +263,8 @@ describe('OneDriveProvider', () => {
 
       await provider.connect();
       
-      await expect(provider.uploadFile('data.json.gz', '{"test":"data"}')).rejects.toThrow(
+      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+      await expect(provider.uploadFile(fileInfo, '{"test":"data"}')).rejects.toThrow(
         'Upload failed'
       );
     });
@@ -270,6 +272,7 @@ describe('OneDriveProvider', () => {
 
   describe('downloadFile', () => {
     it('should download and decompress file from OneDrive using Graph Client', async () => {
+      const testFileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
       const mockAccount = {
         homeAccountId: '123',
         environment: 'login.windows.net',
@@ -290,7 +293,7 @@ describe('OneDriveProvider', () => {
       });
 
       await provider.connect();
-      const data = await provider.downloadFile('data.json.gz');
+      const data = await provider.downloadFile(testFileInfo);
 
       expect(data).toBe('{"test":"data"}');
       expect(mockApi).toHaveBeenCalledWith('/me/drive/special/approot:/data.json.gz:/content');
@@ -298,7 +301,8 @@ describe('OneDriveProvider', () => {
     });
 
     it('should throw error when not connected', async () => {
-      await expect(provider.downloadFile('test.json.gz')).rejects.toThrow('Not connected');
+      const testFileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
+      await expect(provider.downloadFile(testFileInfo)).rejects.toThrow('Not connected');
     });
 
     it('should handle download errors', async () => {
@@ -322,7 +326,8 @@ describe('OneDriveProvider', () => {
 
       await provider.connect();
       
-      await expect(provider.downloadFile('data.json.gz')).rejects.toThrow(
+      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+      await expect(provider.downloadFile(fileInfo)).rejects.toThrow(
         'Download failed'
       );
     });

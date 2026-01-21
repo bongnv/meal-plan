@@ -3,7 +3,7 @@ import { Client } from '@microsoft/microsoft-graph-client';
 
 import { msalConfig, loginRequest } from '../../../config/msalConfig';
 import { compressData, decompressData } from '../../compression';
-import { ICloudStorageProvider } from '../ICloudStorageProvider';
+import { ICloudStorageProvider, type FileInfo } from '../ICloudStorageProvider';
 
 /**
  * OneDrive storage provider implementation
@@ -103,7 +103,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
   /**
    * Upload compressed file to OneDrive app folder
    */
-  async uploadFile(filename: string, data: string): Promise<void> {
+  async uploadFile(fileInfo: FileInfo, data: string): Promise<void> {
     await this.initPromise;
 
     if (!this.graphClient) {
@@ -115,15 +115,16 @@ export class OneDriveProvider implements ICloudStorageProvider {
     const buffer = compressedData.buffer instanceof ArrayBuffer ? compressedData.buffer : new ArrayBuffer(0);
 
     // Upload to OneDrive app folder using Graph Client
+    // Use fileInfo.path for the full path, or fileInfo.name for just the filename
     await this.graphClient
-      .api(`/me/drive/special/approot:/${filename}:/content`)
+      .api(`/me/drive/special/approot:/${fileInfo.name}:/content`)
       .put(buffer);
   }
 
   /**
    * Download and decompress file from OneDrive app folder
    */
-  async downloadFile(filename: string): Promise<string> {
+  async downloadFile(fileInfo: FileInfo): Promise<string> {
     await this.initPromise;
 
     if (!this.graphClient) {
@@ -131,8 +132,9 @@ export class OneDriveProvider implements ICloudStorageProvider {
     }
 
     // Download from OneDrive app folder using Graph Client
+    // Use fileInfo.path for the full path, or fileInfo.name for just the filename
     const response = await this.graphClient
-      .api(`/me/drive/special/approot:/${filename}:/content`)
+      .api(`/me/drive/special/approot:/${fileInfo.name}:/content`)
       .get();
 
     // Response is already an ArrayBuffer

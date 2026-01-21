@@ -81,6 +81,8 @@ describe('MealPlansPage', () => {
     deleteMealPlan: mockDeleteMealPlan,
     copyMealPlan: vi.fn(),
     generateCopyPreview: vi.fn(),
+    replaceAllMealPlans: vi.fn(),
+    getLastModified: vi.fn(() => Date.now()),
   }
 
   const mockRecipeContext = {
@@ -91,6 +93,8 @@ describe('MealPlansPage', () => {
     addRecipe: vi.fn(),
     updateRecipe: vi.fn(),
     deleteRecipe: vi.fn(),
+    replaceAllRecipes: vi.fn(),
+    getLastModified: vi.fn(() => Date.now()),
   }
 
   const mockIngredientContext = {
@@ -101,6 +105,8 @@ describe('MealPlansPage', () => {
     updateIngredient: vi.fn(),
     deleteIngredient: vi.fn(),
     getIngredientById: vi.fn(),
+    replaceAllIngredients: vi.fn(),
+    getLastModified: vi.fn(() => Date.now()),
   }
 
   beforeEach(() => {

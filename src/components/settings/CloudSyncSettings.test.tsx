@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { CloudSyncSettings } from './CloudSyncSettings'
 import { SyncProvider } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
-import type { FileInfo } from '../../contexts/SyncContext'
+import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
 
 // Mock SyncContext
 const mockConnectProvider = vi.fn()
@@ -91,6 +91,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -117,6 +119,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -142,6 +146,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -167,6 +173,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -192,6 +200,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -224,6 +234,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -249,6 +261,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -281,6 +295,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })
@@ -306,6 +322,8 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectProvider: mockDisconnectProvider,
       syncNow: vi.fn(),
+      importFromRemote: vi.fn(),
+      uploadToRemote: vi.fn(),
       resolveConflict: vi.fn(),
       reset: mockReset,
     })

@@ -29,6 +29,8 @@ const defaultMockIngredientContext = {
   addIngredient: vi.fn(),
   updateIngredient: vi.fn(),
   deleteIngredient: vi.fn(),
+  replaceAllIngredients: vi.fn(),
+  getLastModified: vi.fn(() => Date.now()),
 }
 
 const renderWithProviders = (component: React.ReactElement) => {
