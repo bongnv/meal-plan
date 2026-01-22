@@ -145,4 +145,35 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt).toContain('imageUrl')
     expect(prompt.toLowerCase()).toMatch(/optional/)
   })
+
+  it('should include displayName field in ingredient schema', () => {
+    const ingredients: Ingredient[] = [
+      { id: '1', name: 'Chicken Breast', category: 'Poultry', unit: 'gram' },
+    ]
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should mention displayName field
+    expect(prompt).toContain('displayName')
+  })
+
+  it('should document displayName as optional field', () => {
+    const ingredients: Ingredient[] = []
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should indicate displayName is optional
+    expect(prompt.toLowerCase()).toMatch(/displayname.*optional/)
+  })
+
+  it('should explain displayName purpose in instructions', () => {
+    const ingredients: Ingredient[] = []
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should explain displayName reflects recipe-specific naming
+    const lowerPrompt = prompt.toLowerCase()
+    expect(lowerPrompt).toContain('displayname')
+    expect(lowerPrompt).toMatch(/recipe.{0,50}(appears|shown|name|specific)/)
+  })
 })

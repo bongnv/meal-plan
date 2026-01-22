@@ -14,6 +14,7 @@ import { RecipeSchema } from '../types/recipe'
 const ImportedIngredientSchema = z.object({
   ingredientId: z.string(),
   quantity: z.number(),
+  displayName: z.string().optional(),
   suggestedIngredient: z
     .object({
       id: z.string(),
@@ -137,6 +138,7 @@ export function validateRecipeImport(
     ingredients: importedRecipe.ingredients.map(ing => ({
       ingredientId: ing.ingredientId,
       quantity: ing.quantity,
+      ...(ing.displayName && { displayName: ing.displayName }),
     })),
   }
 

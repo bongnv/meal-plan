@@ -922,33 +922,27 @@ Allow users to use different display names for the same ingredient in different 
   - ✅ **Quality checks**: Run tests and lint, save output to `tmp/`
   - **Results**: All 470 tests pass (24/24 RecipeForm with 6 new displayName tests), lint clean, TypeScript compiles successfully
 
-- [ ] I6.4. Update RecipeList to show ingredient previews with custom names (TDD)
-  - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
-  - Test cases:
-    - Show custom display names in recipe card preview (optional enhancement)
-    - Maintain existing card layout and styling
-  - Evaluate whether to show ingredient names on recipe cards:
-    - Option A: Keep current design (no ingredient preview on cards)
-    - Option B: Add optional ingredient preview using displayName
-  - If implementing preview, show first 3-4 ingredients with custom names
-  - **Quality checks**: Run tests and lint, save output to `tmp/`
-
-- [ ] I6.5. Update AI Recipe Import to support custom names (TDD)
-  - Write component tests first in `src/components/recipes/RecipeImportModal.test.tsx`
-  - Test cases:
+- [x] I6.4. Update AI Recipe Import to support custom names (TDD)
+  - ✅ Write component tests first in `src/components/recipes/RecipeImportModal.test.tsx`
+  - ✅ Test cases:
     - Parse displayName from AI-generated JSON
-    - Show displayName in review step
+    - Show displayName in review step (15/15 tests passing)
     - Import recipe with custom names correctly
-  - Update AI prompt template in `RecipeImportModal`:
-    - Add displayName field to RecipeIngredient example in template
+  - ✅ Update AI prompt template in `src/utils/aiPromptGenerator.ts`:
+    - Added displayName field to RecipeIngredient schema (11/11 tests passing)
     - Document that displayName is optional and should reflect how ingredient appears in source recipe
-  - Update validation logic to handle optional displayName field
-  - Update review UI to show custom names when present:
-    - Display: "2 cup chicken breast (Chicken Breast)" where first is displayName, parentheses show library name
-  - Test import flow with and without custom names
-  - **Quality checks**: Run tests and lint, save output to `tmp/`
+    - Update example output to show displayName usage
+  - ✅ Update validation logic to handle optional displayName field:
+    - Added displayName to `ImportedIngredientSchema` in `src/utils/recipeImportValidator.ts`
+    - Fixed `cleanRecipe` mapping to preserve displayName field
+  - ✅ Update review UI to show custom names when present:
+    - Display: "chicken (Chicken Breast)" where first is displayName, parentheses show library name
+    - Falls back to just library name when displayName absent
+  - ✅ Test import flow with and without custom names
+  - ✅ **Quality checks**: Run tests and lint, save output to `tmp/`
+  - **Results**: All 475 tests pass (15/15 RecipeImportModal, 11/11 aiPromptGenerator), lint clean, build successful
 
-- [ ] I6.6. Update Recipe storage and migration (TDD)
+- [ ] I6.5. Update Recipe storage and migration (TDD)
   - Write migration tests in `src/utils/storage/recipeStorage.test.ts`
   - Test cases:
     - Load old recipes without displayName successfully (backward compatible)

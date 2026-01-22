@@ -245,10 +245,15 @@ export const RecipeImportModal = ({
                           isNew = !!ingredient
                         }
 
+                        // Format ingredient display with displayName if present
+                        const ingredientName = ingredient?.name || 'Unknown'
+                        const displayText = ing.displayName
+                          ? `${ing.displayName} (${ingredientName})`
+                          : ingredientName
+
                         return (
                           <List.Item key={index}>
-                            {ing.quantity} {ingredient?.unit}{' '}
-                            {ingredient?.name || 'Unknown'}
+                            {ing.quantity} {ingredient?.unit} {displayText}
                             {isNew && (
                               <Badge size="xs" color="blue" ml="xs">
                                 New

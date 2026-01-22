@@ -33,7 +33,8 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
   "ingredients": [
     {
       "ingredientId": "string (reference to ingredient ID from library below, or suggest new ingredient)",
-      "quantity": "number (numeric quantity)"
+      "quantity": "number (numeric quantity)",
+      "displayName": "string (optional - recipe-specific name as it appears in the recipe, e.g., 'Truss Tomatoes' instead of 'Tomato')"
     }
   ],
   "instructions": ["string (step 1)", "string (step 2)", ...],
@@ -54,6 +55,7 @@ ${ingredientList}
 2. For each ingredient in the recipe:
    - Try to match it to an existing ingredient in the library
    - Use the matching ingredientId if found
+   - **If the recipe uses a different name** (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
    - If no match exists, suggest a new ingredient with:
      - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
      - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other
@@ -73,9 +75,9 @@ ${ingredientList}
   "name": "Garlic Pasta",
   "description": "Simple and delicious pasta with garlic and olive oil",
   "ingredients": [
-    { "ingredientId": "1", "quantity": 2 },
+    { "ingredientId": "1", "quantity": 2, "displayName": "olive oil" },
     { "ingredientId": "2", "quantity": 4 },
-    { "ingredientId": "new_1", "quantity": 0.5, "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
+    { "ingredientId": "new_1", "quantity": 0.5, "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
   ],
   "instructions": [
     "Boil water and cook pasta according to package directions",

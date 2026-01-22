@@ -299,4 +299,100 @@ describe('RecipeImportModal', () => {
     // Should be back at step 1
     expect(screen.getByText(/Step 1:/)).toBeInTheDocument()
   })
+
+  it('should display recipe with displayName in review step', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <RecipeImportModal opened={true} onClose={mockOnClose} />
+    )
+
+    // Navigate to step 2
+    await user.click(screen.getByRole('button', { name: /next.*ai response/i }))
+
+    // Recipe with displayName
+    const recipeWithDisplayName = {
+      id: 'recipe_test456',
+      name: 'Chicken Recipe',
+      description: 'A chicken dish',
+      servings: 2,
+      totalTime: 45,
+      tags: ['dinner'],
+      ingredients: [
+        {
+          ingredientId: 'ing_new1',
+          quantity: 500,
+          displayName: 'chicken',
+          suggestedIngredient: {
+            id: 'ing_new1',
+            name: 'Chicken Breast',
+            category: 'Poultry',
+            unit: 'gram',
+          },
+        },
+      ],
+      instructions: ['Cook chicken'],
+    }
+
+    const textarea = screen.getByPlaceholderText(/paste.*json/i)
+    await user.click(textarea)
+    await user.paste(JSON.stringify(recipeWithDisplayName))
+    await user.click(screen.getByRole('button', { name: /validate json/i }))
+
+    // Wait for step 3 and check displayName is shown
+    await waitFor(() => {
+      expect(screen.getByText('Chicken Recipe')).toBeInTheDocument()
+    })
+
+    // Should show displayName in format: "chicken (Chicken Breast)"
+    const ingredientsList = screen.getAllByRole('list')[0] // First list is ingredients
+    expect(ingredientsList).toHaveTextContent('chicken (Chicken Breast)')
+  })
+
+  it('should display recipe without displayName using library name only', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <RecipeImportModal opened={true} onClose={mockOnClose} />
+    )
+
+    // Navigate to step 2
+    await user.click(screen.getByRole('button', { name: /next.*ai response/i }))
+
+    // Recipe without displayName
+    const recipeWithoutDisplayName = {
+      id: 'recipe_test789',
+      name: 'Simple Recipe',
+      description: 'Basic recipe',
+      servings: 2,
+      totalTime: 20,
+      tags: ['quick'],
+      ingredients: [
+        {
+          ingredientId: 'ing_new1',
+          quantity: 2,
+          suggestedIngredient: {
+            id: 'ing_new1',
+            name: 'Tomato',
+            category: 'Vegetables',
+            unit: 'piece',
+          },
+        },
+      ],
+      instructions: ['Slice tomato'],
+    }
+
+    const textarea = screen.getByPlaceholderText(/paste.*json/i)
+    await user.click(textarea)
+    await user.paste(JSON.stringify(recipeWithoutDisplayName))
+    await user.click(screen.getByRole('button', { name: /validate json/i }))
+
+    // Wait for step 3
+    await waitFor(() => {
+      expect(screen.getByText('Simple Recipe')).toBeInTheDocument()
+    })
+
+    // Should show library name without displayName format (just "Tomato")
+    expect(screen.getByText(/2 piece Tomato/i)).toBeInTheDocument()
+    // Should NOT show parentheses format when no displayName
+    expect(screen.queryByText(/\(Tomato\)/)).not.toBeInTheDocument()
+  })
 })
