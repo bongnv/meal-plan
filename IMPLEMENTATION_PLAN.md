@@ -142,6 +142,74 @@
   - Persist filter state in URL query parameters (optional)
   - Empty state when no recipes match filters
   - Test all filter combinations and edge cases
+
+- [x] I1.12. Implement AI-Assisted Recipe Import (TDD) (R1.5)
+  - [x] I1.12.1. Add AI Import entry point to Recipes page (TDD)
+    - Write page tests in `src/pages/recipes/RecipesPage.test.tsx` for import button
+    - Test cases: import button renders, clicking opens modal
+    - Add "Import with AI" button to RecipesPage header (next to "New Recipe" button)
+    - Add state for modal open/close
+    - Create placeholder RecipeImportModal component that just renders "Coming soon"
+    - Wire up button to open modal
+    - Test import button visibility and modal open/close
+    - Add keyboard shortcut (optional): Ctrl/Cmd + I for import
+  
+  - [x] I1.12.2. Build AI Recipe Import modal UI with stepper (TDD)
+    - Write component tests in `src/components/recipes/RecipeImportModal.test.tsx`
+    - Test cases: render modal, stepper navigation, step content rendering
+    - Create `RecipeImportModal` component in `src/components/recipes/RecipeImportModal.tsx`
+    - Implement 3-step Mantine Stepper:
+      - Step 1: "Generate Prompt" - placeholder text and copy button (non-functional yet)
+      - Step 2: "Paste Response" - textarea for JSON input with parse button (non-functional yet)
+      - Step 3: "Review & Import" - placeholder for recipe preview and import button
+    - Add navigation: Next/Back buttons, Close button
+    - Add state management for current step and form data
+    - Apply Mantine styling with responsive design
+    - Test stepper navigation, modal close, step transitions
+  
+  - [x] I1.12.3. Implement prompt generator and wire to Step 1 (TDD)
+    - Write unit tests in `src/utils/aiPromptGenerator.test.ts`
+    - Test cases: generate prompt with ingredient library, JSON schema format, prompt structure
+    - Create `generateRecipeImportPrompt()` function in `src/utils/aiPromptGenerator.ts`
+    - Function accepts ingredient library from IngredientContext
+    - Generate structured prompt that includes:
+      - Instructions for AI to parse recipe from URL or text
+      - Current ingredient library with full details: IDs, names, categories, and units
+        - Minimal token overhead with significant matching improvement
+      - JSON schema definition matching Recipe type
+      - Example output format
+      - Instructions to map ingredients to existing IDs or suggest new ingredients with category
+    - Return copyable prompt string
+    - Wire prompt generator to RecipeImportModal Step 1
+    - Connect to IngredientContext to get current ingredients
+    - Display generated prompt in read-only textarea
+    - Implement copy to clipboard functionality
+    - Add instructions: "Copy this prompt and paste it with a recipe URL or recipe text into your AI tool (ChatGPT, Claude, etc.)"
+    - Test prompt generation and clipboard copy
+  
+  - [x] I1.12.4. Implement validator and complete import flow (TDD)
+    - Write unit tests in `src/utils/recipeImportValidator.test.ts`
+    - Test cases: validate JSON structure, validate ingredient references, error messages
+    - Create `validateRecipeImport()` function in `src/utils/recipeImportValidator.ts`
+    - Validate imported JSON matches Recipe schema using Zod
+    - Check ingredient IDs exist in ingredient library
+    - Validate required fields are present
+    - Return validation result with errors or validated recipe object
+    - Wire validator to RecipeImportModal Step 2:
+      - Parse button validates pasted JSON
+      - Show validation errors if any
+      - On success, advance to Step 3 with parsed data
+    - Implement Step 3 review UI:
+      - Display parsed recipe details (name, ingredients, instructions)
+      - Show ingredient mappings (existing IDs vs. new ingredients needing to be added)
+      - Highlight new ingredients that need library addition
+    - Connect to RecipeContext for import:
+      - On confirm, add recipe to context
+      - Handle new ingredients: connect to IngredientContext and auto-create using addIngredient()
+      - Navigate to recipe detail page on success
+    - Test complete flow: paste JSON → validate → review → import → navigate
+    - Test error handling for invalid JSON and missing ingredients
+
 ## I2. Meal Planning (R2)
 
 ### Implementation Steps
@@ -755,3 +823,35 @@
     - All 23 tests passing with complete coverage of states, interactions, and edge cases
     - Error notifications handled by SyncContext via @mantine/notifications
     - No right-click functionality implemented (optional feature not added)
+## I4. State Management Improvements
+
+### Implementation Steps
+
+- [ ] I4.1. Migrate to Zustand for state management
+  - **Goal**: Replace React Context API with Zustand for better state management
+  - **Benefits**:
+    - **No race conditions**: `get()` returns latest state (not snapshot like useState)
+    - **Simpler API**: No Context Provider boilerplate, direct imports
+    - **Better performance**: Selective re-renders with automatic subscription management
+    - **Built-in devtools**: Redux DevTools integration for debugging
+  - **Migration Strategy**:
+    - Migrate one context at a time (IngredientContext → RecipeContext → MealPlanContext)
+    - Keep current API surface compatible (same function names/signatures)
+    - Replace Context Provider pattern with Zustand store pattern
+    - Update imports in components to use Zustand hooks
+  - **Implementation Steps**:
+    1. Install Zustand: `npm install zustand`
+    2. Create `src/stores/ingredientStore.ts`:
+       - Convert IngredientContext to Zustand store
+       - Keep same actions: `addIngredient`, `addIngredients`, `updateIngredient`, `deleteIngredient`
+       - Add devtools middleware: `devtools(store, { name: 'IngredientStore' })`
+       - Test store in isolation (existing tests can be adapted)
+    3. Update components using `useIngredients` hook:
+       - Replace Context imports with store hook
+       - Update tests to use store instead of Context wrapper
+    4. Repeat for RecipeContext → `src/stores/recipeStore.ts`
+    5. Repeat for MealPlanContext → `src/stores/mealPlanStore.ts`
+    6. Update SyncContext to work with Zustand stores
+    7. Verify all 450+ tests still pass
+    8. Remove old Context files after full migration
+  - **Note**: Batch operations (like `addIngredients`) still important for performance (1 save vs N saves)

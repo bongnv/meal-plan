@@ -95,6 +95,7 @@ const defaultMockIngredientContext = {
     mockIngredients.find(i => i.id === id)
   ),
   addIngredient: vi.fn(),
+  addIngredients: vi.fn(),
   updateIngredient: vi.fn(),
   deleteIngredient: vi.fn(),
   replaceAllIngredients: vi.fn(),

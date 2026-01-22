@@ -55,11 +55,7 @@ export function CloudSyncSettings() {
 
   // Auto-open file selection modal after authentication (e.g., after OAuth redirect)
   useEffect(() => {
-    if (
-      cloudStorage.isAuthenticated &&
-      !selectedFile &&
-      !isModalOpen
-    ) {
+    if (cloudStorage.isAuthenticated && !selectedFile && !isModalOpen) {
       queueMicrotask(() => {
         setIsModalOpen(true)
       })

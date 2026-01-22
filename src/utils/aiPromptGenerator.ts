@@ -1,0 +1,97 @@
+import { Ingredient } from '../types/ingredient'
+
+/**
+ * Generates a prompt for AI tools (ChatGPT, Claude) to parse recipes
+ * and return structured JSON data that matches our recipe schema.
+ *
+ * The prompt includes the current ingredient library to help the AI
+ * map ingredients to existing IDs, reducing manual work for the user.
+ *
+ * @param ingredients - Array of ingredients from the ingredient library
+ * @returns A formatted prompt string ready to be copied and used with AI tools
+ */
+export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
+  const ingredientList =
+    ingredients.length > 0
+      ? ingredients
+          .map(
+            ing =>
+              `  - ID: ${ing.id}, Name: "${ing.name}", Category: ${ing.category}, Unit: ${ing.unit}`
+          )
+          .join('\n')
+      : '  (No ingredients in library yet - you will need to suggest new ingredients with categories and units)'
+
+  return `Please parse the following recipe and convert it to JSON format matching this schema:
+
+## Recipe JSON Schema
+
+\`\`\`json
+{
+  "id": "string (generate a unique ID like 'recipe_1234567890')",
+  "name": "string (recipe name)",
+  "description": "string (brief description)",
+  "ingredients": [
+    {
+      "ingredientId": "string (reference to ingredient ID from library below, or suggest new ingredient)",
+      "quantity": "number (numeric quantity)"
+    }
+  ],
+  "instructions": ["string (step 1)", "string (step 2)", ...],
+  "servings": "number (number of servings)",
+  "totalTime": "number (total time in minutes)",
+  "tags": ["string (tag 1)", "string (tag 2)", ...],
+  "imageUrl": "string (optional - URL to recipe image if available)"
+}
+\`\`\`
+
+## Current Ingredient Library
+
+${ingredientList}
+
+## Instructions
+
+1. Parse the recipe from the URL or text I provide
+2. For each ingredient in the recipe:
+   - Try to match it to an existing ingredient in the library
+   - Use the matching ingredientId if found
+   - If no match exists, suggest a new ingredient with:
+     - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
+     - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other
+     - An appropriate unit from: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, clove, slice, bunch, pinch, dash, can, package
+3. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5)
+4. Break instructions into clear, sequential steps
+5. Estimate total time in minutes (prep + cook time)
+6. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
+7. Use placeholder 'temp' for recipe ID (app will generate actual ID)
+8. Return ONLY the JSON object, no additional text
+
+## Example Output Format
+
+\`\`\`json
+{
+  "id": "temp",
+  "name": "Garlic Pasta",
+  "description": "Simple and delicious pasta with garlic and olive oil",
+  "ingredients": [
+    { "ingredientId": "1", "quantity": 2 },
+    { "ingredientId": "2", "quantity": 4 },
+    { "ingredientId": "new_1", "quantity": 0.5, "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
+  ],
+  "instructions": [
+    "Boil water and cook pasta according to package directions",
+    "Heat olive oil in a pan over medium heat",
+    "Add minced garlic and sauté until fragrant",
+    "Drain pasta and toss with garlic oil",
+    "Season with salt and pepper, serve immediately"
+  ],
+  "servings": 4,
+  "totalTime": 20,
+  "tags": ["Italian", "Quick", "Easy"],
+  "imageUrl": "https://example.com/recipe-image.jpg"
+}
+\`\`\`
+
+---
+
+I will provide the recipe URL or recipe text in my next message. Please wait for it, then parse it according to the instructions above and return only the JSON object.`
+}

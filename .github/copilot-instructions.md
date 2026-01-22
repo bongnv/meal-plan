@@ -13,11 +13,14 @@
 - Follow the architecture guidelines and tech stack defined in ARCHITECTURE.md for all implementations
 
 ## Implementation Planning
-- Use IMPLEMENTATION_PLAN.md to plan feature implementations
-- When a feature is planned in IMPLEMENTATION_PLAN.md, mark the corresponding checkbox in REQUIREMENTS.md as completed
+- Use IMPLEMENTATION_PLAN.md to plan features; mark REQUIREMENTS.md checkboxes when planned
 - Break down features into numbered, actionable implementation steps
-- Each implementation step should have a checkbox to track completion
-- When building UI components (views, pages, forms), integrate them into their parent pages/views immediately upon completion, rather than waiting until all components are built.
+- Follow **top-down, integrate-first approach**:
+  1. Add UI entry point (button, link, etc.)
+  2. Build UI with placeholders and wire to parent pages/contexts immediately
+  3. Implement logic and connect to UI as you build
+- Track completion with checkboxes for each step
+- Integrate continuously - no isolated components or separate "wiring" phase
 
 ## Decision Making
 - When multiple approaches are possible, present options to the user

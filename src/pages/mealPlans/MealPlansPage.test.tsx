@@ -103,6 +103,7 @@ describe('MealPlansPage', () => {
     loading: false,
     error: null,
     addIngredient: vi.fn(),
+    addIngredients: vi.fn(),
     updateIngredient: vi.fn(),
     deleteIngredient: vi.fn(),
     getIngredientById: vi.fn(),

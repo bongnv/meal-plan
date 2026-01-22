@@ -118,6 +118,7 @@ describe('RecipesPage', () => {
     error: null,
     getIngredientById: vi.fn(),
     addIngredient: vi.fn(),
+    addIngredients: vi.fn(),
     updateIngredient: vi.fn(),
     deleteIngredient: vi.fn(),
     replaceAllIngredients: vi.fn(),
@@ -317,6 +318,51 @@ describe('RecipesPage', () => {
       expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
       expect(screen.getByText('Chicken Curry')).toBeInTheDocument()
       expect(screen.getByText('Quick Salad')).toBeInTheDocument()
+    })
+  })
+
+  describe('AI Recipe Import', () => {
+    it('should render Import with AI button', () => {
+      renderWithProviders(<RecipesPage />)
+
+      expect(screen.getByText('Import with AI')).toBeInTheDocument()
+    })
+
+    it('should open import modal when Import with AI button is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipesPage />)
+
+      const importButton = screen.getByText('Import with AI')
+      await user.click(importButton)
+
+      // Modal should be visible with stepper
+      await waitFor(() => {
+        expect(screen.getByText('Generate Prompt')).toBeInTheDocument()
+        expect(screen.getByText('Paste Response')).toBeInTheDocument()
+        expect(screen.getByText('Review & Import')).toBeInTheDocument()
+      })
+    })
+
+    it('should close import modal when close is triggered', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipesPage />)
+
+      // Open modal
+      const importButton = screen.getByText('Import with AI')
+      await user.click(importButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Generate Prompt')).toBeInTheDocument()
+      })
+
+      // Close modal - Mantine modal close button doesn't have aria-label by default
+      const closeButton = screen.getByRole('button', { name: '' })
+      await user.click(closeButton)
+
+      // Modal should be closed
+      await waitFor(() => {
+        expect(screen.queryByText('Generate Prompt')).not.toBeInTheDocument()
+      })
     })
   })
 })

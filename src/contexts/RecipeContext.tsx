@@ -10,7 +10,7 @@ interface RecipeContextType {
   loading: boolean
   error: string | null
   getRecipeById: (id: string) => Recipe | undefined
-  addRecipe: (recipe: Omit<Recipe, 'id'>) => void
+  addRecipe: (recipe: Omit<Recipe, 'id'>) => string
   updateRecipe: (recipe: Recipe) => void
   deleteRecipe: (id: string) => void
   replaceAllRecipes: (recipes: Recipe[]) => void
@@ -56,7 +56,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   }
 
   // Add recipe to in-memory state and persist
-  const addRecipe = (recipe: Omit<Recipe, 'id'>): void => {
+  const addRecipe = (recipe: Omit<Recipe, 'id'>): string => {
     try {
       const newRecipe: Recipe = {
         ...recipe,
@@ -67,9 +67,13 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       storageService.saveRecipes(updatedRecipes)
       setLastModified(Date.now())
       setError(null)
+      return newRecipe.id
     } catch (err) {
       console.error('Failed to add recipe:', err)
       setError('Failed to add recipe')
+      // Return a generated ID even if save fails (recipe is in memory)
+      const fallbackId = generateId()
+      return fallbackId
     }
   }
 

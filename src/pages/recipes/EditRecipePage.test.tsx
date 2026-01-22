@@ -56,6 +56,7 @@ const mockIngredientContext = {
   error: null,
   getIngredientById: vi.fn(),
   addIngredient: vi.fn(),
+  addIngredients: vi.fn(),
   updateIngredient: vi.fn(),
   deleteIngredient: vi.fn(),
   replaceAllIngredients: vi.fn(),

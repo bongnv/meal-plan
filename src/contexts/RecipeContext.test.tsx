@@ -197,10 +197,12 @@ describe('RecipeContext', () => {
         tags: ['snack'],
       }
 
+      let recipeId: string
       act(() => {
-        result.current.addRecipe(newRecipe)
+        recipeId = result.current.addRecipe(newRecipe)
       })
 
+      expect(recipeId!).toBeTruthy()
       expect(result.current.error).toBe('Failed to add recipe')
     })
   })

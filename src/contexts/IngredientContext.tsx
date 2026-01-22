@@ -10,7 +10,8 @@ interface IngredientContextValue {
   loading: boolean
   error: string | null
   getIngredientById: (id: string) => Ingredient | undefined
-  addIngredient: (ingredient: IngredientFormValues) => Promise<void>
+  addIngredient: (ingredient: IngredientFormValues) => string
+  addIngredients: (ingredients: IngredientFormValues[]) => string[]
   updateIngredient: (ingredient: Ingredient) => Promise<void>
   deleteIngredient: (id: string) => Promise<void>
   replaceAllIngredients: (ingredients: Ingredient[]) => void
@@ -51,9 +52,7 @@ export function IngredientProvider({
     return ingredients.find(ingredient => ingredient.id === id)
   }
 
-  const addIngredient = async (
-    ingredientData: IngredientFormValues
-  ): Promise<void> => {
+  const addIngredient = (ingredientData: IngredientFormValues): string => {
     const storage = new IngredientStorageService()
     try {
       const newIngredient: Ingredient = {
@@ -65,8 +64,30 @@ export function IngredientProvider({
       setIngredients(updatedIngredients)
       setLastModified(Date.now())
       setError(null)
+      return newIngredient.id
     } catch (err) {
       setError('Failed to add ingredient')
+      throw err
+    }
+  }
+
+  const addIngredients = (
+    ingredientsData: IngredientFormValues[]
+  ): string[] => {
+    const storage = new IngredientStorageService()
+    try {
+      const newIngredients: Ingredient[] = ingredientsData.map(data => ({
+        ...data,
+        id: generateId(),
+      }))
+      const updatedIngredients = [...ingredients, ...newIngredients]
+      storage.saveIngredients(updatedIngredients)
+      setIngredients(updatedIngredients)
+      setLastModified(Date.now())
+      setError(null)
+      return newIngredients.map(ing => ing.id)
+    } catch (err) {
+      setError('Failed to add ingredients')
       throw err
     }
   }
@@ -128,6 +149,7 @@ export function IngredientProvider({
         error,
         getIngredientById,
         addIngredient,
+        addIngredients,
         updateIngredient,
         deleteIngredient,
         replaceAllIngredients,

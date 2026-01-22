@@ -33,6 +33,13 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Tags/categories (e.g., breakfast, vegetarian, quick)
 - [x] R1.3. Search and filter recipes by name, ingredient, or tag
 - [ ] R1.4. Image support (optional)
+- [x] R1.5. AI-Assisted Recipe Import:
+  - Generate prompt template for users to copy
+  - Prompt includes existing ingredient library with IDs for accurate matching
+  - Users paste prompt with recipe URL or recipe text into their AI tool of choice
+  - AI generates JSON format matching app's recipe schema
+  - UI to paste and import AI-generated recipe data
+  - Validation of imported data before saving
 
 ### R2. Meal Planning
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead

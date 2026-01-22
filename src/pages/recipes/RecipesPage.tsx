@@ -17,6 +17,7 @@ import { IconFilter, IconSearch, IconX } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { RecipeImportModal } from '../../components/recipes/RecipeImportModal'
 import { RecipeList } from '../../components/recipes/RecipeList'
 import { useIngredients } from '../../contexts/IngredientContext'
 import { useRecipes } from '../../contexts/RecipeContext'
@@ -28,6 +29,9 @@ export const RecipesPage = () => {
   const navigate = useNavigate()
   const { recipes, deleteRecipe } = useRecipes()
   const { ingredients } = useIngredients()
+
+  // Import modal state
+  const [importModalOpened, setImportModalOpened] = useState(false)
 
   // Filter state
   const [searchText, setSearchText] = useState('')
@@ -94,8 +98,20 @@ export const RecipesPage = () => {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <Title order={1}>My Recipes</Title>
-        <Button onClick={() => navigate('/recipes/new')}>Create Recipe</Button>
+        <Group gap="sm">
+          <Button variant="default" onClick={() => setImportModalOpened(true)}>
+            Import with AI
+          </Button>
+          <Button onClick={() => navigate('/recipes/new')}>
+            Create Recipe
+          </Button>
+        </Group>
       </Group>
+
+      <RecipeImportModal
+        opened={importModalOpened}
+        onClose={() => setImportModalOpened(false)}
+      />
 
       {/* Filters Section */}
       <Paper p="md" mb="xl" withBorder>
