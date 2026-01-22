@@ -10,7 +10,8 @@ import {
   Container,
 } from '@mantine/core'
 import { IconCloud, IconCloudOff } from '@tabler/icons-react'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useCloudStorage } from '../../contexts/CloudStorageContext'
 import { useSyncContext } from '../../contexts/SyncContext'
@@ -34,15 +35,14 @@ export function CloudSyncSettings() {
     lastSyncTime,
     syncStatus,
     connectProvider,
-    resetLocalState,
-    hasSelectedFile,
+    disconnectAndReset,
   } = useSyncContext()
 
   // Get cloud storage context (for provider and account info)
   const cloudStorage = useCloudStorage()
+  const navigate = useNavigate()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const hasAutoOpenedRef = useRef(false)
 
   // User is "connected" only when both authenticated AND has a file selected
   const isConnected = cloudStorage.isAuthenticated && selectedFile !== null
@@ -53,23 +53,18 @@ export function CloudSyncSettings() {
     ? cloudStorage.getAccountInfo()
     : null
 
-  // Auto-open file selection modal after authentication (e.g., after redirect)
-  // Use a ref to track if we've already auto-opened to avoid loops
+  // Auto-open file selection modal after authentication (e.g., after OAuth redirect)
   useEffect(() => {
     if (
       cloudStorage.isAuthenticated &&
       !selectedFile &&
-      !hasSelectedFile() &&
-      !isModalOpen &&
-      !hasAutoOpenedRef.current
+      !isModalOpen
     ) {
-      hasAutoOpenedRef.current = true
-      // Queue state update to avoid synchronous setState in effect
       queueMicrotask(() => {
         setIsModalOpen(true)
       })
     }
-  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen, hasSelectedFile])
+  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen])
 
   /**
    * Handle connect to OneDrive
@@ -96,22 +91,18 @@ export function CloudSyncSettings() {
   }
 
   /**
-   * Handle change file
-   * Clears local data and opens FileSelectionModal to switch to a different file
-   * Cloud is source of truth - local data is just a cache
+   * Handle disconnect
+   * Disconnects from cloud and navigates to home page where welcome screen will show
    */
-  const handleChangeFile = async () => {
+  const handleDisconnect = async () => {
     try {
-      // Reset local state (clears file and data)
-      await resetLocalState()
+      // Disconnect from cloud and clear all local data
+      await disconnectAndReset()
 
-      // Reconnect to same provider (handles authentication if needed)
-      await cloudStorage.connect(CloudProvider.ONEDRIVE)
-
-      // Open modal for new file selection
-      setIsModalOpen(true)
+      // Navigate to home page where welcome screen will show
+      navigate('/')
     } catch (error) {
-      console.error('[CloudSyncSettings] Failed to change file:', error)
+      console.error('[CloudSyncSettings] Failed to disconnect:', error)
     }
   }
 
@@ -233,11 +224,12 @@ export function CloudSyncSettings() {
 
                   <Button
                     variant="light"
-                    onClick={handleChangeFile}
+                    color="red"
+                    onClick={handleDisconnect}
                     disabled={isSyncing}
                     size="xs"
                   >
-                    Change File
+                    Disconnect
                   </Button>
                 </Stack>
               </Paper>
@@ -254,7 +246,7 @@ export function CloudSyncSettings() {
         {isConnected && (
           <Text size="xs" c="dimmed">
             Note: Auto-sync is enabled. Your changes are automatically synced to
-            the cloud. To switch to a different file, use "Change File" button.
+            the cloud.
           </Text>
         )}
 

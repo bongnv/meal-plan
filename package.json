@@ -25,6 +25,7 @@
     "@mantine/form": "^8.3.13",
     "@mantine/hooks": "^8.3.13",
     "@mantine/modals": "^8.3.13",
+    "@mantine/notifications": "^8.3.13",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@tabler/icons-react": "^3.36.1",
     "dayjs": "^1.11.19",

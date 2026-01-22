@@ -1,6 +1,7 @@
 import { MantineProvider } from '@mantine/core'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { IngredientProvider } from '../../contexts/IngredientContext'
@@ -55,23 +56,26 @@ vi.mock('../sync/FileSelectionModal', () => ({
 // Create AllProviders wrapper
 const AllProviders = ({ children }: { children: ReactNode }) => (
   <MantineProvider>
-    <RecipeProvider>
-      <MealPlanProvider>
-        <IngredientProvider>
-          <SyncProvider>{children}</SyncProvider>
-        </IngredientProvider>
-      </MealPlanProvider>
-    </RecipeProvider>
+    <MemoryRouter>
+      <RecipeProvider>
+        <MealPlanProvider>
+          <IngredientProvider>
+            <SyncProvider>{children}</SyncProvider>
+          </IngredientProvider>
+        </MealPlanProvider>
+      </RecipeProvider>
+    </MemoryRouter>
   </MantineProvider>
 )
 
 // Mock SyncContext
 const mockConnectProvider = vi.fn()
-const mockResetLocalState = vi.fn()
+const mockDisconnectAndReset = vi.fn()
 const mockSyncNow = vi.fn()
 const mockImportFromRemote = vi.fn()
 const mockUploadToRemote = vi.fn()
 const mockResolveConflict = vi.fn()
+const mockHasSelectedFile = vi.fn(() => false)
 
 let mockSyncContextValue = {
   syncStatus: 'idle' as 'idle' | 'syncing' | 'success' | 'error',
@@ -79,11 +83,12 @@ let mockSyncContextValue = {
   selectedFile: null as FileInfo | null,
   conflicts: [],
   connectProvider: mockConnectProvider,
-  resetLocalState: mockResetLocalState,
+  disconnectAndReset: mockDisconnectAndReset,
   syncNow: mockSyncNow,
   importFromRemote: mockImportFromRemote,
   uploadToRemote: mockUploadToRemote,
   resolveConflict: mockResolveConflict,
+  hasSelectedFile: mockHasSelectedFile,
 }
 
 vi.mock('../../contexts/SyncContext', async () => {
@@ -106,11 +111,12 @@ describe('CloudSyncSettings', () => {
       selectedFile: null,
       conflicts: [],
       connectProvider: mockConnectProvider,
-      resetLocalState: mockResetLocalState,
+      disconnectAndReset: mockDisconnectAndReset,
       syncNow: mockSyncNow,
       importFromRemote: mockImportFromRemote,
       uploadToRemote: mockUploadToRemote,
       resolveConflict: mockResolveConflict,
+      hasSelectedFile: mockHasSelectedFile,
     }
   })
 
@@ -133,7 +139,7 @@ describe('CloudSyncSettings', () => {
       </AllProviders>
     )
 
-    // Only "Change File" button exists now, no separate disconnect
+    // Disconnect button only shows when connected
     expect(
       screen.queryByRole('button', { name: /disconnect/i })
     ).not.toBeInTheDocument()
@@ -158,11 +164,12 @@ describe('CloudSyncSettings - Connected State', () => {
       selectedFile: mockFileInfo,
       conflicts: [],
       connectProvider: mockConnectProvider,
-      resetLocalState: mockResetLocalState,
+      disconnectAndReset: mockDisconnectAndReset,
       syncNow: mockSyncNow,
       importFromRemote: mockImportFromRemote,
       uploadToRemote: mockUploadToRemote,
       resolveConflict: mockResolveConflict,
+      hasSelectedFile: mockHasSelectedFile,
     }
   })
 
@@ -197,7 +204,7 @@ describe('CloudSyncSettings - Connected State', () => {
     expect(screen.getByText(/\/MealPlanner/i)).toBeInTheDocument()
   })
 
-  it('should show change file button when connected', () => {
+  it('should show disconnect button when connected', () => {
     render(
       <AllProviders>
         <CloudSyncSettings />
@@ -205,11 +212,11 @@ describe('CloudSyncSettings - Connected State', () => {
     )
 
     expect(
-      screen.getByRole('button', { name: /change file/i })
+      screen.getByRole('button', { name: /disconnect/i })
     ).toBeInTheDocument()
   })
 
-  it('should open file selection modal when change file button clicked', async () => {
+  it('should disconnect and reset state when disconnect button clicked', async () => {
     const user = userEvent.setup()
 
     render(
@@ -218,15 +225,15 @@ describe('CloudSyncSettings - Connected State', () => {
       </AllProviders>
     )
 
-    const changeFileButton = screen.getByRole('button', {
-      name: /change file/i,
+    const disconnectButton = screen.getByRole('button', {
+      name: /disconnect/i,
     })
 
-    await user.click(changeFileButton)
+    await user.click(disconnectButton)
 
-    // Verify resetLocalState was called
+    // Verify disconnectAndReset was called (which handles both disconnect and reset)
     await waitFor(() => {
-      expect(mockResetLocalState).toHaveBeenCalledTimes(1)
+      expect(mockDisconnectAndReset).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -239,6 +246,6 @@ describe('CloudSyncSettings - Connected State', () => {
       </AllProviders>
     )
 
-    expect(screen.getByRole('button', { name: /change file/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /disconnect/i })).toBeDisabled()
   })
 })

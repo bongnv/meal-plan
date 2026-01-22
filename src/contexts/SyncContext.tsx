@@ -1,4 +1,5 @@
 import { useThrottledCallback } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import {
   createContext,
   useContext,
@@ -63,7 +64,7 @@ interface SyncContextType {
 
   // Actions
   connectProvider: (fileInfo: FileInfo) => Promise<void>
-  resetLocalState: () => Promise<void>
+  disconnectAndReset: () => Promise<void>
   syncNow: () => Promise<void>
   importFromRemote: () => Promise<void>
   uploadToRemote: () => Promise<void>
@@ -173,6 +174,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       await syncNow()
     } catch (error) {
       console.error('Auto-sync failed:', error)
+      notifications.show({
+        title: 'Sync Failed',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to sync with OneDrive. Your changes are saved locally.',
+        color: 'red',
+        autoClose: 5000,
+      })
       // Don't throw - let user continue with local data
     }
   }, 60000) // 1 minute
@@ -257,12 +267,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Reset local state and clear cache
+   * Disconnect from cloud and reset all local data
    * Clears provider connection and all local data (cloud is source of truth)
    * Auth token remains valid - no logout popup
-   * Used when switching to a different file
+   * Used when disconnecting or switching to a different file
    */
-  const resetLocalState = async (): Promise<void> => {
+  const disconnectAndReset = async (): Promise<void> => {
     // Disconnect from provider (clears provider state, but keeps MSAL auth)
     await cloudStorage.disconnect()
 
@@ -613,7 +623,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         conflicts,
         selectedFile,
         connectProvider,
-        resetLocalState,
+        disconnectAndReset,
         syncNow,
         importFromRemote,
         uploadToRemote,
