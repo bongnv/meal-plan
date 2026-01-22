@@ -1,13 +1,16 @@
 import {
   ActionIcon,
+  Box,
   Button,
   Group,
+  Image,
   Modal,
   NumberInput,
   Paper,
   Select,
   Stack,
   TagsInput,
+  Text,
   Textarea,
   TextInput,
   Title,
@@ -15,6 +18,7 @@ import {
 import { useForm, zodResolver } from '@mantine/form'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
 import { RecipeFormSchema } from '../../types/recipe'
@@ -27,9 +31,10 @@ interface RecipeFormProps {
   recipe?: Recipe
   onSubmit: (values: RecipeFormValues) => void
   onCancel: () => void
+  onDelete?: () => void
 }
 
-export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
+export function RecipeForm({ recipe, onSubmit, onCancel, onDelete }: RecipeFormProps) {
   const isEditMode = !!recipe
   const {
     ingredients,
@@ -40,6 +45,9 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },
   ] = useDisclosure(false)
+  const [showImagePreview, setShowImagePreview] = useState(
+    !!recipe?.imageUrl
+  )
 
   const form = useForm<RecipeFormValues>({
     validate: zodResolver(RecipeFormSchema),
@@ -90,6 +98,25 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
     }
   }
 
+  const handleImageUrlChange = (value: string) => {
+    form.setFieldValue('imageUrl', value || undefined)
+    // Check if URL is valid for preview
+    try {
+      if (value && value.trim()) {
+        const url = new URL(value)
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+          setShowImagePreview(true)
+        } else {
+          setShowImagePreview(false)
+        }
+      } else {
+        setShowImagePreview(false)
+      }
+    } catch {
+      setShowImagePreview(false)
+    }
+  }
+
   const ingredientSelectData = [
     ...ingredients.map(ing => ({
       value: ing.id,
@@ -117,6 +144,32 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
             {...form.getInputProps('description')}
           />
 
+          <div>
+            <TextInput
+              label="Image URL (optional)"
+              placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+              value={form.values.imageUrl || ''}
+              onChange={event => handleImageUrlChange(event.currentTarget.value)}
+              error={form.errors.imageUrl}
+            />
+            {showImagePreview && form.values.imageUrl && (
+              <Box mt="xs">
+                <Text size="sm" c="dimmed" mb={4}>
+                  Preview:
+                </Text>
+                <Image
+                  src={form.values.imageUrl}
+                  alt="Recipe image preview"
+                  radius="md"
+                  fit="cover"
+                  h={200}
+                  style={{ maxWidth: '400px' }}
+                  fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect fill='%23e9ecef' width='400' height='200'/%3E%3Ctext fill='%23868e96' font-family='sans-serif' font-size='16' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3EImage not available%3C/text%3E%3C/svg%3E"
+                />
+              </Box>
+            )}
+          </div>
+
           <Group grow>
             <NumberInput
               label="Servings"
@@ -134,6 +187,12 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
               {...form.getInputProps('totalTime')}
             />
           </Group>
+
+          <TagsInput
+            label="Tags"
+            placeholder="Press Enter to add tags"
+            {...form.getInputProps('tags')}
+          />
 
           <div>
             <Group justify="space-between" mb="xs">
@@ -261,19 +320,20 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
             </Stack>
           </div>
 
-          <TagsInput
-            label="Tags"
-            placeholder="Press Enter to add tags"
-            {...form.getInputProps('tags')}
-          />
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {isEditMode ? 'Update Recipe' : 'Create Recipe'}
-            </Button>
+          <Group justify="space-between" mt="md">
+            {isEditMode && onDelete && (
+              <Button variant="outline" color="red" onClick={onDelete}>
+                Delete Recipe
+              </Button>
+            )}
+            <Group ml="auto">
+              <Button variant="default" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+              </Button>
+            </Group>
           </Group>
         </Stack>
       </form>

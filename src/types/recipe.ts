@@ -68,7 +68,14 @@ export const RecipeSchema = z.object({
   servings: z.number(),
   totalTime: z.number(),
   tags: z.array(z.string()),
-  imageUrl: z.string().optional(),
+  imageUrl: z
+    .string()
+    .url('Image URL must be a valid URL')
+    .refine((url) => url.startsWith('http://') || url.startsWith('https://'), {
+      message: 'Image URL must use http or https protocol',
+    })
+    .optional()
+    .or(z.literal(undefined)),
 })
 
 /**
@@ -86,7 +93,14 @@ export const RecipeFormSchema = z.object({
   servings: z.number().min(1, 'Servings must be at least 1'),
   totalTime: z.number().min(1, 'Total time must be at least 1 minute'),
   tags: z.array(z.string()),
-  imageUrl: z.string().optional(),
+  imageUrl: z
+    .string()
+    .url('Image URL must be a valid URL')
+    .refine((url) => url.startsWith('http://') || url.startsWith('https://'), {
+      message: 'Image URL must use http or https protocol',
+    })
+    .optional()
+    .or(z.literal(undefined)),
 })
 
 export type RecipeFormValues = z.infer<typeof RecipeFormSchema>

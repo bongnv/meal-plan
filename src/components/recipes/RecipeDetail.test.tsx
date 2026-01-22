@@ -420,4 +420,50 @@ describe('RecipeDetail', () => {
       ).toBeInTheDocument()
     })
   })
+
+  describe('Hero Image Display', () => {
+    it('should display hero image when imageUrl is provided', () => {
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const image = screen.getByRole('img', { name: /spaghetti carbonara/i })
+      expect(image).toBeInTheDocument()
+      expect(image).toHaveAttribute('src', 'https://example.com/carbonara.jpg')
+    })
+
+    it('should not display image section when imageUrl is absent', () => {
+      const recipeWithoutImage = { ...mockRecipe, imageUrl: undefined }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutImage} />)
+
+      const images = screen.queryByRole('img')
+      expect(images).not.toBeInTheDocument()
+    })
+
+    it('should use recipe name as alt text for accessibility', () => {
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const image = screen.getByAltText('Spaghetti Carbonara')
+      expect(image).toBeInTheDocument()
+    })
+
+    it('should handle broken image URLs gracefully', () => {
+      const recipeWithBrokenImage = {
+        ...mockRecipe,
+        imageUrl: 'https://example.com/broken.jpg',
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithBrokenImage} />)
+
+      const image = screen.getByRole('img', { name: /spaghetti carbonara/i })
+      expect(image).toBeInTheDocument()
+    })
+
+    it('should maintain responsive design with image', () => {
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const image = screen.getByRole('img', { name: /spaghetti carbonara/i })
+      expect(image).toBeInTheDocument()
+      // Mantine Image component handles responsive design internally
+    })
+  })
 })

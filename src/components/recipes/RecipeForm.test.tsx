@@ -675,4 +675,267 @@ describe('RecipeForm', () => {
       })
     })
   })
+
+  describe('Image URL field', () => {
+    it('should render image URL input field', () => {
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      expect(
+        screen.getByPlaceholderText(/enter image url/i)
+      ).toBeInTheDocument()
+    })
+
+    it('should allow empty imageUrl (optional field)', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Fill required fields
+      await user.type(
+        screen.getByPlaceholderText(/enter recipe name/i),
+        'Test Recipe'
+      )
+      await user.type(
+        screen.getByPlaceholderText(/describe your recipe/i),
+        'Test description'
+      )
+      await user.clear(screen.getByPlaceholderText(/number of servings/i))
+      await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
+      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
+      await user.type(
+        screen.getByPlaceholderText(/total cooking time/i),
+        '30'
+      )
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.clear(screen.getByLabelText(/quantity/i))
+      await user.type(screen.getByLabelText(/quantity/i), '2')
+
+      // Add instruction
+      const addInstructionButton = screen.getByRole('button', {
+        name: /add instruction/i,
+      })
+      await user.click(addInstructionButton)
+      await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
+
+      // Leave imageUrl empty
+      const imageUrlInput = screen.getByPlaceholderText(/enter image url/i)
+      expect(imageUrlInput).toHaveValue('')
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /create recipe/i }))
+
+      // Should submit successfully with undefined imageUrl
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Test Recipe',
+            imageUrl: undefined,
+          })
+        )
+      })
+    })
+
+    it('should show validation error for invalid URL', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Fill required fields
+      await user.type(
+        screen.getByPlaceholderText(/enter recipe name/i),
+        'Test Recipe'
+      )
+      await user.type(
+        screen.getByPlaceholderText(/describe your recipe/i),
+        'Test description'
+      )
+      await user.clear(screen.getByPlaceholderText(/number of servings/i))
+      await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
+      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
+      await user.type(
+        screen.getByPlaceholderText(/total cooking time/i),
+        '30'
+      )
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.clear(screen.getByLabelText(/quantity/i))
+      await user.type(screen.getByLabelText(/quantity/i), '2')
+
+      // Add instruction
+      const addInstructionButton = screen.getByRole('button', {
+        name: /add instruction/i,
+      })
+      await user.click(addInstructionButton)
+      await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
+
+      // Enter invalid URL
+      await user.type(
+        screen.getByPlaceholderText(/enter image url/i),
+        'not-a-valid-url'
+      )
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /create recipe/i }))
+
+      // Should show validation error - validation happens via Zod
+      await waitFor(() => {
+        expect(mockOnSubmit).not.toHaveBeenCalled()
+      })
+      
+      // The error should be in the form error state
+      const imageUrlInput = screen.getByPlaceholderText(/enter image url/i)
+      expect(imageUrlInput).toBeInTheDocument()
+    })
+
+    it('should accept valid URL', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Fill required fields
+      await user.type(
+        screen.getByPlaceholderText(/enter recipe name/i),
+        'Test Recipe'
+      )
+      await user.type(
+        screen.getByPlaceholderText(/describe your recipe/i),
+        'Test description'
+      )
+      await user.clear(screen.getByPlaceholderText(/number of servings/i))
+      await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
+      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
+      await user.type(
+        screen.getByPlaceholderText(/total cooking time/i),
+        '30'
+      )
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.clear(screen.getByLabelText(/quantity/i))
+      await user.type(screen.getByLabelText(/quantity/i), '2')
+
+      // Add instruction
+      const addInstructionButton = screen.getByRole('button', {
+        name: /add instruction/i,
+      })
+      await user.click(addInstructionButton)
+      await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
+
+      // Enter valid URL
+      await user.type(
+        screen.getByPlaceholderText(/enter image url/i),
+        'https://example.com/recipe.jpg'
+      )
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /create recipe/i }))
+
+      // Should submit successfully
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Test Recipe',
+            imageUrl: 'https://example.com/recipe.jpg',
+          })
+        )
+      })
+    })
+
+    it('should display image preview when valid URL is entered', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Enter valid URL
+      await user.type(
+        screen.getByPlaceholderText(/enter image url/i),
+        'https://example.com/recipe.jpg'
+      )
+
+      // Should display preview image
+      await waitFor(() => {
+        const previewImage = screen.getByAltText(/recipe image preview/i)
+        expect(previewImage).toBeInTheDocument()
+        expect(previewImage).toHaveAttribute(
+          'src',
+          'https://example.com/recipe.jpg'
+        )
+      })
+    })
+
+    it('should not display preview for invalid URL', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Enter invalid URL
+      await user.type(
+        screen.getByPlaceholderText(/enter image url/i),
+        'not-a-url'
+      )
+
+      // Should not display preview
+      const previewImage = screen.queryByAltText(/recipe image preview/i)
+      expect(previewImage).not.toBeInTheDocument()
+    })
+
+    it('should include imageUrl in edit mode', () => {
+      const mockRecipe: Recipe = {
+        id: '1',
+        name: 'Test Recipe',
+        description: 'Test description',
+        ingredients: [{ ingredientId: '1', quantity: 2 }],
+        instructions: ['Step 1'],
+        servings: 4,
+        totalTime: 30,
+        tags: ['test'],
+        imageUrl: 'https://example.com/recipe.jpg',
+      }
+
+      renderWithProviders(
+        <RecipeForm
+          recipe={mockRecipe}
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      const imageUrlInput = screen.getByPlaceholderText(/enter image url/i)
+      expect(imageUrlInput).toHaveValue('https://example.com/recipe.jpg')
+    })
+  })
 })

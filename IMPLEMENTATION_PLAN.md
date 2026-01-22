@@ -965,3 +965,87 @@ Allow users to use different display names for the same ingredient in different 
   - Consolidates ingredients by `ingredientId` (not displayName)
   - Shows all unique displayNames used for context: "Chicken Breast (as: chicken, chicken breast) - 800g"
   - Falls back to library name only if no custom names exist
+
+## I7. Recipe Hero Images (R1.4)
+
+### Implementation Steps
+
+- [x] I7.1. Update Recipe data model for hero images (TDD)
+  - Note: Recipe interface already includes optional `imageUrl?: string` field
+  - Write tests in `src/types/recipe.test.ts` to verify:
+    - Recipe with imageUrl validates correctly
+    - Recipe without imageUrl remains valid (backward compatible)
+    - Empty string imageUrl is invalid (must be valid URL or omitted)
+    - Invalid URL formats are rejected
+  - Update RecipeSchema Zod validation to enforce URL format when imageUrl is provided:
+    - Use `z.string().url()` or custom URL validation
+    - Keep field optional to maintain backward compatibility
+  - **Quality checks**: Run type tests, save output to `tmp/`
+  - ✅ **Results**: All 488 tests pass (18 new Recipe imageUrl validation tests), output saved to `tmp/all-tests-i7.1.txt`
+
+- [x] I7.2. Update RecipeDetail to display hero image (TDD)
+  - Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
+  - Test cases:
+    - Display hero image when imageUrl is provided
+    - Show placeholder or no image area when imageUrl is absent
+    - Handle broken/invalid image URLs gracefully (fallback image or icon)
+    - Image should be responsive and maintain aspect ratio
+    - Alt text uses recipe name for accessibility
+  - Update `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`:
+    - Add hero image section at top of recipe detail
+    - Use Mantine Image component with loading states
+    - Implement error handling for failed image loads
+    - Responsive design: full-width on mobile, constrained on desktop
+    - Suggested max width: 800px, aspect ratio: 16:9 or 4:3
+  - **Quality checks**: Run RecipeDetail tests, verify visual appearance, save output to `tmp/`
+  - ✅ **Results**: All 500 tests pass (5 new RecipeDetail hero image tests), component displays hero images with responsive design and fallback handling
+
+- [x] I7.3. Update RecipeForm to support image URL input (TDD)
+  - Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
+  - Test cases:
+    - Render image URL input field
+    - Validate URL format on submission
+    - Allow empty/undefined imageUrl (optional field)
+    - Show validation error for invalid URLs
+    - Preview image when valid URL is entered
+    - Form submission includes imageUrl
+  - Update `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`:
+    - Add imageUrl text input field (Mantine TextInput)
+    - Add URL validation with zodResolver
+    - Add optional image preview below input when URL is provided
+    - Preview should handle loading/error states
+    - Form should submit with imageUrl included
+  - Apply Mantine styling with responsive design
+  - **Quality checks**: Run RecipeForm tests, verify form behavior, save output to `tmp/`
+  - ✅ **Results**: All 500 tests pass (7 new RecipeForm imageUrl tests), form includes imageUrl input field with live preview and validation, output saved to `tmp/all-tests-i7.2-i7.3-final.txt`
+
+- [ ] I7.4. Update RecipeList cards to show thumbnail images (TDD)
+  - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
+  - Test cases:
+    - Display thumbnail image when imageUrl exists
+    - Show placeholder icon/image when imageUrl is absent
+    - Handle broken image URLs gracefully
+    - Thumbnails have consistent size across all cards
+    - Maintain card layout integrity with/without images
+  - Update `RecipeList` component in `src/components/recipes/RecipeList.tsx`:
+    - Add image section to each recipe card
+    - Use Mantine Image component with placeholder
+    - Thumbnail size: ~150-200px height, full card width
+    - Maintain aspect ratio with object-fit: cover
+    - Position image at top of card
+    - Fallback: cooking/recipe icon when no image
+  - Update card layout to accommodate images without breaking existing design
+  - **Quality checks**: Run RecipeList tests, verify grid layout, save output to `tmp/`
+
+### Implementation Notes
+- **AI Import & Storage**: imageUrl is already fully supported in AI prompt generator, validator, and storage - no additional work needed
+- **URL Storage Only**: This implementation stores image URLs (external links), not file uploads
+- **Future Enhancement**: Consider adding local file upload/storage in future iteration
+- **Image Sources**: Users can link to images from:
+  - Original recipe websites
+  - Cloud storage services (Google Drive, Dropbox with public links)
+  - Image hosting services (Imgur, etc.)
+  - Personal web servers
+- **Performance**: Images loaded on-demand, not bundled with app
+- **Privacy**: External images may track user access via image URLs
+- **Offline**: Images won't be available offline unless browser cached
