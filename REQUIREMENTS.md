@@ -46,11 +46,12 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Example: "chicken" in one recipe and "chicken breast" in another both link to same ingredient
   - Grocery lists consolidate by ingredient ID regardless of display name
   - Optional field - defaults to ingredient library name if not specified
-  - Status: ✅ Complete - Data model, display, form input, and AI import support (I6.1-I6.4)
+  - Status: ✅ **COMPLETE** - Full feature implementation (I6.1-I6.5)
   - Implementation notes: 
     - RecipeForm supports displayName with library name placeholder
     - AI Recipe Import includes displayName in schema and displays "customName (LibraryName)" format
-    - All tests passing (475/475), lint clean, build successful
+    - Storage is fully backward compatible - old recipes without displayName load correctly
+    - All tests passing (479/479), lint clean, build successful
 
 ### R2. Meal Planning
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead

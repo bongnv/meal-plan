@@ -192,4 +192,113 @@ describe('RecipeStorageService', () => {
       expect(() => service.saveRecipes(invalidRecipes)).toThrow()
     })
   })
+
+  describe('displayName support', () => {
+    it('should load old recipes without displayName (backward compatibility)', () => {
+      const oldRecipes: Recipe[] = [
+        {
+          id: '1',
+          name: 'Old Recipe',
+          description: 'Recipe without displayName',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 2 },
+            { ingredientId: 'ing2', quantity: 1 },
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: ['dinner'],
+        },
+      ]
+
+      localStorage.setItem('recipes', JSON.stringify(oldRecipes))
+
+      const recipes = service.loadRecipes()
+      expect(recipes).toEqual(oldRecipes)
+      expect(recipes[0].ingredients[0].displayName).toBeUndefined()
+    })
+
+    it('should save and load recipes with displayName', () => {
+      const recipesWithDisplayName: Recipe[] = [
+        {
+          id: '1',
+          name: 'New Recipe',
+          description: 'Recipe with displayName',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 2, displayName: 'chicken' },
+            { ingredientId: 'ing2', quantity: 1, displayName: 'tomatoes' },
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: ['dinner'],
+        },
+      ]
+
+      service.saveRecipes(recipesWithDisplayName)
+
+      const recipes = service.loadRecipes()
+      expect(recipes).toEqual(recipesWithDisplayName)
+      expect(recipes[0].ingredients[0].displayName).toBe('chicken')
+      expect(recipes[0].ingredients[1].displayName).toBe('tomatoes')
+    })
+
+    it('should handle mixed recipes with and without displayName', () => {
+      const mixedRecipes: Recipe[] = [
+        {
+          id: '1',
+          name: 'Recipe with displayName',
+          description: 'Has custom names',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 2, displayName: 'chicken' },
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: ['dinner'],
+        },
+        {
+          id: '2',
+          name: 'Recipe without displayName',
+          description: 'No custom names',
+          ingredients: [{ ingredientId: 'ing2', quantity: 1 }],
+          instructions: ['Step 1'],
+          servings: 2,
+          totalTime: 15,
+          tags: ['lunch'],
+        },
+      ]
+
+      service.saveRecipes(mixedRecipes)
+
+      const recipes = service.loadRecipes()
+      expect(recipes).toEqual(mixedRecipes)
+      expect(recipes[0].ingredients[0].displayName).toBe('chicken')
+      expect(recipes[1].ingredients[0].displayName).toBeUndefined()
+    })
+
+    it('should preserve displayName through save/load cycle', () => {
+      const recipe: Recipe = {
+        id: '1',
+        name: 'Test Recipe',
+        description: 'Test',
+        ingredients: [
+          { ingredientId: 'ing1', quantity: 2, displayName: 'olive oil' },
+          { ingredientId: 'ing2', quantity: 1 }, // no displayName
+          { ingredientId: 'ing3', quantity: 3, displayName: 'pasta' },
+        ],
+        instructions: ['Step 1'],
+        servings: 4,
+        totalTime: 30,
+        tags: [],
+      }
+
+      service.saveRecipes([recipe])
+      const loaded = service.loadRecipes()
+
+      expect(loaded[0].ingredients[0].displayName).toBe('olive oil')
+      expect(loaded[0].ingredients[1].displayName).toBeUndefined()
+      expect(loaded[0].ingredients[2].displayName).toBe('pasta')
+    })
+  })
 })

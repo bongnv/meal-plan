@@ -942,20 +942,23 @@ Allow users to use different display names for the same ingredient in different 
   - ✅ **Quality checks**: Run tests and lint, save output to `tmp/`
   - **Results**: All 475 tests pass (15/15 RecipeImportModal, 11/11 aiPromptGenerator), lint clean, build successful
 
-- [ ] I6.5. Update Recipe storage and migration (TDD)
-  - Write migration tests in `src/utils/storage/recipeStorage.test.ts`
-  - Test cases:
+- [x] I6.5. Update Recipe storage and migration (TDD)
+  - ✅ Write migration tests in `src/utils/storage/recipeStorage.test.ts`
+  - ✅ Test cases (16/16 tests passing):
     - Load old recipes without displayName successfully (backward compatible)
     - Save recipes with displayName correctly
     - Validate schema handles both formats
-  - Update `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`:
+    - Handle mixed recipes with and without displayName
+    - Preserve displayName through save/load cycles
+  - ✅ Verify `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`:
     - No changes needed - displayName is optional, schema already handles it
-    - Verify backward compatibility with existing stored recipes
-  - Create data migration if needed:
-    - Old format: `{ ingredientId: "1", quantity: 2 }`
-    - New format: `{ ingredientId: "1", quantity: 2, displayName: "chicken" }`
-    - Migration: No action needed - old format still valid
-  - **Quality checks**: Run all storage tests, verify migration works, save output to `tmp/`
+    - Backward compatibility with existing stored recipes confirmed
+  - ✅ Data migration assessment:
+    - Old format: `{ ingredientId: "1", quantity: 2 }` - still valid
+    - New format: `{ ingredientId: "1", quantity: 2, displayName: "chicken" }` - supported
+    - Migration: No action needed - old format remains valid
+  - ✅ **Quality checks**: Run all storage tests, verify migration works, save output to `tmp/`
+  - **Results**: All 479 tests pass (16/16 recipeStorage with 4 new displayName tests), no regressions
 
 ### Notes for Future Implementation
 - **Grocery List Integration**: When implementing grocery list generation (R3), ensure it:
