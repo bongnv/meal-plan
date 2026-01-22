@@ -28,6 +28,7 @@ export const IngredientSchema = z.object({
 export interface RecipeIngredient {
   ingredientId: string // references Ingredient.id
   quantity: number
+  displayName?: string // optional custom display name for this recipe
 }
 
 /**
@@ -36,6 +37,7 @@ export interface RecipeIngredient {
 export const RecipeIngredientSchema = z.object({
   ingredientId: z.string(),
   quantity: z.number(),
+  displayName: z.string().optional(),
 })
 
 /**

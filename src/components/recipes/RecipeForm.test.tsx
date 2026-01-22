@@ -461,4 +461,218 @@ describe('RecipeForm', () => {
       })
     })
   })
+
+  describe('Custom Ingredient Names (displayName)', () => {
+    it('should display custom name input when ingredient is selected', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Select an ingredient
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.type(ingredientSelect, 'Tomato')
+
+      await waitFor(() => {
+        expect(screen.getByText('Tomato (piece)')).toBeInTheDocument()
+      })
+
+      await user.click(screen.getByText('Tomato (piece)'))
+
+      // Should show custom name input
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText(/tomato/i)
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('should pre-fill custom name in edit mode when displayName exists', async () => {
+      const recipeWithDisplayName: Recipe = {
+        id: '1',
+        name: 'Test Recipe',
+        description: 'Test Description',
+        servings: 4,
+        totalTime: 30,
+        ingredients: [
+          { ingredientId: '1', quantity: 2, displayName: 'diced tomatoes' },
+        ],
+        instructions: ['Step 1'],
+        tags: [],
+      }
+
+      renderWithProviders(
+        <RecipeForm
+          recipe={recipeWithDisplayName}
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      // Custom name input should have the displayName value
+      await waitFor(() => {
+        const customNameInput = screen.getByDisplayValue('diced tomatoes')
+        expect(customNameInput).toBeInTheDocument()
+      })
+    })
+
+    it('should allow clearing custom name to use library name', async () => {
+      const user = userEvent.setup()
+      const recipeWithDisplayName: Recipe = {
+        id: '1',
+        name: 'Test Recipe',
+        description: 'Test Description',
+        servings: 4,
+        totalTime: 30,
+        ingredients: [
+          { ingredientId: '1', quantity: 2, displayName: 'diced tomatoes' },
+        ],
+        instructions: ['Step 1'],
+        tags: [],
+      }
+
+      renderWithProviders(
+        <RecipeForm
+          recipe={recipeWithDisplayName}
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      const customNameInput = await screen.findByDisplayValue('diced tomatoes')
+      await user.clear(customNameInput)
+
+      // Input should be empty (will use library name)
+      expect(customNameInput).toHaveValue('')
+    })
+
+    it('should submit form with displayName included', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Fill basic form fields
+      await user.type(
+        screen.getByPlaceholderText(/enter recipe name/i),
+        'Test Recipe'
+      )
+      await user.type(
+        screen.getByPlaceholderText(/describe your recipe/i),
+        'Test Description'
+      )
+      await user.clear(screen.getByPlaceholderText(/number of servings/i))
+      await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
+      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
+      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Select ingredient
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.type(ingredientSelect, 'Tomato')
+      await user.click(await screen.findByText('Tomato (piece)'))
+
+      // Fill quantity
+      const quantityInput = screen.getByPlaceholderText(/quantity/i)
+      await user.clear(quantityInput)
+      await user.type(quantityInput, '2')
+
+      // Fill custom name
+      const customNameInput = screen.getByPlaceholderText(/tomato/i)
+      await user.type(customNameInput, 'diced tomatoes')
+
+      // Add instruction
+      const addInstructionButton = screen.getByRole('button', {
+        name: /add instruction/i,
+      })
+      await user.click(addInstructionButton)
+      await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
+
+      // Submit form
+      await user.click(
+        screen.getByRole('button', { name: /create recipe/i })
+      )
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith({
+          name: 'Test Recipe',
+          description: 'Test Description',
+          servings: 4,
+          totalTime: 30,
+          ingredients: [
+            {
+              ingredientId: '1',
+              quantity: 2,
+              displayName: 'diced tomatoes',
+            },
+          ],
+          instructions: ['Cook it'],
+          tags: [],
+          imageUrl: undefined,
+        })
+      })
+    })
+
+    it('should show library name as placeholder hint', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Select ingredient
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.type(ingredientSelect, 'Chicken')
+      await user.click(await screen.findByText('Chicken Breast (gram)'))
+
+      // Custom name input should have library name as placeholder
+      await waitFor(() => {
+        const customNameInput = screen.getByPlaceholderText(/chicken breast/i)
+        expect(customNameInput).toBeInTheDocument()
+      })
+    })
+
+    it('should show "Custom Name (optional)" label only on first row', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Add two ingredients
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+      await user.click(addIngredientButton)
+
+      // Should have label "Custom Name (optional)" only once
+      await waitFor(() => {
+        const labels = screen.getAllByText(/custom name \(optional\)/i)
+        expect(labels).toHaveLength(1)
+      })
+    })
+  })
 })

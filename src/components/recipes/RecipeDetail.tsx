@@ -123,8 +123,10 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           <Stack gap="xs">
             {recipe.ingredients.map((ingredient, index) => {
               const ingredientData = getIngredientById(ingredient.ingredientId)
-              const ingredientName =
-                ingredientData?.name || 'Unknown Ingredient'
+              const displayName =
+                ingredient.displayName ||
+                ingredientData?.name ||
+                'Unknown Ingredient'
               const unit = ingredientData?.unit || ''
               const adjustedQuantity = (
                 ingredient.quantity * servingMultiplier
@@ -140,7 +142,7 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
                       <Text component="span" fw={500}>
                         {adjustedQuantity} {unit}
                       </Text>{' '}
-                      {ingredientName}
+                      {displayName}
                     </Text>
                   }
                 />

@@ -40,6 +40,14 @@ A client-side web application for managing recipes, planning meals, and organizi
   - AI generates JSON format matching app's recipe schema
   - UI to paste and import AI-generated recipe data
   - Validation of imported data before saving
+- [x] R1.6. Recipe-Specific Ingredient Names:
+  - Allow custom display names for ingredients within recipes
+  - Link to canonical ingredient in library for grocery consolidation
+  - Example: "chicken" in one recipe and "chicken breast" in another both link to same ingredient
+  - Grocery lists consolidate by ingredient ID regardless of display name
+  - Optional field - defaults to ingredient library name if not specified
+  - Status: Data model, display, and form input complete (I6.1-I6.3)
+  - Implementation notes: RecipeForm supports displayName with library name placeholder
 
 ### R2. Meal Planning
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead

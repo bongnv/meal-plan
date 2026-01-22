@@ -63,6 +63,7 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
     form.insertListItem('ingredients', {
       ingredientId: '',
       quantity: 0,
+      displayName: '',
     })
   }
 
@@ -192,6 +193,12 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
                         {selectedIngredient.unit}
                       </div>
                     )}
+                    <TextInput
+                      placeholder={selectedIngredient?.name || 'Custom name'}
+                      label={index === 0 ? 'Custom Name (optional)' : undefined}
+                      style={{ flex: 2 }}
+                      {...form.getInputProps(`ingredients.${index}.displayName`)}
+                    />
                     <ActionIcon
                       color="red"
                       variant="subtle"

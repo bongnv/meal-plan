@@ -855,3 +855,116 @@
     7. Verify all 450+ tests still pass
     8. Remove old Context files after full migration
   - **Note**: Batch operations (like `addIngredients`) still important for performance (1 save vs N saves)
+
+## I6. Recipe-Specific Ingredient Names
+
+### Feature Overview
+Allow users to use different display names for the same ingredient in different recipes while maintaining proper ingredient linking for grocery list consolidation. For example:
+- Recipe A uses "chicken breast" → links to ingredient "Chicken Breast"
+- Recipe B uses "chicken" → links to same ingredient "Chicken Breast"
+- Both consolidate correctly in grocery lists
+
+### Implementation Steps
+
+- [x] I6.1. Update RecipeIngredient data model (TDD)
+  - Write tests first in `src/types/recipe.test.ts`
+  - Test cases: RecipeIngredientSchema validation with new displayName field, backward compatibility
+  - Update `RecipeIngredient` interface in `src/types/recipe.ts`:
+    - Add optional `displayName?: string` field
+    - When `displayName` is present, use it for display
+    - When `displayName` is absent, fall back to ingredient library name (backward compatible)
+  - Update `RecipeIngredientSchema` Zod schema to include optional displayName
+  - Update all type exports and ensure existing code compiles
+  - **Quality checks**: Run tests and type checks, save output to `tmp/`
+
+- [x] I6.2. Update RecipeDetail component to display custom names (TDD)
+  - ✅ Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
+  - ✅ Test cases: 
+    - Display custom displayName when provided
+    - Fall back to ingredient library name when displayName not provided
+    - Handle missing ingredient gracefully
+  - ✅ Update `RecipeDetail` component in `src/components/recipes/RecipeDetail.tsx`:
+    - Modify ingredient rendering logic:
+      ```typescript
+      const ingredientData = getIngredientById(ingredient.ingredientId)
+      const displayName = ingredient.displayName || ingredientData?.name || 'Unknown Ingredient'
+      ```
+    - Show displayName in ingredient list instead of always using library name
+    - Keep quantity and unit display logic unchanged
+  - ✅ Ensure responsive styling remains intact
+  - ✅ **Quality checks**: Run tests and lint, save output to `tmp/`
+  - **Results**: All 464 tests pass (25/25 RecipeDetail), lint clean, TypeScript compiles successfully
+
+- [x] I6.3. Update RecipeForm to support custom ingredient names (TDD)
+  - ✅ Write component tests first in `src/components/recipes/RecipeForm.test.tsx`
+  - ✅ Test cases:
+    - Display text input for custom name when ingredient selected
+    - Pre-fill with existing displayName in edit mode
+    - Allow clearing custom name to use library name
+    - Submit form with displayName included
+    - Show library name as placeholder/hint
+  - ✅ Update `RecipeForm` component in `src/components/recipes/RecipeForm.tsx`:
+    - Add displayName field to ingredient rows in form
+    - Layout for each ingredient row:
+      ```
+      [Ingredient Select (2 flex)] [Quantity Input (1 flex)] [Unit (static)] [Custom Name Input (2 flex)] [Remove Button]
+      ```
+    - Custom name input:
+      - TextInput with placeholder showing library ingredient name
+      - Label: "Custom Name (optional)" on first row only
+      - Optional field - can be left empty to use library name
+      - Pre-populate in edit mode if displayName exists
+    - Update form validation to include displayName field
+    - Update handleSubmit to include displayName in recipe data
+  - ✅ Update responsive layout for mobile (stack fields vertically)
+  - ✅ **Integrate into RecipeForm immediately**: Wire form state and submission
+  - ✅ Test complete flow: select ingredient → add custom name → submit → verify saved
+  - ✅ **Quality checks**: Run tests and lint, save output to `tmp/`
+  - **Results**: All 470 tests pass (24/24 RecipeForm with 6 new displayName tests), lint clean, TypeScript compiles successfully
+
+- [ ] I6.4. Update RecipeList to show ingredient previews with custom names (TDD)
+  - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
+  - Test cases:
+    - Show custom display names in recipe card preview (optional enhancement)
+    - Maintain existing card layout and styling
+  - Evaluate whether to show ingredient names on recipe cards:
+    - Option A: Keep current design (no ingredient preview on cards)
+    - Option B: Add optional ingredient preview using displayName
+  - If implementing preview, show first 3-4 ingredients with custom names
+  - **Quality checks**: Run tests and lint, save output to `tmp/`
+
+- [ ] I6.5. Update AI Recipe Import to support custom names (TDD)
+  - Write component tests first in `src/components/recipes/RecipeImportModal.test.tsx`
+  - Test cases:
+    - Parse displayName from AI-generated JSON
+    - Show displayName in review step
+    - Import recipe with custom names correctly
+  - Update AI prompt template in `RecipeImportModal`:
+    - Add displayName field to RecipeIngredient example in template
+    - Document that displayName is optional and should reflect how ingredient appears in source recipe
+  - Update validation logic to handle optional displayName field
+  - Update review UI to show custom names when present:
+    - Display: "2 cup chicken breast (Chicken Breast)" where first is displayName, parentheses show library name
+  - Test import flow with and without custom names
+  - **Quality checks**: Run tests and lint, save output to `tmp/`
+
+- [ ] I6.6. Update Recipe storage and migration (TDD)
+  - Write migration tests in `src/utils/storage/recipeStorage.test.ts`
+  - Test cases:
+    - Load old recipes without displayName successfully (backward compatible)
+    - Save recipes with displayName correctly
+    - Validate schema handles both formats
+  - Update `RecipeStorageService` in `src/utils/storage/recipeStorage.ts`:
+    - No changes needed - displayName is optional, schema already handles it
+    - Verify backward compatibility with existing stored recipes
+  - Create data migration if needed:
+    - Old format: `{ ingredientId: "1", quantity: 2 }`
+    - New format: `{ ingredientId: "1", quantity: 2, displayName: "chicken" }`
+    - Migration: No action needed - old format still valid
+  - **Quality checks**: Run all storage tests, verify migration works, save output to `tmp/`
+
+### Notes for Future Implementation
+- **Grocery List Integration**: When implementing grocery list generation (R3), ensure it:
+  - Consolidates ingredients by `ingredientId` (not displayName)
+  - Shows all unique displayNames used for context: "Chicken Breast (as: chicken, chicken breast) - 800g"
+  - Falls back to library name only if no custom names exist

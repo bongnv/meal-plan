@@ -157,6 +157,107 @@ describe('RecipeDetail', () => {
       expect(screen.getByText(/100/)).toBeInTheDocument()
       expect(screen.getByText(/Unknown Ingredient/i)).toBeInTheDocument()
     })
+
+    it('should display custom displayName when provided', () => {
+      const recipeWithDisplayNames: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 400, displayName: 'pasta' },
+          { ingredientId: '2', quantity: 200, displayName: 'pancetta' },
+          { ingredientId: '3', quantity: 4 }, // No displayName, should use library name
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithDisplayNames} />)
+
+      // Should display custom names - use getAllByText since "pasta" appears in multiple places
+      const pastaMatches = screen.getAllByText(/pasta/i)
+      expect(pastaMatches.length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/pancetta/i)).toBeInTheDocument()
+
+      // Should display library name when no displayName
+      const eggsMatches = screen.getAllByText(/Eggs/i)
+      expect(eggsMatches.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('should fall back to library name when displayName is not provided', () => {
+      const recipeWithoutDisplayNames: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 400 }, // No displayName
+          { ingredientId: '2', quantity: 200 }, // No displayName
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutDisplayNames} />)
+
+      // Should display library names as fallback
+      const spaghettiMatches = screen.getAllByText(/Spaghetti/i)
+      expect(spaghettiMatches.length).toBeGreaterThanOrEqual(1)
+
+      const baconMatches = screen.getAllByText(/Bacon/i)
+      expect(baconMatches.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('should handle displayName with special characters', () => {
+      const recipeWithSpecialChars: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          {
+            ingredientId: '1',
+            quantity: 400,
+            displayName: 'spaghetti (al dente)',
+          },
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithSpecialChars} />)
+
+      expect(screen.getByText(/spaghetti \(al dente\)/i)).toBeInTheDocument()
+    })
+
+    it('should handle displayName when ingredient is missing from library', () => {
+      const recipeWithDisplayNameAndMissingIngredient: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '999', quantity: 100, displayName: 'mystery meat' },
+        ],
+      }
+
+      renderWithProviders(
+        <RecipeDetail recipe={recipeWithDisplayNameAndMissingIngredient} />
+      )
+
+      // Should display custom displayName even when ingredient not found in library
+      expect(screen.getByText(/mystery meat/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Unknown Ingredient/i)).not.toBeInTheDocument()
+    })
+
+    it('should adjust displayName quantities when servings change', async () => {
+      const user = userEvent.setup()
+      const recipeWithDisplayName: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 400, displayName: 'pasta' },
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithDisplayName} />)
+
+      // Initial quantity
+      expect(screen.getByText(/400\.0/)).toBeInTheDocument()
+      const pastaMatchesInitial = screen.getAllByText(/pasta/i)
+      expect(pastaMatchesInitial.length).toBeGreaterThanOrEqual(1)
+
+      // Increase servings from 4 to 5
+      const increaseButton = screen.getByLabelText('Increase servings')
+      await user.click(increaseButton)
+
+      // Quantity should be adjusted (400 * 5/4 = 500)
+      expect(screen.getByText(/500\.0/)).toBeInTheDocument()
+      const pastaMatchesAfter = screen.getAllByText(/pasta/i)
+      expect(pastaMatchesAfter.length).toBeGreaterThanOrEqual(1)
+    })
   })
 
   describe('Instructions Display', () => {
