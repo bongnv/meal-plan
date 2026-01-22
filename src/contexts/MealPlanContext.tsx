@@ -1,15 +1,15 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 import { generateId } from '../utils/idGenerator'
 import { MealPlanStorageService } from '../utils/storage/mealPlanStorage'
 
-import type { MealPlan, CopyOptions, CopyResult, CopyPreviewItem, ConflictResolution } from '../types/mealPlan'
+import type {
+  MealPlan,
+  CopyOptions,
+  CopyResult,
+  CopyPreviewItem,
+  ConflictResolution,
+} from '../types/mealPlan'
 
 interface MealPlanContextType {
   mealPlans: MealPlan[]
@@ -19,33 +19,50 @@ interface MealPlanContextType {
   addMealPlan: (mealPlan: Omit<MealPlan, 'id'>) => void
   updateMealPlan: (mealPlan: MealPlan) => void
   deleteMealPlan: (id: string) => void
-  copyMealPlan: (id: string, options: CopyOptions, conflictResolution?: ConflictResolution) => string[]
+  copyMealPlan: (
+    id: string,
+    options: CopyOptions,
+    conflictResolution?: ConflictResolution
+  ) => string[]
   generateCopyPreview: (id: string, options: CopyOptions) => CopyResult
   replaceAllMealPlans: (mealPlans: MealPlan[]) => void
   getLastModified: () => number
 }
 
-const MealPlanContext = createContext<MealPlanContextType | undefined>(undefined)
+const MealPlanContext = createContext<MealPlanContextType | undefined>(
+  undefined
+)
 
 export function MealPlanProvider({ children }: { children: ReactNode }) {
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastModified, setLastModified] = useState<number>(Date.now())
   const [storageService] = useState(() => new MealPlanStorageService())
 
-  // Load meal plans on mount
-  useEffect(() => {
+  // Load meal plans and capture any initialization error
+  const [mealPlansState, setMealPlansState] = useState<{
+    mealPlans: MealPlan[]
+    error: string | null
+  }>(() => {
     try {
-      const loadedMealPlans = storageService.loadMealPlans()
-      setMealPlans(loadedMealPlans)
-      setLoading(false)
+      return {
+        mealPlans: storageService.loadMealPlans(),
+        error: null,
+      }
     } catch (err) {
       console.error('Failed to load meal plans:', err)
-      setError('Failed to load meal plans')
-      setLoading(false)
+      return {
+        mealPlans: [],
+        error: 'Failed to load meal plans',
+      }
     }
-  }, [storageService])
+  })
+
+  const mealPlans = mealPlansState.mealPlans
+  const setMealPlans = (newMealPlans: MealPlan[]) => {
+    setMealPlansState({ mealPlans: newMealPlans, error: mealPlansState.error })
+  }
+
+  const [loading, _setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(mealPlansState.error)
+  const [lastModified, setLastModified] = useState<number>(() => Date.now())
 
   // Get meal plan by ID from in-memory state
   const getMealPlanById = (id: string): MealPlan | undefined => {
@@ -109,7 +126,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   // Generate target dates based on copy options
   const generateTargetDates = (options: CopyOptions): string[] => {
     const dates: string[] = []
-    
+
     // Helper to convert Date to ISO date string (YYYY-MM-DD) in local timezone
     const toISODate = (date: Date): string => {
       const year = date.getFullYear()
@@ -149,10 +166,10 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
         endDate.setHours(0, 0, 0, 0)
         // Check if next iteration would exceed end date
         const nextDate = new Date(currentDate)
-        
+
         if (options.frequency === 'weekly') {
           const weeksToAdd = options.weeklyInterval || 1
-          nextDate.setDate(nextDate.getDate() + (7 * weeksToAdd))
+          nextDate.setDate(nextDate.getDate() + 7 * weeksToAdd)
         } else if (options.frequency === 'specific-weekday') {
           nextDate.setDate(nextDate.getDate() + 1)
           const targetWeekday = options.specificWeekday ?? 0
@@ -163,7 +180,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
           const daysToAdd = options.customIntervalDays || 1
           nextDate.setDate(nextDate.getDate() + daysToAdd)
         }
-        
+
         if (nextDate > endDate) {
           break
         }
@@ -174,7 +191,7 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       // Calculate next date based on frequency
       if (options.frequency === 'weekly') {
         const weeksToAdd = options.weeklyInterval || 1
-        currentDate.setDate(currentDate.getDate() + (7 * weeksToAdd))
+        currentDate.setDate(currentDate.getDate() + 7 * weeksToAdd)
       } else if (options.frequency === 'specific-weekday') {
         // Find next occurrence of specified weekday
         const targetWeekday = options.specificWeekday ?? 0
@@ -192,7 +209,10 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   }
 
   // Generate preview with conflict detection
-  const generateCopyPreview = (id: string, options: CopyOptions): CopyResult => {
+  const generateCopyPreview = (
+    id: string,
+    options: CopyOptions
+  ): CopyResult => {
     const sourceMeal = getMealPlanById(id)
     if (!sourceMeal) {
       return { targetDates: [], conflicts: [], preview: [] }
@@ -250,7 +270,11 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
           } else if (conflictResolution === 'replace') {
             // Remove existing meal
             updatedMealPlans = updatedMealPlans.filter(
-              mp => !(mp.date === previewItem.date && mp.mealType === sourceMeal.mealType)
+              mp =>
+                !(
+                  mp.date === previewItem.date &&
+                  mp.mealType === sourceMeal.mealType
+                )
             )
           }
         }
@@ -317,7 +341,6 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useMealPlans(): MealPlanContextType {
   const context = useContext(MealPlanContext)
   if (context === undefined) {

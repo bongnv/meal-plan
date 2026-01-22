@@ -4,10 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MealPlansPage } from './MealPlansPage'
 import * as IngredientContext from '../../contexts/IngredientContext'
 import * as MealPlanContext from '../../contexts/MealPlanContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
+
+import { MealPlansPage } from './MealPlansPage'
 
 import type { MealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -67,7 +68,7 @@ describe('MealPlansPage', () => {
   const mockGetMealPlanById = vi.fn((id: string) =>
     mockMealPlans.find(mp => mp.id === id)
   )
-  const mockGetRecipeById = vi.fn((id: string) => 
+  const mockGetRecipeById = vi.fn((id: string) =>
     mockRecipes.find(r => r.id === id)
   )
 
@@ -111,16 +112,22 @@ describe('MealPlansPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(MealPlanContext, 'useMealPlans').mockReturnValue(mockMealPlanContext)
+    vi.spyOn(MealPlanContext, 'useMealPlans').mockReturnValue(
+      mockMealPlanContext
+    )
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
   })
 
   describe('Page Rendering', () => {
     it('should render the page title', () => {
       renderWithProviders(<MealPlansPage />)
 
-      expect(screen.getByRole('heading', { name: /meal plans/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /meal plans/i })
+      ).toBeInTheDocument()
     })
 
     it('should render the calendar view with navigation controls', () => {
@@ -128,7 +135,9 @@ describe('MealPlansPage', () => {
 
       // Calendar grid should be present (check for navigation)
       expect(screen.getByRole('button', { name: /today/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /previous/i })
+      ).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
     })
 
@@ -181,7 +190,9 @@ describe('MealPlansPage', () => {
         const dialog = screen.getByRole('dialog')
         expect(dialog).toBeInTheDocument()
         // Check for the modal title
-        expect(screen.getByRole('heading', { name: /add meal/i })).toBeInTheDocument()
+        expect(
+          screen.getByRole('heading', { name: /add meal/i })
+        ).toBeInTheDocument()
       })
     })
 
@@ -195,7 +206,9 @@ describe('MealPlansPage', () => {
 
       await waitFor(() => {
         // Check that unified autocomplete is present
-        expect(screen.getByRole('textbox', { name: /select or enter meal/i })).toBeInTheDocument()
+        expect(
+          screen.getByRole('textbox', { name: /select or enter meal/i })
+        ).toBeInTheDocument()
       })
     })
 
@@ -214,9 +227,11 @@ describe('MealPlansPage', () => {
       })
 
       // Select a recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
-      
+
       // Click the recipe option in the dropdown
       await waitFor(() => {
         const spagOption = screen.getByText(/🍽.*Spaghetti Carbonara/)
@@ -252,7 +267,9 @@ describe('MealPlansPage', () => {
       })
 
       // Select a recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/🍽.*Spaghetti Carbonara/))
 
@@ -407,12 +424,14 @@ describe('MealPlansPage', () => {
       })
 
       // Check that the unified meal selection autocomplete is available
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       expect(mealSelect).toBeInTheDocument()
-      
+
       // Type to trigger autocomplete dropdown
       await user.type(mealSelect, 'Spa')
-      
+
       // Verify recipes appear with icon in autocomplete (recipes should contain icon prefix)
       await waitFor(() => {
         const spaghettiOptions = screen.getAllByText(/Spaghetti Carbonara/i)
@@ -433,7 +452,9 @@ describe('MealPlansPage', () => {
       })
 
       // Enter custom meal directly (no need to switch, unified autocomplete)
-      const mealInput = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealInput = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealInput, 'Birthday Party')
 
       // Submit form

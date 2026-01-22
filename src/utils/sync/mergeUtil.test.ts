@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { merge, resolveConflicts } from './mergeUtil'
-import type { SyncData, ConflictInfo, ConflictResolution } from './types'
-import type { Recipe } from '../../types/recipe'
-import type { MealPlan } from '../../types/mealPlan'
 
+import { merge, resolveConflicts } from './mergeUtil'
+
+import type { SyncData, ConflictInfo, ConflictResolution } from './types'
+import type { MealPlan } from '../../types/mealPlan'
+import type { Recipe } from '../../types/recipe'
 
 describe('mergeUtil', () => {
   // Sample data
@@ -202,7 +203,6 @@ describe('mergeUtil', () => {
       // Should still return partial merged data for non-conflicting records
       expect(result.merged).toBeDefined()
     })
-
   })
 
   describe('resolveConflicts', () => {

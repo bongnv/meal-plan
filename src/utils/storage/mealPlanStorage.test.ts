@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-import { MealPlanStorageService } from './mealPlanStorage'
 import { generateId } from '../idGenerator'
+
+import { MealPlanStorageService } from './mealPlanStorage'
 
 import type { MealPlan } from '../../types/mealPlan'
 
@@ -240,7 +241,9 @@ describe('MealPlanStorageService', () => {
         },
       ]
 
-      expect(() => service.saveMealPlans(mockMealPlans)).toThrow('localStorage error')
+      expect(() => service.saveMealPlans(mockMealPlans)).toThrow(
+        'localStorage error'
+      )
     })
   })
 })

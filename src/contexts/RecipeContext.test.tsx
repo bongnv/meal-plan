@@ -1,8 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { RecipeProvider, useRecipes } from './RecipeContext'
 import * as idGenerator from '../utils/idGenerator'
+
+import { RecipeProvider, useRecipes } from './RecipeContext'
 
 import type { Recipe } from '../types/recipe'
 
@@ -13,7 +14,9 @@ const mockStorageServiceInstance = {
 }
 
 vi.mock('../utils/storage/recipeStorage', () => ({
-  RecipeStorageService: vi.fn(function() { return mockStorageServiceInstance }),
+  RecipeStorageService: vi.fn(function () {
+    return mockStorageServiceInstance
+  }),
 }))
 vi.mock('../utils/idGenerator', () => ({
   generateId: vi.fn(),

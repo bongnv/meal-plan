@@ -1,5 +1,3 @@
-import { ReactElement } from 'react'
-
 import { MantineProvider } from '@mantine/core'
 import {
   render as rtlRender,
@@ -9,6 +7,7 @@ import {
   within,
   fireEvent,
 } from '@testing-library/react'
+import { ReactElement } from 'react'
 
 function render(ui: ReactElement, options?: RenderOptions) {
   return rtlRender(ui, {

@@ -1,5 +1,3 @@
-import { useEffect, useMemo, useState } from 'react'
-
 import {
   Autocomplete,
   Button,
@@ -13,10 +11,12 @@ import {
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, zodResolver } from '@mantine/form'
 import { IconCopy } from '@tabler/icons-react'
+import { useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 
-import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
+
+import { CopyMealPlanModal } from './CopyMealPlanModal'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -32,14 +32,13 @@ interface MealPlanFormProps {
   initialMeal?: MealPlan
 }
 
-const mealPlanSchema = z
-  .object({
-    date: z.string().min(1, 'Date is required'),
-    mealType: z.enum(['lunch', 'dinner']),
-    mealSelection: z.string().min(1, 'Meal selection is required'),
-    servings: z.number().optional(),
-    note: z.string().optional(),
-  })
+const mealPlanSchema = z.object({
+  date: z.string().min(1, 'Date is required'),
+  mealType: z.enum(['lunch', 'dinner']),
+  mealSelection: z.string().min(1, 'Meal selection is required'),
+  servings: z.number().optional(),
+  note: z.string().optional(),
+})
 
 type FormValues = z.infer<typeof mealPlanSchema>
 
@@ -65,19 +64,21 @@ export const MealPlanForm = ({
 
   // Prepare unified meal options: recipes + custom meal types
   const mealOptions = useMemo(() => {
-    const recipeOpts = recipes.map((recipe) => ({
+    const recipeOpts = recipes.map(recipe => ({
       value: `recipe:${recipe.id}`,
       label: `🍽 ${recipe.name}`,
       recipeId: recipe.id,
       type: 'recipe' as const,
     }))
 
-    const customOpts = CUSTOM_MEAL_TYPES.filter((t) => t.value !== 'other').map((type) => ({
-      value: `custom:${type.value}`,
-      label: `${type.icon} ${type.label}`,
-      customType: type.value,
-      type: 'custom' as const,
-    }))
+    const customOpts = CUSTOM_MEAL_TYPES.filter(t => t.value !== 'other').map(
+      type => ({
+        value: `custom:${type.value}`,
+        label: `${type.icon} ${type.label}`,
+        customType: type.value,
+        type: 'custom' as const,
+      })
+    )
 
     return [...recipeOpts, ...customOpts]
   }, [recipes])
@@ -141,7 +142,7 @@ export const MealPlanForm = ({
   useEffect(() => {
     if (form.values.mealSelection.startsWith('recipe:')) {
       const recipeId = form.values.mealSelection.replace('recipe:', '')
-      const recipe = recipes.find((r) => r.id === recipeId)
+      const recipe = recipes.find(r => r.id === recipeId)
       if (recipe && form.values.servings === undefined) {
         form.setFieldValue('servings', recipe.servings)
       }
@@ -210,7 +211,7 @@ export const MealPlanForm = ({
             placeholder="Search recipes, or enter Dining Out, Takeout, etc..."
             data={mealOptions.map(opt => opt.label)}
             {...form.getInputProps('mealSelection')}
-            onChange={(value) => {
+            onChange={value => {
               form.setFieldValue('mealSelection', value)
               // Find the matching option to set proper value format
               const matchedOption = mealOptions.find(opt => opt.label === value)
@@ -220,7 +221,9 @@ export const MealPlanForm = ({
             }}
             value={(() => {
               const selection = form.values.mealSelection
-              const matchedOption = mealOptions.find(opt => opt.value === selection)
+              const matchedOption = mealOptions.find(
+                opt => opt.value === selection
+              )
               return matchedOption ? matchedOption.label : selection
             })()}
           />
@@ -275,8 +278,8 @@ export const MealPlanForm = ({
             </Group>
             <Group gap="xs">
               {isEditing && initialMeal && (
-                <Button 
-                  variant="subtle" 
+                <Button
+                  variant="subtle"
                   color="green"
                   leftSection={<IconCopy size={16} />}
                   onClick={() => setCopyModalOpened(true)}

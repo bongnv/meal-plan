@@ -1,3 +1,4 @@
+import { useThrottledCallback } from '@mantine/hooks'
 import {
   createContext,
   useContext,
@@ -8,14 +9,19 @@ import {
 } from 'react'
 import { z } from 'zod'
 
-import { CloudStorageFactory } from '../utils/storage/CloudStorageFactory'
-import { CloudProvider } from '../utils/storage/CloudProvider'
-import type { FileInfo } from '../utils/storage/ICloudStorageProvider'
 import { merge, resolveConflicts } from '../utils/sync/mergeUtil'
-import type { SyncData, ConflictInfo as MergeConflictInfo, ConflictResolution } from '../utils/sync/types'
-import { useRecipes } from './RecipeContext'
-import { useMealPlans } from './MealPlanContext'
+
+import { useCloudStorage } from './CloudStorageContext'
 import { useIngredients } from './IngredientContext'
+import { useMealPlans } from './MealPlanContext'
+import { useRecipes } from './RecipeContext'
+
+import type { FileInfo } from '../utils/storage/ICloudStorageProvider'
+import type {
+  SyncData,
+  ConflictInfo as MergeConflictInfo,
+  ConflictResolution,
+} from '../utils/sync/types'
 
 // Zod schema for validating remote sync data
 const SyncDataSchema = z.object({
@@ -30,7 +36,6 @@ const SyncDataSchema = z.object({
  * LocalStorage keys
  */
 const SELECTED_FILE_KEY = 'mealplan_selected_file'
-const CONNECTED_PROVIDER_KEY = 'mealplan_connected_provider'
 const SYNC_BASE_KEY = 'syncBase'
 
 /**
@@ -51,32 +56,30 @@ export interface SyncConflict {
 
 interface SyncContextType {
   // State
-  connectedProvider: CloudProvider | null
-  accountInfo: { name: string; email: string } | null
   syncStatus: SyncStatus
   lastSyncTime: number | null
   conflicts: SyncConflict[]
   selectedFile: FileInfo | null
 
   // Actions
-  connectProvider: (provider: CloudProvider, fileInfo: FileInfo) => Promise<void>
-  disconnectProvider: () => Promise<void>
+  connectProvider: (fileInfo: FileInfo) => Promise<void>
+  resetLocalState: () => Promise<void>
   syncNow: () => Promise<void>
   importFromRemote: () => Promise<void>
   uploadToRemote: () => Promise<void>
   resolveConflict: (resolution: 'local' | 'remote') => Promise<void>
-  reset: () => Promise<void>
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined)
 
-export function SyncProvider({ children }: { children: ReactNode}) {
-  const [connectedProvider, setConnectedProvider] = useState<CloudProvider | null>(null)
-  const [accountInfo, setAccountInfo] = useState<{ name: string; email: string } | null>(null)
+export function SyncProvider({ children }: { children: ReactNode }) {
+  // Get cloud storage methods from context
+  const cloudStorage = useCloudStorage()
+
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
-  
+
   // Store merge context when conflicts occur for later resolution
   const [conflictContext, setConflictContext] = useState<{
     partialMerged: SyncData
@@ -87,9 +90,21 @@ export function SyncProvider({ children }: { children: ReactNode}) {
   } | null>(null)
 
   // Access data contexts
-  const { recipes, replaceAllRecipes, getLastModified: getRecipesLastModified } = useRecipes()
-  const { mealPlans, replaceAllMealPlans, getLastModified: getMealPlansLastModified } = useMealPlans()
-  const { ingredients, replaceAllIngredients, getLastModified: getIngredientsLastModified } = useIngredients()
+  const {
+    recipes,
+    replaceAllRecipes,
+    getLastModified: getRecipesLastModified,
+  } = useRecipes()
+  const {
+    mealPlans,
+    replaceAllMealPlans,
+    getLastModified: getMealPlansLastModified,
+  } = useMealPlans()
+  const {
+    ingredients,
+    replaceAllIngredients,
+    getLastModified: getIngredientsLastModified,
+  } = useIngredients()
 
   /**
    * Helper function to apply merged data and finalize sync
@@ -99,7 +114,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
     mergedData: SyncData,
     expectedTimestamp: number
   ): Promise<void> => {
-    if (!connectedProvider || !selectedFile) {
+    if (!cloudStorage.currentProvider || !selectedFile) {
       throw new Error('Not connected or no file selected')
     }
 
@@ -119,112 +134,108 @@ export function SyncProvider({ children }: { children: ReactNode}) {
     replaceAllIngredients(mergedData.ingredients)
 
     // Step 9: Upload merged data to remote
-    const factory = CloudStorageFactory.getInstance()
-    const cloudProvider = factory.getProvider(connectedProvider)
     const uploadData = { ...mergedData, lastModified: Date.now() }
-    await cloudProvider.uploadFile(selectedFile, JSON.stringify(uploadData))
+    await cloudStorage.uploadFile(selectedFile, JSON.stringify(uploadData))
 
     // Step 10: Save as new base
     localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(uploadData))
   }
 
-  // Restore provider connection on mount
+  // Restore selected file from localStorage on mount
   useEffect(() => {
-    const restoreConnection = async () => {
-      const savedProvider = localStorage.getItem(CONNECTED_PROVIDER_KEY) as CloudProvider | null
-      const savedFile = localStorage.getItem(SELECTED_FILE_KEY)
-      
-      if (!savedProvider || !savedFile) {
-        return
-      }
+    const savedFile = localStorage.getItem(SELECTED_FILE_KEY)
 
+    if (savedFile && cloudStorage.isAuthenticated) {
       try {
-        const factory = CloudStorageFactory.getInstance()
-        const cloudProvider = factory.getProvider(savedProvider)
-        
-        // Check if provider is still connected (has valid token)
-        const isConnected = await cloudProvider.isConnected()
-        
-        if (isConnected) {
-          // Restore connection state without re-authenticating
-          const info = await cloudProvider.getAccountInfo()
-          const fileInfo = JSON.parse(savedFile) as FileInfo
-          
-          setConnectedProvider(savedProvider)
-          setAccountInfo(info)
-          setSelectedFile(fileInfo)
-        } else {
-          // Token expired, clear saved data
-          localStorage.removeItem(CONNECTED_PROVIDER_KEY)
-          localStorage.removeItem(SELECTED_FILE_KEY)
-        }
+        const fileInfo = JSON.parse(savedFile) as FileInfo
+        setSelectedFile(fileInfo)
       } catch (error) {
-        console.error('Failed to restore cloud provider connection:', error)
-        // Failed to restore, clear saved data
-        localStorage.removeItem(CONNECTED_PROVIDER_KEY)
+        console.error('Failed to restore selected file:', error)
         localStorage.removeItem(SELECTED_FILE_KEY)
       }
     }
+  }, [cloudStorage.isAuthenticated])
 
-    restoreConnection()
-  }, [])
+  // Throttled auto-sync function (max once per minute)
+  const throttledSync = useThrottledCallback(async () => {
+    console.log('Auto-syncing...')
+    try {
+      await syncNow()
+    } catch (error) {
+      console.error('Auto-sync failed:', error)
+      // Don't throw - let user continue with local data
+    }
+  }, 60000) // 1 minute
+
+  // Track lastModified timestamps for auto-sync trigger
+  const recipesLastModified = getRecipesLastModified()
+  const mealPlansLastModified = getMealPlansLastModified()
+  const ingredientsLastModified = getIngredientsLastModified()
+
+  // Auto-sync: immediate on first call, throttled on subsequent data changes
+  useEffect(() => {
+    // Only auto-sync if we're connected and not already syncing
+    if (
+      !cloudStorage.isAuthenticated ||
+      !selectedFile ||
+      syncStatus === 'syncing'
+    ) {
+      return
+    }
+
+    // Throttled sync (executes immediately on first call, then throttles)
+    throttledSync()
+  }, [
+    recipesLastModified,
+    mealPlansLastModified,
+    ingredientsLastModified,
+    cloudStorage.isAuthenticated,
+    selectedFile,
+    throttledSync,
+    syncStatus,
+  ])
 
   /**
-   * Connect to specified cloud storage provider
-   * Initiates authentication and enables auto-sync
-   * 
-   * @param provider - Cloud storage provider to connect to
+   * Select a file for syncing
+   * Note: Provider must already be authenticated via CloudStorageContext
+   *
    * @param fileInfo - File information for sync (persisted to localStorage)
    */
-  const connectProvider = async (provider: CloudProvider, fileInfo: FileInfo): Promise<void> => {
-    const factory = CloudStorageFactory.getInstance()
-    const cloudProvider = factory.getProvider(provider)
+  const connectProvider = async (fileInfo: FileInfo): Promise<void> => {
+    if (!cloudStorage.isAuthenticated) {
+      throw new Error('Provider not authenticated')
+    }
 
-    // Initiate provider-specific authentication flow
-    await cloudProvider.connect()
-
-    // Get account info for UI display
-    const info = await cloudProvider.getAccountInfo()
-
-    // Update state
-    setConnectedProvider(provider)
-    setAccountInfo(info)
+    // Update file selection
     setSelectedFile(fileInfo)
-
-    // Persist provider and file info to localStorage
-    localStorage.setItem(CONNECTED_PROVIDER_KEY, provider)
     localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(fileInfo))
   }
 
   /**
-   * Disconnect from current provider
-   * Disables auto-sync but keeps local data
+   * Reset local state and clear cache
+   * Clears provider connection and all local data (cloud is source of truth)
+   * Auth token remains valid - no logout popup
+   * Used when switching to a different file
    */
-  const disconnectProvider = async (): Promise<void> => {
-    if (!connectedProvider) {
-      return
-    }
+  const resetLocalState = async (): Promise<void> => {
+    // Clear provider state (no logout popup)
+    await cloudStorage.disconnect()
 
-    const factory = CloudStorageFactory.getInstance()
-    const cloudProvider = factory.getProvider(connectedProvider)
+    // Clear all local storage (local data is just a cache)
+    localStorage.clear()
 
-    // Disconnect from provider
-    await cloudProvider.disconnect()
-
-    // Clear state and persisted data
-    setConnectedProvider(null)
-    setAccountInfo(null)
-    setSyncStatus('idle')
+    // Reset all state
     setSelectedFile(null)
-    localStorage.removeItem(CONNECTED_PROVIDER_KEY)
-    localStorage.removeItem(SELECTED_FILE_KEY)
+    setSyncStatus('idle')
+    setLastSyncTime(null)
+    setConflictContext(null)
   }
 
   /**
    * Trigger manual sync with three-way merge
    */
   const syncNow = async (): Promise<void> => {
-    if (!connectedProvider) {
+    if (!cloudStorage.currentProvider || !selectedFile) {
       throw new Error('Not connected')
     }
 
@@ -235,9 +246,6 @@ export function SyncProvider({ children }: { children: ReactNode}) {
     try {
       setSyncStatus('syncing')
 
-      const factory = CloudStorageFactory.getInstance()
-      const cloudProvider = factory.getProvider(connectedProvider)
-
       // Step 1: Capture initial state timestamp for race condition detection
       const initialStateTimestamp = Math.max(
         getRecipesLastModified(),
@@ -246,13 +254,17 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       )
 
       // Step 2: Load base version (last synced state)
+      // If no base exists (first sync), use empty base for merge
       const baseJson = localStorage.getItem(SYNC_BASE_KEY)
-      const base: SyncData | null = baseJson ? JSON.parse(baseJson) : null
-
-      // Require base for sync - fail fast before expensive operations
-      if (!base) {
-        throw new Error('No sync base found. Use uploadToRemote() for initial upload or importFromRemote() to import existing data.')
-      }
+      const base: SyncData = baseJson
+        ? JSON.parse(baseJson)
+        : {
+            recipes: [],
+            mealPlans: [],
+            ingredients: [],
+            lastModified: 0,
+            version: 1,
+          }
 
       // Step 3: Create local data snapshot with actual state modification time
       const localData: SyncData = {
@@ -264,16 +276,16 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       }
 
       // Step 4: Download remote data
-      const remoteJson = await cloudProvider.downloadFile(selectedFile)
+      const remoteJson = await cloudStorage.downloadFile(selectedFile)
       const parsedRemote = JSON.parse(remoteJson)
-      
+
       // Validate remote data structure with zod
       const validationResult = SyncDataSchema.safeParse(parsedRemote)
       if (!validationResult.success) {
         console.error('Remote data validation failed:', validationResult.error)
         throw new Error('Invalid remote data format')
       }
-      
+
       const remote = validationResult.data as SyncData
 
       // Step 5: Perform merge
@@ -283,9 +295,11 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       if (!mergeResult.success && mergeResult.conflicts) {
         // Store merge context for later resolution
         if (!mergeResult.merged) {
-          throw new Error('Merge failed: no partial merge data for conflict resolution')
+          throw new Error(
+            'Merge failed: no partial merge data for conflict resolution'
+          )
         }
-        
+
         setConflictContext({
           partialMerged: mergeResult.merged,
           conflicts: mergeResult.conflicts,
@@ -293,9 +307,11 @@ export function SyncProvider({ children }: { children: ReactNode}) {
           localModified: localData.lastModified,
           remoteModified: remote.lastModified,
         })
-        
+
         setSyncStatus('error')
-        throw new Error(`Sync conflicts detected: ${mergeResult.conflicts.length} items need resolution`)
+        throw new Error(
+          `Sync conflicts detected: ${mergeResult.conflicts.length} items need resolution`
+        )
       }
 
       if (!mergeResult.merged) {
@@ -303,7 +319,10 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       }
 
       // Steps 7-10: Apply merged data and finalize
-      await applyMergedDataAndFinalize(mergeResult.merged, initialStateTimestamp)
+      await applyMergedDataAndFinalize(
+        mergeResult.merged,
+        initialStateTimestamp
+      )
 
       setSyncStatus('success')
       setLastSyncTime(Date.now())
@@ -317,7 +336,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
 
   /**
    * Resolve all conflicts by choosing to keep either local or remote versions
-   * 
+   *
    * @param resolution - 'local' to keep all local changes, 'remote' to keep all remote changes
    */
   const resolveConflict = async (
@@ -327,7 +346,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       throw new Error('No conflict context available')
     }
 
-    if (!connectedProvider || !selectedFile) {
+    if (!cloudStorage.currentProvider || !selectedFile) {
       throw new Error('Not connected or no file selected')
     }
 
@@ -352,7 +371,10 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       }
 
       // Steps 7-10: Apply merged data and finalize
-      await applyMergedDataAndFinalize(resolveResult.merged, conflictContext.initialTimestamp)
+      await applyMergedDataAndFinalize(
+        resolveResult.merged,
+        conflictContext.initialTimestamp
+      )
 
       // Clear conflict context
       setConflictContext(null)
@@ -370,7 +392,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
    * Use this for first-time import or when you want to discard local changes
    */
   const importFromRemote = async (): Promise<void> => {
-    if (!connectedProvider) {
+    if (!cloudStorage.currentProvider) {
       throw new Error('Not connected')
     }
 
@@ -381,20 +403,17 @@ export function SyncProvider({ children }: { children: ReactNode}) {
     try {
       setSyncStatus('syncing')
 
-      const factory = CloudStorageFactory.getInstance()
-      const cloudProvider = factory.getProvider(connectedProvider)
-
       // Download remote data
-      const remoteJson = await cloudProvider.downloadFile(selectedFile)
+      const remoteJson = await cloudStorage.downloadFile(selectedFile)
       const parsedRemote = JSON.parse(remoteJson)
-      
+
       // Validate remote data structure with zod
       const validationResult = SyncDataSchema.safeParse(parsedRemote)
       if (!validationResult.success) {
         console.error('Remote data validation failed:', validationResult.error)
         throw new Error('Invalid remote data format')
       }
-      
+
       const remote = validationResult.data as SyncData
 
       // Apply remote data to React state (overwrites local)
@@ -420,7 +439,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
    * Use this for first-time upload or when you want to overwrite remote with local data
    */
   const uploadToRemote = async (): Promise<void> => {
-    if (!connectedProvider) {
+    if (!cloudStorage.currentProvider) {
       throw new Error('Not connected')
     }
 
@@ -430,9 +449,6 @@ export function SyncProvider({ children }: { children: ReactNode}) {
 
     try {
       setSyncStatus('syncing')
-
-      const factory = CloudStorageFactory.getInstance()
-      const cloudProvider = factory.getProvider(connectedProvider)
 
       // Capture current state timestamp
       const stateTimestamp = Math.max(
@@ -451,7 +467,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       }
 
       // Upload to remote
-      await cloudProvider.uploadFile(selectedFile, JSON.stringify(localData))
+      await cloudStorage.uploadFile(selectedFile, JSON.stringify(localData))
 
       // Save as new base
       localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(localData))
@@ -466,32 +482,10 @@ export function SyncProvider({ children }: { children: ReactNode}) {
     }
   }
 
-  /**
-   * Reset all local data and disconnect
-   * Shows welcome screen
-   */
-  const reset = async (): Promise<void> => {
-    // Disconnect from provider if connected
-    if (connectedProvider) {
-      await disconnectProvider()
-    }
-
-    // Clear all local storage
-    localStorage.clear()
-
-    // Reset all state
-    setConnectedProvider(null)
-    setAccountInfo(null)
-    setSyncStatus('idle')
-    setLastSyncTime(null)
-    setConflictContext(null)
-    setSelectedFile(null)
-  }
-
   // Derive conflicts from conflictContext (memoized)
   const conflicts: SyncConflict[] = useMemo(() => {
     if (!conflictContext) return []
-    
+
     return conflictContext.conflicts.map((c: MergeConflictInfo) => {
       // Extract name from different entity types
       let itemName = 'Unknown'
@@ -500,7 +494,7 @@ export function SyncProvider({ children }: { children: ReactNode}) {
       } else if (c.remoteVersion && 'name' in c.remoteVersion) {
         itemName = c.remoteVersion.name
       }
-      
+
       return {
         id: c.id,
         type: c.entity,
@@ -514,19 +508,16 @@ export function SyncProvider({ children }: { children: ReactNode}) {
   return (
     <SyncContext.Provider
       value={{
-        connectedProvider,
-        accountInfo,
         syncStatus,
         lastSyncTime,
         conflicts,
         selectedFile,
         connectProvider,
-        disconnectProvider,
+        resetLocalState,
         syncNow,
         importFromRemote,
         uploadToRemote,
         resolveConflict,
-        reset,
       }}
     >
       {children}

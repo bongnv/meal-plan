@@ -1,72 +1,39 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import type { ReactNode } from 'react'
-import { SyncProvider, useSyncContext } from './SyncContext'
-import { RecipeProvider } from './RecipeContext'
-import { MealPlanProvider } from './MealPlanContext'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { IngredientProvider } from './IngredientContext'
-import { CloudStorageFactory } from '../utils/storage/CloudStorageFactory'
-import { CloudProvider } from '../utils/storage/CloudProvider'
-import type { ICloudStorageProvider } from '../utils/storage/ICloudStorageProvider'
-import type { FileInfo } from '../utils/storage/ICloudStorageProvider'
+import { MealPlanProvider } from './MealPlanContext'
+import { RecipeProvider } from './RecipeContext'
+import { SyncProvider, useSyncContext } from './SyncContext'
 
-// Mock cloud storage provider
-class MockCloudStorageProvider implements ICloudStorageProvider {
-  private connected = false
-  private accountInfo = { name: 'Test User', email: 'test@example.com' }
-  public uploadFileMock = vi.fn()
-  public downloadFileMock = vi.fn()
-  public listFilesMock = vi.fn()
-  public connectMock = vi.fn()
-  public disconnectMock = vi.fn()
+import type { ReactNode } from 'react'
 
-  async connect(): Promise<void> {
-    this.connectMock()
-    this.connected = true
-  }
+// Mock cloud storage functions
+const mockUploadFile = vi.fn()
+const mockDownloadFile = vi.fn()
+const mockListFoldersAndFiles = vi.fn()
+const mockConnect = vi.fn()
+const mockDisconnect = vi.fn()
+const mockGetAccountInfo = vi.fn()
+let mockIsAuthenticated = false
+let mockCurrentProvider: string | null = null
 
-  async disconnect(): Promise<void> {
-    this.disconnectMock()
-    this.connected = false
-  }
-
-  async isConnected(): Promise<boolean> {
-    return this.connected
-  }
-
-  async getAccountInfo(): Promise<{ name: string; email: string }> {
-    if (!this.connected) {
-      throw new Error('Not connected')
-    }
-    return this.accountInfo
-  }
-
-  async uploadFile(fileInfo: FileInfo, data: string): Promise<void> {
-    if (!this.connected) {
-      throw new Error('Not connected')
-    }
-    return this.uploadFileMock(fileInfo.name, data)
-  }
-
-  async downloadFile(fileInfo: FileInfo): Promise<string> {
-    if (!this.connected) {
-      throw new Error('Not connected')
-    }
-    return this.downloadFileMock(fileInfo.name)
-  }
-
-  async listFiles(): Promise<Array<{ name: string; lastModified: Date; size: number }>> {
-    if (!this.connected) {
-      throw new Error('Not connected')
-    }
-    return this.listFilesMock()
-  }
-}
+// Mock CloudStorageContext
+vi.mock('./CloudStorageContext', () => ({
+  CloudStorageProvider: ({ children }: { children: ReactNode }) => children,
+  useCloudStorage: () => ({
+    currentProvider: mockCurrentProvider,
+    isAuthenticated: mockIsAuthenticated,
+    connect: mockConnect,
+    disconnect: mockDisconnect,
+    getAccountInfo: mockGetAccountInfo,
+    uploadFile: mockUploadFile,
+    downloadFile: mockDownloadFile,
+    listFoldersAndFiles: mockListFoldersAndFiles,
+  }),
+}))
 
 describe('SyncContext', () => {
-  let mockProvider: MockCloudStorageProvider
-  let factory: CloudStorageFactory
-
   // Wrapper component that includes all required providers
   const AllProviders = ({ children }: { children: ReactNode }) => (
     <RecipeProvider>
@@ -82,15 +49,19 @@ describe('SyncContext', () => {
     // Clear localStorage before each test
     localStorage.clear()
 
-    // Reset and set up factory with mock provider
-    factory = CloudStorageFactory.getInstance()
-    factory.clearProviders()
-    mockProvider = new MockCloudStorageProvider()
-    factory.registerProvider(CloudProvider.ONEDRIVE, mockProvider)
-  })
-
-  afterEach(() => {
-    factory.clearProviders()
+    // Reset all mocks
+    vi.clearAllMocks()
+    mockIsAuthenticated = false
+    mockCurrentProvider = null
+    mockConnect.mockResolvedValue(undefined)
+    mockDisconnect.mockResolvedValue(undefined)
+    mockGetAccountInfo.mockReturnValue({
+      name: 'Test User',
+      email: 'test@example.com',
+    })
+    mockUploadFile.mockResolvedValue(undefined)
+    mockDownloadFile.mockResolvedValue('{}')
+    mockListFoldersAndFiles.mockResolvedValue({ folders: [], files: [] })
   })
 
   describe('Context Provider', () => {
@@ -100,7 +71,7 @@ describe('SyncContext', () => {
       })
 
       expect(result.current).toBeDefined()
-      expect(result.current.connectedProvider).toBeNull()
+      expect(result.current.selectedFile).toBeNull()
       expect(result.current.syncStatus).toBe('idle')
     })
 
@@ -122,8 +93,7 @@ describe('SyncContext', () => {
         wrapper: AllProviders,
       })
 
-      expect(result.current.connectedProvider).toBeNull()
-      expect(result.current.accountInfo).toBeNull()
+      expect(result.current.selectedFile).toBeNull()
       expect(result.current.syncStatus).toBe('idle')
       expect(result.current.lastSyncTime).toBeNull()
       expect(result.current.conflicts).toEqual([])
@@ -132,26 +102,28 @@ describe('SyncContext', () => {
 
   describe('Connect Provider', () => {
     it('should connect to OneDrive provider successfully', async () => {
+      mockIsAuthenticated = true
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
       })
 
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
+        await result.current.connectProvider({
+          id: 'file-1',
+          name: 'data.json.gz',
+          path: '/data.json.gz',
+        })
       })
 
-      expect(mockProvider.connectMock).toHaveBeenCalledOnce()
-      expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
-      expect(result.current.accountInfo).toEqual({
-        name: 'Test User',
-        email: 'test@example.com',
+      expect(result.current.selectedFile).toEqual({
+        id: 'file-1',
+        name: 'data.json.gz',
+        path: '/data.json.gz',
       })
     })
 
     it('should handle connection errors', async () => {
-      mockProvider.connectMock.mockImplementation(() => {
-        throw new Error('Connection failed')
-      })
+      mockIsAuthenticated = false
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -159,63 +131,15 @@ describe('SyncContext', () => {
 
       await expect(async () => {
         await act(async () => {
-          await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
+          await result.current.connectProvider({
+            id: 'file-1',
+            name: 'data.json.gz',
+            path: '/data.json.gz',
+          })
         })
-      }).rejects.toThrow('Connection failed')
+      }).rejects.toThrow('Provider not authenticated')
 
-      expect(result.current.connectedProvider).toBeNull()
-      expect(result.current.accountInfo).toBeNull()
-    })
-
-    it('should not allow connecting to unregistered provider', async () => {
-      factory.clearProviders() // Remove all providers
-
-      const { result } = renderHook(() => useSyncContext(), {
-        wrapper: AllProviders,
-      })
-
-      await expect(async () => {
-        await act(async () => {
-          await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
-        })
-      }).rejects.toThrow('Provider "onedrive" not found')
-    })
-  })
-
-  describe('Disconnect Provider', () => {
-    it('should disconnect from provider successfully', async () => {
-      const { result } = renderHook(() => useSyncContext(), {
-        wrapper: AllProviders,
-      })
-
-      // First connect
-      await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
-      })
-
-      expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
-
-      // Then disconnect
-      await act(async () => {
-        await result.current.disconnectProvider()
-      })
-
-      expect(mockProvider.disconnectMock).toHaveBeenCalledOnce()
-      expect(result.current.connectedProvider).toBeNull()
-      expect(result.current.accountInfo).toBeNull()
-    })
-
-    it('should handle disconnect when not connected', async () => {
-      const { result } = renderHook(() => useSyncContext(), {
-        wrapper: AllProviders,
-      })
-
-      // Should not throw error
-      await act(async () => {
-        await result.current.disconnectProvider()
-      })
-
-      expect(result.current.connectedProvider).toBeNull()
+      expect(result.current.selectedFile).toBeNull()
     })
   })
 
@@ -238,9 +162,7 @@ describe('SyncContext', () => {
       })
 
       await act(async () => {
-        await expect(result.current.syncNow()).rejects.toThrow(
-          'Not connected'
-        )
+        await expect(result.current.syncNow()).rejects.toThrow('Not connected')
       })
     })
 
@@ -271,65 +193,6 @@ describe('SyncContext', () => {
     })
   })
 
-  describe('Reset', () => {
-    it('should reset all state and disconnect', async () => {
-      const { result } = renderHook(() => useSyncContext(), {
-        wrapper: AllProviders,
-      })
-
-      // Connect and set some state
-      await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
-      })
-
-      expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
-
-      // Reset
-      await act(async () => {
-        await result.current.reset()
-      })
-
-      expect(result.current.connectedProvider).toBeNull()
-      expect(result.current.accountInfo).toBeNull()
-      expect(result.current.syncStatus).toBe('idle')
-      expect(result.current.lastSyncTime).toBeNull()
-      expect(result.current.conflicts).toEqual([])
-    })
-  })
-
-  describe('Provider Switching', () => {
-    it('should allow switching between providers', async () => {
-      // Register a second mock provider
-      const mockProvider2 = new MockCloudStorageProvider()
-      factory.registerProvider(CloudProvider.GOOGLE_DRIVE, mockProvider2)
-
-      const { result } = renderHook(() => useSyncContext(), {
-        wrapper: AllProviders,
-      })
-
-      // Connect to first provider
-      await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, { id: "file-1", name: "data.json.gz", path: "/data.json.gz" })
-      })
-
-      expect(result.current.connectedProvider).toBe(CloudProvider.ONEDRIVE)
-      expect(mockProvider.connectMock).toHaveBeenCalledOnce()
-
-      // Disconnect
-      await act(async () => {
-        await result.current.disconnectProvider()
-      })
-
-      // Connect to second provider
-      await act(async () => {
-        await result.current.connectProvider(CloudProvider.GOOGLE_DRIVE, { id: 'file-2', name: 'data.json.gz', path: '/data.json.gz' })
-      })
-
-      expect(result.current.connectedProvider).toBe(CloudProvider.GOOGLE_DRIVE)
-      expect(mockProvider2.connectMock).toHaveBeenCalledOnce()
-    })
-  })
-
   // TODO: Add Offline Detection tests after implementing base setup in I3.4
 
   describe('Import from Remote', () => {
@@ -339,7 +202,9 @@ describe('SyncContext', () => {
       })
 
       await act(async () => {
-        await expect(result.current.importFromRemote()).rejects.toThrow('Not connected')
+        await expect(result.current.importFromRemote()).rejects.toThrow(
+          'Not connected'
+        )
       })
     })
 
@@ -353,12 +218,16 @@ describe('SyncContext', () => {
       })
 
       await act(async () => {
-        await expect(result.current.uploadToRemote()).rejects.toThrow('Not connected')
+        await expect(result.current.uploadToRemote()).rejects.toThrow(
+          'Not connected'
+        )
       })
     })
 
     it('should upload local data to remote', async () => {
-      mockProvider.uploadFileMock.mockResolvedValue(undefined)
+      mockIsAuthenticated = true
+      mockCurrentProvider = 'onedrive'
+      mockUploadFile.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -366,7 +235,7 @@ describe('SyncContext', () => {
 
       // Connect first
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, {
+        await result.current.connectProvider({
           id: 'file-1',
           name: 'data.json.gz',
           path: '/data.json.gz',
@@ -378,12 +247,19 @@ describe('SyncContext', () => {
         await result.current.uploadToRemote()
       })
 
-      expect(mockProvider.uploadFileMock).toHaveBeenCalledWith('data.json.gz', expect.any(String))
+      expect(mockUploadFile).toHaveBeenCalledWith(
+        {
+          id: 'file-1',
+          name: 'data.json.gz',
+          path: '/data.json.gz',
+        },
+        expect.any(String)
+      )
       expect(result.current.syncStatus).toBe('success')
       expect(result.current.lastSyncTime).not.toBeNull()
 
       // Verify uploaded data structure
-      const uploadedData = JSON.parse(mockProvider.uploadFileMock.mock.calls[0][1])
+      const uploadedData = JSON.parse(mockUploadFile.mock.calls[0][1])
       expect(uploadedData).toHaveProperty('recipes')
       expect(uploadedData).toHaveProperty('mealPlans')
       expect(uploadedData).toHaveProperty('ingredients')
@@ -392,7 +268,9 @@ describe('SyncContext', () => {
     })
 
     it('should handle upload errors', async () => {
-      mockProvider.uploadFileMock.mockRejectedValue(new Error('Upload failed'))
+      mockIsAuthenticated = true
+      mockCurrentProvider = 'onedrive'
+      mockUploadFile.mockRejectedValue(new Error('Upload failed'))
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -400,7 +278,7 @@ describe('SyncContext', () => {
 
       // Connect first
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, {
+        await result.current.connectProvider({
           id: 'file-1',
           name: 'data.json.gz',
           path: '/data.json.gz',
@@ -423,7 +301,9 @@ describe('SyncContext', () => {
     })
 
     it('should save uploaded data as new base', async () => {
-      mockProvider.uploadFileMock.mockResolvedValue(undefined)
+      mockIsAuthenticated = true
+      mockCurrentProvider = 'onedrive'
+      mockUploadFile.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -431,7 +311,7 @@ describe('SyncContext', () => {
 
       // Connect first
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, {
+        await result.current.connectProvider({
           id: 'file-1',
           name: 'data.json.gz',
           path: '/data.json.gz',
@@ -455,7 +335,9 @@ describe('SyncContext', () => {
     })
 
     it('should clear conflict context after successful upload', async () => {
-      mockProvider.uploadFileMock.mockResolvedValue(undefined)
+      mockIsAuthenticated = true
+      mockCurrentProvider = 'onedrive'
+      mockUploadFile.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -463,7 +345,7 @@ describe('SyncContext', () => {
 
       // Connect first
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, {
+        await result.current.connectProvider({
           id: 'file-1',
           name: 'data.json.gz',
           path: '/data.json.gz',
@@ -480,7 +362,9 @@ describe('SyncContext', () => {
     })
 
     it('should include current lastModified timestamp in uploaded data', async () => {
-      mockProvider.uploadFileMock.mockResolvedValue(undefined)
+      mockIsAuthenticated = true
+      mockCurrentProvider = 'onedrive'
+      mockUploadFile.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useSyncContext(), {
         wrapper: AllProviders,
@@ -488,7 +372,7 @@ describe('SyncContext', () => {
 
       // Connect first
       await act(async () => {
-        await result.current.connectProvider(CloudProvider.ONEDRIVE, {
+        await result.current.connectProvider({
           id: 'file-1',
           name: 'data.json.gz',
           path: '/data.json.gz',
@@ -501,7 +385,7 @@ describe('SyncContext', () => {
       })
 
       // Verify uploaded data has a valid timestamp
-      const uploadedData = JSON.parse(mockProvider.uploadFileMock.mock.calls[0][1])
+      const uploadedData = JSON.parse(mockUploadFile.mock.calls[0][1])
       expect(uploadedData.lastModified).toBeGreaterThan(0)
       expect(typeof uploadedData.lastModified).toBe('number')
       // Should be within the last second (reasonable for test execution)

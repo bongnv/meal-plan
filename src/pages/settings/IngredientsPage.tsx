@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import {
   Button,
   Container,
@@ -11,6 +9,7 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconPlus } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { IngredientForm } from '../../components/ingredients/IngredientForm'
 import { IngredientList } from '../../components/ingredients/IngredientList'
@@ -52,7 +51,7 @@ export function IngredientsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    const ingredient = ingredients.find((i) => i.id === id)
+    const ingredient = ingredients.find(i => i.id === id)
     if (ingredient) {
       modals.openConfirmModal({
         title: 'Delete Ingredient',

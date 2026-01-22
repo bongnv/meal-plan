@@ -1,8 +1,9 @@
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { IngredientList } from './IngredientList'
 import { render, screen } from '../../test/test-utils'
+
+import { IngredientList } from './IngredientList'
 
 import type { Ingredient } from '../../types/ingredient'
 

@@ -1,4 +1,15 @@
-import { ActionIcon, Button, Container, Group, Loader, Stack, Text, Title, Tooltip, Box } from '@mantine/core'
+import {
+  ActionIcon,
+  Button,
+  Container,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+  Box,
+} from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -60,8 +71,8 @@ export function RecipeDetailPage() {
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete "{recipe.name}"? This action cannot
-          be undone.
+          Are you sure you want to delete "{recipe.name}"? This action cannot be
+          undone.
         </Text>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },

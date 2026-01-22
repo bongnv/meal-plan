@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { IngredientStorageService } from './IngredientStorage'
 import { generateId } from '../idGenerator'
+
+import { IngredientStorageService } from './IngredientStorage'
 
 import type { Ingredient } from '../../types/ingredient'
 

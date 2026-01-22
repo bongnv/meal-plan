@@ -3,8 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { MealPlanForm } from './MealPlanForm'
 import { MealPlanProvider } from '../../contexts/MealPlanContext'
+
+import { MealPlanForm } from './MealPlanForm'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -35,9 +36,7 @@ const mockRecipes: Recipe[] = [
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MantineProvider>
-      <MealPlanProvider>
-        {component}
-      </MealPlanProvider>
+      <MealPlanProvider>{component}</MealPlanProvider>
     </MantineProvider>
   )
 }
@@ -106,13 +105,19 @@ describe('MealPlanForm', () => {
     it('should render unified meal selection autocomplete', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      expect(screen.getByRole('textbox', { name: /select or enter meal/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('textbox', { name: /select or enter meal/i })
+      ).toBeInTheDocument()
     })
 
     it('should show placeholder text', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      expect(screen.getByPlaceholderText(/search recipes, or enter dining out, takeout/i)).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText(
+          /search recipes, or enter dining out, takeout/i
+        )
+      ).toBeInTheDocument()
     })
   })
 
@@ -120,14 +125,18 @@ describe('MealPlanForm', () => {
     it('should show unified meal selector', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      expect(screen.getByRole('textbox', { name: /select or enter meal/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('textbox', { name: /select or enter meal/i })
+      ).toBeInTheDocument()
     })
 
     it('should show servings input when recipe is selected', async () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -138,7 +147,9 @@ describe('MealPlanForm', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -154,7 +165,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // First select a recipe to show servings input
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -176,15 +189,21 @@ describe('MealPlanForm', () => {
   describe('Custom Entry', () => {
     it('should show unified autocomplete for all meal types', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
-      
-      expect(screen.getByPlaceholderText(/search recipes, or enter dining out, takeout/i)).toBeInTheDocument()
+
+      expect(
+        screen.getByPlaceholderText(
+          /search recipes, or enter dining out, takeout/i
+        )
+      ).toBeInTheDocument()
     })
 
     it('should show predefined custom options when typing', async () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Din')
 
       await waitFor(() => {
@@ -196,7 +215,9 @@ describe('MealPlanForm', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Din')
 
       await waitFor(() => {
@@ -208,7 +229,9 @@ describe('MealPlanForm', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Spag')
 
       await waitFor(() => {
@@ -220,7 +243,9 @@ describe('MealPlanForm', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Din')
       await user.click(screen.getByText(/Dining Out/))
 
@@ -234,7 +259,9 @@ describe('MealPlanForm', () => {
       const user = userEvent.setup()
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Pizza Night')
 
       expect(autocomplete).toHaveValue('Pizza Night')
@@ -288,7 +315,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Select recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -315,7 +344,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Select predefined custom option from unified autocomplete
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Din')
       await user.click(screen.getByText(/Dining Out/))
 
@@ -340,7 +371,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Type custom text in unified autocomplete
-      const autocomplete = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const autocomplete = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(autocomplete, 'Pizza Night')
 
       // Submit
@@ -365,7 +398,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Select recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -391,7 +426,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Select recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -415,7 +452,9 @@ describe('MealPlanForm', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/meal selection is required/i)).toBeInTheDocument()
+        expect(
+          screen.getByText(/meal selection is required/i)
+        ).toBeInTheDocument()
       })
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
@@ -426,7 +465,9 @@ describe('MealPlanForm', () => {
       renderWithProviders(<MealPlanForm {...defaultProps} />)
 
       // Select recipe from unified autocomplete
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i })
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      })
       await user.type(mealSelect, 'Spag')
       await user.click(screen.getByText(/Spaghetti Carbonara/))
 
@@ -447,7 +488,6 @@ describe('MealPlanForm', () => {
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
     })
-
   })
 
   describe('Edit Mode', () => {
@@ -469,7 +509,9 @@ describe('MealPlanForm', () => {
       // DatePickerInput doesn't have a text value, so we can't check it with toHaveValue
       expect(screen.getByLabelText('Dinner')).toBeChecked()
       // Check that the autocomplete has the recipe name with icon
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i }) as HTMLInputElement
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      }) as HTMLInputElement
       await waitFor(() => {
         // Value includes icon
         expect(mealSelect.value).toContain('Spaghetti Carbonara')
@@ -492,7 +534,9 @@ describe('MealPlanForm', () => {
       )
 
       // Check that the unified autocomplete has the custom meal type
-      const mealSelect = screen.getByRole('textbox', { name: /select or enter meal/i }) as HTMLInputElement
+      const mealSelect = screen.getByRole('textbox', {
+        name: /select or enter meal/i,
+      }) as HTMLInputElement
       // Value includes icon
       expect(mealSelect.value).toContain('Dining Out')
     })

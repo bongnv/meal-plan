@@ -4,9 +4,9 @@ import type {
   ConflictResolution,
   RecordChanges,
 } from './types'
-import type { Recipe } from '../../types/recipe'
-import type { MealPlan } from '../../types/mealPlan'
 import type { Ingredient } from '../../types/ingredient'
+import type { MealPlan } from '../../types/mealPlan'
+import type { Recipe } from '../../types/recipe'
 
 /**
  * Result of a merge operation
@@ -20,17 +20,17 @@ export interface MergeResult {
 
 /**
  * Three-way merge utility for syncing local and remote data
- * 
+ *
  * Pure functions that handle merge logic without side effects.
  * Caller (SyncContext) orchestrates download, merge, apply to state, and upload.
  */
 
 /**
  * Merge local and remote data using three-way merge algorithm
- * 
+ *
  * REQUIRES: base must exist (not null). For initial sync without base,
  * caller should use importFromRemote() or uploadToRemote() instead.
- * 
+ *
  * @param base Last successfully synced version (common ancestor) - REQUIRED
  * @param local Current local state
  * @param remote Current remote state
@@ -94,7 +94,7 @@ export function merge(
 
 /**
  * Apply conflict resolutions to produce final merged data
- * 
+ *
  * @param partialMerged Partially merged data from merge() call (non-conflicting changes already applied)
  * @param conflicts List of conflicts to resolve
  * @param resolutions Map of conflict ID to resolution choice ('local' or 'remote')
@@ -120,7 +120,8 @@ export function resolveConflicts(
         }
       }
 
-      const version = resolution === 'local' ? conflict.localVersion : conflict.remoteVersion
+      const version =
+        resolution === 'local' ? conflict.localVersion : conflict.remoteVersion
 
       if (conflict.entity === 'recipe') {
         const index = recipes.findIndex(r => r.id === conflict.entityId)
@@ -189,9 +190,21 @@ function performThreeWayMerge(
   const conflicts: ConflictInfo[] = []
 
   // Detect changes
-  const recipeChanges = detectChanges(base.recipes, local.recipes, remote.recipes)
-  const mealPlanChanges = detectChanges(base.mealPlans, local.mealPlans, remote.mealPlans)
-  const ingredientChanges = detectChanges(base.ingredients, local.ingredients, remote.ingredients)
+  const recipeChanges = detectChanges(
+    base.recipes,
+    local.recipes,
+    remote.recipes
+  )
+  const mealPlanChanges = detectChanges(
+    base.mealPlans,
+    local.mealPlans,
+    remote.mealPlans
+  )
+  const ingredientChanges = detectChanges(
+    base.ingredients,
+    local.ingredients,
+    remote.ingredients
+  )
 
   // Merge with conflict detection
   const recipes = mergeRecords(
@@ -242,8 +255,16 @@ function detectChanges<T extends { id: string }>(
   const localMap = new Map(local.map(item => [item.id, item]))
   const remoteMap = new Map(remote.map(item => [item.id, item]))
 
-  const localChanges: RecordChanges<T> = { created: [], updated: [], deleted: [] }
-  const remoteChanges: RecordChanges<T> = { created: [], updated: [], deleted: [] }
+  const localChanges: RecordChanges<T> = {
+    created: [],
+    updated: [],
+    deleted: [],
+  }
+  const remoteChanges: RecordChanges<T> = {
+    created: [],
+    updated: [],
+    deleted: [],
+  }
 
   // Detect local changes
   for (const item of local) {
@@ -342,7 +363,10 @@ function mergeRecords<T extends { id: string }>(
   // 1. Update-Update conflicts
   for (const localItem of localChanges.updated) {
     const remoteItem = remoteChanges.updated.find(r => r.id === localItem.id)
-    if (remoteItem && JSON.stringify(localItem) !== JSON.stringify(remoteItem)) {
+    if (
+      remoteItem &&
+      JSON.stringify(localItem) !== JSON.stringify(remoteItem)
+    ) {
       const baseItem = base.find(b => b.id === localItem.id)
       conflicts.push({
         id: `${entityType}-${localItem.id}`,

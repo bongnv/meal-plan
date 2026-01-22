@@ -1,7 +1,25 @@
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  Modal,
+  Paper,
+  SegmentedControl,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core'
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconCopy,
+  IconEdit,
+  IconTrash,
+} from '@tabler/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-
-import { ActionIcon, Badge, Box, Button, Card, Group, Modal, Paper, SegmentedControl, Stack, Text, Title } from '@mantine/core'
-import { IconChevronLeft, IconChevronRight, IconCopy, IconEdit, IconTrash } from '@tabler/icons-react'
 
 import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { DroppableMealSlot } from './DroppableMealSlot'
@@ -26,12 +44,21 @@ interface DayData {
 
 type ViewMode = 'month' | 'list'
 
-export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, onDeleteMeal }: CalendarViewProps) {
+export function CalendarView({
+  mealPlans,
+  getRecipeById,
+  onAddMeal,
+  onEditMeal,
+  onDeleteMeal,
+}: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('month')
-  const [deleteConfirmation, setDeleteConfirmation] = useState<MealPlan | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<MealPlan | null>(
+    null
+  )
   const [copyModalOpened, setCopyModalOpened] = useState(false)
-  const [selectedMealForCopy, setSelectedMealForCopy] = useState<MealPlan | null>(null)
+  const [selectedMealForCopy, setSelectedMealForCopy] =
+    useState<MealPlan | null>(null)
   const listScrollRef = useRef<HTMLDivElement>(null)
   const todayDateRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -42,18 +69,30 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
     today.setHours(0, 0, 0, 0)
 
     // Month view: show full month grid
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-    
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    )
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    )
+
     // Start from the Sunday before the first day of the month
     const startDate = new Date(firstDayOfMonth)
     startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay())
-    
+
     // End on the Saturday after the last day of the month
     const endDate = new Date(lastDayOfMonth)
     endDate.setDate(endDate.getDate() + (6 - lastDayOfMonth.getDay()))
-    
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
       const dateString = date.toISOString().split('T')[0]
       days.push({
         date: new Date(date),
@@ -62,15 +101,20 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
         isCurrentMonth: date.getMonth() === currentDate.getMonth(),
       })
     }
-    
+
     return days
   }
 
   const days = getDaysToDisplay()
 
   // Get meals for a specific date and meal type
-  const getMealsForSlot = (dateString: string, mealType: MealType): MealPlan | undefined => {
-    return mealPlans.find(mp => mp.date === dateString && mp.mealType === mealType)
+  const getMealsForSlot = (
+    dateString: string,
+    mealType: MealType
+  ): MealPlan | undefined => {
+    return mealPlans.find(
+      mp => mp.date === dateString && mp.mealType === mealType
+    )
   }
 
   // Navigate to previous month
@@ -94,7 +138,10 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
 
   // Format month/year header
   const getHeaderText = () => {
-    const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' }
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      year: 'numeric',
+    }
     return currentDate.toLocaleDateString('en-US', options)
   }
 
@@ -108,8 +155,8 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
     })
 
     const grouped: Array<{ date: string; meals: MealPlan[] }> = []
-    sorted.forEach((meal) => {
-      const existing = grouped.find((g) => g.date === meal.date)
+    sorted.forEach(meal => {
+      const existing = grouped.find(g => g.date === meal.date)
       if (existing) {
         existing.meals.push(meal)
       } else {
@@ -141,7 +188,7 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
     if (viewMode === 'list') {
       const todayString = currentDate.toISOString().split('T')[0]
       const todayElement = todayDateRefs.current.get(todayString)
-      
+
       if (todayElement && listScrollRef.current) {
         // Use setTimeout to ensure DOM is updated
         setTimeout(() => {
@@ -156,11 +203,11 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
       {/* Header with navigation and view switcher */}
       <Group justify="space-between">
         <Title order={2}>{getHeaderText()}</Title>
-        
+
         <Group gap="xs">
           <SegmentedControl
             value={viewMode}
-            onChange={(value) => setViewMode(value as ViewMode)}
+            onChange={value => setViewMode(value as ViewMode)}
             data={[
               { label: 'Month', value: 'month' },
               { label: 'List', value: 'list' },
@@ -171,11 +218,15 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
           <Button onClick={handleToday} variant="default" size="sm">
             Today
           </Button>
-          
-          <ActionIcon onClick={handlePrevious} variant="default" aria-label="Previous">
+
+          <ActionIcon
+            onClick={handlePrevious}
+            variant="default"
+            aria-label="Previous"
+          >
             <IconChevronLeft size={18} />
           </ActionIcon>
-          
+
           <ActionIcon onClick={handleNext} variant="default" aria-label="Next">
             <IconChevronRight size={18} />
           </ActionIcon>
@@ -222,7 +273,9 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                   style={{
                     minHeight: '120px',
                     opacity: isCurrentMonth ? 1 : 0.5,
-                    backgroundColor: isToday ? 'var(--mantine-color-blue-0)' : undefined,
+                    backgroundColor: isToday
+                      ? 'var(--mantine-color-blue-0)'
+                      : undefined,
                   }}
                 >
                   <Stack gap="xs">
@@ -249,7 +302,11 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                         <>
                           {lunchMeal && (
                             <Box>
-                              <Group justify="space-between" wrap="nowrap" gap={4}>
+                              <Group
+                                justify="space-between"
+                                wrap="nowrap"
+                                gap={4}
+                              >
                                 <Box style={{ flex: 1, minWidth: 0 }}>
                                   <DroppableMealSlot
                                     dateString={dateString}
@@ -274,7 +331,11 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                           )}
                           {dinnerMeal && (
                             <Box>
-                              <Group justify="space-between" wrap="nowrap" gap={4}>
+                              <Group
+                                justify="space-between"
+                                wrap="nowrap"
+                                gap={4}
+                              >
                                 <Box style={{ flex: 1, minWidth: 0 }}>
                                   <DroppableMealSlot
                                     dateString={dateString}
@@ -308,12 +369,12 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
         </>
       ) : (
         /* List/Agenda View */
-        <Box 
+        <Box
           ref={listScrollRef}
-          style={{ 
+          style={{
             maxHeight: 'calc(100vh - 230px)',
             overflowY: 'auto',
-            overflowX: 'hidden'
+            overflowX: 'hidden',
           }}
         >
           <Stack gap="md" pb="md">
@@ -322,65 +383,85 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                 <Text size="lg" c="dimmed" mb="md">
                   No meals planned yet
                 </Text>
-                <Button onClick={() => onAddMeal({ date: new Date().toISOString().split('T')[0] })}>
+                <Button
+                  onClick={() =>
+                    onAddMeal({ date: new Date().toISOString().split('T')[0] })
+                  }
+                >
                   Add Your First Meal
                 </Button>
               </Box>
             ) : (
-              groupedMealsForList.map((group) => {
+              groupedMealsForList.map(group => {
                 const today = new Date().toISOString().split('T')[0]
                 const isToday = group.date === today
-                
+
                 return (
-                  <Box 
+                  <Box
                     key={group.date}
-                    ref={(el) => {
+                    ref={el => {
                       if (el) todayDateRefs.current.set(group.date, el)
                     }}
                   >
-                    <Title 
-                      order={3} 
-                      size="h4" 
+                    <Title
+                      order={3}
+                      size="h4"
                       mb="sm"
                       style={{
-                        color: isToday ? 'var(--mantine-color-blue-6)' : undefined,
+                        color: isToday
+                          ? 'var(--mantine-color-blue-6)'
+                          : undefined,
                         fontWeight: isToday ? 700 : 400,
                       }}
                     >
                       {formatDate(group.date)}
                     </Title>
-                  <Stack gap="sm">
-                    {group.meals.map((meal) => {
-                      const isRecipe = meal.type === 'recipe'
-                      
-                      return (
-                        <Card key={meal.id} shadow="sm" padding="md" withBorder>
-                          <Group justify="space-between" wrap="nowrap" align="flex-start">
-                            <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
-                              <Text size="xl" style={{ flexShrink: 0 }}>
-                                {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
-                              </Text>
-                              <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-                                <Group gap="xs" wrap="wrap">
-                                  <Badge variant="light" size="sm">
-                                    {meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}
-                                  </Badge>
-                                </Group>
-                                <DroppableMealSlot
-                                  dateString={meal.date}
-                                  mealType={meal.mealType}
-                                  meal={meal}
-                                  getRecipeById={getRecipeById}
-                                  onAddMeal={onAddMeal}
-                                />
-                                {isRecipe && 'servings' in meal && (
-                                  <Text size="sm" c="dimmed">
-                                    {meal.servings} servings
-                                  </Text>
-                                )}
-                              </Stack>
-                            </Group>
-                            <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                    <Stack gap="sm">
+                      {group.meals.map(meal => {
+                        const isRecipe = meal.type === 'recipe'
+
+                        return (
+                          <Card
+                            key={meal.id}
+                            shadow="sm"
+                            padding="md"
+                            withBorder
+                          >
+                            <Group
+                              justify="space-between"
+                              wrap="nowrap"
+                              align="flex-start"
+                            >
+                              <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
+                                <Text size="xl" style={{ flexShrink: 0 }}>
+                                  {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
+                                </Text>
+                                <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+                                  <Group gap="xs" wrap="wrap">
+                                    <Badge variant="light" size="sm">
+                                      {meal.mealType.charAt(0).toUpperCase() +
+                                        meal.mealType.slice(1)}
+                                    </Badge>
+                                  </Group>
+                                  <DroppableMealSlot
+                                    dateString={meal.date}
+                                    mealType={meal.mealType}
+                                    meal={meal}
+                                    getRecipeById={getRecipeById}
+                                    onAddMeal={onAddMeal}
+                                  />
+                                  {isRecipe && 'servings' in meal && (
+                                    <Text size="sm" c="dimmed">
+                                      {meal.servings} servings
+                                    </Text>
+                                  )}
+                                </Stack>
+                              </Group>
+                              <Group
+                                gap="xs"
+                                wrap="nowrap"
+                                style={{ flexShrink: 0 }}
+                              >
                                 <ActionIcon
                                   variant="subtle"
                                   color="green"
@@ -409,12 +490,12 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
                                   <IconTrash size={18} />
                                 </ActionIcon>
                               </Group>
-                          </Group>
-                        </Card>
-                      )
-                    })}
-                  </Stack>
-                </Box>
+                            </Group>
+                          </Card>
+                        )
+                      })}
+                    </Stack>
+                  </Box>
                 )
               })
             )}
@@ -432,7 +513,10 @@ export function CalendarView({ mealPlans, getRecipeById, onAddMeal, onEditMeal, 
         <Stack gap="md">
           <Text>Are you sure you want to delete this meal?</Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteConfirmation(null)}>
+            <Button
+              variant="default"
+              onClick={() => setDeleteConfirmation(null)}
+            >
               Cancel
             </Button>
             <Button color="red" onClick={handleDeleteConfirm}>

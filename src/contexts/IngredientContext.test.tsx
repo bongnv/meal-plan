@@ -1,8 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { IngredientProvider, useIngredients } from './IngredientContext'
 import * as idGenerator from '../utils/idGenerator'
+
+import { IngredientProvider, useIngredients } from './IngredientContext'
 
 import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 
@@ -13,7 +14,9 @@ const mockIngredientStorageService = {
 }
 
 vi.mock('../utils/storage/IngredientStorage', () => ({
-  IngredientStorageService: vi.fn(function() { return mockIngredientStorageService }),
+  IngredientStorageService: vi.fn(function () {
+    return mockIngredientStorageService
+  }),
 }))
 
 vi.mock('../utils/idGenerator', () => ({

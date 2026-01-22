@@ -1,5 +1,3 @@
-import { useMemo, useState } from 'react'
-
 import {
   Button,
   Group,
@@ -12,11 +10,13 @@ import {
   Title,
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 
-import { DraggableRecipeCard } from './DraggableRecipeCard'
 import { useIngredients } from '../../contexts/IngredientContext'
 import { useRecipes } from '../../contexts/RecipeContext'
 import { useRecipeFilter } from '../../hooks/useRecipeFilter'
+
+import { DraggableRecipeCard } from './DraggableRecipeCard'
 
 import type { TimeRange } from '../../hooks/useRecipeFilter'
 
@@ -33,8 +33,8 @@ export const RecipeSidebar = () => {
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
     const tagSet = new Set<string>()
-    recipes.forEach((recipe) => {
-      recipe.tags.forEach((tag) => tagSet.add(tag))
+    recipes.forEach(recipe => {
+      recipe.tags.forEach(tag => tagSet.add(tag))
     })
     return Array.from(tagSet).sort()
   }, [recipes])
@@ -72,7 +72,7 @@ export const RecipeSidebar = () => {
           placeholder="Search recipes..."
           leftSection={<IconSearch size={16} />}
           value={searchText}
-          onChange={(e) => setSearchText(e.currentTarget.value)}
+          onChange={e => setSearchText(e.currentTarget.value)}
         />
 
         {/* Tag filter */}
@@ -92,7 +92,7 @@ export const RecipeSidebar = () => {
         {ingredients.length > 0 && (
           <MultiSelect
             placeholder="Filter by ingredients..."
-            data={ingredients.map((ing) => ({
+            data={ingredients.map(ing => ({
               value: ing.id,
               label: ing.name,
             }))}
@@ -107,7 +107,7 @@ export const RecipeSidebar = () => {
         {/* Time range filter */}
         <SegmentedControl
           value={timeRange || ''}
-          onChange={(value) =>
+          onChange={value =>
             setTimeRange(value === '' ? null : (value as TimeRange))
           }
           data={[
@@ -149,7 +149,7 @@ export const RecipeSidebar = () => {
           </Stack>
         ) : (
           <Stack gap="sm">
-            {filteredRecipes.map((recipe) => (
+            {filteredRecipes.map(recipe => (
               <DraggableRecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </Stack>

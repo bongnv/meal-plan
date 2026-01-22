@@ -1,8 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { MealPlanProvider, useMealPlans } from './MealPlanContext'
 import * as idGenerator from '../utils/idGenerator'
+
+import { MealPlanProvider, useMealPlans } from './MealPlanContext'
 
 import type { MealPlan } from '../types/mealPlan'
 
@@ -13,7 +14,9 @@ const mockStorageServiceInstance = {
 }
 
 vi.mock('../utils/storage/mealPlanStorage', () => ({
-  MealPlanStorageService: vi.fn(function() { return mockStorageServiceInstance }),
+  MealPlanStorageService: vi.fn(function () {
+    return mockStorageServiceInstance
+  }),
 }))
 vi.mock('../utils/idGenerator', () => ({
   generateId: vi.fn(),
@@ -401,7 +404,9 @@ describe('MealPlanContext', () => {
       expect(mockStorageService.saveMealPlans).toHaveBeenCalledTimes(1)
       const savedMealPlans = mockStorageService.saveMealPlans.mock.calls[0][0]
       expect(savedMealPlans).toHaveLength(2)
-      expect(savedMealPlans.find((mp: MealPlan) => mp.id === '2')).toBeUndefined()
+      expect(
+        savedMealPlans.find((mp: MealPlan) => mp.id === '2')
+      ).toBeUndefined()
     })
 
     it('should do nothing when deleting non-existent meal plan', async () => {
@@ -651,7 +656,9 @@ describe('MealPlanContext', () => {
 
         // Should be all Tuesdays: 2024-01-23, 2024-01-30, 2024-02-06, 2024-02-13, 2024-02-20
         expect(copiedMealIds).toHaveLength(5)
-        const meals = copiedMealIds.map(id => result.current.getMealPlanById(id))
+        const meals = copiedMealIds.map(id =>
+          result.current.getMealPlanById(id)
+        )
         meals.forEach(meal => {
           const date = new Date(meal!.date + 'T00:00:00')
           expect(date.getDay()).toBe(2) // All should be Tuesdays

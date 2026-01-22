@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import {
   ActionIcon,
   Badge,
@@ -11,6 +9,7 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconEdit, IconSearch, IconTrash } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { INGREDIENT_CATEGORIES } from '../../types/ingredient'
 

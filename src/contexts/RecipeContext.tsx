@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 import { generateId } from '../utils/idGenerator'
 import { RecipeStorageService } from '../utils/storage/recipeStorage'
@@ -26,24 +20,35 @@ interface RecipeContextType {
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined)
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastModified, setLastModified] = useState<number>(Date.now())
   const [storageService] = useState(() => new RecipeStorageService())
 
-  // Load recipes on mount
-  useEffect(() => {
+  // Load recipes and capture any initialization error
+  const [recipesState, setRecipesState] = useState<{
+    recipes: Recipe[]
+    error: string | null
+  }>(() => {
     try {
-      const loadedRecipes = storageService.loadRecipes()
-      setRecipes(loadedRecipes)
-      setLoading(false)
+      return {
+        recipes: storageService.loadRecipes(),
+        error: null,
+      }
     } catch (err) {
       console.error('Failed to load recipes:', err)
-      setError('Failed to load recipes')
-      setLoading(false)
+      return {
+        recipes: [],
+        error: 'Failed to load recipes',
+      }
     }
-  }, [storageService])
+  })
+
+  const recipes = recipesState.recipes
+  const setRecipes = (newRecipes: Recipe[]) => {
+    setRecipesState({ recipes: newRecipes, error: recipesState.error })
+  }
+
+  const [loading, _setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(recipesState.error)
+  const [lastModified, setLastModified] = useState<number>(() => Date.now())
 
   // Get recipe by ID from in-memory state
   const getRecipeById = (id: string): Recipe | undefined => {
@@ -139,7 +144,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useRecipes(): RecipeContextType {
   const context = useContext(RecipeContext)
   if (context === undefined) {

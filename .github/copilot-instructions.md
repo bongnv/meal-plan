@@ -33,3 +33,6 @@
 - Read from the saved log files to examine results instead of re-running commands
 - Only re-run commands when requires fresh output
 - Fix any issues before marking the task as complete
+- Check test coverage after implementing features:
+  - Ensure new code has adequate test coverage (aim for >80% coverage)
+  - Write additional tests if coverage is insufficient

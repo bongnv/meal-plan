@@ -2,7 +2,13 @@ import { z } from 'zod'
 
 export type MealType = 'lunch' | 'dinner'
 
-export type MealPlanType = 'recipe' | 'dining-out' | 'takeout' | 'leftovers' | 'skipping' | 'other'
+export type MealPlanType =
+  | 'recipe'
+  | 'dining-out'
+  | 'takeout'
+  | 'leftovers'
+  | 'skipping'
+  | 'other'
 
 export interface MealPlanTypeInfo {
   value: MealPlanType
@@ -18,7 +24,9 @@ export const CUSTOM_MEAL_TYPES: MealPlanTypeInfo[] = [
   { value: 'other', label: 'Other', icon: '📝' },
 ]
 
-export function getMealPlanTypeInfo(type: MealPlanType): MealPlanTypeInfo | null {
+export function getMealPlanTypeInfo(
+  type: MealPlanType
+): MealPlanTypeInfo | null {
   return CUSTOM_MEAL_TYPES.find(c => c.value === type) || null
 }
 
@@ -43,16 +51,24 @@ export interface CustomMealPlan extends BaseMealPlan {
 
 export type MealPlan = RecipeMealPlan | CustomMealPlan
 
-export function isRecipeMealPlan(mealPlan: MealPlan): mealPlan is RecipeMealPlan {
+export function isRecipeMealPlan(
+  mealPlan: MealPlan
+): mealPlan is RecipeMealPlan {
   return mealPlan.type === 'recipe'
 }
 
-export function isCustomMealPlan(mealPlan: MealPlan): mealPlan is CustomMealPlan {
+export function isCustomMealPlan(
+  mealPlan: MealPlan
+): mealPlan is CustomMealPlan {
   return mealPlan.type !== 'recipe'
 }
 
 // Copy functionality types
-export type CopyFrequency = 'one-time' | 'weekly' | 'specific-weekday' | 'custom-interval'
+export type CopyFrequency =
+  | 'one-time'
+  | 'weekly'
+  | 'specific-weekday'
+  | 'custom-interval'
 
 export type CopyEndCondition = 'until-date' | 'after-occurrences'
 
@@ -85,7 +101,14 @@ export interface CopyResult {
 
 export const MealTypeSchema = z.enum(['lunch', 'dinner'])
 
-export const MealPlanTypeSchema = z.enum(['recipe', 'dining-out', 'takeout', 'leftovers', 'skipping', 'other'])
+export const MealPlanTypeSchema = z.enum([
+  'recipe',
+  'dining-out',
+  'takeout',
+  'leftovers',
+  'skipping',
+  'other',
+])
 
 const BaseMealPlanSchema = z.object({
   id: z.string(),

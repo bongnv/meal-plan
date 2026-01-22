@@ -3,9 +3,10 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { EditRecipePage } from './EditRecipePage'
 import * as IngredientContext from '../../contexts/IngredientContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
+
+import { EditRecipePage } from './EditRecipePage'
 
 import type { Recipe } from '../../types/recipe'
 

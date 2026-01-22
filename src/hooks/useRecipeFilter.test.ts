@@ -133,8 +133,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Spaghetti Carbonara')
-      expect(result.current.map((r) => r.name)).toContain('Quick Salad')
+      expect(result.current.map(r => r.name)).toContain('Spaghetti Carbonara')
+      expect(result.current.map(r => r.name)).toContain('Quick Salad')
     })
 
     it('should filter recipes by multiple tags (OR logic)', () => {
@@ -148,8 +148,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Spaghetti Carbonara')
-      expect(result.current.map((r) => r.name)).toContain('Chicken Curry')
+      expect(result.current.map(r => r.name)).toContain('Spaghetti Carbonara')
+      expect(result.current.map(r => r.name)).toContain('Chicken Curry')
     })
 
     it('should return empty array when no recipes match tags', () => {
@@ -178,8 +178,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Spaghetti Carbonara')
-      expect(result.current.map((r) => r.name)).toContain('Beef Stew')
+      expect(result.current.map(r => r.name)).toContain('Spaghetti Carbonara')
+      expect(result.current.map(r => r.name)).toContain('Beef Stew')
     })
 
     it('should filter recipes by multiple ingredients (OR logic)', () => {
@@ -193,8 +193,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Chicken Curry')
-      expect(result.current.map((r) => r.name)).toContain('Quick Salad')
+      expect(result.current.map(r => r.name)).toContain('Chicken Curry')
+      expect(result.current.map(r => r.name)).toContain('Quick Salad')
     })
 
     it('should return empty array when no recipes match ingredients', () => {
@@ -223,8 +223,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Spaghetti Carbonara')
-      expect(result.current.map((r) => r.name)).toContain('Quick Salad')
+      expect(result.current.map(r => r.name)).toContain('Spaghetti Carbonara')
+      expect(result.current.map(r => r.name)).toContain('Quick Salad')
     })
 
     it('should filter recipes between 30-60 minutes', () => {
@@ -309,8 +309,8 @@ describe('useRecipeFilter', () => {
       )
 
       expect(result.current).toHaveLength(2)
-      expect(result.current.map((r) => r.name)).toContain('Spaghetti Carbonara')
-      expect(result.current.map((r) => r.name)).toContain('Quick Salad')
+      expect(result.current.map(r => r.name)).toContain('Spaghetti Carbonara')
+      expect(result.current.map(r => r.name)).toContain('Quick Salad')
     })
   })
 })

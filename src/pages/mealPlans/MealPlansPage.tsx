@@ -1,8 +1,17 @@
-import { useState } from 'react'
-
 import { DndContext, DragOverlay } from '@dnd-kit/core'
-import { Box, Card, Container, Grid, Stack, Text, Badge, Group, Title } from '@mantine/core'
+import {
+  Box,
+  Card,
+  Container,
+  Grid,
+  Stack,
+  Text,
+  Badge,
+  Group,
+  Title,
+} from '@mantine/core'
 import { IconClock } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { CalendarView } from '../../components/mealPlans/CalendarView'
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
@@ -22,10 +31,11 @@ interface FormState {
 }
 
 export function MealPlansPage() {
-  const { mealPlans, addMealPlan, updateMealPlan, deleteMealPlan } = useMealPlans()
+  const { mealPlans, addMealPlan, updateMealPlan, deleteMealPlan } =
+    useMealPlans()
   const { recipes, getRecipeById } = useRecipes()
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
-  
+
   const [formState, setFormState] = useState<FormState>({
     opened: false,
     date: '',
@@ -35,7 +45,9 @@ export function MealPlansPage() {
   const handleAddMeal = (params: { date: string }) => {
     // Determine the meal type based on what already exists
     // Check if lunch exists, if so default to dinner
-    const lunchExists = mealPlans.some(mp => mp.date === params.date && mp.mealType === 'lunch')
+    const lunchExists = mealPlans.some(
+      mp => mp.date === params.date && mp.mealType === 'lunch'
+    )
     const mealType: MealType = lunchExists ? 'dinner' : 'lunch'
 
     setFormState({
@@ -101,17 +113,18 @@ export function MealPlansPage() {
 
       // Check if the target slot already has a meal
       const existingMeal = mealPlans.find(
-        (m) => m.date === dateString && m.mealType === mealType
+        m => m.date === dateString && m.mealType === mealType
       )
 
       // If dropping on an occupied slot, try the other meal type
       let finalMealType = mealType
       if (existingMeal) {
-        const alternateMealType: MealType = mealType === 'lunch' ? 'dinner' : 'lunch'
+        const alternateMealType: MealType =
+          mealType === 'lunch' ? 'dinner' : 'lunch'
         const alternateHasMeal = mealPlans.find(
-          (m) => m.date === dateString && m.mealType === alternateMealType
+          m => m.date === dateString && m.mealType === alternateMealType
         )
-        
+
         // Only switch if alternate is free
         if (!alternateHasMeal) {
           finalMealType = alternateMealType
@@ -135,7 +148,9 @@ export function MealPlansPage() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <Container size="xl" fluid>
-        <Title order={1} mb="md">Meal Plans</Title>
+        <Title order={1} mb="md">
+          Meal Plans
+        </Title>
 
         <Grid gutter="md">
           {/* Main Content Area - Calendar View with integrated view switcher */}
@@ -145,7 +160,7 @@ export function MealPlansPage() {
               getRecipeById={getRecipeById}
               onAddMeal={handleAddMeal}
               onEditMeal={handleEditMeal}
-              onDeleteMeal={(mealPlan) => deleteMealPlan(mealPlan.id)}
+              onDeleteMeal={mealPlan => deleteMealPlan(mealPlan.id)}
             />
           </Grid.Col>
 
@@ -161,7 +176,7 @@ export function MealPlansPage() {
           recipes={recipes}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
-          onDelete={(id) => deleteMealPlan(id)}
+          onDelete={id => deleteMealPlan(id)}
           opened={formState.opened}
           date={formState.date}
           mealType={formState.mealType}
@@ -186,7 +201,7 @@ export function MealPlansPage() {
               </Text>
               {activeRecipe.tags.length > 0 && (
                 <Group gap={4}>
-                  {activeRecipe.tags.map((tag) => (
+                  {activeRecipe.tags.map(tag => (
                     <Badge key={tag} size="xs" variant="light">
                       {tag}
                     </Badge>

@@ -1,8 +1,15 @@
 import { AppShell, Group, Title, Anchor, Burger, NavLink } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconChefHat, IconCarrot, IconSettings, IconCalendar, IconCloud } from '@tabler/icons-react'
+import {
+  IconChefHat,
+  IconCarrot,
+  IconSettings,
+  IconCalendar,
+  IconCloud,
+} from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
+import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
@@ -10,7 +17,6 @@ import { EditRecipePage } from './pages/recipes/EditRecipePage'
 import { RecipeDetailPage } from './pages/recipes/RecipeDetailPage'
 import { RecipesPage } from './pages/recipes/RecipesPage'
 import { IngredientsPage } from './pages/settings/IngredientsPage'
-import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
@@ -50,7 +56,12 @@ function App() {
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group gap="xs">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
             <Anchor
               component={Link}
               to="/"
@@ -78,7 +89,7 @@ function App() {
             onClick={close}
           />
         ))}
-        
+
         <NavLink
           label="Settings"
           leftSection={<IconSettings size={20} stroke={1.5} />}

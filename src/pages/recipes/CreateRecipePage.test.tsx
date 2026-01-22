@@ -3,9 +3,10 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CreateRecipePage } from './CreateRecipePage'
 import * as IngredientContext from '../../contexts/IngredientContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
+
+import { CreateRecipePage } from './CreateRecipePage'
 
 const mockRecipeContext = {
   recipes: [],

@@ -62,16 +62,17 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Categories: produce, dairy, meat, pantry, frozen, bakery, other
 - [ ] R4.2. Data Management (OneDrive Sync):
   - Microsoft account authentication using MSAL.js
+  - Cloud as source of truth (local data is cache for offline use)
   - Enable/disable sync in settings
     - Manual sync trigger (sync now button)
     - Automatic background sync
     - Sync status indicator (last synced time, sync in progress, errors)
+    - Change File button: clears local cache and switches to different OneDrive file (stays signed in)
     - Conflict resolution:
       - Auto-merge when possible (non-conflicting changes to different records)
       - Show conflicts when local and OneDrive data differ for same records
       - Manual resolution options: Keep local or Keep OneDrive
     - Offline capability: queue changes for sync when online
-    - Reset and re-import: clear local data and re-import from OneDrive
 - [ ] R4.3. Application Settings:
   - Default servings for new recipes
 
@@ -82,3 +83,4 @@ A client-side web application for managing recipes, planning meals, and organizi
     - Start fresh with empty data
     - Load existing data from OneDrive (requires authentication)
   - Skip welcome screen after initial setup complete
+- [ ] R5.2. App should try to sync when reloading and become visible

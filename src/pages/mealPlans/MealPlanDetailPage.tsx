@@ -1,8 +1,19 @@
-import { useState } from 'react'
-
-import { ActionIcon, Badge, Button, Container, Group, Stack, Text, Title, Loader, Box, Tooltip } from '@mantine/core'
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Loader,
+  Box,
+  Tooltip,
+} from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconTrash, IconCopy } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
@@ -10,14 +21,23 @@ import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
 import { useMealPlans } from '../../contexts/MealPlanContext'
 import { useRecipes } from '../../contexts/RecipeContext'
-import { isRecipeMealPlan, isCustomMealPlan, getMealPlanTypeInfo } from '../../types/mealPlan'
+import {
+  isRecipeMealPlan,
+  isCustomMealPlan,
+  getMealPlanTypeInfo,
+} from '../../types/mealPlan'
 
 import type { MealPlan } from '../../types/mealPlan'
 
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getMealPlanById, updateMealPlan, deleteMealPlan, loading: mealPlansLoading } = useMealPlans()
+  const {
+    getMealPlanById,
+    updateMealPlan,
+    deleteMealPlan,
+    loading: mealPlansLoading,
+  } = useMealPlans()
   const { recipes, getRecipeById } = useRecipes()
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [copyModalOpened, setCopyModalOpened] = useState(false)
@@ -40,7 +60,9 @@ export function MealPlanDetailPage() {
           <Text size="lg" c="red">
             Invalid meal plan ID
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>Back to Meal Plans</Button>
+          <Button onClick={() => navigate('/meal-plans')}>
+            Back to Meal Plans
+          </Button>
         </Stack>
       </Container>
     )
@@ -55,7 +77,9 @@ export function MealPlanDetailPage() {
           <Text size="lg" c="red">
             Meal plan not found
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>Back to Meal Plans</Button>
+          <Button onClick={() => navigate('/meal-plans')}>
+            Back to Meal Plans
+          </Button>
         </Stack>
       </Container>
     )
@@ -82,7 +106,8 @@ export function MealPlanDetailPage() {
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete this meal? This action cannot be undone.
+          Are you sure you want to delete this meal? This action cannot be
+          undone.
         </Text>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
@@ -103,9 +128,10 @@ export function MealPlanDetailPage() {
     month: 'long',
     day: 'numeric',
   })
-  const mealTypeLabel = mealPlan.mealType.charAt(0).toUpperCase() + mealPlan.mealType.slice(1)
+  const mealTypeLabel =
+    mealPlan.mealType.charAt(0).toUpperCase() + mealPlan.mealType.slice(1)
   const mealIcon = mealPlan.mealType === 'lunch' ? '🥗' : '🍽️'
-  
+
   // Create note for recipe detail
   const recipeNote = `${mealIcon} ${mealTypeLabel} • ${formattedDate}${mealPlan.note ? ` • ${mealPlan.note}` : ''}`
 
@@ -116,7 +142,7 @@ export function MealPlanDetailPage() {
         opened={editModalOpened}
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
-        onDelete={(id) => {
+        onDelete={id => {
           deleteMealPlan(id)
           navigate('/meal-plans')
         }}
@@ -199,7 +225,11 @@ export function MealPlanDetailPage() {
                     </Text>
                   </Box>
                   <Group gap="xs">
-                    <Button variant="light" color="green" onClick={() => setCopyModalOpened(true)}>
+                    <Button
+                      variant="light"
+                      color="green"
+                      onClick={() => setCopyModalOpened(true)}
+                    >
                       Copy
                     </Button>
                     <Button variant="light" color="blue" onClick={handleEdit}>
@@ -210,9 +240,11 @@ export function MealPlanDetailPage() {
                     </Button>
                   </Group>
                 </Group>
-                
+
                 <Group gap="md" mb="md">
-                  <Text size="xl">{getMealPlanTypeInfo(mealPlan.type)?.icon}</Text>
+                  <Text size="xl">
+                    {getMealPlanTypeInfo(mealPlan.type)?.icon}
+                  </Text>
                   <Badge variant="light" color="blue" size="lg">
                     {mealTypeLabel}
                   </Badge>

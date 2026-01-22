@@ -394,6 +394,22 @@
 
 ## I3. Cloud Storage Sync (R4.2)
 
+### Cloud-First Design Philosophy
+
+**File-as-Dataset Model:**
+- Each file = separate dataset (like opening different Google Docs)
+- Switching files = switching entire datasets (no merging)
+- Auto-sync keeps current file updated in real-time
+- Works offline with last-synced data cached locally
+- Users can maintain multiple datasets (work meals, home meals, backups)
+
+**User Experience:**
+- Welcome screen prompts connection to OneDrive on first visit
+- Offline mode available but not encouraged (error-prone)
+- No "Disconnect" button in UI - promotes cloud-first usage
+- "Change File" allows switching between datasets or creating new ones
+- No conflict resolution needed - file switching replaces local data
+
 ### Implementation Steps
 
 - [x] I3.1. Define cloud storage abstraction layer (TDD)
@@ -401,17 +417,25 @@
   - Test cases: interface contract, provider registration, provider switching
   - Create `ICloudStorageProvider` interface in `src/utils/storage/ICloudStorageProvider.ts`
   - Interface methods:
-    - `connect()` - initiate provider-specific authentication flow
-    - `disconnect()` - disconnect app from provider (clear tokens/credentials)
-    - `isConnected()` - check if provider is connected
-    - `getAccountInfo()` - get user account info (name, email) for display in UI
+    - `isAuthenticated()` - synchronous check if provider has valid authentication
+    - `getAccountInfo()` - synchronous get user account info (name, email) from provider state
     - `uploadFile(filename, data)` - upload gzip-compressed JSON data to cloud
     - `downloadFile(filename)` - download and decompress JSON data from cloud
-  - Create `CloudStorageFactory` for managing providers
-  - Support provider registration and selection
+    - `listFoldersAndFiles(folderPath?)` - list folders and files for browsing
+  - Create `CloudStorageContext` for managing provider lifecycle:
+    - Handles `connect(provider)` - initiate MSAL authentication flow
+    - Handles `disconnect()` - clear authentication state
+    - Exposes `currentProvider`, `isAuthenticated`, `getAccountInfo()`
+  - Create `SyncContext` for managing sync operations and file selection:
+    - Handles `connectProvider(provider, file)` - sets file and triggers initial sync
+    - Handles `disconnectProvider()` - clears file selection and provider connection
+    - Exposes `selectedFile`, `syncStatus`, `lastSyncTime`
+  - Two-layer architecture:
+    - CloudStorageContext = infrastructure layer (provider auth, file operations)
+    - SyncContext = business logic layer (sync operations, file selection)
   - Design for future providers: Google Drive, Dropbox, etc.
   - Document provider implementation requirements
-  - Note: Each provider encapsulates its own authentication logic (MSAL for OneDrive, OAuth for Google Drive, etc.)
+  - Note: Connect/disconnect methods handled by CloudStorageContext using MSAL. Providers query authentication state.
 
 - [x] I3.2. Create OneDrive storage provider implementation (TDD)
   - Install MSAL.js library (`@azure/msal-browser`) and MS Graph Client (`@microsoft/microsoft-graph-client`)
@@ -442,27 +466,24 @@
 
 - [x] I3.3. Create Sync Context for state management (TDD)
   - Write unit tests for SyncContext in `src/contexts/SyncContext.test.tsx`
-  - Test cases: connect/disconnect provider, manual sync, auto sync, conflict detection, offline retry, provider switching
+  - Test cases: connect/disconnect provider, file selection, auto sync, offline retry
   - Create `SyncContext` in `src/contexts/SyncContext.tsx`
   - State management:
-    - `connectedProvider` - currently connected cloud storage provider ('onedrive' | 'googledrive' | 'dropbox' | null)
-    - `accountInfo` - connected account info (name, email) for UI display
+    - `selectedFile` - currently selected file info (FileInfo | null)
     - `syncStatus` - idle | syncing | success | error
     - `lastSyncTime` - timestamp of last successful sync
-    - `conflicts` - array of detected conflicts
   - Actions:
-    - `connectProvider(provider, fileInfo)` - connect to specified provider (initiates auth and enables auto-sync)
-    - `disconnectProvider()` - disconnect from current provider (disables auto-sync)
-    - `syncNow()` - trigger manual sync with three-way merge
-    - `importFromRemote()` - import data from remote, overwriting all local data
-    - `uploadToRemote()` - upload local data to remote (first-time upload or overwrite)
-    - `resolveConflict(resolution)` - resolve all conflicts with 'local' or 'remote'
-    - `reset()` - clear local data and disconnect provider (shows welcome screen)
-  - Work with `ICloudStorageProvider` interface (provider-agnostic)
-  - Use CloudStorageFactory to get current provider
-  - Implement automatic background sync (triggers after local data changes when connected)
+    - `connectProvider(provider, fileInfo)` - connect to provider with file selection (replaces local data with file data)
+    - `disconnectProvider()` - disconnect from provider and clear file selection
+    - `syncNow()` - trigger manual sync (auto-save to current file)
+    - `importFromRemote()` - import data from selected file (used internally by connectProvider)
+    - `uploadToRemote()` - upload local data to selected file
+  - Work with CloudStorageContext for provider authentication state
+  - Use CloudStorageContext file operations (uploadFile, downloadFile)
+  - Implement automatic background sync (triggers after local data changes when file is selected)
   - Handle offline detection: retry sync when back online
-  - Persist `selectedFilename` in localStorage to remember user's choice across sessions
+  - Persist `selectedFile` in localStorage to restore on page load
+  - Removed: `reset()`, `resolveConflict()`, `conflicts` state - no longer needed with file-switching model
 
 - [x] I3.4. Implement sync logic with record-level three-way merge (TDD)
   - Write unit tests for sync logic in `src/utils/sync/syncManager.test.ts`
@@ -475,7 +496,7 @@
   - Sync algorithm (timestamp-based conflict detection with record-level auto-merge):
     1. Get base version from localStorage (`syncBase` with `base.lastModified`)
     2. Get local data from React context state (`local.lastModified` = timestamp from state) - this is our snapshot
-    3. Download `data.json.gz` from OneDrive, decompress and parse remote data (`remote.lastModified`)
+    3. Download file from OneDrive, decompress and parse remote data (`remote.lastModified`)
     4. **Check timestamps to detect changes**:
        - Remote changed: `base.lastModified < remote.lastModified`
        - Local changed: `base.lastModified < local.lastModified`
@@ -503,11 +524,11 @@
          - Same record updated on both local and remote
          - Same record deleted on one side, updated on other
     7. If conflicts detected:
-       - Store partial merged data and conflicts in conflictContext state
+       - Store partial merged data and conflicts in context state
        - Update syncStatus to 'error' and set conflicts array for UI display
-       - **Future enhancement**: Show ConflictResolutionModal (modal overlay)
-       - **Future enhancement**: User selects "Keep Local" or "Keep Remote" for all conflicts
-       - **Current**: Throw error with conflict details for UI to handle
+       - Show ConflictResolutionModal (future enhancement)
+       - User selects "Keep Local" or "Keep Remote" for all conflicts
+       - For now: Throw error with conflict details for UI to handle
     8. Before applying merge:
        - **Race condition check**: Read current `state.lastModified` from React context state
        - If `state.lastModified > local.lastModified`: User made changes during sync
@@ -530,8 +551,9 @@
     - Update only (local/remote/same record/different records)
     - Mixed operations (create + update + delete)
   - Verify works with any ICloudStorageProvider implementation
+  - Note: When user switches files via "Change File", import new file data and set it as new base version
 
-- [ ] I3.4.1. Build file/folder selection UI with multi-user support (TDD)
+- [x] I3.4.1. Build file/folder selection UI with multi-user support (TDD)
   - Write component tests in `src/components/sync/FileSelectionModal.test.tsx`
   - Test cases: render modal, list folders/files, create new file, select file, validation, shared files
   - Create `FileSelectionModal` component in `src/components/sync/FileSelectionModal.tsx`
@@ -592,24 +614,27 @@
 
 - [x] I3.5. Build cloud storage sync settings UI (TDD)
   - Write component tests in `src/components/settings/CloudSyncSettings.test.tsx`
-  - Test cases: render, connect to provider, disconnect, account info display, file info display, change file, folder path display
+  - Test cases: render, connect to provider, account info display, file info display, change file
   - Create `CloudSyncSettings` component in `src/components/settings/CloudSyncSettings.tsx`
   - Add to settings page (create new settings page or add to existing)
   - UI elements:
-    - Provider connection:
-      - "Connect to OneDrive" button (only provider available) - opens FileSelectionModal
-      - Future providers (Google Drive, Dropbox) will be added when implemented
-    - When connected, show:
-      - "Disconnect" button
-      - Connected account info (name, email)
-      - **Current folder path**: Display `selectedFile.path` folder portion (e.g., "/MealPlanner")
-      - **Selected file info**: `selectedFile.name`, last synced date
-      - **Sharing status**: Badge showing "Shared" if `selectedFile.isShared` is true
-      - **"Change File" button** - calls `disconnectProvider()` then reopens FileSelectionModal to switch files/folders
-    - Note: Auto-sync is enabled when connected
-    - "Reset" button (with confirmation dialog) - clears all data and disconnects
-  - Apply Mantine styling
+    - **When not connected:**
+      - "Connect to OneDrive" button - opens FileSelectionModal
+      - Brief description of cloud sync benefits
+    - **When connected:**
+      - **Connected Account Card:**
+        - Account info (name, email from `cloudStorage.getAccountInfo()`)
+        - Provider name badge
+      - **Sync File Card:**
+        - Current file name and folder path
+        - Last sync time
+        - "Change File" button - opens FileSelectionModal to switch files
+        - Note: Auto-sync is enabled
+    - **No disconnect button** - promotes cloud-first usage
+    - **No reset button** - user can create new files via "Change File"
+  - Apply Mantine styling with Card/Paper components
   - Disable controls when sync is in progress
+  - Removed: Disconnect button, Reset button, Danger Zone section
 
 - [ ] I3.6. Build sync status indicator in header (TDD)
   - Write component tests in `src/components/header/SyncStatusIndicator.test.tsx`
@@ -632,43 +657,47 @@
   - Apply Mantine styling with IconButton
   - Test all state transitions and user interactions
 
-- [ ] I3.7. Build conflict resolution UI (TDD)
-  - Write component tests in `src/components/settings/ConflictResolutionModal.test.tsx`
-  - Test cases: render conflicts, show details, resolve with local, resolve with remote
-  - Create `ConflictResolutionModal` component in `src/components/settings/ConflictResolutionModal.tsx`
-  - Display when conflicts are detected during sync
-  - Show list of conflicting items:
-    - Item type (recipe, meal plan, ingredient)
-    - Item name/identifier
-    - Last modified time for local and cloud versions
-  - For each conflict, show two options:
-    - "Keep Local" button
-    - "Keep Cloud" button (provider-agnostic label)
-  - Resolve conflicts one at a time or in batch
-  - Apply resolution and complete sync
-  - Show confirmation after all conflicts resolved
-  - Use Mantine Modal component
-  - Test conflict resolution flow end-to-end
+- [ ] I3.7. Build welcome screen with OneDrive prompt (TDD)
+  - Write component tests in `src/components/welcome/WelcomeScreen.test.tsx`
+  - Test cases: render on first visit, connect action, skip to offline, localStorage check
+  - Create `WelcomeScreen` component in `src/components/welcome/WelcomeScreen.tsx`
+  - **Display when:**
+    - First visit (no localStorage data)
+    - Not connected to cloud storage
+  - **UI elements:**
+    - Welcome message and app intro
+    - "Connect to OneDrive" primary button
+    - Opens FileSelectionModal for authentication and file selection
+    - "Skip - Work Offline" secondary link (small, less prominent)
+    - Warning text about offline limitations (data not synced, risk of loss)
+  - **Logic:**
+    - Check localStorage for existing data on mount
+    - If has data OR connected to cloud, skip welcome screen
+    - If no data AND not connected, show welcome screen
+    - After connection, hide welcome screen permanently
+  - Apply Mantine styling with Center layout
+  - Use Mantine Modal or full-page overlay
+  - Test localStorage persistence after connection
 
-- [ ] I3.7.1. Build session expired reconnect dialog (TDD)
-  - Write component tests in `src/components/sync/ReconnectDialog.test.tsx`
-  - Test cases: render dialog, reconnect action, cancel action, global positioning
-  - Create `ReconnectDialog` component in `src/components/sync/ReconnectDialog.tsx`
-  - **Global component**: Rendered at app level (App.tsx), not page-specific
-  - Display when sync operations fail with "Session expired" error from background auto-sync
-  - Show clear message: "Your OneDrive session has expired. Please reconnect to continue syncing."
-  - Two action buttons:
-    - "Reconnect" - disconnects current session and initiates new connection flow
-    - "Cancel" - dismisses dialog and disables auto-sync (can manually reconnect later from settings)
-  - Managed by SyncContext state (showReconnectDialog flag)
-  - Can appear on any page since background sync runs globally
-  - After successful reconnection, retry the failed sync operation
-  - Use Mantine Modal component with appropriate styling
-  - Test reconnection success and failure scenarios
-  - Test cancel behavior (should not show dialog again until user attempts sync)
-  - Test that dialog appears correctly regardless of current route
+- [ ] I3.8. Update FileSelectionModal for "Change File" flow (TDD)
+  - Update component tests in `src/components/sync/FileSelectionModal.test.tsx`
+  - Test cases: show warning modal, cancel change, confirm and replace data
+  - Update `FileSelectionModal` component behavior:
+    - **When opened from "Change File" button:**
+      - Show warning before opening file browser: "Changing files will replace your current local data with data from the selected file"
+      - Options: "Cancel" (close modal) or "Continue" (proceed to file browser)
+    - **After file selection:**
+      - Download and import data from selected file
+      - REPLACE all local data (no merging)
+      - Close modal
+    - **When opened from "Connect to OneDrive" button:**
+      - No warning needed (first-time connection)
+      - Proceed directly to file browser
+  - Add `mode` prop to distinguish between "connect" and "changeFile" modes
+  - Apply Mantine Modal for warning overlay
+  - Test warning display and data replacement flow
 
-- [ ] I3.8. Integrate automatic background sync (TDD)
+- [ ] I3.9. Integrate automatic background sync (TDD)
   - Write integration tests for auto-sync behavior
   - Test cases: sync after recipe add/update/delete, sync after meal plan changes, debouncing
   - Integrate sync triggers into existing contexts:
@@ -678,8 +707,28 @@
   - Implement debouncing to avoid excessive syncs:
     - Wait 1 minute after last change before syncing
     - User makes multiple changes → sync once after idle period
-  - Use `lastModified` from React state to detect changes
-  - Only sync when provider is connected
+  - Only sync when file is selected (cloudStorage.isAuthenticated && selectedFile !== null)
   - Handle sync failures gracefully with retry logic
-  - Test shared file access scenarios
-  - Ensure backward compatibility with app folder files
+  - Show toast notification on sync errors
+  - **No session expiry dialog** - simpler error handling with toast notifications
+
+- [ ] I3.10. Add sync status indicator to header (TDD)
+  - Write component tests in `src/components/header/SyncStatusIndicator.test.tsx`
+  - Test cases: render states, click to sync, tooltip display, error states, offline detection
+  - Create `SyncStatusIndicator` component in `src/components/header/SyncStatusIndicator.tsx`
+  - Add to app header/navigation bar
+  - Visual states:
+    - Idle: cloud icon (normal color) with "Last synced X minutes ago" tooltip
+    - Syncing: cloud icon with spinner/animation
+    - Success: cloud icon with checkmark (brief display)
+    - Error: cloud icon with error indicator (red)
+    - Offline: cloud icon with offline indicator
+    - Not connected: cloud-off icon or no indicator shown
+  - **Clickable sync indicator**:
+    - Click icon to trigger manual sync
+    - Disabled/not clickable during active sync (shows spinner)
+    - Tooltip shows: "Click to sync now" when idle, "Syncing..." when in progress
+  - Sync error messages display in toast notification
+  - Right-click or long-press opens sync settings (optional)
+  - Apply Mantine styling with ActionIcon
+  - Test all state transitions and user interactions

@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import {
   Modal,
   Stack,
@@ -15,10 +13,17 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { useMealPlans } from '../../contexts/MealPlanContext'
 
-import type { CopyFrequency, CopyEndCondition, CopyOptions, CopyResult, ConflictResolution } from '../../types/mealPlan'
+import type {
+  CopyFrequency,
+  CopyEndCondition,
+  CopyOptions,
+  CopyResult,
+  ConflictResolution,
+} from '../../types/mealPlan'
 
 interface CopyMealPlanModalProps {
   opened: boolean
@@ -36,27 +41,33 @@ const WEEKDAYS = [
   { value: '6', label: 'Saturday' },
 ]
 
-export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanModalProps) {
+export function CopyMealPlanModal({
+  opened,
+  mealPlanId,
+  onClose,
+}: CopyMealPlanModalProps) {
   const { copyMealPlan, generateCopyPreview, mealPlans } = useMealPlans()
-  
+
   // Form state
   const [targetDate, setTargetDate] = useState<Date | null>(new Date())
   const [frequency, setFrequency] = useState<CopyFrequency>('one-time')
   const [weeklyInterval, setWeeklyInterval] = useState<number>(1)
   const [specificWeekday, setSpecificWeekday] = useState<string>('1') // Monday
   const [customIntervalDays, setCustomIntervalDays] = useState<number>(7)
-  const [endCondition, setEndCondition] = useState<CopyEndCondition>('after-occurrences')
+  const [endCondition, setEndCondition] =
+    useState<CopyEndCondition>('after-occurrences')
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [occurrences, setOccurrences] = useState<number>(4)
-  const [conflictResolution, setConflictResolution] = useState<ConflictResolution>('skip')
+  const [conflictResolution, setConflictResolution] =
+    useState<ConflictResolution>('skip')
 
   // Preview state
   const [preview, setPreview] = useState<CopyResult | null>(null)
   const [showPreview, setShowPreview] = useState(false)
-  
+
   // Get the meal from the context
   const meal = mealPlans.find(m => m.id === mealPlanId)
-  
+
   // If meal not found, don't render anything
   if (!meal) return null
 
@@ -67,11 +78,21 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
       frequency,
       targetDate,
       weeklyInterval: frequency === 'weekly' ? weeklyInterval : undefined,
-      specificWeekday: frequency === 'specific-weekday' ? parseInt(specificWeekday) : undefined,
-      customIntervalDays: frequency === 'custom-interval' ? customIntervalDays : undefined,
+      specificWeekday:
+        frequency === 'specific-weekday'
+          ? parseInt(specificWeekday)
+          : undefined,
+      customIntervalDays:
+        frequency === 'custom-interval' ? customIntervalDays : undefined,
       endCondition: frequency !== 'one-time' ? endCondition : undefined,
-      endDate: frequency !== 'one-time' && endCondition === 'until-date' ? endDate || undefined : undefined,
-      occurrences: frequency !== 'one-time' && endCondition === 'after-occurrences' ? occurrences : undefined,
+      endDate:
+        frequency !== 'one-time' && endCondition === 'until-date'
+          ? endDate || undefined
+          : undefined,
+      occurrences:
+        frequency !== 'one-time' && endCondition === 'after-occurrences'
+          ? occurrences
+          : undefined,
     }
 
     const result = generateCopyPreview(meal.id, options)
@@ -86,11 +107,21 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
       frequency,
       targetDate,
       weeklyInterval: frequency === 'weekly' ? weeklyInterval : undefined,
-      specificWeekday: frequency === 'specific-weekday' ? parseInt(specificWeekday) : undefined,
-      customIntervalDays: frequency === 'custom-interval' ? customIntervalDays : undefined,
+      specificWeekday:
+        frequency === 'specific-weekday'
+          ? parseInt(specificWeekday)
+          : undefined,
+      customIntervalDays:
+        frequency === 'custom-interval' ? customIntervalDays : undefined,
       endCondition: frequency !== 'one-time' ? endCondition : undefined,
-      endDate: frequency !== 'one-time' && endCondition === 'until-date' ? endDate || undefined : undefined,
-      occurrences: frequency !== 'one-time' && endCondition === 'after-occurrences' ? occurrences : undefined,
+      endDate:
+        frequency !== 'one-time' && endCondition === 'until-date'
+          ? endDate || undefined
+          : undefined,
+      occurrences:
+        frequency !== 'one-time' && endCondition === 'after-occurrences'
+          ? occurrences
+          : undefined,
     }
 
     copyMealPlan(meal.id, options, conflictResolution)
@@ -117,7 +148,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
         <DatePickerInput
           label="Target Date"
           value={targetDate}
-          onChange={(value: string | null) => setTargetDate(value ? new Date(value) : null)}
+          onChange={(value: string | null) =>
+            setTargetDate(value ? new Date(value) : null)
+          }
           required
         />
 
@@ -125,7 +158,7 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
         <Radio.Group
           label="Frequency"
           value={frequency}
-          onChange={(value) => {
+          onChange={value => {
             setFrequency(value as CopyFrequency)
             setShowPreview(false)
             setPreview(null)
@@ -144,7 +177,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
           <NumberInput
             label="Repeat every X weeks"
             value={weeklyInterval}
-            onChange={(value) => setWeeklyInterval(typeof value === 'number' ? value : 1)}
+            onChange={value =>
+              setWeeklyInterval(typeof value === 'number' ? value : 1)
+            }
             min={1}
             max={52}
           />
@@ -155,7 +190,7 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
           <Select
             label="Weekday"
             value={specificWeekday}
-            onChange={(value) => setSpecificWeekday(value || '1')}
+            onChange={value => setSpecificWeekday(value || '1')}
             data={WEEKDAYS}
           />
         )}
@@ -165,7 +200,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
           <NumberInput
             label="Repeat every X days"
             value={customIntervalDays}
-            onChange={(value) => setCustomIntervalDays(typeof value === 'number' ? value : 7)}
+            onChange={value =>
+              setCustomIntervalDays(typeof value === 'number' ? value : 7)
+            }
             min={1}
             max={365}
           />
@@ -177,7 +214,7 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
             <Radio.Group
               label="End Condition"
               value={endCondition}
-              onChange={(value) => {
+              onChange={value => {
                 setEndCondition(value as CopyEndCondition)
                 setShowPreview(false)
                 setPreview(null)
@@ -193,7 +230,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
               <DatePickerInput
                 label="End Date"
                 value={endDate}
-                onChange={(value: string | null) => setEndDate(value ? new Date(value) : null)}
+                onChange={(value: string | null) =>
+                  setEndDate(value ? new Date(value) : null)
+                }
                 minDate={targetDate || undefined}
                 required
               />
@@ -203,7 +242,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
               <NumberInput
                 label="Number of occurrences"
                 value={occurrences}
-                onChange={(value) => setOccurrences(typeof value === 'number' ? value : 4)}
+                onChange={value =>
+                  setOccurrences(typeof value === 'number' ? value : 4)
+                }
                 min={1}
                 max={100}
               />
@@ -220,13 +261,24 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
         {showPreview && preview && (
           <>
             <Alert
-              icon={preview.conflicts.length > 0 ? <IconAlertCircle size="1rem" /> : <IconCheck size="1rem" />}
-              title={preview.conflicts.length > 0 ? 'Conflicts Detected' : 'No Conflicts'}
+              icon={
+                preview.conflicts.length > 0 ? (
+                  <IconAlertCircle size="1rem" />
+                ) : (
+                  <IconCheck size="1rem" />
+                )
+              }
+              title={
+                preview.conflicts.length > 0
+                  ? 'Conflicts Detected'
+                  : 'No Conflicts'
+              }
               color={preview.conflicts.length > 0 ? 'yellow' : 'green'}
             >
               {preview.conflicts.length > 0 ? (
                 <Text size="sm">
-                  {preview.conflicts.length} date(s) already have a meal planned for {meal.mealType}.
+                  {preview.conflicts.length} date(s) already have a meal planned
+                  for {meal.mealType}.
                 </Text>
               ) : (
                 <Text size="sm">
@@ -240,7 +292,9 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
               <Radio.Group
                 label="How to handle conflicts?"
                 value={conflictResolution}
-                onChange={(value) => setConflictResolution(value as ConflictResolution)}
+                onChange={value =>
+                  setConflictResolution(value as ConflictResolution)
+                }
               >
                 <Stack gap="xs" mt="xs">
                   <Radio value="replace" label="Replace existing meals" />
@@ -259,16 +313,22 @@ export function CopyMealPlanModal({ opened, mealPlanId, onClose }: CopyMealPlanM
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {preview.preview.map((item) => (
+                {preview.preview.map(item => (
                   <Table.Tr key={item.date}>
                     <Table.Td>{item.date}</Table.Td>
                     <Table.Td>
                       {item.hasConflict ? (
-                        <Badge color="yellow" leftSection={<IconX size="0.8rem" />}>
+                        <Badge
+                          color="yellow"
+                          leftSection={<IconX size="0.8rem" />}
+                        >
                           Conflict
                         </Badge>
                       ) : (
-                        <Badge color="green" leftSection={<IconCheck size="0.8rem" />}>
+                        <Badge
+                          color="green"
+                          leftSection={<IconCheck size="0.8rem" />}
+                        >
                           Available
                         </Badge>
                       )}

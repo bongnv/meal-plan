@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { RecipeForm } from './RecipeForm'
 import * as IngredientContextModule from '../../contexts/IngredientContext'
+
+import { RecipeForm } from './RecipeForm'
 
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'

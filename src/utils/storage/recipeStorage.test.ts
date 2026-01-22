@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-import { RecipeStorageService } from './recipeStorage'
 import { generateId } from '../idGenerator'
+
+import { RecipeStorageService } from './recipeStorage'
 
 import type { Recipe } from '../../types/recipe'
 
@@ -167,7 +168,9 @@ describe('RecipeStorageService', () => {
         },
       ]
 
-      expect(() => service.saveRecipes(mockRecipes)).toThrow('localStorage error')
+      expect(() => service.saveRecipes(mockRecipes)).toThrow(
+        'localStorage error'
+      )
     })
 
     it('should save empty array', () => {
@@ -184,7 +187,6 @@ describe('RecipeStorageService', () => {
           name: 'Invalid Recipe',
           // missing required fields
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any
 
       expect(() => service.saveRecipes(invalidRecipes)).toThrow()

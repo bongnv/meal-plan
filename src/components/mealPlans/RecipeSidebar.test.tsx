@@ -2,10 +2,11 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { RecipeSidebar } from './RecipeSidebar'
 import * as IngredientContextModule from '../../contexts/IngredientContext'
 import * as RecipeContextModule from '../../contexts/RecipeContext'
 import { render } from '../../test/test-utils'
+
+import { RecipeSidebar } from './RecipeSidebar'
 
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
@@ -65,7 +66,12 @@ const mockIngredients: Ingredient[] = [
   { id: 'ing1', name: 'Spaghetti', category: 'Grains', unit: 'gram' },
   { id: 'ing2', name: 'Parmesan', category: 'Dairy', unit: 'gram' },
   { id: 'ing3', name: 'Chicken', category: 'Meat', unit: 'gram' },
-  { id: 'ing4', name: 'Curry Powder', category: 'Herbs & Spices', unit: 'gram' },
+  {
+    id: 'ing4',
+    name: 'Curry Powder',
+    category: 'Herbs & Spices',
+    unit: 'gram',
+  },
   { id: 'ing5', name: 'Lettuce', category: 'Vegetables', unit: 'gram' },
 ]
 
@@ -117,9 +123,7 @@ describe('RecipeSidebar', () => {
   it('should display search input', () => {
     render(<RecipeSidebar />)
 
-    expect(
-      screen.getByPlaceholderText(/search recipes/i)
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/search recipes/i)).toBeInTheDocument()
   })
 
   it('should filter recipes by search text', async () => {
@@ -150,16 +154,16 @@ describe('RecipeSidebar', () => {
     expect(screen.getByText('Quick Salad')).toBeInTheDocument()
 
     const tagFilter = screen.getByPlaceholderText(/filter by tags/i)
-    
+
     // Click to open dropdown
     await user.click(tagFilter)
-    
+
     // Type to filter options
     await user.type(tagFilter, 'quick')
-    
+
     // Wait a bit for dropdown to update
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    
+    await new Promise(resolve => setTimeout(resolve, 100))
+
     // Press down arrow and then enter to select
     await user.keyboard('{ArrowDown}{Enter}')
 
@@ -170,7 +174,7 @@ describe('RecipeSidebar', () => {
       },
       { timeout: 2000 }
     )
-    
+
     // Verify the other two are still there
     expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
     expect(screen.getByText('Quick Salad')).toBeInTheDocument()
@@ -265,10 +269,10 @@ describe('RecipeSidebar', () => {
     // Check for tags - use getAllByText since tags appear in multiple places
     const italianTags = screen.getAllByText('italian')
     expect(italianTags.length).toBeGreaterThan(0)
-    
+
     const pastaTags = screen.getAllByText('pasta')
     expect(pastaTags.length).toBeGreaterThan(0)
-    
+
     const quickTags = screen.getAllByText('quick')
     expect(quickTags.length).toBeGreaterThan(0)
 
@@ -283,7 +287,7 @@ describe('RecipeSidebar', () => {
     expect(recipeCards.length).toBeGreaterThan(0)
 
     // Check that cards have draggable attributes
-    recipeCards.forEach((card) => {
+    recipeCards.forEach(card => {
       expect(card).toHaveAttribute('data-recipe-id')
     })
   })

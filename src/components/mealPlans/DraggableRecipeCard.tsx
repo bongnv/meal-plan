@@ -41,7 +41,7 @@ export const DraggableRecipeCard = ({ recipe }: DraggableRecipeCardProps) => {
         {/* Tags */}
         {recipe.tags.length > 0 && (
           <Group gap={4}>
-            {recipe.tags.map((tag) => (
+            {recipe.tags.map(tag => (
               <Badge key={tag} size="xs" variant="light">
                 {tag}
               </Badge>

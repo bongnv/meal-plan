@@ -1,5 +1,3 @@
-import { useMemo, useState } from 'react'
-
 import {
   ActionIcon,
   Badge,
@@ -16,6 +14,7 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconFilter, IconSearch, IconX } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { RecipeList } from '../../components/recipes/RecipeList'
@@ -39,8 +38,8 @@ export const RecipesPage = () => {
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
     const tagSet = new Set<string>()
-    recipes.forEach((recipe) => {
-      recipe.tags.forEach((tag) => tagSet.add(tag))
+    recipes.forEach(recipe => {
+      recipe.tags.forEach(tag => tagSet.add(tag))
     })
     return Array.from(tagSet).sort()
   }, [recipes])
@@ -73,7 +72,7 @@ export const RecipesPage = () => {
   }
 
   const handleDelete = (id: string) => {
-    const recipe = recipes.find((r) => r.id === id)
+    const recipe = recipes.find(r => r.id === id)
     if (recipe) {
       modals.openConfirmModal({
         title: 'Delete Recipe',
@@ -107,7 +106,7 @@ export const RecipesPage = () => {
               placeholder="Search recipes..."
               leftSection={<IconSearch size={16} />}
               value={searchText}
-              onChange={(e) => setSearchText(e.currentTarget.value)}
+              onChange={e => setSearchText(e.currentTarget.value)}
               style={{ flex: 1 }}
             />
 
@@ -142,7 +141,7 @@ export const RecipesPage = () => {
           {ingredients.length > 0 && (
             <MultiSelect
               placeholder="Filter by ingredients..."
-              data={ingredients.map((ing) => ({
+              data={ingredients.map(ing => ({
                 value: ing.id,
                 label: ing.name,
               }))}
@@ -161,7 +160,7 @@ export const RecipesPage = () => {
             </Text>
             <SegmentedControl
               value={timeRange || ''}
-              onChange={(value) =>
+              onChange={value =>
                 setTimeRange(value === '' ? null : (value as TimeRange))
               }
               data={[
@@ -177,7 +176,8 @@ export const RecipesPage = () => {
           {hasActiveFilters && (
             <Group gap="xs">
               <Badge variant="light" size="lg">
-                {filteredRecipes.length} {filteredRecipes.length === 1 ? 'recipe' : 'recipes'} found
+                {filteredRecipes.length}{' '}
+                {filteredRecipes.length === 1 ? 'recipe' : 'recipes'} found
               </Badge>
               <Button
                 variant="subtle"

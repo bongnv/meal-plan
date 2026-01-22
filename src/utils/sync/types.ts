@@ -1,6 +1,6 @@
-import type { Recipe } from '../../types/recipe'
-import type { MealPlan } from '../../types/mealPlan'
 import type { Ingredient } from '../../types/ingredient'
+import type { MealPlan } from '../../types/mealPlan'
+import type { Recipe } from '../../types/recipe'
 
 /**
  * Structure of synced data
@@ -17,7 +17,7 @@ export interface SyncData {
 /**
  * Type of conflict that occurred during sync
  */
-export type ConflictType = 
+export type ConflictType =
   | 'update-update' // Same record updated on both sides
   | 'update-delete' // Updated locally, deleted remotely
   | 'delete-update' // Deleted locally, updated remotely

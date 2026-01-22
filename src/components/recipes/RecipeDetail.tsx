@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import {
   ActionIcon,
   Badge,
@@ -11,12 +9,8 @@ import {
   Text,
   Title,
 } from '@mantine/core'
-import {
-  IconUsers,
-  IconClock,
-  IconPlus,
-  IconMinus,
-} from '@tabler/icons-react'
+import { IconUsers, IconClock, IconPlus, IconMinus } from '@tabler/icons-react'
+import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
 
@@ -129,7 +123,8 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           <Stack gap="xs">
             {recipe.ingredients.map((ingredient, index) => {
               const ingredientData = getIngredientById(ingredient.ingredientId)
-              const ingredientName = ingredientData?.name || 'Unknown Ingredient'
+              const ingredientName =
+                ingredientData?.name || 'Unknown Ingredient'
               const unit = ingredientData?.unit || ''
               const adjustedQuantity = (
                 ingredient.quantity * servingMultiplier

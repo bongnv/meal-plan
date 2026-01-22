@@ -1,104 +1,136 @@
-import { Button, Stack, Text, Group, Badge, Paper, Title, Alert, Container } from '@mantine/core'
-import { modals } from '@mantine/modals'
-import { IconCloud, IconCloudOff, IconAlertCircle } from '@tabler/icons-react'
+import {
+  Button,
+  Stack,
+  Text,
+  Group,
+  Badge,
+  Paper,
+  Title,
+  Alert,
+  Container,
+} from '@mantine/core'
+import { IconCloud, IconCloudOff } from '@tabler/icons-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+
+import { useCloudStorage } from '../../contexts/CloudStorageContext'
 import { useSyncContext } from '../../contexts/SyncContext'
+import { CloudProvider } from '../../utils/storage/CloudProvider'
+import { FileSelectionModal } from '../sync/FileSelectionModal'
+
+import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
 
 /**
  * Cloud Storage Sync Settings component
- * 
+ *
+ * Cloud-first design: encourages users to sync with OneDrive.
  * Displays cloud storage connection status and allows user to:
- * - Connect to cloud storage providers
+ * - Connect to OneDrive
  * - View connected account and file information
- * - Disconnect from provider
- * - Change selected file
- * - Reset all data
+ * - Change selected file (switches to different dataset)
  */
 export function CloudSyncSettings() {
   const {
-    connectedProvider,
-    accountInfo,
     selectedFile,
     lastSyncTime,
     syncStatus,
-    disconnectProvider,
-    reset,
+    connectProvider,
+    resetLocalState,
   } = useSyncContext()
 
-  const isConnected = connectedProvider !== null
+  // Get cloud storage context (for provider and account info)
+  const cloudStorage = useCloudStorage()
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const hasAutoOpenedRef = useRef(false)
+
+  // User is "connected" only when both authenticated AND has a file selected
+  const isConnected = cloudStorage.isAuthenticated && selectedFile !== null
   const isSyncing = syncStatus === 'syncing'
+
+  // Get account info only when authenticated
+  const accountInfo = cloudStorage.isAuthenticated
+    ? cloudStorage.getAccountInfo()
+    : null
+
+  // Auto-open file selection modal after authentication (e.g., after redirect)
+  // Use a ref to track if we've already auto-opened to avoid loops
+  useEffect(() => {
+    if (
+      cloudStorage.isAuthenticated &&
+      !selectedFile &&
+      !isModalOpen &&
+      !hasAutoOpenedRef.current
+    ) {
+      hasAutoOpenedRef.current = true
+      // Queue state update to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setIsModalOpen(true)
+      })
+    }
+  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen])
 
   /**
    * Handle connect to OneDrive
-   * Opens FileSelectionModal (to be implemented in I3.4.1)
+   * Opens FileSelectionModal for authentication and file selection
    */
-  const handleConnect = () => {
-    // TODO: Open FileSelectionModal for authentication and file selection
-    // This will be implemented in I3.4.1
-    console.log('Connect to OneDrive - FileSelectionModal to be implemented')
+  const handleConnect = async () => {
+    try {
+      // Authenticate first (or skip if already authenticated)
+      await cloudStorage.connect(CloudProvider.ONEDRIVE)
+      // Open modal for file selection
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error('Authentication failed:', error)
+      // Modal won't open if authentication fails
+    }
   }
 
   /**
-   * Handle disconnect from provider
+   * Handle file selection from modal
    */
-  const handleDisconnect = async () => {
-    await disconnectProvider()
+  const handleFileSelected = async (fileInfo: FileInfo) => {
+    setIsModalOpen(false)
+    await connectProvider(fileInfo)
   }
 
   /**
    * Handle change file
-   * Disconnects then reopens FileSelectionModal
+   * Clears local data and opens FileSelectionModal to switch to a different file
+   * Cloud is source of truth - local data is just a cache
    */
   const handleChangeFile = async () => {
-    await disconnectProvider()
-    // TODO: Open FileSelectionModal
-    // This will be implemented in I3.4.1
-    console.log('Change file - FileSelectionModal to be implemented')
-  }
-
-  /**
-   * Handle reset all data with confirmation
-   */
-  const handleReset = () => {
-    modals.openConfirmModal({
-      title: 'Reset All Data',
-      children: (
-        <Text size="sm">
-          This will disconnect from cloud storage and clear all local data including recipes, meal
-          plans, and ingredients. This action cannot be undone.
-        </Text>
-      ),
-      labels: { confirm: 'Reset', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
-      onConfirm: async () => {
-        await reset()
-      },
-    })
+    // Reset local state via context
+    await resetLocalState()
+    // Open modal for new file selection
+    setIsModalOpen(true)
   }
 
   /**
    * Format last sync time
    */
-  const formatLastSyncTime = (timestamp: number | null): string => {
-    if (!timestamp) {
-      return 'Never'
-    }
+  const formatLastSyncTime = useMemo(() => {
+    return (timestamp: number | null): string => {
+      if (!timestamp) {
+        return 'Never'
+      }
 
-    const now = Date.now()
-    const diff = now - timestamp
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
+      const now = Date.now()
+      const diff = now - timestamp
+      const minutes = Math.floor(diff / 60000)
+      const hours = Math.floor(diff / 3600000)
+      const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) {
-      return 'Just now'
-    } else if (minutes < 60) {
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
-    } else if (hours < 24) {
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`
-    } else {
-      return `${days} day${days > 1 ? 's' : ''} ago`
+      if (minutes < 1) {
+        return 'Just now'
+      } else if (minutes < 60) {
+        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+      } else if (hours < 24) {
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`
+      } else {
+        return `${days} day${days > 1 ? 's' : ''} ago`
+      }
     }
-  }
+  }, [])
 
   /**
    * Extract folder path from file path
@@ -113,128 +145,122 @@ export function CloudSyncSettings() {
       <Stack gap="lg">
         <Title order={2}>Cloud Storage Sync</Title>
 
-      {!isConnected && (
-        <Alert icon={<IconCloudOff size={16} />} title="Not Connected" color="gray">
-          Connect to OneDrive to automatically sync your data across devices.
-        </Alert>
-      )}
+        {!isConnected && (
+          <Alert
+            icon={<IconCloudOff size={16} />}
+            title="Not Connected"
+            color="gray"
+          >
+            Connect to OneDrive to automatically sync your data across devices.
+          </Alert>
+        )}
 
-      {!isConnected ? (
-        <Paper p="md" withBorder>
-          <Stack gap="md">
-            <Text size="sm" c="dimmed">
-              Choose a cloud storage provider to sync your recipes, meal plans, and ingredients.
-            </Text>
-            <Button
-              leftSection={<IconCloud size={16} />}
-              onClick={handleConnect}
-              disabled={isSyncing}
-            >
-              Connect to OneDrive
-            </Button>
-            <Text size="xs" c="dimmed">
-              Google Drive and Dropbox support coming soon
-            </Text>
-          </Stack>
-        </Paper>
-      ) : (
-        <Stack gap="md">
+        {!isConnected ? (
           <Paper p="md" withBorder>
             <Stack gap="md">
-              <Group justify="apart">
-                <Text fw={500}>Connected to {connectedProvider}</Text>
-                <Badge color="green" variant="light">
-                  Active
-                </Badge>
-              </Group>
-
-              {accountInfo && (
-                <Stack gap={4}>
-                  <Text size="sm" fw={500}>
-                    {accountInfo.name}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    {accountInfo.email}
-                  </Text>
-                </Stack>
-              )}
-
-              <Group gap="xs">
-                <Button
-                  variant="light"
-                  onClick={handleDisconnect}
-                  disabled={isSyncing}
-                  size="xs"
-                >
-                  Disconnect
-                </Button>
-              </Group>
+              <Text size="sm" c="dimmed">
+                Choose a cloud storage provider to sync your recipes, meal
+                plans, and ingredients.
+              </Text>
+              <Button
+                leftSection={<IconCloud size={16} />}
+                onClick={handleConnect}
+                disabled={isSyncing}
+              >
+                Connect to OneDrive
+              </Button>
+              <Text size="xs" c="dimmed">
+                Google Drive and Dropbox support coming soon
+              </Text>
             </Stack>
           </Paper>
-
-          {selectedFile && (
+        ) : (
+          <Stack gap="md">
             <Paper p="md" withBorder>
-              <Stack gap="sm">
-                <Text fw={500} size="sm">
-                  Sync File
-                </Text>
-
-                <Stack gap={4}>
-                  <Group gap="xs">
-                    <Text size="sm">{selectedFile.name}</Text>
-                  </Group>
-
-                  <Text size="xs" c="dimmed">
-                    Folder: {getFolderPath(selectedFile.path)}
+              <Stack gap="md">
+                <Group justify="apart">
+                  <Text fw={500}>
+                    Connected to {cloudStorage.currentProvider}
                   </Text>
-
-                  <Text size="xs" c="dimmed">
-                    Last synced: {formatLastSyncTime(lastSyncTime)}
-                  </Text>
-                </Stack>
-
-                <Group gap="xs">
-                  <Button variant="light" onClick={handleChangeFile} disabled={isSyncing} size="xs">
-                    Change File
-                  </Button>
+                  <Badge color="green" variant="light">
+                    Active
+                  </Badge>
                 </Group>
+
+                {accountInfo && (
+                  <Stack gap={4}>
+                    <Text size="sm" fw={500}>
+                      {accountInfo.name}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {accountInfo.email}
+                    </Text>
+                  </Stack>
+                )}
               </Stack>
             </Paper>
-          )}
 
-          <Paper p="md" withBorder>
-            <Stack gap="sm">
-              <Group gap="xs">
-                <IconAlertCircle size={16} color="var(--mantine-color-red-6)" />
-                <Text fw={500} size="sm" c="red">
-                  Danger Zone
-                </Text>
-              </Group>
+            {selectedFile && (
+              <Paper p="md" withBorder>
+                <Stack gap="sm">
+                  <Text fw={500} size="sm">
+                    Sync File
+                  </Text>
 
-              <Text size="xs" c="dimmed">
-                Reset all data and disconnect from cloud storage. This action cannot be undone.
-              </Text>
+                  <Stack gap={4}>
+                    <Group gap="xs">
+                      <Text size="sm">{selectedFile.name}</Text>
+                    </Group>
 
-              <Group gap="xs">
-                <Button variant="light" color="red" onClick={handleReset} disabled={isSyncing} size="xs">
-                  Reset
-                </Button>
-              </Group>
-            </Stack>
-          </Paper>
-        </Stack>
-      )}
+                    <Text size="xs" c="dimmed">
+                      Folder: {getFolderPath(selectedFile.path)}
+                    </Text>
 
-      {isSyncing && (
-        <Alert icon={<IconCloud size={16} />} title="Syncing..." color="blue">
-          Sync in progress. Please wait...
-        </Alert>
-      )}
+                    <Text size="xs" c="dimmed">
+                      Last synced: {formatLastSyncTime(lastSyncTime)}
+                    </Text>
+                  </Stack>
 
-      <Text size="xs" c="dimmed">
-        Note: Auto-sync is enabled when connected. Changes are automatically synced to the cloud.
-      </Text>
+                  <Button
+                    variant="light"
+                    onClick={handleChangeFile}
+                    disabled={isSyncing}
+                    size="xs"
+                  >
+                    Change File
+                  </Button>
+                </Stack>
+              </Paper>
+            )}
+          </Stack>
+        )}
+
+        {isSyncing && (
+          <Alert icon={<IconCloud size={16} />} title="Syncing..." color="blue">
+            Sync in progress. Please wait...
+          </Alert>
+        )}
+
+        {isConnected && (
+          <Text size="xs" c="dimmed">
+            Note: Auto-sync is enabled. Your changes are automatically synced to
+            the cloud. To switch to a different file, use "Change File" button.
+          </Text>
+        )}
+
+        {!isConnected && (
+          <Text size="xs" c="dimmed">
+            Connect to OneDrive to sync your data across devices and prevent
+            data loss.
+          </Text>
+        )}
       </Stack>
+
+      <FileSelectionModal
+        opened={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectFile={handleFileSelected}
+      />
     </Container>
   )
 }

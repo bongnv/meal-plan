@@ -3,8 +3,9 @@ import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RecipeDetail } from './RecipeDetail'
 import * as IngredientContextModule from '../../contexts/IngredientContext'
+
+import { RecipeDetail } from './RecipeDetail'
 
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
@@ -81,9 +82,7 @@ describe('RecipeDetail', () => {
 
   describe('Recipe Information Display', () => {
     it('should render recipe description', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(
         screen.getByText(/classic Italian pasta dish with eggs/i)
@@ -91,25 +90,19 @@ describe('RecipeDetail', () => {
     })
 
     it('should display servings information', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(screen.getByText(/4 servings/i)).toBeInTheDocument()
     })
 
     it('should display total time', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(screen.getByText(/30 min/i)).toBeInTheDocument()
     })
 
     it('should display all tags', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(screen.getByText('Italian')).toBeInTheDocument()
       expect(screen.getByText('Pasta')).toBeInTheDocument()
@@ -119,29 +112,25 @@ describe('RecipeDetail', () => {
 
   describe('Ingredients Display', () => {
     it('should render ingredients section heading', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(screen.getByText('Ingredients')).toBeInTheDocument()
     })
 
     it('should display all ingredients with quantities and units', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       // Check each ingredient is displayed with its quantity
       expect(screen.getByText(/400/)).toBeInTheDocument()
       expect(screen.getByText(/200/)).toBeInTheDocument()
-      
+
       // Check ingredient names - there may be multiple matches (title + ingredient)
       const spaghettiMatches = screen.getAllByText(/Spaghetti/i)
       expect(spaghettiMatches.length).toBeGreaterThanOrEqual(1)
-      
+
       const baconMatches = screen.getAllByText(/Bacon/i)
       expect(baconMatches.length).toBeGreaterThanOrEqual(1)
-      
+
       const eggsMatches = screen.getAllByText(/Eggs/i)
       expect(eggsMatches.length).toBeGreaterThanOrEqual(1)
     })
@@ -155,11 +144,7 @@ describe('RecipeDetail', () => {
         ],
       }
 
-      renderWithProviders(
-        <RecipeDetail
-          recipe={recipeWithMissingIngredient}
-        />
-      )
+      renderWithProviders(<RecipeDetail recipe={recipeWithMissingIngredient} />)
 
       // Should display known ingredient
       expect(screen.getByText(/400/)).toBeInTheDocument()
@@ -174,19 +159,17 @@ describe('RecipeDetail', () => {
 
   describe('Instructions Display', () => {
     it('should render instructions section heading', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
       expect(screen.getByText('Instructions')).toBeInTheDocument()
     })
 
     it('should display all instruction steps', () => {
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
-      expect(screen.getByText(/Boil pasta in salted water/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/Boil pasta in salted water/i)
+      ).toBeInTheDocument()
       expect(screen.getByText(/Cook bacon until crispy/i)).toBeInTheDocument()
       expect(screen.getByText(/Mix eggs with cheese/i)).toBeInTheDocument()
       expect(
@@ -199,25 +182,25 @@ describe('RecipeDetail', () => {
     it('should render recipe without image', () => {
       const recipeWithoutImage = { ...mockRecipe, imageUrl: undefined }
 
-      renderWithProviders(
-        <RecipeDetail
-          recipe={recipeWithoutImage}
-        />
-      )
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutImage} />)
 
-      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'A classic Italian pasta dish with eggs, cheese, and bacon'
+        )
+      ).toBeInTheDocument()
     })
 
     it('should render recipe with empty tags array', () => {
       const recipeWithoutTags = { ...mockRecipe, tags: [] }
 
-      renderWithProviders(
-        <RecipeDetail
-          recipe={recipeWithoutTags}
-        />
-      )
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutTags} />)
 
-      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'A classic Italian pasta dish with eggs, cheese, and bacon'
+        )
+      ).toBeInTheDocument()
     })
 
     it('should display loading state when ingredients are loading', () => {
@@ -226,11 +209,13 @@ describe('RecipeDetail', () => {
         loading: true,
       })
 
-      renderWithProviders(
-        <RecipeDetail recipe={mockRecipe} />
-      )
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
-      expect(screen.getByText('A classic Italian pasta dish with eggs, cheese, and bacon')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'A classic Italian pasta dish with eggs, cheese, and bacon'
+        )
+      ).toBeInTheDocument()
     })
   })
 })

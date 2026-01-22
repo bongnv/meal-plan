@@ -1,41 +1,43 @@
-import { PublicClientApplication } from '@azure/msal-browser';
-import { Client } from '@microsoft/microsoft-graph-client';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PublicClientApplication } from '@azure/msal-browser'
+import { Client } from '@microsoft/microsoft-graph-client'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { OneDriveProvider } from './OneDriveProvider';
-
-// Extend globalThis for test environment
-declare const global: typeof globalThis;
+import { OneDriveProvider } from './OneDriveProvider'
 
 // Mock MSAL
 vi.mock('@azure/msal-browser', () => ({
   PublicClientApplication: vi.fn(),
-}));
+}))
 
 // Mock MS Graph Client
 vi.mock('@microsoft/microsoft-graph-client', () => ({
   Client: {
     init: vi.fn(),
   },
-}));
+}))
 
 // Mock compression utilities
 vi.mock('../../compression', () => ({
-  compressData: vi.fn((_data: string) => Promise.resolve(new Uint8Array([1, 2, 3]))),
-  decompressData: vi.fn((_data: Uint8Array) => Promise.resolve('{"test":"data"}')),
-}));
+  compressData: vi.fn((_data: string) =>
+    Promise.resolve(new Uint8Array([1, 2, 3]))
+  ),
+  decompressData: vi.fn((_data: Uint8Array) =>
+    Promise.resolve('{"test":"data"}')
+  ),
+}))
 
 describe('OneDriveProvider', () => {
-  let provider: OneDriveProvider;
+  let provider: OneDriveProvider
   let mockMsalInstance: {
-    loginPopup: ReturnType<typeof vi.fn>;
-    logoutPopup: ReturnType<typeof vi.fn>;
-    getAllAccounts: ReturnType<typeof vi.fn>;
-    acquireTokenSilent: ReturnType<typeof vi.fn>;
-  };
+    initialize: ReturnType<typeof vi.fn>
+    loginPopup: ReturnType<typeof vi.fn>
+    logoutPopup: ReturnType<typeof vi.fn>
+    getAllAccounts: ReturnType<typeof vi.fn>
+    acquireTokenSilent: ReturnType<typeof vi.fn>
+  }
   let mockGraphClient: {
-    api: ReturnType<typeof vi.fn>;
-  };
+    api: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     // Create mock MSAL instance
@@ -45,70 +47,77 @@ describe('OneDriveProvider', () => {
       logoutPopup: vi.fn(),
       getAllAccounts: vi.fn().mockReturnValue([]),
       acquireTokenSilent: vi.fn(),
-    } as any;
+    } as any
+    ;(
+      PublicClientApplication as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(function () {
+      return mockMsalInstance
+    })
 
-    (PublicClientApplication as unknown as ReturnType<typeof vi.fn>).mockImplementation(function() { return mockMsalInstance });
-
-    // Create mock Graph Client
-    const mockApi = vi.fn().mockReturnThis();
+    // Create mock Graph Client that calls authProvider
+    const mockApi = vi.fn().mockReturnThis()
     mockGraphClient = {
       api: mockApi,
-    };
+    }
 
     // Mock api() to return chainable object
     mockApi.mockReturnValue({
       put: vi.fn().mockResolvedValue({}),
       get: vi.fn().mockResolvedValue(new ArrayBuffer(3)),
-    });
+    })
 
-    (Client.init as ReturnType<typeof vi.fn>).mockReturnValue(mockGraphClient);
+    // Mock Client.init to capture and call the authProvider
+    ;(Client.init as ReturnType<typeof vi.fn>).mockImplementation(
+      (config: any) => {
+        // Store authProvider for tests that need to trigger it
+        if (config && config.authProvider) {
+          ;(mockGraphClient as any)._authProvider = config.authProvider
+        }
+        return mockGraphClient
+      }
+    )
 
-    provider = new OneDriveProvider();
-  });
+    provider = new OneDriveProvider(mockMsalInstance as any)
+  })
 
   afterEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   describe('ICloudStorageProvider interface compliance', () => {
-    it('should implement connect method', () => {
-      expect(provider.connect).toBeDefined();
-      expect(typeof provider.connect).toBe('function');
-    });
-
-    it('should implement disconnect method', () => {
-      expect(provider.disconnect).toBeDefined();
-      expect(typeof provider.disconnect).toBe('function');
-    });
-
-    it('should implement isConnected method', () => {
-      expect(provider.isConnected).toBeDefined();
-      expect(typeof provider.isConnected).toBe('function');
-    });
+    it('should implement isAuthenticated method', () => {
+      expect(provider.isAuthenticated).toBeDefined()
+      expect(typeof provider.isAuthenticated).toBe('function')
+    })
 
     it('should implement getAccountInfo method', () => {
-      expect(provider.getAccountInfo).toBeDefined();
-      expect(typeof provider.getAccountInfo).toBe('function');
-    });
+      expect(provider.getAccountInfo).toBeDefined()
+      expect(typeof provider.getAccountInfo).toBe('function')
+    })
 
     it('should implement uploadFile method', () => {
-      expect(provider.uploadFile).toBeDefined();
-      expect(typeof provider.uploadFile).toBe('function');
-    });
+      expect(provider.uploadFile).toBeDefined()
+      expect(typeof provider.uploadFile).toBe('function')
+    })
 
     it('should implement downloadFile method', () => {
-      expect(provider.downloadFile).toBeDefined();
-      expect(typeof provider.downloadFile).toBe('function');
-    });
+      expect(provider.downloadFile).toBeDefined()
+      expect(typeof provider.downloadFile).toBe('function')
+    })
 
-    it('should implement listFiles method', () => {
-      expect(provider.listFiles).toBeDefined();
-      expect(typeof provider.listFiles).toBe('function');
-    });
-  });
+    it('should implement listFoldersAndFiles method', () => {
+      expect(provider.listFoldersAndFiles).toBeDefined()
+      expect(typeof provider.listFoldersAndFiles).toBe('function')
+    })
+  })
 
-  describe('connect', () => {
-    it('should authenticate user with MSAL popup', async () => {
+  describe('isAuthenticated', () => {
+    it('should return false when no MSAL accounts exist', () => {
+      mockMsalInstance.getAllAccounts.mockReturnValue([])
+      expect(provider.isAuthenticated()).toBe(false)
+    })
+
+    it('should return true when MSAL account exists', () => {
       const mockAccount = {
         homeAccountId: '123',
         environment: 'login.windows.net',
@@ -116,73 +125,14 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-
-      mockMsalInstance.loginPopup.mockResolvedValue({
-        account: mockAccount,
-      });
-
-      await provider.connect();
-
-      expect(mockMsalInstance.loginPopup).toHaveBeenCalledTimes(1);
-      expect(await provider.isConnected()).toBe(true);
-    });
-
-    it('should throw error if authentication fails', async () => {
-      mockMsalInstance.loginPopup.mockRejectedValue(new Error('Auth failed'));
-
-      await expect(provider.connect()).rejects.toThrow('Auth failed');
-      expect(await provider.isConnected()).toBe(false);
-    });
-  });
-
-  describe('disconnect', () => {
-    it('should logout user and clear account', async () => {
-      // First connect
-      const mockAccount = {
-        homeAccountId: '123',
-        environment: 'login.windows.net',
-        tenantId: 'tenant-id',
-        username: 'user@example.com',
-        localAccountId: 'local-id',
-        name: 'Test User',
-      };
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
-      await provider.connect();
-
-      // Then disconnect
-      mockMsalInstance.logoutPopup.mockResolvedValue(undefined);
-      await provider.disconnect();
-
-      expect(mockMsalInstance.logoutPopup).toHaveBeenCalledTimes(1);
-      expect(await provider.isConnected()).toBe(false);
-    });
-  });
-
-  describe('isConnected', () => {
-    it('should return false when not connected', async () => {
-      expect(await provider.isConnected()).toBe(false);
-    });
-
-    it('should return true when connected', async () => {
-      const mockAccount = {
-        homeAccountId: '123',
-        environment: 'login.windows.net',
-        tenantId: 'tenant-id',
-        username: 'user@example.com',
-        localAccountId: 'local-id',
-        name: 'Test User',
-      };
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
-      
-      await provider.connect();
-      
-      expect(await provider.isConnected()).toBe(true);
-    });
-  });
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+      expect(provider.isAuthenticated()).toBe(true)
+    })
+  })
 
   describe('getAccountInfo', () => {
-    it('should return account info when connected', async () => {
+    it('should return account info when authenticated', () => {
       const mockAccount = {
         homeAccountId: '123',
         environment: 'login.windows.net',
@@ -190,23 +140,22 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
-      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount]);
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
 
-      await provider.connect();
-      const accountInfo = await provider.getAccountInfo();
+      const accountInfo = provider.getAccountInfo()
 
       expect(accountInfo).toEqual({
         name: 'Test User',
         email: 'user@example.com',
-      });
-    });
+      })
+    })
 
-    it('should throw error when not connected', async () => {
-      await expect(provider.getAccountInfo()).rejects.toThrow('Not connected');
-    });
-  });
+    it('should throw error when not authenticated', () => {
+      mockMsalInstance.getAllAccounts.mockReturnValue([])
+      expect(() => provider.getAccountInfo()).toThrow('Not authenticated')
+    })
+  })
 
   describe('uploadFile', () => {
     it('should compress and upload file to OneDrive using Graph Client', async () => {
@@ -217,31 +166,29 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-      
-      const mockPut = vi.fn().mockResolvedValue({});
-      const mockApi = vi.fn().mockReturnValue({ put: mockPut });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockPut = vi.fn().mockResolvedValue({})
+      const mockApi = vi.fn().mockReturnValue({ put: mockPut })
+      mockGraphClient.api = mockApi
+
       mockMsalInstance.acquireTokenSilent.mockResolvedValue({
         accessToken: 'mock-token',
-      });
+      })
 
-      await provider.connect();
-      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
-      await provider.uploadFile(fileInfo, '{"test":"data"}');
+      const fileInfo = {
+        id: 'test-id',
+        name: 'data.json.gz',
+        path: '/meal-plan/data.json.gz',
+      }
+      await provider.uploadFile(fileInfo, '{"test":"data"}')
 
-      expect(mockApi).toHaveBeenCalledWith('/me/drive/special/approot:/data.json.gz:/content');
-      expect(mockPut).toHaveBeenCalledWith(expect.any(ArrayBuffer));
-    });
-
-    it('should throw error when not connected', async () => {
-      const fileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
-      await expect(provider.uploadFile(fileInfo, 'data')).rejects.toThrow(
-        'Not connected'
-      );
-    });
+      expect(mockApi).toHaveBeenCalledWith(
+        '/me/drive/special/approot:/data.json.gz:/content'
+      )
+      expect(mockPut).toHaveBeenCalledWith(expect.any(ArrayBuffer))
+    })
 
     it('should handle upload errors', async () => {
       const mockAccount = {
@@ -251,29 +198,35 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-      
-      const mockPut = vi.fn().mockRejectedValue(new Error('Upload failed'));
-      const mockApi = vi.fn().mockReturnValue({ put: mockPut });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockPut = vi.fn().mockRejectedValue(new Error('Upload failed'))
+      const mockApi = vi.fn().mockReturnValue({ put: mockPut })
+      mockGraphClient.api = mockApi
+
       mockMsalInstance.acquireTokenSilent.mockResolvedValue({
         accessToken: 'mock-token',
-      });
+      })
 
-      await provider.connect();
-      
-      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
-      await expect(provider.uploadFile(fileInfo, '{"test":"data"}')).rejects.toThrow(
-        'Upload failed'
-      );
-    });
-  });
+      const fileInfo = {
+        id: 'test-id',
+        name: 'data.json.gz',
+        path: '/meal-plan/data.json.gz',
+      }
+      await expect(
+        provider.uploadFile(fileInfo, '{"test":"data"}')
+      ).rejects.toThrow('Upload failed')
+    })
+  })
 
   describe('downloadFile', () => {
     it('should download and decompress file from OneDrive using Graph Client', async () => {
-      const testFileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+      const testFileInfo = {
+        id: 'test-id',
+        name: 'data.json.gz',
+        path: '/meal-plan/data.json.gz',
+      }
       const mockAccount = {
         homeAccountId: '123',
         environment: 'login.windows.net',
@@ -281,30 +234,26 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-      
-      const mockArrayBuffer = new Uint8Array([1, 2, 3]).buffer;
-      const mockGet = vi.fn().mockResolvedValue(mockArrayBuffer);
-      const mockApi = vi.fn().mockReturnValue({ get: mockGet });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockArrayBuffer = new Uint8Array([1, 2, 3]).buffer
+      const mockGet = vi.fn().mockResolvedValue(mockArrayBuffer)
+      const mockApi = vi.fn().mockReturnValue({ get: mockGet })
+      mockGraphClient.api = mockApi
+
       mockMsalInstance.acquireTokenSilent.mockResolvedValue({
         accessToken: 'mock-token',
-      });
+      })
 
-      await provider.connect();
-      const data = await provider.downloadFile(testFileInfo);
+      const data = await provider.downloadFile(testFileInfo)
 
-      expect(data).toBe('{"test":"data"}');
-      expect(mockApi).toHaveBeenCalledWith('/me/drive/special/approot:/data.json.gz:/content');
-      expect(mockGet).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw error when not connected', async () => {
-      const testFileInfo = { id: 'test-id', name: 'test.json.gz', path: '/meal-plan/test.json.gz' };
-      await expect(provider.downloadFile(testFileInfo)).rejects.toThrow('Not connected');
-    });
+      expect(data).toBe('{"test":"data"}')
+      expect(mockApi).toHaveBeenCalledWith(
+        '/me/drive/special/approot:/data.json.gz:/content'
+      )
+      expect(mockGet).toHaveBeenCalledTimes(1)
+    })
 
     it('should handle download errors', async () => {
       const mockAccount = {
@@ -314,120 +263,25 @@ describe('OneDriveProvider', () => {
         username: 'user@example.com',
         localAccountId: 'local-id',
         name: 'Test User',
-      };
-      
-      const mockGet = vi.fn().mockRejectedValue(new Error('Download failed'));
-      const mockApi = vi.fn().mockReturnValue({ get: mockGet });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockGet = vi.fn().mockRejectedValue(new Error('Download failed'))
+      const mockApi = vi.fn().mockReturnValue({ get: mockGet })
+      mockGraphClient.api = mockApi
+
       mockMsalInstance.acquireTokenSilent.mockResolvedValue({
         accessToken: 'mock-token',
-      });
+      })
 
-      await provider.connect();
-      
-      const fileInfo = { id: 'test-id', name: 'data.json.gz', path: '/meal-plan/data.json.gz' };
+      const fileInfo = {
+        id: 'test-id',
+        name: 'data.json.gz',
+        path: '/meal-plan/data.json.gz',
+      }
       await expect(provider.downloadFile(fileInfo)).rejects.toThrow(
         'Download failed'
-      );
-    });
-  });
-
-  describe('listFiles', () => {
-    it('should list .json.gz files from OneDrive app folder', async () => {
-      const mockAccount = {
-        homeAccountId: '123',
-        environment: 'login.windows.net',
-        tenantId: 'tenant-id',
-        username: 'user@example.com',
-        localAccountId: 'local-id',
-        name: 'Test User',
-      };
-      
-      const mockFiles = {
-        value: [
-          {
-            name: 'meal-plan-data.json.gz',
-            lastModifiedDateTime: '2026-01-20T10:00:00Z',
-            size: 1024,
-          },
-          {
-            name: 'backup.json.gz',
-            lastModifiedDateTime: '2026-01-19T09:00:00Z',
-            size: 2048,
-          },
-          {
-            name: 'other-file.txt',
-            lastModifiedDateTime: '2026-01-18T08:00:00Z',
-            size: 512,
-          },
-        ],
-      };
-      
-      const mockGet = vi.fn().mockResolvedValue(mockFiles);
-      const mockApi = vi.fn().mockReturnValue({ get: mockGet });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
-      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
-        accessToken: 'mock-token',
-      });
-
-      await provider.connect();
-      const files = await provider.listFiles();
-
-      expect(mockApi).toHaveBeenCalledWith('/me/drive/special/approot/children');
-      expect(files).toHaveLength(2); // Only .json.gz files
-      expect(files[0]).toEqual({
-        name: 'meal-plan-data.json.gz',
-        lastModified: new Date('2026-01-20T10:00:00Z'),
-        size: 1024,
-      });
-      expect(files[1]).toEqual({
-        name: 'backup.json.gz',
-        lastModified: new Date('2026-01-19T09:00:00Z'),
-        size: 2048,
-      });
-    });
-
-    it('should return empty array when no .json.gz files exist', async () => {
-      const mockAccount = {
-        homeAccountId: '123',
-        environment: 'login.windows.net',
-        tenantId: 'tenant-id',
-        username: 'user@example.com',
-        localAccountId: 'local-id',
-        name: 'Test User',
-      };
-      
-      const mockFiles = {
-        value: [
-          {
-            name: 'other-file.txt',
-            lastModifiedDateTime: '2026-01-18T08:00:00Z',
-            size: 512,
-          },
-        ],
-      };
-      
-      const mockGet = vi.fn().mockResolvedValue(mockFiles);
-      const mockApi = vi.fn().mockReturnValue({ get: mockGet });
-      mockGraphClient.api = mockApi;
-      
-      mockMsalInstance.loginPopup.mockResolvedValue({ account: mockAccount });
-      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
-        accessToken: 'mock-token',
-      });
-
-      await provider.connect();
-      const files = await provider.listFiles();
-
-      expect(files).toHaveLength(0);
-    });
-
-    it('should throw error when not connected', async () => {
-      await expect(provider.listFiles()).rejects.toThrow('Not connected');
-    });
-  });
-});
+      )
+    })
+  })
+})

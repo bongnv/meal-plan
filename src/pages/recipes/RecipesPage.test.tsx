@@ -3,9 +3,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RecipesPage } from './RecipesPage'
 import * as IngredientContext from '../../contexts/IngredientContext'
 import * as RecipeContext from '../../contexts/RecipeContext'
+
+import { RecipesPage } from './RecipesPage'
 
 // Mock the navigate function
 const mockNavigate = vi.fn()
@@ -66,11 +67,36 @@ describe('RecipesPage', () => {
   ]
 
   const mockIngredients = [
-    { id: 'ing1', name: 'Pasta', unit: 'gram' as const, category: 'Grains' as const },
-    { id: 'ing2', name: 'Eggs', unit: 'piece' as const, category: 'Dairy' as const },
-    { id: 'ing3', name: 'Chicken', unit: 'gram' as const, category: 'Poultry' as const },
-    { id: 'ing4', name: 'Curry Powder', unit: 'gram' as const, category: 'Herbs & Spices' as const },
-    { id: 'ing5', name: 'Lettuce', unit: 'gram' as const, category: 'Vegetables' as const },
+    {
+      id: 'ing1',
+      name: 'Pasta',
+      unit: 'gram' as const,
+      category: 'Grains' as const,
+    },
+    {
+      id: 'ing2',
+      name: 'Eggs',
+      unit: 'piece' as const,
+      category: 'Dairy' as const,
+    },
+    {
+      id: 'ing3',
+      name: 'Chicken',
+      unit: 'gram' as const,
+      category: 'Poultry' as const,
+    },
+    {
+      id: 'ing4',
+      name: 'Curry Powder',
+      unit: 'gram' as const,
+      category: 'Herbs & Spices' as const,
+    },
+    {
+      id: 'ing5',
+      name: 'Lettuce',
+      unit: 'gram' as const,
+      category: 'Vegetables' as const,
+    },
   ]
 
   const mockRecipeContext = {
@@ -100,7 +126,9 @@ describe('RecipesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(mockIngredientContext)
+    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
+      mockIngredientContext
+    )
   })
 
   it('should render with filter controls', () => {
@@ -111,12 +139,8 @@ describe('RecipesPage', () => {
     expect(screen.getByText('Create Recipe')).toBeInTheDocument()
 
     // Check filter controls exist
-    expect(
-      screen.getByPlaceholderText('Search recipes...')
-    ).toBeInTheDocument()
-    expect(
-      screen.getByPlaceholderText('Filter by tags...')
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search recipes...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Filter by tags...')).toBeInTheDocument()
     expect(
       screen.getByPlaceholderText('Filter by ingredients...')
     ).toBeInTheDocument()
