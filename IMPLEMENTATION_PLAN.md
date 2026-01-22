@@ -1019,7 +1019,7 @@ Allow users to use different display names for the same ingredient in different 
   - **Quality checks**: Run RecipeForm tests, verify form behavior, save output to `tmp/`
   - ✅ **Results**: All 500 tests pass (7 new RecipeForm imageUrl tests), form includes imageUrl input field with live preview and validation, output saved to `tmp/all-tests-i7.2-i7.3-final.txt`
 
-- [ ] I7.4. Update RecipeList cards to show thumbnail images (TDD)
+- [x] I7.4. Update RecipeList cards to show thumbnail images (TDD)
   - Write component tests first in `src/components/recipes/RecipeList.test.tsx`
   - Test cases:
     - Display thumbnail image when imageUrl exists
@@ -1036,6 +1036,7 @@ Allow users to use different display names for the same ingredient in different 
     - Fallback: cooking/recipe icon when no image
   - Update card layout to accommodate images without breaking existing design
   - **Quality checks**: Run RecipeList tests, verify grid layout, save output to `tmp/`
+  - ✅ **Results**: All 505 tests pass (24 RecipeList tests), cards always show Image component with SVG fallback ("No image" text) for missing images, consistent 180px thumbnail height, output saved to `tmp/all-tests-i7.4-fixed.txt`
 
 ### Implementation Notes
 - **AI Import & Storage**: imageUrl is already fully supported in AI prompt generator, validator, and storage - no additional work needed

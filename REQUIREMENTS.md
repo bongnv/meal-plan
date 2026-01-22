@@ -32,12 +32,12 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Prep/cook time
   - Tags/categories (e.g., breakfast, vegetarian, quick)
 - [x] R1.3. Search and filter recipes by name, ingredient, or tag
-- [ ] R1.4. Image support (optional):
+- [x] R1.4. Image support (optional):
   - Hero image for recipe detail view
   - Thumbnail images in recipe list cards
   - Support external image URLs (not file uploads)
   - Graceful fallback when no image provided
-  - Implementation: I7.1-I7.6
+  - Implementation: I7.1-I7.4
 - [x] R1.5. AI-Assisted Recipe Import:
   - Generate prompt template for users to copy
   - Prompt includes existing ingredient library with IDs for accurate matching

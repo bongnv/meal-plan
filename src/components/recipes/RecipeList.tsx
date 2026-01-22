@@ -1,10 +1,8 @@
 import {
   ActionIcon,
-  AspectRatio,
   Badge,
   Button,
   Card,
-  Center,
   Group,
   Image,
   SimpleGrid,
@@ -15,7 +13,6 @@ import {
 import {
   IconEdit,
   IconEye,
-  IconPhoto,
   IconTrash,
   IconUsers,
   IconClock,
@@ -79,26 +76,15 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
           }}
         >
           <Stack gap="md">
-            {/* Image placeholder - future-ready for recipe images */}
-            <AspectRatio ratio={16 / 9}>
-              {recipe.imageUrl ? (
-                <Image
-                  src={recipe.imageUrl}
-                  alt={recipe.name}
-                  fit="cover"
-                  radius="sm"
-                />
-              ) : (
-                <Center
-                  style={{
-                    backgroundColor: 'var(--mantine-color-gray-1)',
-                    borderRadius: 'var(--mantine-radius-sm)',
-                  }}
-                >
-                  <IconPhoto size={48} color="var(--mantine-color-gray-5)" />
-                </Center>
-              )}
-            </AspectRatio>
+            {/* Recipe thumbnail image - always shown */}
+            <Image
+              src={recipe.imageUrl || undefined}
+              alt={`${recipe.name} thumbnail`}
+              fit="cover"
+              h={180}
+              radius="sm"
+              fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='180'%3E%3Crect fill='%23e9ecef' width='400' height='180'/%3E%3Ctext fill='%23868e96' font-family='sans-serif' font-size='16' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo image%3C/text%3E%3C/svg%3E"
+            />
 
             <Title order={3} lineClamp={1}>
               {recipe.name}
