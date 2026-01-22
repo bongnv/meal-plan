@@ -16,10 +16,12 @@ const mockCloudStorage = {
 }
 const mockSyncContext = {
   syncStatus: 'idle' as SyncStatus,
-  lastSyncTime: Date.now() - 5 * 60 * 1000 as number | null, // 5 minutes ago
-  selectedFile: { id: '1', name: 'meal-plan-data.json.gz', path: '/data' } as
-    | { id: string; name: string; path: string }
-    | null,
+  lastSyncTime: (Date.now() - 5 * 60 * 1000) as number | null, // 5 minutes ago
+  selectedFile: { id: '1', name: 'meal-plan-data.json.gz', path: '/data' } as {
+    id: string
+    name: string
+    path: string
+  } | null,
   syncNow: mockSyncNow,
 }
 

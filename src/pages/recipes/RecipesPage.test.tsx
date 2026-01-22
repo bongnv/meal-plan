@@ -1,5 +1,6 @@
 import { MantineProvider } from '@mantine/core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -262,6 +263,60 @@ describe('RecipesPage', () => {
         screen.queryByText('No recipes match your filters')
       ).not.toBeInTheDocument()
       expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+    })
+  })
+
+  it('should navigate to edit page when edit action is triggered', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<RecipesPage />)
+
+    // Find and click edit button (first one)
+    const editButtons = screen.getAllByRole('button', { name: /edit/i })
+    await user.click(editButtons[0])
+
+    expect(mockNavigate).toHaveBeenCalledWith('/recipes/1/edit')
+  })
+
+  it('should show time filter options', () => {
+    renderWithProviders(<RecipesPage />)
+
+    expect(screen.getByText('All')).toBeInTheDocument()
+    expect(screen.getByText('< 30 min')).toBeInTheDocument()
+    expect(screen.getByText('30-60 min')).toBeInTheDocument()
+    expect(screen.getByText('> 60 min')).toBeInTheDocument()
+  })
+
+  it('should filter by time range when selected', async () => {
+    renderWithProviders(<RecipesPage />)
+
+    // Click the "< 30 min" option
+    const quickOption = screen.getByText('< 30 min')
+    fireEvent.click(quickOption)
+
+    await waitFor(() => {
+      // Should show Spaghetti (25 min) and Quick Salad (10 min)
+      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      expect(screen.getByText('Quick Salad')).toBeInTheDocument()
+      // Should NOT show Chicken Curry (45 min)
+      expect(screen.queryByText('Chicken Curry')).not.toBeInTheDocument()
+    })
+  })
+
+  it('should show all recipes when "All" time filter is selected', async () => {
+    renderWithProviders(<RecipesPage />)
+
+    // First select a filter
+    fireEvent.click(screen.getByText('< 30 min'))
+
+    // Then select "All"
+    fireEvent.click(screen.getByText('All'))
+
+    await waitFor(() => {
+      // All recipes should be visible
+      expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
+      expect(screen.getByText('Chicken Curry')).toBeInTheDocument()
+      expect(screen.getByText('Quick Salad')).toBeInTheDocument()
     })
   })
 })

@@ -12,9 +12,7 @@ import {
   Alert,
   Loader,
   ActionIcon,
-  Box,
   Paper,
-  Divider,
 } from '@mantine/core'
 import {
   IconFolder,
@@ -302,10 +300,10 @@ export function FileSelectionModal({
 
   return (
     <>
-      <Modal 
-        opened={opened} 
-        onClose={onClose} 
-        title="Select File" 
+      <Modal
+        opened={opened}
+        onClose={onClose}
+        title="Select File"
         size="lg"
         closeOnEscape={!showCreateModal}
       >

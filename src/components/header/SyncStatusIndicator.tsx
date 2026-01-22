@@ -101,8 +101,7 @@ export function SyncStatusIndicator() {
   const { syncStatus, lastSyncTime, selectedFile, syncNow } = useSyncContext()
 
   // Determine if connected (has auth AND file selected)
-  const isConnected =
-    cloudStorage.isAuthenticated && selectedFile !== null
+  const isConnected = cloudStorage.isAuthenticated && selectedFile !== null
 
   const handleClick = async () => {
     if (!isConnected || syncStatus === 'syncing') return

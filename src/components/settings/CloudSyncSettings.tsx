@@ -69,7 +69,7 @@ export function CloudSyncSettings() {
         setIsModalOpen(true)
       })
     }
-  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen])
+  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen, hasSelectedFile])
 
   /**
    * Handle connect to OneDrive
@@ -104,10 +104,10 @@ export function CloudSyncSettings() {
     try {
       // Reset local state (clears file and data)
       await resetLocalState()
-      
+
       // Reconnect to same provider (handles authentication if needed)
       await cloudStorage.connect(CloudProvider.ONEDRIVE)
-      
+
       // Open modal for new file selection
       setIsModalOpen(true)
     } catch (error) {

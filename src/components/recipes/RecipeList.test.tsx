@@ -297,4 +297,111 @@ describe('RecipeList', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/recipes/new')
     })
   })
+
+  describe('Card Interactions', () => {
+    it('should navigate to recipe detail when card is clicked', async () => {
+      const user = userEvent.setup()
+
+      renderWithProviders(
+        <RecipeList
+          recipes={mockRecipes}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      )
+
+      // Get the card container by clicking on recipe title area
+      const cards = screen.getAllByText(/spaghetti carbonara/i)
+      await user.click(cards[0])
+
+      expect(mockNavigate).toHaveBeenCalledWith('/recipes/1')
+    })
+
+    it('should apply hover effects on mouse enter', async () => {
+      const user = userEvent.setup()
+
+      renderWithProviders(
+        <RecipeList
+          recipes={mockRecipes}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      )
+
+      // Find a card element
+      const recipeTitle = screen.getByText('Spaghetti Carbonara')
+      const card = recipeTitle.closest('[style*="cursor"]') as HTMLElement
+
+      // Hover over the card
+      await user.hover(card)
+
+      // Check that hover styles are applied
+      expect(card.style.boxShadow).toBe('0 8px 16px rgba(0, 0, 0, 0.1)')
+      expect(card.style.transform).toBe('translateY(-2px)')
+    })
+
+    it('should remove hover effects on mouse leave', async () => {
+      const user = userEvent.setup()
+
+      renderWithProviders(
+        <RecipeList
+          recipes={mockRecipes}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      )
+
+      const recipeTitle = screen.getByText('Spaghetti Carbonara')
+      const card = recipeTitle.closest('[style*="cursor"]') as HTMLElement
+
+      // Hover and then unhover
+      await user.hover(card)
+      await user.unhover(card)
+
+      // Check that hover styles are removed
+      expect(card.style.boxShadow).toBe('')
+      expect(card.style.transform).toBe('')
+    })
+
+    it('should display recipe image when imageUrl is provided', () => {
+      const recipesWithImage = [
+        {
+          ...mockRecipes[0],
+          imageUrl: 'https://example.com/image.jpg',
+        },
+      ]
+
+      renderWithProviders(
+        <RecipeList
+          recipes={recipesWithImage}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      )
+
+      const image = screen.getByRole('img', { name: /spaghetti carbonara/i })
+      expect(image).toHaveAttribute('src', 'https://example.com/image.jpg')
+    })
+
+    it('should truncate long descriptions', () => {
+      const recipesWithLongDescription = [
+        {
+          ...mockRecipes[0],
+          description:
+            'This is a very long description that exceeds the maximum length allowed for display in the card view. It should be truncated with ellipsis at the end to maintain a clean layout and prevent the card from becoming too tall.',
+        },
+      ]
+
+      renderWithProviders(
+        <RecipeList
+          recipes={recipesWithLongDescription}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      )
+
+      const description = screen.getByText(/this is a very long description/i)
+      expect(description.textContent).toMatch(/\.\.\./)
+    })
+  })
 })

@@ -126,7 +126,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
       // Fallback to sharing reference ID
       return `/me/drive/items/${fileInfo.id}/content`
     }
-    
+
     // For personal files, use path-based access
     // Path should start with / (e.g., "/file.json.gz" or "/folder/file.json.gz")
     return `/me/drive/root:${fileInfo.path}:/content`
@@ -143,10 +143,8 @@ export class OneDriveProvider implements ICloudStorageProvider {
 
     // Upload to OneDrive using the file's path
     const uploadPath = this.getFilePath(fileInfo)
-    
-    const response = await graphClient
-      .api(uploadPath)
-      .put(compressedBlob)
+
+    const response = await graphClient.api(uploadPath).put(compressedBlob)
 
     // Return updated FileInfo with actual ID from OneDrive
     return {
@@ -165,13 +163,13 @@ export class OneDriveProvider implements ICloudStorageProvider {
 
     // Download from OneDrive using the file's path
     const downloadPath = this.getFilePath(fileInfo)
-    const response = await graphClient
-      .api(downloadPath)
-      .get()
+    const response = await graphClient.api(downloadPath).get()
 
     // Decompress the stream directly
     if (!(response instanceof ReadableStream)) {
-      console.error('[OneDrive] Unexpected response type, expected ReadableStream')
+      console.error(
+        '[OneDrive] Unexpected response type, expected ReadableStream'
+      )
       throw new Error('Unexpected response type from OneDrive API')
     }
 

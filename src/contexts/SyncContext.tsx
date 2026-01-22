@@ -136,7 +136,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
     // Step 9: Upload merged data to remote
     const uploadData = { ...mergedData, lastModified: Date.now() }
-    const updatedFileInfo = await cloudStorage.uploadFile(selectedFile, JSON.stringify(uploadData))
+    const updatedFileInfo = await cloudStorage.uploadFile(
+      selectedFile,
+      JSON.stringify(uploadData)
+    )
 
     // Step 9.5: Update selectedFile if ID was generated (new file)
     if (!selectedFile.id && updatedFileInfo.id) {
@@ -182,7 +185,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   // Set status to 'idle' when there are unsaved changes (local differs from base)
   useEffect(() => {
     // Only check when status is 'success' - don't interrupt syncing or override error
-    if (!cloudStorage.isAuthenticated || !selectedFile || syncStatus !== 'success') {
+    if (
+      !cloudStorage.isAuthenticated ||
+      !selectedFile ||
+      syncStatus !== 'success'
+    ) {
       return
     }
 
@@ -342,7 +349,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         // Validate remote data structure with zod
         const validationResult = SyncDataSchema.safeParse(parsedRemote)
         if (!validationResult.success) {
-          console.error('Remote data validation failed:', validationResult.error)
+          console.error(
+            'Remote data validation failed:',
+            validationResult.error
+          )
           throw new Error('Invalid remote data format')
         }
 
@@ -352,7 +362,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Step 4.5: Check if anything changed - skip upload if not
       const localUnchanged = localData.lastModified === base.lastModified
       const remoteUnchanged = remote.lastModified === base.lastModified
-      
+
       if (localUnchanged && remoteUnchanged) {
         setSyncStatus('success')
         setLastSyncTime(Date.now())
@@ -510,7 +520,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
    * Check if there's a stored file in localStorage
    */
   const hasSelectedFile = (): boolean => {
-    return selectedFile !== null || localStorage.getItem(SELECTED_FILE_KEY) !== null
+    return (
+      selectedFile !== null || localStorage.getItem(SELECTED_FILE_KEY) !== null
+    )
   }
 
   /**
@@ -546,7 +558,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       }
 
       // Upload to remote
-      const updatedFileInfo = await cloudStorage.uploadFile(selectedFile, JSON.stringify(localData))
+      const updatedFileInfo = await cloudStorage.uploadFile(
+        selectedFile,
+        JSON.stringify(localData)
+      )
 
       // Update selectedFile if ID was generated (new file)
       if (!selectedFile.id && updatedFileInfo.id) {

@@ -7,7 +7,7 @@ import unicorn from 'eslint-plugin-unicorn'
 import importPlugin from 'eslint-plugin-import'
 
 export default tseslint.config(
-  { ignores: ['dist', '*.config.ts', '*.config.js'] },
+  { ignores: ['dist', 'coverage', '*.config.ts', '*.config.js'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

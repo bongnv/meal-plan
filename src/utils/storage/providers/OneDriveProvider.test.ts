@@ -19,7 +19,7 @@ vi.mock('@microsoft/microsoft-graph-client', () => ({
 // Mock compression utilities
 vi.mock('../../compression', () => ({
   compressData: vi.fn((_data: string) =>
-    Promise.resolve(new Uint8Array([1, 2, 3]))
+    Promise.resolve(new Blob([new Uint8Array([1, 2, 3])]))
   ),
   decompressData: vi.fn((_data: Uint8Array) =>
     Promise.resolve('{"test":"data"}')
@@ -185,9 +185,10 @@ describe('OneDriveProvider', () => {
       await provider.uploadFile(fileInfo, '{"test":"data"}')
 
       expect(mockApi).toHaveBeenCalledWith(
-        '/me/drive/special/approot:/data.json.gz:/content'
+        '/me/drive/root:/meal-plan/data.json.gz:/content'
       )
-      expect(mockPut).toHaveBeenCalledWith(expect.any(ArrayBuffer))
+      // compressData returns a Blob, which is passed to put()
+      expect(mockPut).toHaveBeenCalledWith(expect.any(Blob))
     })
 
     it('should handle upload errors', async () => {
@@ -237,8 +238,15 @@ describe('OneDriveProvider', () => {
       }
       mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
 
+      // Create a mock ReadableStream
       const mockArrayBuffer = new Uint8Array([1, 2, 3]).buffer
-      const mockGet = vi.fn().mockResolvedValue(mockArrayBuffer)
+      const mockStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(mockArrayBuffer))
+          controller.close()
+        },
+      })
+      const mockGet = vi.fn().mockResolvedValue(mockStream)
       const mockApi = vi.fn().mockReturnValue({ get: mockGet })
       mockGraphClient.api = mockApi
 
@@ -250,7 +258,7 @@ describe('OneDriveProvider', () => {
 
       expect(data).toBe('{"test":"data"}')
       expect(mockApi).toHaveBeenCalledWith(
-        '/me/drive/special/approot:/data.json.gz:/content'
+        '/me/drive/root:/meal-plan/data.json.gz:/content'
       )
       expect(mockGet).toHaveBeenCalledTimes(1)
     })

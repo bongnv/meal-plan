@@ -1,5 +1,6 @@
 import { MantineProvider } from '@mantine/core'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -178,6 +179,97 @@ describe('RecipeDetail', () => {
     })
   })
 
+  describe('Interactive Features', () => {
+    it('should increase servings when clicking increase button', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const increaseButton = screen.getByLabelText('Increase servings')
+      await user.click(increaseButton)
+
+      expect(screen.getByText(/5 servings/i)).toBeInTheDocument()
+    })
+
+    it('should decrease servings when clicking decrease button', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const decreaseButton = screen.getByLabelText('Decrease servings')
+      await user.click(decreaseButton)
+
+      expect(screen.getByText(/3 servings/i)).toBeInTheDocument()
+    })
+
+    it('should not decrease servings below 1', async () => {
+      const user = userEvent.setup()
+      const recipeWith1Serving = { ...mockRecipe, servings: 1 }
+      renderWithProviders(<RecipeDetail recipe={recipeWith1Serving} />)
+
+      const decreaseButton = screen.getByLabelText('Decrease servings')
+      await user.click(decreaseButton)
+
+      // Should stay at 1 serving
+      expect(screen.getByText(/1 servings/i)).toBeInTheDocument()
+    })
+
+    it('should adjust ingredient quantities based on servings', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      // Initial quantities for 4 servings
+      expect(screen.getByText(/400\.0/)).toBeInTheDocument()
+
+      const increaseButton = screen.getByLabelText('Increase servings')
+      await user.click(increaseButton)
+
+      // After increasing to 5 servings, quantities should be scaled
+      expect(screen.getByText(/500\.0/)).toBeInTheDocument()
+    })
+
+    it('should use initialServings prop if provided', () => {
+      renderWithProviders(
+        <RecipeDetail recipe={mockRecipe} initialServings={6} />
+      )
+
+      expect(screen.getByText(/6 servings/i)).toBeInTheDocument()
+      // Quantity should be scaled to 6 servings (400 * 6/4 = 600)
+      expect(screen.getByText(/600\.0/)).toBeInTheDocument()
+    })
+
+    it('should toggle ingredient checkbox when clicked', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      const firstIngredientCheckbox = checkboxes[0]
+
+      expect(firstIngredientCheckbox).not.toBeChecked()
+
+      await user.click(firstIngredientCheckbox)
+      expect(firstIngredientCheckbox).toBeChecked()
+
+      await user.click(firstIngredientCheckbox)
+      expect(firstIngredientCheckbox).not.toBeChecked()
+    })
+
+    it('should toggle instruction checkbox when clicked', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      // Instructions start after ingredients (3 ingredients + 4 instructions)
+      const firstInstructionCheckbox = checkboxes[3]
+
+      expect(firstInstructionCheckbox).not.toBeChecked()
+
+      await user.click(firstInstructionCheckbox)
+      expect(firstInstructionCheckbox).toBeChecked()
+
+      await user.click(firstInstructionCheckbox)
+      expect(firstInstructionCheckbox).not.toBeChecked()
+    })
+  })
+
   describe('Edge Cases', () => {
     it('should render recipe without image', () => {
       const recipeWithoutImage = { ...mockRecipe, imageUrl: undefined }
@@ -201,6 +293,14 @@ describe('RecipeDetail', () => {
           'A classic Italian pasta dish with eggs, cheese, and bacon'
         )
       ).toBeInTheDocument()
+    })
+
+    it('should render recipe with no description', () => {
+      const recipeWithoutDescription = { ...mockRecipe, description: '' }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutDescription} />)
+
+      expect(screen.getByText('No description')).toBeInTheDocument()
     })
 
     it('should display loading state when ingredients are loading', () => {

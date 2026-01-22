@@ -33,6 +33,8 @@ export async function decompressData(
   compressedStream: ReadableStream
 ): Promise<string> {
   // Decompress using gzip and read as text
-  const decompressedStream = compressedStream.pipeThrough(new DecompressionStream('gzip'))
+  const decompressedStream = compressedStream.pipeThrough(
+    new DecompressionStream('gzip')
+  )
   return await new Response(decompressedStream).text()
 }

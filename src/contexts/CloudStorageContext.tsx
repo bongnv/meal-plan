@@ -56,11 +56,13 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
   const [currentProvider, setCurrentProvider] = useState<CloudProvider | null>(
     () => {
       // Check for pending provider from redirect flow first
-      const pending = sessionStorage.getItem(PENDING_PROVIDER_KEY) as CloudProvider | null
+      const pending = sessionStorage.getItem(
+        PENDING_PROVIDER_KEY
+      ) as CloudProvider | null
       if (pending) {
         return pending
       }
-      
+
       // Otherwise check localStorage
       const saved = localStorage.getItem(
         CONNECTED_PROVIDER_KEY
@@ -91,11 +93,11 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
     if (inProgress !== 'none') {
       return false
     }
-    
+
     if (!currentProvider) {
       return false
     }
-    
+
     const provider = providers.get(currentProvider)
     const providerAuth = provider?.isAuthenticated() ?? false
     return providerAuth

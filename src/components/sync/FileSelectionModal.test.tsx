@@ -446,6 +446,8 @@ describe('FileSelectionModal', () => {
     })
 
     it('should have default filename suggestion', async () => {
+      const user = userEvent.setup()
+
       renderWithMantine(
         <FileSelectionModal
           opened={true}
@@ -454,11 +456,17 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createButton)
+
       await waitFor(() => {
         const filenameInput = screen.getByLabelText(
           /file name/i
         ) as HTMLInputElement
-        expect(filenameInput.value).toBe('meal-plan-data.json.gz')
+        expect(filenameInput.value).toBe('')
       })
     })
 
@@ -473,6 +481,12 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createButton)
+
       await waitFor(() => {
         expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
       })
@@ -481,7 +495,9 @@ describe('FileSelectionModal', () => {
       await user.clear(filenameInput)
       await user.tab()
 
-      expect(screen.getByText(/file name is required/i)).toBeInTheDocument()
+      // The create button should be disabled when filename is empty
+      const createFileButton = screen.getByRole('button', { name: /^create$/i })
+      expect(createFileButton).toBeDisabled()
     })
 
     it('should validate filename has no invalid characters', async () => {
@@ -495,6 +511,12 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createButton)
+
       await waitFor(() => {
         expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
       })
@@ -502,9 +524,10 @@ describe('FileSelectionModal', () => {
       const filenameInput = screen.getByLabelText(/file name/i)
       await user.clear(filenameInput)
       await user.type(filenameInput, 'invalid/name*.json.gz')
-      await user.tab()
 
-      expect(screen.getByText(/invalid characters/i)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText(/invalid characters/i)).toBeInTheDocument()
+      })
     })
 
     it('should auto-append .json.gz extension if not present', async () => {
@@ -518,6 +541,12 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createNewButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createNewButton)
+
       await waitFor(() => {
         expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
       })
@@ -526,7 +555,7 @@ describe('FileSelectionModal', () => {
       await user.clear(filenameInput)
       await user.type(filenameInput, 'my-meal-plan')
 
-      const createButton = screen.getByRole('button', { name: /create file/i })
+      const createButton = screen.getByRole('button', { name: /^create$/i })
       await user.click(createButton)
 
       expect(onSelectFile).toHaveBeenCalledWith(
@@ -547,6 +576,12 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createNewButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createNewButton)
+
       await waitFor(() => {
         expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
       })
@@ -555,7 +590,7 @@ describe('FileSelectionModal', () => {
       await user.clear(filenameInput)
       await user.type(filenameInput, 'new-meal-plan')
 
-      const createButton = screen.getByRole('button', { name: /create file/i })
+      const createButton = screen.getByRole('button', { name: /^create$/i })
       expect(createButton).toBeEnabled()
     })
 
@@ -570,6 +605,12 @@ describe('FileSelectionModal', () => {
         />
       )
 
+      // Click Create New File button to open the nested modal
+      const createNewButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createNewButton)
+
       await waitFor(() => {
         expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
       })
@@ -578,7 +619,7 @@ describe('FileSelectionModal', () => {
       await user.clear(filenameInput)
       await user.type(filenameInput, 'new-file.json.gz')
 
-      const createButton = screen.getByRole('button', { name: /create file/i })
+      const createButton = screen.getByRole('button', { name: /^create$/i })
       await user.click(createButton)
 
       expect(onSelectFile).toHaveBeenCalledWith(
@@ -604,12 +645,22 @@ describe('FileSelectionModal', () => {
         expect(screen.getByText('meal-plan-data.json.gz')).toBeInTheDocument()
       })
 
-      const filenameInput = screen.getByLabelText(/file name/i)
-      await user.clear(filenameInput)
-      await user.type(filenameInput, 'meal-plan-data.json.gz')
-      await user.tab()
+      // Click Create New File button to open the nested modal
+      const createNewButton = await screen.findByRole('button', {
+        name: /create new file/i,
+      })
+      await user.click(createNewButton)
 
-      expect(screen.getByText(/file already exists/i)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByLabelText(/file name/i)).toBeInTheDocument()
+      })
+
+      const filenameInput = screen.getByLabelText(/file name/i)
+      await user.type(filenameInput, 'meal-plan-data.json.gz')
+
+      await waitFor(() => {
+        expect(screen.getByText(/file already exists/i)).toBeInTheDocument()
+      })
     })
   })
 
