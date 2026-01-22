@@ -24,6 +24,7 @@ vi.mock('@azure/msal-react', () => ({
       logoutPopup: vi.fn(),
       acquireTokenSilent: vi.fn(),
     },
+    inProgress: 'none',
   }),
 }))
 

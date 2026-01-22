@@ -636,7 +636,7 @@
   - Disable controls when sync is in progress
   - Removed: Disconnect button, Reset button, Danger Zone section
 
-- [ ] I3.6. Build sync status indicator in header (TDD)
+- [x] I3.6. Build sync status indicator in header (TDD)
   - Write component tests in `src/components/header/SyncStatusIndicator.test.tsx`
   - Test cases: render states, click to sync, tooltip display, error states, offline detection
   - Create `SyncStatusIndicator` component in `src/components/header/SyncStatusIndicator.tsx`
@@ -646,14 +646,12 @@
     - Syncing: cloud icon with spinner/animation
     - Success: cloud icon with checkmark (brief display)
     - Error: cloud icon with error indicator (red)
-    - Offline: cloud icon with offline indicator
-    - Not connected: no indicator shown
+    - Offline/Not connected: cloud icon with offline indicator
   - **Clickable sync indicator**:
     - Click icon to trigger manual sync
     - Disabled/not clickable during active sync (shows spinner)
     - Tooltip shows: "Click to sync now" when idle, "Syncing..." when in progress
   - Sync error messages display in toast notification
-  - Right-click or long-press opens sync settings (optional)
   - Apply Mantine styling with IconButton
   - Test all state transitions and user interactions
 

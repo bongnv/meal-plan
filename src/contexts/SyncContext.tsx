@@ -68,6 +68,7 @@ interface SyncContextType {
   importFromRemote: () => Promise<void>
   uploadToRemote: () => Promise<void>
   resolveConflict: (resolution: 'local' | 'remote') => Promise<void>
+  hasSelectedFile: () => boolean
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined)
@@ -135,7 +136,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
     // Step 9: Upload merged data to remote
     const uploadData = { ...mergedData, lastModified: Date.now() }
-    await cloudStorage.uploadFile(selectedFile, JSON.stringify(uploadData))
+    const updatedFileInfo = await cloudStorage.uploadFile(selectedFile, JSON.stringify(uploadData))
+
+    // Step 9.5: Update selectedFile if ID was generated (new file)
+    if (!selectedFile.id && updatedFileInfo.id) {
+      setSelectedFile(updatedFileInfo)
+      localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
+    }
 
     // Step 10: Save as new base
     localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(uploadData))
@@ -171,6 +178,37 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const recipesLastModified = getRecipesLastModified()
   const mealPlansLastModified = getMealPlansLastModified()
   const ingredientsLastModified = getIngredientsLastModified()
+
+  // Set status to 'idle' when there are unsaved changes (local differs from base)
+  useEffect(() => {
+    // Only check when status is 'success' - don't interrupt syncing or override error
+    if (!cloudStorage.isAuthenticated || !selectedFile || syncStatus !== 'success') {
+      return
+    }
+
+    // Get current local timestamp
+    const currentLocalTimestamp = Math.max(
+      recipesLastModified,
+      mealPlansLastModified,
+      ingredientsLastModified
+    )
+
+    // Get base timestamp
+    const baseJson = localStorage.getItem(SYNC_BASE_KEY)
+    const baseTimestamp = baseJson ? JSON.parse(baseJson).lastModified : 0
+
+    // If local changed since last sync, set status to idle
+    if (currentLocalTimestamp !== baseTimestamp) {
+      setSyncStatus('idle')
+    }
+  }, [
+    recipesLastModified,
+    mealPlansLastModified,
+    ingredientsLastModified,
+    cloudStorage.isAuthenticated,
+    selectedFile,
+    syncStatus,
+  ])
 
   // Auto-sync: immediate on first call, throttled on subsequent data changes
   useEffect(() => {
@@ -218,13 +256,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
    * Used when switching to a different file
    */
   const resetLocalState = async (): Promise<void> => {
-    // Clear provider state (no logout popup)
+    // Disconnect from provider (clears provider state, but keeps MSAL auth)
     await cloudStorage.disconnect()
 
     // Clear all local storage (local data is just a cache)
     localStorage.clear()
 
-    // Reset all state
+    // Reset sync state
     setSelectedFile(null)
     setSyncStatus('idle')
     setLastSyncTime(null)
@@ -275,18 +313,52 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         version: 1,
       }
 
-      // Step 4: Download remote data
-      const remoteJson = await cloudStorage.downloadFile(selectedFile)
-      const parsedRemote = JSON.parse(remoteJson)
-
-      // Validate remote data structure with zod
-      const validationResult = SyncDataSchema.safeParse(parsedRemote)
-      if (!validationResult.success) {
-        console.error('Remote data validation failed:', validationResult.error)
-        throw new Error('Invalid remote data format')
+      // Step 3.5: Early return if local hasn't changed - no need to check remote
+      if (localData.lastModified === base.lastModified) {
+        setSyncStatus('success')
+        setLastSyncTime(Date.now())
+        setConflictContext(null)
+        return
       }
 
-      const remote = validationResult.data as SyncData
+      // Step 4: Download remote data (skip if new file with empty ID)
+      let remote: SyncData
+      const isNewFile = !selectedFile.id
+
+      if (isNewFile) {
+        // New file doesn't exist yet, treat as empty remote
+        remote = {
+          recipes: [],
+          mealPlans: [],
+          ingredients: [],
+          lastModified: 0,
+          version: 1,
+        }
+      } else {
+        // Existing file, download remote data
+        const remoteJson = await cloudStorage.downloadFile(selectedFile)
+        const parsedRemote = JSON.parse(remoteJson)
+
+        // Validate remote data structure with zod
+        const validationResult = SyncDataSchema.safeParse(parsedRemote)
+        if (!validationResult.success) {
+          console.error('Remote data validation failed:', validationResult.error)
+          throw new Error('Invalid remote data format')
+        }
+
+        remote = validationResult.data as SyncData
+      }
+
+      // Step 4.5: Check if anything changed - skip upload if not
+      const localUnchanged = localData.lastModified === base.lastModified
+      const remoteUnchanged = remote.lastModified === base.lastModified
+      
+      if (localUnchanged && remoteUnchanged) {
+        setSyncStatus('success')
+        setLastSyncTime(Date.now())
+        setConflictContext(null)
+        return
+      }
 
       // Step 5: Perform merge
       const mergeResult = merge(base, localData, remote)
@@ -435,6 +507,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }
 
   /**
+   * Check if there's a stored file in localStorage
+   */
+  const hasSelectedFile = (): boolean => {
+    return selectedFile !== null || localStorage.getItem(SELECTED_FILE_KEY) !== null
+  }
+
+  /**
    * Upload local data to remote file, creating or overwriting the file
    * Use this for first-time upload or when you want to overwrite remote with local data
    */
@@ -467,7 +546,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       }
 
       // Upload to remote
-      await cloudStorage.uploadFile(selectedFile, JSON.stringify(localData))
+      const updatedFileInfo = await cloudStorage.uploadFile(selectedFile, JSON.stringify(localData))
+
+      // Update selectedFile if ID was generated (new file)
+      if (!selectedFile.id && updatedFileInfo.id) {
+        setSelectedFile(updatedFileInfo)
+        localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
+      }
 
       // Save as new base
       localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(localData))
@@ -518,6 +603,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         importFromRemote,
         uploadToRemote,
         resolveConflict,
+        hasSelectedFile,
       }}
     >
       {children}

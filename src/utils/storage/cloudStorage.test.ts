@@ -22,11 +22,12 @@ class MockCloudProvider implements ICloudStorageProvider {
     return this.accountInfo
   }
 
-  async uploadFile(_fileInfo: FileInfo, _data: string): Promise<void> {
+  async uploadFile(_fileInfo: FileInfo, _data: string): Promise<FileInfo> {
     if (!this.authenticated) {
       throw new Error('Not authenticated')
     }
-    // Mock upload - do nothing
+    // Mock upload - return the fileInfo (in real implementation, would have actual ID from cloud)
+    return _fileInfo
   }
 
   async downloadFile(_fileInfo: FileInfo): Promise<string> {

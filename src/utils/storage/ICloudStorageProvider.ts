@@ -6,6 +6,7 @@ export interface FileInfo {
   name: string
   path: string
   isSharedWithMe?: boolean
+  driveId?: string // For shared files, the drive ID where the file exists
 }
 
 /**
@@ -55,11 +56,12 @@ export interface ICloudStorageProvider {
   /**
    * Upload gzip-compressed JSON data to cloud storage
    *
-   * @param fileInfo - File metadata (id, name, path)
+   * @param fileInfo - File metadata (id, name, path). ID may be empty for new files.
    * @param data - Compressed data as string
+   * @returns Updated FileInfo with actual ID from cloud provider
    * @throws Error if upload fails or not connected
    */
-  uploadFile(fileInfo: FileInfo, data: string): Promise<void>
+  uploadFile(fileInfo: FileInfo, data: string): Promise<FileInfo>
 
   /**
    * Download and decompress JSON data from cloud storage

@@ -61,7 +61,8 @@ export function FileSelectionModal({
   const [folders, setFolders] = useState<FolderInfo[]>([])
   const [files, setFiles] = useState<FileInfo[]>([])
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-  const [newFileName, setNewFileName] = useState('meal-plan-data.json.gz')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newFileName, setNewFileName] = useState('')
   const [fileNameError, setFileNameError] = useState<string | null>(null)
 
   const loadFolderContents = useCallback(
@@ -181,6 +182,9 @@ export function FileSelectionModal({
       isSharedWithMe: false,
     }
 
+    setShowCreateModal(false)
+    setNewFileName('')
+    setFileNameError(null)
     onSelectFile(newFile)
   }
 
@@ -296,45 +300,81 @@ export function FileSelectionModal({
     </Stack>
   )
 
-  const renderCreateFileSection = () => (
-    <Box>
-      <Divider my="md" label="Or Create New File" labelPosition="center" />
-      <TextInput
-        label="File Name"
-        placeholder="Enter file name"
-        value={newFileName}
-        onChange={e => handleFileNameChange(e.currentTarget.value)}
-        error={fileNameError}
-        description="Extension .json.gz will be added automatically"
-      />
-    </Box>
-  )
-
   return (
-    <Modal opened={opened} onClose={onClose} title="Select File" size="lg">
-      <Stack gap="md">
-        {error && renderError()}
-        {renderFolderBrowser()}
-        {renderCreateFileSection()}
+    <>
+      <Modal 
+        opened={opened} 
+        onClose={onClose} 
+        title="Select File" 
+        size="lg"
+        closeOnEscape={!showCreateModal}
+      >
+        <Stack gap="md">
+          {error && renderError()}
+          {renderFolderBrowser()}
 
-        <Group justify="flex-end" mt="md">
-          <Button variant="subtle" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSelectFile}
-            disabled={!selectedFileId || isLoading}
-          >
-            Select File
-          </Button>
-          <Button
-            onClick={handleCreateFile}
-            disabled={!!fileNameError || !newFileName.trim() || isLoading}
-          >
-            Create File
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+          <Group justify="flex-end" mt="md">
+            <Button variant="subtle" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="light"
+              onClick={() => setShowCreateModal(true)}
+              disabled={isLoading}
+            >
+              Create New File
+            </Button>
+            <Button
+              onClick={handleSelectFile}
+              disabled={!selectedFileId || isLoading}
+            >
+              Select File
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false)
+          setNewFileName('')
+          setFileNameError(null)
+        }}
+        title="Create New File"
+        size="md"
+      >
+        <Stack gap="md">
+          <TextInput
+            label="File Name"
+            placeholder="meal-plan-data"
+            value={newFileName}
+            onChange={e => handleFileNameChange(e.currentTarget.value)}
+            error={fileNameError}
+            description="Extension .json.gz will be added automatically"
+            data-autofocus
+          />
+
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setShowCreateModal(false)
+                setNewFileName('')
+                setFileNameError(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateFile}
+              disabled={!!fileNameError || !newFileName.trim()}
+            >
+              Create
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   )
 }

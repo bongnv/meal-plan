@@ -9,6 +9,7 @@ import {
 } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
+import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
@@ -74,6 +75,7 @@ function App() {
               </Title>
             </Anchor>
           </Group>
+          <SyncStatusIndicator />
         </Group>
       </AppShell.Header>
 
@@ -95,6 +97,7 @@ function App() {
           leftSection={<IconSettings size={20} stroke={1.5} />}
           active={isSettingsActive()}
           defaultOpened={isSettingsActive()}
+          onClick={close}
         >
           {settingsItems.map(item => (
             <NavLink

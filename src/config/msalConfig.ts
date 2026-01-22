@@ -1,4 +1,4 @@
-import { Configuration, PopupRequest } from '@azure/msal-browser'
+import { Configuration, RedirectRequest } from '@azure/msal-browser'
 
 /**
  * MSAL Configuration for Microsoft authentication
@@ -34,6 +34,6 @@ export const msalConfig: Configuration = {
  * Files.ReadWrite.AppFolder - Access to app-specific folder in OneDrive
  * User.Read - Basic user profile information (name, email)
  */
-export const loginRequest: PopupRequest = {
+export const loginRequest: RedirectRequest = {
   scopes: ['Files.ReadWrite', 'User.Read'],
 }

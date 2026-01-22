@@ -24,6 +24,11 @@ import type {
  */
 const CONNECTED_PROVIDER_KEY = 'mealplan_connected_provider'
 
+/**
+ * SessionStorage key for temporary provider during redirect flow
+ */
+const PENDING_PROVIDER_KEY = 'mealplan_pending_provider'
+
 interface CloudStorageContextType {
   // Current state
   currentProvider: CloudProvider | null
@@ -35,7 +40,7 @@ interface CloudStorageContextType {
   getAccountInfo: () => { name: string; email: string }
 
   // File operation methods (delegated to provider)
-  uploadFile: (fileInfo: FileInfo, data: string) => Promise<void>
+  uploadFile: (fileInfo: FileInfo, data: string) => Promise<FileInfo>
   downloadFile: (fileInfo: FileInfo) => Promise<string>
   listFoldersAndFiles: (folder?: FolderInfo) => Promise<FolderListResult>
 }
@@ -50,6 +55,13 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
   // Initialize currentProvider from localStorage, but validate after MSAL is ready
   const [currentProvider, setCurrentProvider] = useState<CloudProvider | null>(
     () => {
+      // Check for pending provider from redirect flow first
+      const pending = sessionStorage.getItem(PENDING_PROVIDER_KEY) as CloudProvider | null
+      if (pending) {
+        return pending
+      }
+      
+      // Otherwise check localStorage
       const saved = localStorage.getItem(
         CONNECTED_PROVIDER_KEY
       ) as CloudProvider | null
@@ -73,9 +85,21 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
 
   // Compute isAuthenticated from active provider, not just MSAL hook
   // This ensures we check the specific provider's auth state
-  const isAuthenticated =
-    currentProvider !== null &&
-    (providers.get(currentProvider)?.isAuthenticated() ?? false)
+  // IMPORTANT: Don't check authentication until MSAL finishes initializing
+  const isAuthenticated = useMemo(() => {
+    // Wait for MSAL to finish initializing
+    if (inProgress !== 'none') {
+      return false
+    }
+    
+    if (!currentProvider) {
+      return false
+    }
+    
+    const provider = providers.get(currentProvider)
+    const providerAuth = provider?.isAuthenticated() ?? false
+    return providerAuth
+  }, [inProgress, currentProvider, providers])
 
   // Auto-restore provider from localStorage on mount
   // Wait for MSAL to finish initializing before checking authentication
@@ -99,8 +123,17 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
       // Queue state update to avoid synchronous setState in effect
       queueMicrotask(() => {
         localStorage.removeItem(CONNECTED_PROVIDER_KEY)
+        sessionStorage.removeItem(PENDING_PROVIDER_KEY)
         setCurrentProvider(null)
       })
+    } else {
+      // Save to localStorage now that authentication is confirmed
+      const pendingProvider = sessionStorage.getItem(PENDING_PROVIDER_KEY)
+      if (pendingProvider || currentProvider) {
+        const providerToSave = pendingProvider || currentProvider
+        localStorage.setItem(CONNECTED_PROVIDER_KEY, providerToSave as string)
+        sessionStorage.removeItem(PENDING_PROVIDER_KEY)
+      }
     }
   }, [providers, inProgress, currentProvider])
 
@@ -128,10 +161,13 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
 
     // Authenticate via MSAL redirect
     if (provider === CloudProvider.ONEDRIVE) {
-      // Save provider BEFORE redirect so it can be restored after
-      localStorage.setItem(CONNECTED_PROVIDER_KEY, provider)
+      // Save provider to sessionStorage (temporary) so it can be restored after redirect
+      // Will only be saved to localStorage after successful authentication
+      sessionStorage.setItem(PENDING_PROVIDER_KEY, provider)
+      setCurrentProvider(provider)
+      // Trigger redirect - page will reload after authentication
       await msalInstance.loginRedirect(loginRequest)
-      return // Page will redirect, then restore provider on return
+      return // Code after this won't execute due to redirect
     }
 
     setCurrentProvider(provider)
@@ -158,7 +194,7 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
   const uploadFile = async (
     fileInfo: FileInfo,
     data: string
-  ): Promise<void> => {
+  ): Promise<FileInfo> => {
     const provider = getActiveProvider()
     return provider.uploadFile(fileInfo, data)
   }

@@ -30,15 +30,21 @@ export class OneDriveProvider implements ICloudStorageProvider {
    * @private
    */
   private getAccount(): AccountInfo | null {
-    const accounts = this.msalInstance.getAllAccounts()
-    return accounts.length > 0 ? accounts[0] : null
+    try {
+      const accounts = this.msalInstance.getAllAccounts()
+      return accounts.length > 0 ? accounts[0] : null
+    } catch (error) {
+      console.warn('[OneDrive] MSAL not ready yet:', error)
+      return null
+    }
   }
 
   /**
    * Check if user is authenticated with OneDrive
    */
   isAuthenticated(): boolean {
-    return this.getAccount() !== null
+    const account = this.getAccount()
+    return account !== null
   }
 
   /**
@@ -96,7 +102,8 @@ export class OneDriveProvider implements ICloudStorageProvider {
         account: account,
       })
       return response.accessToken
-    } catch {
+    } catch (error) {
+      console.error('[OneDrive] Token acquisition failed:', error)
       throw new Error(
         'Session expired. Please disconnect and reconnect to OneDrive.'
       )
@@ -104,42 +111,71 @@ export class OneDriveProvider implements ICloudStorageProvider {
   }
 
   /**
-   * Upload compressed file to OneDrive app folder
+   * Build Graph API path for a file
+   * Ensures consistent path format across all file operations
+   * Handles both personal and shared files
+   * @private
    */
-  async uploadFile(fileInfo: FileInfo, data: string): Promise<void> {
-    const graphClient = this.createGraphClient()
-
-    // Compress data
-    const compressedData = await compressData(data)
-    const buffer =
-      compressedData.buffer instanceof ArrayBuffer
-        ? compressedData.buffer
-        : new ArrayBuffer(0)
-
-    // Upload to OneDrive app folder using Graph Client
-    await graphClient
-      .api(`/me/drive/special/approot:/${fileInfo.name}:/content`)
-      .put(buffer)
+  private getFilePath(fileInfo: FileInfo): string {
+    // For shared files, prefer driveId + itemId if available, otherwise use sharing reference
+    if (fileInfo.isSharedWithMe) {
+      if (fileInfo.driveId && fileInfo.id) {
+        // Use drive ID + item ID for direct access
+        return `/drives/${fileInfo.driveId}/items/${fileInfo.id}/content`
+      }
+      // Fallback to sharing reference ID
+      return `/me/drive/items/${fileInfo.id}/content`
+    }
+    
+    // For personal files, use path-based access
+    // Path should start with / (e.g., "/file.json.gz" or "/folder/file.json.gz")
+    return `/me/drive/root:${fileInfo.path}:/content`
   }
 
   /**
-   * Download and decompress file from OneDrive app folder
+   * Upload compressed file to OneDrive
+   */
+  async uploadFile(fileInfo: FileInfo, data: string): Promise<FileInfo> {
+    const graphClient = this.createGraphClient()
+
+    // Compress data (returns Blob ready for upload)
+    const compressedBlob = await compressData(data)
+
+    // Upload to OneDrive using the file's path
+    const uploadPath = this.getFilePath(fileInfo)
+    
+    const response = await graphClient
+      .api(uploadPath)
+      .put(compressedBlob)
+
+    // Return updated FileInfo with actual ID from OneDrive
+    return {
+      id: response.id,
+      name: response.name,
+      path: fileInfo.path,
+      isSharedWithMe: fileInfo.isSharedWithMe,
+    }
+  }
+
+  /**
+   * Download and decompress file from OneDrive
    */
   async downloadFile(fileInfo: FileInfo): Promise<string> {
     const graphClient = this.createGraphClient()
 
-    // Download from OneDrive app folder using Graph Client
+    // Download from OneDrive using the file's path
+    const downloadPath = this.getFilePath(fileInfo)
     const response = await graphClient
-      .api(`/me/drive/special/approot:/${fileInfo.name}:/content`)
+      .api(downloadPath)
       .get()
 
-    // Response is already an ArrayBuffer
-    const compressedData = new Uint8Array(response)
+    // Decompress the stream directly
+    if (!(response instanceof ReadableStream)) {
+      console.error('[OneDrive] Unexpected response type, expected ReadableStream')
+      throw new Error('Unexpected response type from OneDrive API')
+    }
 
-    // Decompress data
-    const decompressedData = await decompressData(compressedData)
-
-    return decompressedData
+    return await decompressData(response)
   }
 
   /**
@@ -211,6 +247,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
               name: item.name,
               path: itemPath,
               isSharedWithMe: true, // Shared with me by others
+              driveId: remoteItem.parentReference?.driveId, // Drive ID for potential future use
             })
           }
         }

@@ -4,7 +4,33 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import App from './App'
+import { CloudStorageProvider } from './contexts/CloudStorageContext'
+import { IngredientProvider } from './contexts/IngredientContext'
+import { MealPlanProvider } from './contexts/MealPlanContext'
 import * as RecipeContext from './contexts/RecipeContext'
+import { RecipeProvider } from './contexts/RecipeContext'
+import { SyncProvider } from './contexts/SyncContext'
+
+import type { ReactNode } from 'react'
+
+// Mock MSAL React
+vi.mock('@azure/msal-react', () => ({
+  MsalProvider: ({ children }: { children: ReactNode }) => children,
+  useMsal: () => ({
+    instance: {
+      getAllAccounts: vi.fn(() => []),
+      loginPopup: vi.fn(),
+      logoutPopup: vi.fn(),
+      acquireTokenSilent: vi.fn(),
+    },
+    inProgress: 'none',
+  }),
+  useMsalAuthentication: () => ({
+    login: vi.fn(),
+    result: null,
+    error: null,
+  }),
+}))
 
 // Mock the recipe pages
 vi.mock('./pages/recipes/CreateRecipePage', () => ({
@@ -29,11 +55,21 @@ const mockRecipeContext = {
 
 const renderApp = (initialRoute: string = '/') => {
   return render(
-    <MantineProvider>
-      <MemoryRouter initialEntries={[initialRoute]}>
-        <App />
-      </MemoryRouter>
-    </MantineProvider>
+    <CloudStorageProvider>
+      <RecipeProvider>
+        <MealPlanProvider>
+          <IngredientProvider>
+            <SyncProvider>
+              <MantineProvider>
+                <MemoryRouter initialEntries={[initialRoute]}>
+                  <App />
+                </MemoryRouter>
+              </MantineProvider>
+            </SyncProvider>
+          </IngredientProvider>
+        </MealPlanProvider>
+      </RecipeProvider>
+    </CloudStorageProvider>
   )
 }
 

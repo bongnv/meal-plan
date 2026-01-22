@@ -35,6 +35,7 @@ export function CloudSyncSettings() {
     syncStatus,
     connectProvider,
     resetLocalState,
+    hasSelectedFile,
   } = useSyncContext()
 
   // Get cloud storage context (for provider and account info)
@@ -58,6 +59,7 @@ export function CloudSyncSettings() {
     if (
       cloudStorage.isAuthenticated &&
       !selectedFile &&
+      !hasSelectedFile() &&
       !isModalOpen &&
       !hasAutoOpenedRef.current
     ) {
@@ -99,10 +101,18 @@ export function CloudSyncSettings() {
    * Cloud is source of truth - local data is just a cache
    */
   const handleChangeFile = async () => {
-    // Reset local state via context
-    await resetLocalState()
-    // Open modal for new file selection
-    setIsModalOpen(true)
+    try {
+      // Reset local state (clears file and data)
+      await resetLocalState()
+      
+      // Reconnect to same provider (handles authentication if needed)
+      await cloudStorage.connect(CloudProvider.ONEDRIVE)
+      
+      // Open modal for new file selection
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error('[CloudSyncSettings] Failed to change file:', error)
+    }
   }
 
   /**
