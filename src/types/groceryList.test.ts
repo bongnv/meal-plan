@@ -4,11 +4,11 @@ import { GroceryItemSchema, GroceryListSchema } from './groceryList'
 
 describe('GroceryList Types', () => {
   describe('GroceryItemSchema', () => {
-    it('should validate GroceryItem with ingredientId (from library)', () => {
+    it('should validate GroceryItem with name (from ingredient library)', () => {
       const item = {
         id: 'item-1',
         listId: 'list-1',
-        ingredientId: 'ingredient-123',
+        name: 'Broccoli',
         quantity: 2.5,
         unit: 'cup',
         category: 'Vegetables',
@@ -24,11 +24,11 @@ describe('GroceryList Types', () => {
       }
     })
 
-    it('should validate GroceryItem with null ingredientId (manual item)', () => {
+    it('should validate GroceryItem with name (manual item)', () => {
       const item = {
         id: 'item-2',
         listId: 'list-1',
-        ingredientId: null,
+        name: 'Custom Item',
         quantity: 1,
         unit: 'piece',
         category: 'Other',
@@ -48,7 +48,7 @@ describe('GroceryList Types', () => {
       const item = {
         id: 'item-3',
         listId: 'list-1',
-        ingredientId: 'ingredient-456',
+        name: 'Chicken Breast',
         quantity: 500,
         unit: 'gram',
         category: 'Meat',
@@ -68,7 +68,8 @@ describe('GroceryList Types', () => {
     it('should reject GroceryItem with invalid unit', () => {
       const item = {
         id: 'item-4',
-        ingredientId: 'ingredient-789',
+        listId: 'list-1',
+        name: 'Milk',
         quantity: 2,
         unit: 'invalid-unit',
         category: 'Dairy',
@@ -84,7 +85,8 @@ describe('GroceryList Types', () => {
     it('should reject GroceryItem with invalid category', () => {
       const item = {
         id: 'item-5',
-        ingredientId: 'ingredient-101',
+        listId: 'list-1',
+        name: 'Spinach',
         quantity: 3,
         unit: 'cup',
         category: 'InvalidCategory',
@@ -100,7 +102,8 @@ describe('GroceryList Types', () => {
     it('should reject GroceryItem with negative quantity', () => {
       const item = {
         id: 'item-6',
-        ingredientId: 'ingredient-202',
+        listId: 'list-1',
+        name: 'Carrot',
         quantity: -1,
         unit: 'cup',
         category: 'Vegetables',
@@ -116,7 +119,8 @@ describe('GroceryList Types', () => {
     it('should reject GroceryItem with zero quantity', () => {
       const item = {
         id: 'item-7',
-        ingredientId: 'ingredient-303',
+        listId: 'list-1',
+        name: 'Salt',
         quantity: 0,
         unit: 'tablespoon',
         category: 'Condiments',
@@ -132,8 +136,8 @@ describe('GroceryList Types', () => {
     it('should reject GroceryItem without required fields', () => {
       const item = {
         id: 'item-8',
-        ingredientId: 'ingredient-404',
-        // Missing quantity, unit, category, checked, mealPlanIds
+        listId: 'list-1',
+        // Missing name, quantity, unit, category, checked, mealPlanIds
       }
 
       const result = GroceryItemSchema.safeParse(item)

@@ -8,11 +8,10 @@ import { IngredientCategorySchema, UnitSchema } from './ingredient'
 export const GroceryItemSchema = z.object({
   id: z.string().min(1),
   listId: z.string().min(1), // Reference to parent grocery list
-  ingredientId: z.string().min(1).nullable(), // null = manually added item
-  name: z.string().optional(), // Optional name for manually added items (not in library)
+  name: z.string().min(1), // Item name (copied from ingredient or manually entered)
   quantity: z.number().positive(),
   unit: UnitSchema,
-  category: IngredientCategorySchema, // Denormalized from ingredient library
+  category: IngredientCategorySchema, // Category for grouping
   checked: z.boolean(),
   mealPlanIds: z.array(z.string().min(1)), // Which meal plans need this ingredient
   notes: z.string().optional(), // Optional user notes
@@ -32,6 +31,7 @@ export const GroceryListSchema = z
       end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
     }),
     createdAt: z.number().nonnegative(), // Unix timestamp
+    note: z.string().optional(), // Optional note for the grocery list
   })
   .refine(
     data => {

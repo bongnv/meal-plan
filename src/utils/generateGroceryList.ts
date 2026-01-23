@@ -1,4 +1,5 @@
 import { roundQuantity } from './quantityRounding'
+import { consolidateUnit, normalizeUnitForConsolidation, convertQuantity } from './unitConversion'
 
 import type { GroceryList, GroceryItem } from '../types/groceryList'
 import type { Ingredient, IngredientCategory, Unit } from '../types/ingredient'
@@ -11,7 +12,7 @@ interface DateRange {
 }
 
 interface AccumulatedIngredient {
-  ingredientId: string
+  name: string
   quantity: number
   unit: Unit
   category: IngredientCategory
@@ -41,7 +42,8 @@ export function generateGroceryList(
     return mp.date >= dateRange.start && mp.date <= dateRange.end
   })
 
-  // Accumulate ingredients by ingredientId
+  // Accumulate ingredients by ingredientId and normalized unit
+  // This allows us to combine e.g., 500g + 600g = 1.1kg
   const accumulated = new Map<string, AccumulatedIngredient>()
 
   for (const mealPlan of relevantMealPlans) {
@@ -61,14 +63,30 @@ export function generateGroceryList(
       const key = recipeIngredient.ingredientId
 
       if (accumulated.has(key)) {
-        // Add to existing
+        // Add to existing - convert to normalized unit first
         const existing = accumulated.get(key)!
-        existing.quantity += scaledQuantity
-        existing.mealPlanIds.push(mealPlan.id)
+        const normalizedUnit = normalizeUnitForConsolidation(ingredient.unit)
+        const existingNormalizedUnit = normalizeUnitForConsolidation(existing.unit)
+        
+        // If units can be combined (same normalized unit), add quantities
+        if (normalizedUnit === existingNormalizedUnit) {
+          // Convert ingredient quantity to normalized unit
+          const convertedQuantity = convertQuantity(scaledQuantity, ingredient.unit, normalizedUnit)
+          // Convert existing quantity to normalized unit
+          const existingConverted = convertQuantity(existing.quantity, existing.unit, normalizedUnit)
+          
+          existing.quantity = existingConverted + convertedQuantity
+          existing.unit = normalizedUnit
+          existing.mealPlanIds.push(mealPlan.id)
+        } else {
+          // Different unit types - shouldn't happen in practice but handle it
+          existing.quantity += scaledQuantity
+          existing.mealPlanIds.push(mealPlan.id)
+        }
       } else {
-        // Create new entry (get unit from ingredient library)
+        // Create new entry (get unit and name from ingredient library)
         accumulated.set(key, {
-          ingredientId: recipeIngredient.ingredientId,
+          name: ingredient.name,
           quantity: scaledQuantity,
           unit: ingredient.unit, // Get unit from ingredient library
           category: ingredient.category,
@@ -78,19 +96,25 @@ export function generateGroceryList(
     }
   }
 
-  // Convert accumulated data to grocery items with smart rounding
+  // Convert accumulated data to grocery items with smart rounding and unit consolidation
   const listId = `gl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-  const items: GroceryItem[] = Array.from(accumulated.values()).map(acc => ({
-    id: `gi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    listId, // Link item to the parent list
-    ingredientId: acc.ingredientId,
-    quantity: roundQuantity(acc.quantity, acc.unit),
-    unit: acc.unit,
-    category: acc.category,
-    checked: false,
-    mealPlanIds: acc.mealPlanIds,
-  }))
+  const items: GroceryItem[] = Array.from(accumulated.values()).map(acc => {
+    const roundedQuantity = roundQuantity(acc.quantity, acc.unit)
+    // Apply unit consolidation after rounding (e.g., 1000g becomes 1kg)
+    const [consolidatedQuantity, consolidatedUnit] = consolidateUnit(roundedQuantity, acc.unit)
+    
+    return {
+      id: `gi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      listId, // Link item to the parent list
+      name: acc.name,
+      quantity: consolidatedQuantity,
+      unit: consolidatedUnit,
+      category: acc.category,
+      checked: false,
+      mealPlanIds: acc.mealPlanIds,
+    }
+  })
 
   const list: GroceryList = {
     id: listId,

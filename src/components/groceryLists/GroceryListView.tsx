@@ -7,21 +7,26 @@ import {
   Divider,
   Group,
   NumberInput,
+  Popover,
   Select,
   Stack,
   Text,
   TextInput,
+  Textarea,
   Title,
 } from '@mantine/core'
-import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { GroceryItem, GroceryList } from '../../types/groceryList'
-import { INGREDIENT_CATEGORIES, UNITS } from '../../types/ingredient'
+import { INGREDIENT_CATEGORIES, UNITS, Unit } from '../../types/ingredient'
+import { MealPlan } from '../../types/mealPlan'
 
 interface GroceryListViewProps {
   groceryList: GroceryList
   items: GroceryItem[]
+  mealPlans: MealPlan[] // For meal plan references
   onCheckItem: (itemId: string) => void
   onUpdateQuantity?: (itemId: string, quantity: number, unit: string) => void
   onUpdateNotes?: (itemId: string, notes: string) => void
@@ -32,7 +37,7 @@ interface GroceryListViewProps {
     unit: string
     category: string
   }) => void
-  getIngredientName: (ingredientId: string) => string
+  getRecipeName: (recipeId: string) => string // For meal plan references
 }
 
 // Category icons mapping
@@ -53,14 +58,197 @@ const CATEGORY_ICONS: Record<string, string> = {
   Other: '📦',
 }
 
+// Item row component with inline editing
+interface ItemRowProps {
+  item: GroceryItem
+  itemName: string
+  mealPlans: MealPlan[]
+  getRecipeName: (recipeId: string) => string
+  onCheckItem: (itemId: string) => void
+  onUpdateQuantity?: (itemId: string, quantity: number, unit: string) => void
+  onUpdateNotes?: (itemId: string, notes: string) => void
+  onRemoveItem: (itemId: string) => void
+}
+
+const ItemRow = ({
+  item,
+  itemName,
+  mealPlans,
+  getRecipeName,
+  onCheckItem,
+  onUpdateQuantity,
+  onUpdateNotes,
+  onRemoveItem,
+}: ItemRowProps) => {
+  const navigate = useNavigate()
+  const [editPopoverOpened, setEditPopoverOpened] = useState(false)
+  const [quantity, setQuantity] = useState(item.quantity)
+  const [unit, setUnit] = useState<Unit>(item.unit)
+  const [notes, setNotes] = useState(item.notes || '')
+
+  // Get meal plan details
+  const itemMealPlans = useMemo(() => {
+    return mealPlans.filter(mp => item.mealPlanIds.includes(mp.id))
+  }, [mealPlans, item.mealPlanIds])
+
+  // Handle saving edits
+  const handleSave = () => {
+    if (onUpdateQuantity && (quantity !== item.quantity || unit !== item.unit)) {
+      onUpdateQuantity(item.id, quantity, unit)
+    }
+    if (onUpdateNotes && notes !== (item.notes || '')) {
+      onUpdateNotes(item.id, notes)
+    }
+    setEditPopoverOpened(false)
+  }
+
+  // Reset on cancel
+  const handleCancel = () => {
+    setQuantity(item.quantity)
+    setUnit(item.unit)
+    setNotes(item.notes || '')
+    setEditPopoverOpened(false)
+  }
+
+  const handleMealClick = (mealPlan: MealPlan) => {
+    // Navigate to calendar view with the meal plan's date
+    navigate(`/?date=${mealPlan.date}`)
+  }
+
+  return (
+    <Card
+      withBorder
+      p="xs"
+      radius="sm"
+      style={{
+        opacity: item.checked ? 0.6 : 1,
+        transition: 'opacity 0.2s',
+      }}
+    >
+      <Group justify="space-between" align="center" wrap="nowrap" gap="xs">
+        <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+          <Group gap="xs" align="center" style={{ flex: 1, minWidth: 0 }}>
+            <Checkbox
+              checked={item.checked}
+              onChange={() => onCheckItem(item.id)}
+              size="sm"
+            />
+            <Text
+              fw={500}
+              size="sm"
+              lineClamp={1}
+              style={{
+                textDecoration: item.checked ? 'line-through' : 'none',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {itemName} • {item.quantity} {item.unit}
+              {item.notes && ` • ${item.notes}`}
+            </Text>
+          </Group>
+          {itemMealPlans.length > 0 && (
+            <Group gap={4} ml={28}>
+              {itemMealPlans.map(mp => {
+                const recipeName =
+                  mp.type === 'recipe' ? getRecipeName(mp.recipeId) : mp.type
+                return (
+                  <Badge
+                    key={mp.id}
+                    size="xs"
+                    variant="light"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleMealClick(mp)}
+                  >
+                    {recipeName} ({mp.date} {mp.mealType})
+                  </Badge>
+                )
+              })}
+            </Group>
+          )}
+        </Stack>
+        <Group gap={4}>
+          <Popover
+            opened={editPopoverOpened}
+            onChange={setEditPopoverOpened}
+            position="left"
+            withArrow
+          >
+            <Popover.Target>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setEditPopoverOpened(true)}
+                aria-label="Edit item"
+              >
+                <IconEdit size={14} />
+              </ActionIcon>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Stack gap="sm" style={{ minWidth: 250 }}>
+                <Group align="end" gap="xs">
+                  <NumberInput
+                    label="Quantity"
+                    value={quantity}
+                    onChange={val => setQuantity(Number(val) || 0)}
+                    min={0.1}
+                    step={0.5}
+                    decimalScale={2}
+                    style={{ flex: 1 }}
+                    size="xs"
+                  />
+                  <Select
+                    label="Unit"
+                    data={UNITS.map(u => ({ value: u, label: u }))}
+                    value={unit}
+                    onChange={val => setUnit((val as Unit) || 'piece')}
+                    style={{ flex: 1 }}
+                    size="xs"
+                  />
+                </Group>
+                <Textarea
+                  label="Notes"
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  placeholder="Optional notes..."
+                  size="xs"
+                  rows={2}
+                />
+                <Group justify="flex-end" gap="xs">
+                  <Button variant="subtle" size="xs" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button size="xs" onClick={handleSave}>
+                    Save
+                  </Button>
+                </Group>
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            size="sm"
+            onClick={() => onRemoveItem(item.id)}
+            aria-label="Remove item"
+          >
+            <IconTrash size={14} />
+          </ActionIcon>
+        </Group>
+      </Group>
+    </Card>
+  )
+}
+
 export const GroceryListView = ({
   items,
+  mealPlans,
   onCheckItem,
-  onUpdateQuantity: _onUpdateQuantity,
-  onUpdateNotes: _onUpdateNotes,
+  onUpdateQuantity,
+  onUpdateNotes,
   onRemoveItem,
   onAddManualItem,
-  getIngredientName,
+  getRecipeName,
 }: GroceryListViewProps) => {
   // Manual item form state
   const [manualItemName, setManualItemName] = useState('')
@@ -213,75 +401,19 @@ export const GroceryListView = ({
             </Group>
 
             <Stack gap={4}>
-              {items.map(item => {
-                // For items with ingredientId, look up the name
-                // For manual items (no ingredientId), use the stored name
-                const itemName = item.ingredientId
-                  ? getIngredientName(item.ingredientId)
-                  : item.name || 'Manual Item' // Use stored name or fallback
-
-                const mealText =
-                  item.mealPlanIds.length === 1
-                    ? '1 meal'
-                    : `${item.mealPlanIds.length} meals`
-
-                return (
-                  <Card
-                    key={item.id}
-                    withBorder
-                    p="xs"
-                    radius="sm"
-                    style={{
-                      opacity: item.checked ? 0.6 : 1,
-                      transition: 'opacity 0.2s',
-                    }}
-                  >
-                    <Group
-                      justify="space-between"
-                      align="center"
-                      wrap="nowrap"
-                      gap="xs"
-                    >
-                      <Group
-                        gap="xs"
-                        align="center"
-                        style={{ flex: 1, minWidth: 0 }}
-                      >
-                        <Checkbox
-                          checked={item.checked}
-                          onChange={() => onCheckItem(item.id)}
-                          size="sm"
-                        />
-                        <Text
-                          fw={500}
-                          size="sm"
-                          lineClamp={1}
-                          style={{
-                            textDecoration: item.checked
-                              ? 'line-through'
-                              : 'none',
-                            flex: 1,
-                            minWidth: 0,
-                          }}
-                        >
-                          {itemName} • {item.quantity} {item.unit}
-                          {item.mealPlanIds.length > 0 && ` • ${mealText}`}
-                          {item.notes && ` • ${item.notes}`}
-                        </Text>
-                      </Group>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        size="sm"
-                        onClick={() => onRemoveItem(item.id)}
-                        aria-label="Remove item"
-                      >
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    </Group>
-                  </Card>
-                )
-              })}
+              {items.map(item => (
+                <ItemRow
+                  key={item.id}
+                  item={item}
+                  itemName={item.name}
+                  mealPlans={mealPlans}
+                  getRecipeName={getRecipeName}
+                  onCheckItem={onCheckItem}
+                  onUpdateQuantity={onUpdateQuantity}
+                  onUpdateNotes={onUpdateNotes}
+                  onRemoveItem={onRemoveItem}
+                />
+              ))}
             </Stack>
           </div>
         )

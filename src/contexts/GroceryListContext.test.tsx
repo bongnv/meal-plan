@@ -57,7 +57,7 @@ describe('GroceryListContext', () => {
     {
       id: 'item-1',
       listId: '1',
-      ingredientId: 'banana-id',
+      name: 'Banana',
       quantity: 2,
       unit: 'cup',
       checked: false,
@@ -312,7 +312,7 @@ describe('GroceryListContext', () => {
       const newItem: GroceryItem = {
         id: 'item-2',
         listId: '1',
-        ingredientId: 'milk-id',
+        name: 'Milk',
         quantity: 1,
         unit: 'liter',
         checked: false,
@@ -341,7 +341,7 @@ describe('GroceryListContext', () => {
       const newItem: GroceryItem = {
         id: 'item-2',
         listId: '1',
-        ingredientId: 'milk-id',
+        name: 'Milk',
         quantity: 1,
         unit: 'liter',
         checked: false,

@@ -1,10 +1,13 @@
 import { MantineProvider } from '@mantine/core'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { GroceryListProvider } from '../../contexts/GroceryListContext'
 import { IngredientProvider } from '../../contexts/IngredientContext'
+import { MealPlanProvider } from '../../contexts/MealPlanContext'
+import { RecipeProvider } from '../../contexts/RecipeContext'
 import { Ingredient } from '../../types/ingredient'
 
 import { GroceryListDetailPage } from './GroceryListDetailPage'
@@ -54,7 +57,7 @@ const mockGroceryItems = [
   {
     id: 'item-1',
     listId: '1',
-    ingredientId: 'banana-id',
+    name: 'Banana',
     quantity: 2,
     unit: 'cup',
     checked: false,
@@ -92,23 +95,53 @@ vi.mock('../../utils/storage/groceryListStorage', () => ({
   },
 }))
 
+vi.mock('../../utils/storage/recipeStorage', () => ({
+  RecipeStorageService: class {
+    loadRecipes() {
+      return []
+    }
+    saveRecipes() {
+      // mock save
+    }
+  },
+}))
+
+vi.mock('../../utils/storage/mealPlanStorage', () => ({
+  MealPlanStorageService: class {
+    loadMealPlans() {
+      return []
+    }
+    saveMealPlans() {
+      // mock save
+    }
+  },
+}))
+
 const renderWithProviders = (
   component: React.ReactElement,
   route = '/grocery-lists/1'
 ) => {
-  return render(
-    <MantineProvider>
-      <IngredientProvider>
-        <GroceryListProvider>
-          <MemoryRouter initialEntries={[route]}>
-            <Routes>
-              <Route path="/grocery-lists/:id" element={component} />
-            </Routes>
-          </MemoryRouter>
-        </GroceryListProvider>
-      </IngredientProvider>
-    </MantineProvider>
-  )
+  const user = userEvent.setup()
+  return {
+    user,
+    ...render(
+      <MantineProvider>
+        <IngredientProvider>
+          <RecipeProvider>
+            <MealPlanProvider>
+              <GroceryListProvider>
+                <MemoryRouter initialEntries={[route]}>
+                  <Routes>
+                    <Route path="/grocery-lists/:id" element={component} />
+                  </Routes>
+                </MemoryRouter>
+              </GroceryListProvider>
+            </MealPlanProvider>
+          </RecipeProvider>
+        </IngredientProvider>
+      </MantineProvider>
+    ),
+  }
 }
 
 describe('GroceryListDetailPage', () => {
@@ -118,10 +151,14 @@ describe('GroceryListDetailPage', () => {
 
   describe('Page Rendering', () => {
     it('should render the page with stub data', () => {
-      renderWithProviders(<GroceryListDetailPage />)
+      const { user: _user, ...result } = renderWithProviders(
+        <GroceryListDetailPage />
+      )
+      const { container } = result
 
       // Should display list name
       expect(screen.getByText(/week of/i)).toBeInTheDocument()
+      expect(container).toBeTruthy()
     })
 
     it('should display the list name', () => {
@@ -144,7 +181,9 @@ describe('GroceryListDetailPage', () => {
     it('should render edit button', () => {
       renderWithProviders(<GroceryListDetailPage />)
 
-      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+      // There may be multiple edit buttons (item edit buttons), so we look for the one with leftSection
+      const buttons = screen.getAllByRole('button', { name: /edit/i })
+      expect(buttons.length).toBeGreaterThan(0)
     })
 
     it('should render delete button', () => {
@@ -195,6 +234,89 @@ describe('GroceryListDetailPage', () => {
       expect(
         screen.getByRole('heading', { name: /week of/i })
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('Edit List Name', () => {
+    it('should open edit modal when edit button is clicked', async () => {
+      const { user } = renderWithProviders(<GroceryListDetailPage />)
+
+      const editButton = screen.getByTestId('edit-list-button')
+      await user.click(editButton)
+
+      // Wait for modal to appear
+      expect(await screen.findByText('Edit Grocery List')).toBeInTheDocument()
+    })
+
+    it('should update list name when save is clicked', async () => {
+      const { user } = renderWithProviders(<GroceryListDetailPage />)
+
+      const editButton = screen.getByTestId('edit-list-button')
+      await user.click(editButton)
+
+      // Wait for modal to open
+      await screen.findByText('Edit Grocery List')
+
+      const nameInput = await screen.findByLabelText(/list name/i)
+      await user.clear(nameInput)
+      await user.type(nameInput, 'New List Name')
+
+      const saveButton = screen.getByRole('button', { name: /^save$/i })
+      await user.click(saveButton)
+
+      // Wait for the new name to appear
+      expect(await screen.findByText('New List Name')).toBeInTheDocument()
+    })
+
+    it('should close modal when cancel is clicked', async () => {
+      const { user } = renderWithProviders(<GroceryListDetailPage />)
+
+      const editButton = screen.getByTestId('edit-list-button')
+      await user.click(editButton)
+
+      // Wait for modal to open
+      await screen.findByText('Edit Grocery List')
+
+      const cancelButtons = screen.getAllByRole('button', { name: /cancel/i })
+      // Click the first cancel button (from the modal)
+      await user.click(cancelButtons[0])
+
+      // Wait for modal to close (state update is async even without animation)
+      await waitFor(() => {
+        expect(screen.queryByText('Edit Grocery List')).not.toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Delete List', () => {
+    it('should open confirmation modal when delete button is clicked', async () => {
+      const { user } = renderWithProviders(<GroceryListDetailPage />)
+
+      const deleteButton = screen.getByTestId('delete-list-button')
+      await user.click(deleteButton)
+
+      // Wait for modal to appear
+      expect(await screen.findByText('Confirm Delete')).toBeInTheDocument()
+    })
+
+
+    it('should close modal when cancel is clicked', async () => {
+      const { user } = renderWithProviders(<GroceryListDetailPage />)
+
+      const deleteButton = screen.getByTestId('delete-list-button')
+      await user.click(deleteButton)
+
+      // Wait for modal to open
+      await screen.findByText('Confirm Delete')
+
+      const cancelButtons = await screen.findAllByRole('button', { name: /cancel/i })
+      // Click the cancel button from the modal
+      await user.click(cancelButtons[0])
+
+      // Wait for modal to close (state update is async)
+      await waitFor(() => {
+        expect(screen.queryByText('Confirm Delete')).not.toBeInTheDocument()
+      })
     })
   })
 })

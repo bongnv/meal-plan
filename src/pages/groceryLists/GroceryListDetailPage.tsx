@@ -1,10 +1,21 @@
-import { Button, Container, Group, Stack, Text, Title } from '@mantine/core'
+import {
+  Button,
+  Container,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core'
 import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { GroceryListView } from '../../components/groceryLists/GroceryListView'
 import { useGroceryLists } from '../../contexts/GroceryListContext'
-import { useIngredients } from '../../contexts/IngredientContext'
+import { useMealPlans } from '../../contexts/MealPlanContext'
+import { useRecipes } from '../../contexts/RecipeContext'
 import { GroceryItem } from '../../types/groceryList'
 
 import type { IngredientCategory, Unit } from '../../types/ingredient'
@@ -12,25 +23,56 @@ import type { IngredientCategory, Unit } from '../../types/ingredient'
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { ingredients } = useIngredients()
+  const { recipes } = useRecipes()
+  const { mealPlans } = useMealPlans()
   const {
     getGroceryListById,
     getItemsForList,
     addGroceryItem,
     updateGroceryItem: updateItem,
+    updateGroceryList,
+    deleteGroceryList,
     removeGroceryItem,
   } = useGroceryLists()
+
+  // Modal states
+  const [editModalOpened, setEditModalOpened] = useState(false)
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false)
+  const [editedName, setEditedName] = useState('')
+  const [editedNote, setEditedNote] = useState('')
 
   // Get grocery list from context
   const groceryList = getGroceryListById(id || '')
   const items = getItemsForList(id || '')
 
   const handleEdit = () => {
-    // Will be implemented in I8.8
+    if (groceryList) {
+      setEditedName(groceryList.name)
+      setEditedNote(groceryList.note || '')
+      setEditModalOpened(true)
+    }
+  }
+
+  const handleSaveEdit = () => {
+    if (groceryList && editedName.trim()) {
+      updateGroceryList({
+        ...groceryList,
+        name: editedName.trim(),
+        note: editedNote.trim() || undefined,
+      })
+      setEditModalOpened(false)
+    }
   }
 
   const handleDelete = () => {
-    // Will be implemented in I8.8
+    setDeleteModalOpened(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (groceryList) {
+      deleteGroceryList(groceryList.id)
+      navigate('/grocery-lists')
+    }
   }
 
   const handleBack = () => {
@@ -69,9 +111,8 @@ export const GroceryListDetailPage = () => {
     if (!groceryList) return
 
     const newItem: GroceryItem = {
-      id: `manual-${Date.now()}`,
+      id: `item-${Date.now()}`,
       listId: groceryList.id,
-      ingredientId: null,
       name: item.name,
       quantity: item.quantity,
       unit: item.unit as Unit,
@@ -83,9 +124,9 @@ export const GroceryListDetailPage = () => {
     addGroceryItem(newItem)
   }
 
-  const getIngredientName = (ingredientId: string): string => {
-    const ingredient = ingredients.find(i => i.id === ingredientId)
-    return ingredient?.name || ingredientId
+  const getRecipeName = (recipeId: string): string => {
+    const recipe = recipes.find(r => r.id === recipeId)
+    return recipe?.name || recipeId
   }
 
   // Handle grocery list not found
@@ -117,18 +158,24 @@ export const GroceryListDetailPage = () => {
           Back to Lists
         </Button>
 
-        <Group justify="space-between" align="center">
-          <div>
+        <Group justify="space-between" align="start">
+          <Stack gap={4}>
             <Title order={1}>{groceryList.name}</Title>
             <Text size="sm" c="dimmed">
               {groceryList.dateRange.start} - {groceryList.dateRange.end}
             </Text>
-          </div>
+            {groceryList.note && (
+              <Text size="sm" c="dimmed" fs="italic">
+                {groceryList.note}
+              </Text>
+            )}
+          </Stack>
           <Group gap="sm">
             <Button
               leftSection={<IconEdit size={18} />}
               onClick={handleEdit}
               variant="light"
+              data-testid="edit-list-button"
             >
               Edit
             </Button>
@@ -137,6 +184,7 @@ export const GroceryListDetailPage = () => {
               onClick={handleDelete}
               variant="light"
               color="red"
+              data-testid="delete-list-button"
             >
               Delete
             </Button>
@@ -146,14 +194,70 @@ export const GroceryListDetailPage = () => {
         <GroceryListView
           groceryList={groceryList}
           items={items}
+          mealPlans={mealPlans}
           onCheckItem={handleCheckItem}
           onUpdateQuantity={handleUpdateQuantity}
           onUpdateNotes={handleUpdateNotes}
           onRemoveItem={handleRemoveItem}
           onAddManualItem={handleAddManualItem}
-          getIngredientName={getIngredientName}
+          getRecipeName={getRecipeName}
         />
       </Stack>
+
+      {/* Edit Modal */}
+      <Modal
+        opened={editModalOpened}
+        onClose={() => setEditModalOpened(false)}
+        title="Edit Grocery List"
+        transitionProps={{ duration: 0 }}
+      >
+        <Stack gap="md">
+          <TextInput
+            label="List Name"
+            value={editedName}
+            onChange={e => setEditedName(e.target.value)}
+            placeholder="Enter list name"
+          />
+          <TextInput
+            label="Note (optional)"
+            value={editedNote}
+            onChange={e => setEditedNote(e.target.value)}
+            placeholder="Add a note for this list"
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button variant="subtle" onClick={() => setEditModalOpened(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>Save</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        opened={deleteModalOpened}
+        onClose={() => setDeleteModalOpened(false)}
+        title="Confirm Delete"
+        transitionProps={{ duration: 0 }}
+      >
+        <Stack gap="md">
+          <Text>
+            Are you sure you want to delete "{groceryList.name}"? This will
+            also delete all items in this list. This action cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="subtle"
+              onClick={() => setDeleteModalOpened(false)}
+            >
+              Cancel
+            </Button>
+            <Button color="red" onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Container>
   )
 }

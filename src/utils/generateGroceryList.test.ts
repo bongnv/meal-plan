@@ -80,8 +80,9 @@ describe('generateGroceryList', () => {
       )
 
       expect(result.items).toHaveLength(3)
-      expect(result.items[0]).toMatchObject({
-        ingredientId: '1',
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
+      expect(chicken).toMatchObject({
+        name: 'Chicken Breast',
         quantity: 400,
         unit: 'gram',
         category: 'Meat',
@@ -121,16 +122,20 @@ describe('generateGroceryList', () => {
       // Should have 3 unique ingredients
       expect(result.items).toHaveLength(3)
 
-      // Find chicken (id '1') - should be consolidated
-      const chicken = result.items.find(item => item.ingredientId === '1')
+      // Find chicken (was id '1') - should be consolidated
+      // 400g (scaled) + 200g (scaled) = 600g, which should not convert to kg (< 1000g)
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
       expect(chicken).toBeDefined()
       expect(chicken?.quantity).toBe(600) // 400 + 200
+      expect(chicken?.unit).toBe('gram')
       expect(chicken?.mealPlanIds).toEqual(['m1', 'm2'])
 
-      // Find rice (id '2') - should be consolidated
-      const rice = result.items.find(item => item.ingredientId === '2')
+      // Find rice (was id '2') - should be consolidated
+      // 200g + 400g = 600g, which should not convert to kg (< 1000g)
+      const rice = result.items.find(item => item.name === 'Rice')
       expect(rice).toBeDefined()
       expect(rice?.quantity).toBe(600) // 200 + 400
+      expect(rice?.unit).toBe('gram')
       expect(rice?.mealPlanIds).toEqual(['m1', 'm2'])
     })
   })
@@ -156,8 +161,9 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
-      const chicken = result.items.find(item => item.ingredientId === '1')
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
       expect(chicken?.quantity).toBe(800) // 400 * (4/2) = 800
+      expect(chicken?.unit).toBe('gram')
     })
 
     it('should scale down for fewer servings', () => {
@@ -180,8 +186,143 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
-      const rice = result.items.find(item => item.ingredientId === '2')
+      const rice = result.items.find(item => item.name === 'Rice')
       expect(rice?.quantity).toBe(200) // 400 * (2/4) = 200
+    })
+  })
+
+  describe('Unit consolidation', () => {
+    it('should convert 1000g to 1kg', () => {
+      const recipes: Recipe[] = [
+        {
+          id: 'r3',
+          name: 'Big Recipe',
+          description: '',
+          servings: 2,
+          totalTime: 10,
+          ingredients: [
+            { ingredientId: '1', quantity: 600 }, // 600g
+          ],
+          instructions: [],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r3',
+          servings: 2,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-24',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r3',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Test List',
+        mealPlans,
+        recipes,
+        mockIngredients
+      )
+
+      // 600g + 600g = 1200g, rounds to 1200g, converts to 1.2kg
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
+      expect(chicken?.quantity).toBe(1.2)
+      expect(chicken?.unit).toBe('kilogram')
+    })
+
+    it('should convert 1500ml to 1.5L', () => {
+      const ingredients: Ingredient[] = [
+        {
+          id: '10',
+          name: 'Milk',
+          category: 'Dairy',
+          unit: 'milliliter',
+        },
+      ]
+
+      const recipes: Recipe[] = [
+        {
+          id: 'r4',
+          name: 'Smoothie',
+          description: '',
+          servings: 1,
+          totalTime: 5,
+          ingredients: [
+            { ingredientId: '10', quantity: 750 }, // 750ml
+          ],
+          instructions: [],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r4',
+          servings: 1,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-24',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r4',
+          servings: 1,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Test List',
+        mealPlans,
+        recipes,
+        ingredients
+      )
+
+      // 750ml + 750ml = 1500ml, rounds to 1500ml, converts to 1.5L
+      const milk = result.items.find(item => item.name === 'Milk')
+      expect(milk?.quantity).toBe(1.5)
+      expect(milk?.unit).toBe('liter')
+    })
+
+    it('should keep quantities below 1000g as grams', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      // Recipe has 400g chicken - should stay as grams
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
+      expect(chicken?.quantity).toBe(400)
+      expect(chicken?.unit).toBe('gram')
     })
   })
 
@@ -221,9 +362,10 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
-      const chicken = result.items.find(item => item.ingredientId === '1')
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
       // 222 rounded to nearest 50g = 200
       expect(chicken?.quantity).toBe(200)
+      expect(chicken?.unit).toBe('gram')
     })
   })
 
@@ -283,10 +425,10 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
-      const chicken = result.items.find(item => item.ingredientId === '1')
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
       expect(chicken?.mealPlanIds).toEqual(['m1', 'm2'])
 
-      const broccoli = result.items.find(item => item.ingredientId === '3')
+      const broccoli = result.items.find(item => item.name === 'Broccoli')
       expect(broccoli?.mealPlanIds).toEqual(['m1']) // Only in r1
     })
   })
