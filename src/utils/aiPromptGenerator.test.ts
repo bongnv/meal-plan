@@ -146,6 +146,15 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt.toLowerCase()).toMatch(/optional/)
   })
 
+  it('should instruct to omit imageUrl when not available', () => {
+    const ingredients: Ingredient[] = []
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should instruct to omit field when no URL is available (not use empty string)
+    expect(prompt).toMatch(/OMIT.*imageUrl.*empty string/i)
+  })
+
   it('should include displayName field in ingredient schema', () => {
     const ingredients: Ingredient[] = [
       { id: '1', name: 'Chicken Breast', category: 'Poultry', unit: 'gram' },
@@ -175,5 +184,42 @@ describe('generateRecipeImportPrompt', () => {
     const lowerPrompt = prompt.toLowerCase()
     expect(lowerPrompt).toContain('displayname')
     expect(lowerPrompt).toMatch(/recipe.{0,50}(appears|shown|name|specific)/)
+  })
+
+  it('should instruct AI to convert units when different from library', () => {
+    const ingredients: Ingredient[] = [
+      {
+        id: '1',
+        name: 'Olive Oil',
+        category: 'Oils & Fats',
+        unit: 'tablespoon',
+      },
+    ]
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should mention unit matching
+    expect(prompt.toLowerCase()).toMatch(/unit/)
+
+    // Should instruct to suggest new ingredient when unit doesn't match
+    expect(prompt.toLowerCase()).toMatch(/unit.*doesn't match|unit.*different/i)
+  })
+
+  it('should provide unit conversion examples in instructions', () => {
+    const ingredients: Ingredient[] = []
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should mention units in available options
+    expect(prompt.toLowerCase()).toContain('unit')
+  })
+
+  it('should demonstrate unit conversion in example output', () => {
+    const ingredients: Ingredient[] = []
+
+    const prompt = generateRecipeImportPrompt(ingredients)
+
+    // Should show unit in example
+    expect(prompt.toLowerCase()).toContain('unit')
   })
 })

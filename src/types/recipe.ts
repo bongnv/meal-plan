@@ -70,11 +70,19 @@ export const RecipeSchema = z.object({
   tags: z.array(z.string()),
   imageUrl: z
     .string()
-    .url('Image URL must be a valid URL')
-    .refine(url => url.startsWith('http://') || url.startsWith('https://'), {
-      message: 'Image URL must use http or https protocol',
-    })
-    .optional()
+    .transform(val => (val === '' ? undefined : val))
+    .pipe(
+      z
+        .string()
+        .url('Image URL must be a valid URL')
+        .refine(
+          url => url.startsWith('http://') || url.startsWith('https://'),
+          {
+            message: 'Image URL must use http or https protocol',
+          }
+        )
+        .optional()
+    )
     .or(z.literal(undefined)),
 })
 
@@ -95,11 +103,19 @@ export const RecipeFormSchema = z.object({
   tags: z.array(z.string()),
   imageUrl: z
     .string()
-    .url('Image URL must be a valid URL')
-    .refine(url => url.startsWith('http://') || url.startsWith('https://'), {
-      message: 'Image URL must use http or https protocol',
-    })
-    .optional()
+    .transform(val => (val === '' ? undefined : val))
+    .pipe(
+      z
+        .string()
+        .url('Image URL must be a valid URL')
+        .refine(
+          url => url.startsWith('http://') || url.startsWith('https://'),
+          {
+            message: 'Image URL must use http or https protocol',
+          }
+        )
+        .optional()
+    )
     .or(z.literal(undefined)),
 })
 

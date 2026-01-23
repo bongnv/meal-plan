@@ -41,7 +41,7 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
   "servings": "number (number of servings)",
   "totalTime": "number (total time in minutes)",
   "tags": ["string (tag 1)", "string (tag 2)", ...],
-  "imageUrl": "string (optional - URL to recipe image if available)"
+  "imageUrl": "string (optional - URL to recipe image if available, OMIT this field entirely if no image URL is available - do not use empty string)"
 }
 \`\`\`
 
@@ -53,9 +53,10 @@ ${ingredientList}
 
 1. Parse the recipe from the URL or text I provide
 2. For each ingredient in the recipe:
-   - Try to match it to an existing ingredient in the library
-   - Use the matching ingredientId if found
-   - **If the recipe uses a different name** (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
+   - Try to match it to an existing ingredient in the library by name
+   - If found and the unit matches**, use the matching ingredientId
+   - If the recipe uses a different name** (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
+   - If the unit doesn't match**, suggest a new ingredient with the recipe's unit instead
    - If no match exists, suggest a new ingredient with:
      - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
      - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other
@@ -65,7 +66,8 @@ ${ingredientList}
 5. Estimate total time in minutes (prep + cook time)
 6. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
 7. Use placeholder 'temp' for recipe ID (app will generate actual ID)
-8. Return ONLY the JSON object, no additional text
+8. If no image URL is available, OMIT the imageUrl field entirely - do not include it with an empty string
+9. Return ONLY the JSON object, no additional text
 
 ## Example Output Format
 
@@ -75,9 +77,9 @@ ${ingredientList}
   "name": "Garlic Pasta",
   "description": "Simple and delicious pasta with garlic and olive oil",
   "ingredients": [
-    { "ingredientId": "1", "quantity": 2, "displayName": "olive oil" },
+    { "ingredientId": "1", "quantity": 4, "displayName": "olive oil" },
     { "ingredientId": "2", "quantity": 4 },
-    { "ingredientId": "new_1", "quantity": 0.5, "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
+    { "ingredientId": "new_1", "quantity": 500, "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
   ],
   "instructions": [
     "Boil water and cook pasta according to package directions",

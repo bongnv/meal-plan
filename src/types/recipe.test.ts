@@ -194,7 +194,7 @@ describe('Recipe Types', () => {
       }
     })
 
-    it('should reject Recipe with empty string imageUrl', () => {
+    it('should transform empty string imageUrl to undefined', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: '',
@@ -202,7 +202,10 @@ describe('Recipe Types', () => {
 
       const result = RecipeSchema.safeParse(recipe)
 
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.imageUrl).toBeUndefined()
+      }
     })
 
     it('should reject Recipe with invalid URL format', () => {
