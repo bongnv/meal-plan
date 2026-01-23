@@ -1048,5 +1048,195 @@ Allow users to use different display names for the same ingredient in different 
   - Image hosting services (Imgur, etc.)
   - Personal web servers
 - **Performance**: Images loaded on-demand, not bundled with app
-- **Privacy**: External images may track user access via image URLs
-- **Offline**: Images won't be available offline unless browser cached
+
+## I8. Grocery List Generation (R3)
+
+### Overview
+Generate grocery lists from planned meals for a selected time period. The system consolidates ingredients by `ingredientId` across multiple recipes, scales quantities based on servings, and allows users to manually edit, add items, and check off items while shopping.
+
+### Data Structure
+```typescript
+interface GroceryList {
+  id: string
+  name: string // e.g., "Week of Jan 23" or user-customized
+  dateRange: { start: string; end: string } // ISO date strings (YYYY-MM-DD)
+  createdAt: number // Unix timestamp
+  items: GroceryItem[]
+}
+
+interface GroceryItem {
+  id: string
+  ingredientId: string | null // Null = manually added item, not from ingredient library
+  quantity: number // User-adjustable (starts as auto-calculated & rounded)
+  unit: Unit // From ingredient library or custom for manual items
+  category: IngredientCategory // Denormalized from ingredient library for sorting/display
+  checked: boolean
+  mealPlanIds: string[] // Which meal plans need this ingredient (for traceability)
+  notes?: string // Optional user notes (e.g., "Get organic", "Costco has sale")
+}
+```
+
+### Generation Algorithm
+1. User selects date range (e.g., "next 7 days", "Jan 23-30", custom dates)
+2. Find all `RecipeMealPlan` entries in date range (ignore custom meal types like dining-out, takeout)
+3. For each recipe-based meal plan:
+   - Fetch recipe by `recipeId`
+   - Scale ingredient quantities: `scaledQuantity = ingredient.quantity * (meal.servings / recipe.servings)`
+   - Add to accumulator: `Map<ingredientId, AccumulatedData>`
+   - Store: quantity, unit, mealPlanIds, category (from ingredient library)
+4. Apply smart rounding based on unit type:
+   - `piece`, `clove`, `slice`, `can`, `package`: Round up to whole number
+   - `cup`, `tablespoon`, `teaspoon`: Round to nearest 0.25
+   - `gram`, `kilogram`: Round to nearest 50g
+   - `milliliter`, `liter`: Round to nearest 50ml
+   - Others: Round to 1 decimal place
+5. Convert accumulated data to flat `GroceryItem[]` with `checked = false`
+6. Generate grocery list name (default: "Week of [start date]")
+
+### Key Features
+- **Consolidation by ingredientId**: Multiple recipes using same ingredient → single grocery item
+- **Category grouping**: Items organized by ingredient category (Produce, Dairy, Meat, etc.) for better shopping flow
+- **Recipe displayNames ignored**: Consolidation happens at ingredient library level
+- **Traceability via mealPlanIds**: Users can see which meals need each ingredient
+- **Manual editing**: Users can adjust quantities, add custom items, remove items
+- **Checked state**: Track shopping progress (R3.5)
+- **Smart rounding**: User-friendly quantities based on unit type
+
+### Implementation Steps
+
+**Following top-down, integrate-first approach:**
+
+- [x] I8.1. Add Grocery Lists navigation entry point + define types (TDD)
+  - **Entry Point First**: Add "Grocery Lists" to NavigationBar with shopping cart icon
+  - Update routes in App.tsx: `/grocery-lists` and `/grocery-lists/:id`
+  - **Define minimal types** needed for UI in `src/types/groceryList.ts`:
+    - Create TypeScript interfaces (GroceryList, GroceryItem)
+    - Include `category: IngredientCategory` field in GroceryItem (denormalized for sorting)
+    - Add Zod schemas for validation
+    - Write type tests in `src/types/groceryList.test.ts`
+  - Test navigation to grocery lists routes
+  - **Quality checks**: Run tests, save output to `tmp/`
+  - ✅ **Results**: All 521 tests pass (16 new GroceryList type tests), navigation added with shopping cart icon, routes configured, output saved to `tmp/all-tests-i8.1.txt`
+
+- [ ] I8.2. Build GroceryListsPage with stub data (TDD)
+  - Write page tests in `src/pages/groceryLists/GroceryListsPage.test.tsx`
+  - Create `GroceryListsPage` in `src/pages/groceryLists/GroceryListsPage.tsx`
+  - **Use stub/mock data** for initial display:
+    - Mock grocery list cards with: name, date range, item count, checked count
+    - "Generate New List" button (opens modal - placeholder for now)
+    - Empty state: "No grocery lists yet"
+  - **Wire to App.tsx immediately** - page is navigable and visible
+  - Apply Mantine styling with responsive card layout
+  - Test page renders, navigation works, button shows modal (even if empty)
+  - **Quality checks**: Run tests, verify in browser, save output to `tmp/`
+
+- [ ] I8.3. Build GroceryListDetailPage with placeholder content (TDD)
+  - Write page tests in `src/pages/groceryLists/GroceryListDetailPage.test.tsx`
+  - Create `GroceryListDetailPage` in `src/pages/groceryLists/GroceryListDetailPage.tsx`
+  - **Display stub grocery list data**:
+    - List name and date range
+    - Mock items with checkboxes, quantities, names
+    - Edit/Delete action buttons (handlers empty for now)
+  - **Wire to parent immediately**: Clicking list card on GroceryListsPage navigates to detail
+  - Apply Mantine styling
+  - **Quality checks**: Run tests, verify full navigation flow, save output to `tmp/`
+
+- [ ] I8.4. Build Generator modal UI and wire to page (TDD)
+  - Write component tests in `src/components/groceryLists/GroceryListGenerator.test.tsx`
+  - Create `GroceryListGenerator` modal in `src/components/groceryLists/GroceryListGenerator.tsx`
+  - UI elements with placeholders:
+    - Date range picker (Mantine DatePicker)
+    - Optional name input (defaults to "Week of [start date]")
+    - Generate button → shows "Coming soon" toast for now
+    - Meal count preview → shows "0 meals" placeholder
+  - **Wire to GroceryListsPage immediately**: "Generate New List" button opens modal
+  - Apply Mantine Modal styling
+  - **Quality checks**: Run tests, verify modal opens/closes, save output to `tmp/`
+
+- [ ] I8.5. Implement generation logic and connect to UI (TDD)
+  - Write utility tests in `src/utils/generateGroceryList.test.ts`
+  - Test cases:
+    - Basic consolidation by ingredientId
+    - Scaling quantities by servings
+    - Smart rounding by unit type
+    - MealPlanIds tracking
+    - Category assignment from ingredient library
+  - Implement `generateGroceryList(dateRange, mealPlans, recipes, ingredients)` in `src/utils/generateGroceryList.ts`
+  - Accumulation strategy: key by ingredientId (unique per ingredient/unit)
+  - Include category lookup from ingredient library for each item
+  - Write smart rounding tests in `src/utils/quantityRounding.test.ts`
+  - Implement `roundQuantity(quantity, unit)` in `src/utils/quantityRounding.ts`
+  - **Connect to Generator modal immediately**:
+    - Replace "Coming soon" with actual generation logic
+    - Use existing MealPlanContext, RecipeContext, IngredientContext
+    - Generate in-memory grocery list
+    - Show in temporary state (not persisted yet)
+  - Update meal count preview with real data from MealPlanContext
+  - **Quality checks**: Run tests, verify generation works in UI, save output to `tmp/`
+
+- [ ] I8.6. Build GroceryListView component and integrate (TDD)
+  - Write component tests in `src/components/groceryLists/GroceryListView.test.tsx`
+  - Create `GroceryListView` in `src/components/groceryLists/GroceryListView.tsx`
+  - **Display items grouped by category**:
+    - Group items by `category` field
+    - Render category headers (e.g., "🥬 Produce", "🥛 Dairy", "🥩 Meat")
+    - List items within each category section
+    - Hide empty categories (no items in that category)
+  - Display each item with:
+    - Checkbox for checked state (local state only for now)
+    - Ingredient name (from library or manual)
+    - Quantity with unit (editable inline - local state only)
+    - Meal plan references (show which meals need this)
+    - Notes input (optional - local state only)
+    - Remove button (works on local array)
+  - "Add Manual Item" section at bottom (includes category selector)
+  - Checked items: visual differentiation (strikethrough, dimmed)
+  - **Replace stub content in GroceryListDetailPage immediately**
+  - Wire Generator → GroceryListView for preview
+  - Apply Mantine styling with category sections
+  - **Quality checks**: Run tests, verify in browser, save output to `tmp/`
+
+- [ ] I8.7. Add LocalStorage persistence and GroceryList Context (TDD)
+  - Write storage tests in `src/utils/storage/groceryListStorage.test.ts`
+  - Implement `GroceryListStorageService` in `src/utils/storage/groceryListStorage.ts`
+  - Write context tests in `src/contexts/GroceryListContext.test.tsx`
+  - Create `GroceryListContext` in `src/contexts/GroceryListContext.tsx`
+  - Actions:
+    - `generateGroceryList(dateRange, name)` - create and persist new list
+    - `updateGroceryList(list)` - update existing list
+    - `deleteGroceryList(id)` - remove list
+    - `addGroceryItem(listId, item)` - add manual item
+    - `updateGroceryItem(listId, itemId, updates)` - modify item
+    - `removeGroceryItem(listId, itemId)` - remove item
+  - **Wire to existing UI immediately**:
+    - Replace mock data in GroceryListsPage with context data
+    - Replace local state in GroceryListView with context actions
+    - Generator saves to context instead of temp state
+  - **Quality checks**: Run tests, verify persistence works, save output to `tmp/`
+
+- [ ] I8.8. Add CRUD operations and finalize UI (TDD)
+  - Add edit name functionality to GroceryListDetailPage
+  - Add delete list with confirmation modal
+  - Wire all GroceryListView interactions to context:
+    - Check/uncheck items → persist immediately
+    - Adjust quantities → debounced save
+    - Add/remove items → persist immediately
+    - Add/edit notes → debounced save
+  - Add meal plan reference display (clickable links to meals)
+  - Test complete CRUUses `ingredientId + unit` as key (same ingredient + same unit = consolidated)
+- **Unit Mismatch**: Same ingredient with different units = separate items (no conversion)
+- **Category Grouping**: Items stored with category field, UI groups by category for shopping flow
+- **Recipe displayNames**: Ignored during consolidation (uses ingredient library name)
+- **Meal Traceability**: `mealPlanIds` allows users to see context for each ingredient
+- **Manual Items**: `ingredientId = null` indicates user-added items not from library
+- **Manual Item Category**: User selects category when adding manual items
+- **No Live Sync**: Lists are static snapshots; changes to meal plans don't auto-update lists
+- **Future Enhancements**:
+  - Nested grouping by ingredient name within categories (show "Bananas" with unit variants grouped)
+  - Unit conversion suggestions (optional hints, non-blocking)
+  - Frequent items (R3.6): Save commonly bought items for quick access
+  - List templates: Save/reuse common grocery lists
+  - Multiple active lists: Allow concurrent lists for different purposes
+  - Export/Print: Generate printable shopping list
+  - Collapsible category sections
+  - Custom category ordering

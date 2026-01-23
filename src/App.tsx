@@ -6,12 +6,15 @@ import {
   IconSettings,
   IconCalendar,
   IconCloud,
+  IconShoppingCart,
 } from '@tabler/icons-react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
+import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
+import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
@@ -38,6 +41,7 @@ function App() {
   const navItems = [
     { path: '/recipes', label: 'Recipes', icon: IconChefHat },
     { path: '/meal-plans', label: 'Meal Plans', icon: IconCalendar },
+    { path: '/grocery-lists', label: 'Grocery Lists', icon: IconShoppingCart },
   ]
 
   const settingsItems = [
@@ -133,6 +137,11 @@ function App() {
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
             <Route path="/meal-plans" element={<MealPlansPage />} />
             <Route path="/meal-plans/:id" element={<MealPlanDetailPage />} />
+            <Route path="/grocery-lists" element={<GroceryListsPage />} />
+            <Route
+              path="/grocery-lists/:id"
+              element={<GroceryListDetailPage />}
+            />
             <Route path="/settings/ingredients" element={<IngredientsPage />} />
             <Route
               path="/settings/cloud-sync"
