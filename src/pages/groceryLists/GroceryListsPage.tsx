@@ -13,9 +13,11 @@ import { IconShoppingCart, IconPlus } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
+
 export const GroceryListsPage = () => {
   const navigate = useNavigate()
-  const [_modalOpened, setModalOpened] = useState(false)
+  const [modalOpened, setModalOpened] = useState(false)
 
   // Stub data - will be replaced with real data from context in I8.7
   const stubGroceryLists: Array<{
@@ -30,8 +32,20 @@ export const GroceryListsPage = () => {
 
   const handleGenerateClick = () => {
     setModalOpened(true)
-    // Modal will be implemented in I8.4
-    // For now, just toggle state
+  }
+
+  const handleCloseModal = () => {
+    setModalOpened(false)
+  }
+
+  const handleGenerate = (params: {
+    startDate: Date
+    endDate: Date
+    name?: string
+  }) => {
+    // Placeholder: Will be implemented in I8.5
+    console.log('Generate grocery list:', params)
+    setModalOpened(false)
   }
 
   const handleListClick = (listId: string) => {
@@ -114,6 +128,12 @@ export const GroceryListsPage = () => {
           </SimpleGrid>
         )}
       </Stack>
+
+      <GroceryListGenerator
+        opened={modalOpened}
+        onClose={handleCloseModal}
+        onGenerate={handleGenerate}
+      />
     </Container>
   )
 }

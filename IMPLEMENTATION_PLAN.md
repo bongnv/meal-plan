@@ -1169,7 +1169,7 @@ interface GroceryItem {
   - **Quality checks**: Run tests, verify full navigation flow, save output to `tmp/`
   - ✅ **Results**: All 538 tests pass (10 new GroceryListDetailPage tests), detail page displays stub data with 3 items (Banana, Chicken Breast, Milk), checkboxes with visual feedback, action buttons (Back/Edit/Delete), progress badge, category badges, navigation from list cards working, output saved to `tmp/all-tests-i8.3.txt`
 
-- [ ] I8.4. Build Generator modal UI and wire to page (TDD)
+- [x] I8.4. Build Generator modal UI and wire to page (TDD)
   - Write component tests in `src/components/groceryLists/GroceryListGenerator.test.tsx`
   - Create `GroceryListGenerator` modal in `src/components/groceryLists/GroceryListGenerator.tsx`
   - UI elements with placeholders:
@@ -1180,6 +1180,7 @@ interface GroceryItem {
   - **Wire to GroceryListsPage immediately**: "Generate New List" button opens modal
   - Apply Mantine Modal styling
   - **Quality checks**: Run tests, verify modal opens/closes, save output to `tmp/`
+  - ✅ **Results**: All 579 tests pass (12 new GroceryListGenerator tests), modal component created with date range pickers, optional name input, disabled Generate button logic, meal count preview placeholder, fully wired to GroceryListsPage with open/close functionality, "Coming soon" notification on generate click, output saved to `tmp/all-tests-i8.4.txt`
 
 - [ ] I8.5. Implement generation logic and connect to UI (TDD)
   - Write utility tests in `src/utils/generateGroceryList.test.ts`
