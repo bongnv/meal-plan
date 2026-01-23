@@ -559,7 +559,7 @@
   - Create `SyncManager` in `src/utils/sync/syncManager.ts`
   - Work with `ICloudStorageProvider` interface (no provider-specific code)
   - Store base version (full snapshot of last synced state) in localStorage as `syncBase`:
-    - Structure: `{ recipes: Recipe[], mealPlans: MealPlan[], ingredients: Ingredient[], lastModified: timestamp }`
+    - Structure: `{ recipes: Recipe[], mealPlans: MealPlan[], ingredients: Ingredient[], groceryLists: GroceryList[], lastModified: timestamp }`
     - Updated after every successful sync
   - Sync algorithm (timestamp-based conflict detection with record-level auto-merge):
     1. Get base version from localStorage (`syncBase` with `base.lastModified`)
@@ -591,12 +591,14 @@
        - **Detect conflicts** (require manual resolution):
          - Same record updated on both local and remote
          - Same record deleted on one side, updated on other
+       - **Note**: Conflicts are detected for all entity types: recipes, meal plans, ingredients, and grocery lists
     7. If conflicts detected:
        - Store partial merged data and conflicts in context state
        - Update syncStatus to 'error' and set conflicts array for UI display
-       - Show ConflictResolutionModal (future enhancement)
+       - Show ConflictResolutionModal automatically
        - User selects "Keep Local" or "Keep Remote" for all conflicts
-       - For now: Throw error with conflict details for UI to handle
+       - Modal displays conflict details: entity type, name, local/remote modified timestamps
+       - Resolution applies to all conflicts at once (bulk operation)
     8. Before applying merge:
        - **Race condition check**: Read current `state.lastModified` from React context state
        - If `state.lastModified > local.lastModified`: User made changes during sync
@@ -613,13 +615,17 @@
     - Detect when offline (no network)
     - Retry sync automatically when back online
     - Local changes persist in LocalStorage until synced
-  - Test all merge scenarios:
+  - Test all merge scenarios for all entity types (recipes, meal plans, ingredients, grocery lists):
     - Creation only (local/remote/both)
     - Deletion only (local/remote/both)
     - Update only (local/remote/same record/different records)
     - Mixed operations (create + update + delete)
   - Verify works with any ICloudStorageProvider implementation
   - Note: When user switches files via "Change File", import new file data and set it as new base version
+  - **Grocery List Considerations**:
+    - Grocery lists are snapshots (no automatic regeneration on sync)
+    - Conflicts in grocery lists preserve both checked states and manual edits
+    - Items in lists reference ingredientIds - sync handles ingredient changes separately
 
 - [x] I3.4.1. Build file/folder selection UI with multi-user support (TDD)
   - Write component tests in `src/components/sync/FileSelectionModal.test.tsx`
@@ -775,8 +781,8 @@
 
 - [x] I3.9. Integrate automatic background sync (TDD)
   - Write integration tests for auto-sync behavior
-  - Test cases: sync after recipe add/update/delete, sync after meal plan changes, debouncing
-  - Integrate sync triggers into existing contexts:
+  - Test cases: sync after recipe add/update/delete, sync after meal plan changes, sync after grocery list changes, debouncing
+  - Integrate sync triggers into existing contexts (recipes, meal plans, ingredients, grocery lists):
     - RecipeContext: trigger sync after addRecipe, updateRecipe, deleteRecipe
     - MealPlanContext: trigger sync after addMealPlan, updateMealPlan, deleteMealPlan
     - IngredientContext: trigger sync after addIngredient, updateIngredient, deleteIngredient
@@ -823,6 +829,24 @@
     - All 23 tests passing with complete coverage of states, interactions, and edge cases
     - Error notifications handled by SyncContext via @mantine/notifications
     - No right-click functionality implemented (optional feature not added)
+
+- [x] I3.10.1. Build Conflict Resolution Modal (TDD)
+  - Write component tests in `src/components/sync/ConflictResolutionModal.test.tsx`
+  - Create `ConflictResolutionModal` component in `src/components/sync/ConflictResolutionModal.tsx`
+  - Display conflict details in table:
+    - Entity type badge (Recipe, Meal Plan, Ingredient, Grocery List)
+    - Item name
+    - Local modified timestamp
+    - Remote modified timestamp
+  - Two resolution buttons:
+    - "Keep Local Version" - applies local changes to all conflicts
+    - "Keep Remote Version" - applies remote changes to all conflicts
+  - Modal cannot be closed until conflicts are resolved (closeOnClickOutside=false)
+  - Integrate into App.tsx - auto-opens when conflicts detected
+  - Test conflict display and resolution flow for all entity types
+  - Apply Mantine Modal styling
+  - **Quality checks**: Run tests, verify modal behavior, save output to `tmp/`
+
 ## I4. State Management Improvements
 
 ### Implementation Steps
@@ -1054,6 +1078,8 @@ Allow users to use different display names for the same ingredient in different 
 ### Overview
 Generate grocery lists from planned meals for a selected time period. The system consolidates ingredients by `ingredientId` across multiple recipes, scales quantities based on servings, and allows users to manually edit, add items, and check off items while shopping.
 
+**Sync Behavior**: Grocery lists are fully synced across devices through OneDrive. Lists are treated as independent entities (not regenerated), so all manual edits, checked states, and custom items are preserved during sync. Conflicts are handled through the standard conflict resolution modal.
+
 ### Data Structure
 ```typescript
 interface GroceryList {
@@ -1210,10 +1236,18 @@ interface GroceryItem {
     - `addGroceryItem(listId, item)` - add manual item
     - `updateGroceryItem(listId, itemId, updates)` - modify item
     - `removeGroceryItem(listId, itemId)` - remove item
+    - `getLastModified()` - return max lastModified timestamp for sync
+    - `replaceAllGroceryLists(lists)` - replace all lists (for sync)
   - **Wire to existing UI immediately**:
     - Replace mock data in GroceryListsPage with context data
     - Replace local state in GroceryListView with context actions
     - Generator saves to context instead of temp state
+  - **Sync Integration**:
+    - Add lastModified tracking (update on create/update/delete)
+    - Expose methods needed by SyncContext
+    - Lists will be included in auto-sync operations
+    - Update SyncContext to monitor groceryLists lastModified timestamp
+    - Add groceryLists to SyncData type in sync/types.ts
   - **Quality checks**: Run tests, verify persistence works, save output to `tmp/`
 
 - [ ] I8.8. Add CRUD operations and finalize UI (TDD)
@@ -1225,7 +1259,13 @@ interface GroceryItem {
     - Add/remove items → persist immediately
     - Add/edit notes → debounced save
   - Add meal plan reference display (clickable links to meals)
-  - Test complete CRUUses `ingredientId + unit` as key (same ingredient + same unit = consolidated)
+  - Test complete CRUD operations for grocery lists
+  - **Quality checks**: Run tests, verify all operations work, save output to `tmp/`
+
+### Grocery List Sync Behavior
+
+- **Sync Integration**: Grocery lists are included in cloud sync alongside recipes, meal plans, and ingredients
+- **Consolidation Key**: Uses `ingredientId + unit` as key (same ingredient + same unit = consolidated)
 - **Unit Mismatch**: Same ingredient with different units = separate items (no conversion)
 - **Category Grouping**: Items stored with category field, UI groups by category for shopping flow
 - **Recipe displayNames**: Ignored during consolidation (uses ingredient library name)

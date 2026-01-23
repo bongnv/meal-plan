@@ -8,11 +8,14 @@ import {
   IconCloud,
   IconShoppingCart,
 } from '@tabler/icons-react'
+import { useEffect } from 'react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
+import { ConflictResolutionModal } from './components/sync/ConflictResolutionModal'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
+import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
@@ -26,6 +29,10 @@ import { IngredientsPage } from './pages/settings/IngredientsPage'
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
+  const { conflicts } = useSyncContext()
+
+  // Auto-open conflict resolution modal when conflicts are detected
+  const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] = useDisclosure(false)
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -49,9 +56,22 @@ function App() {
     { path: '/settings/cloud-sync', label: 'Cloud Sync', icon: IconCloud },
   ]
 
+  // Auto-open conflict resolution modal when conflicts are detected
+  useEffect(() => {
+    if (conflicts.length > 0 && !conflictModalOpened) {
+      openConflictModal()
+    } else if (conflicts.length === 0 && conflictModalOpened) {
+      closeConflictModal()
+    }
+  }, [conflicts, conflictModalOpened, openConflictModal, closeConflictModal])
+
   return (
     <>
       <WelcomeScreen />
+      <ConflictResolutionModal
+        opened={conflictModalOpened}
+        onClose={closeConflictModal}
+      />
       <AppShell
         header={{ height: 60 }}
         navbar={{
