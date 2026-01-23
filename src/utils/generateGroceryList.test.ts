@@ -1,0 +1,488 @@
+import { describe, expect, it } from 'vitest'
+
+import { generateGroceryList } from './generateGroceryList'
+
+import type { Ingredient } from '../types/ingredient'
+import type { MealPlan } from '../types/mealPlan'
+import type { Recipe } from '../types/recipe'
+
+describe('generateGroceryList', () => {
+  const mockIngredients: Ingredient[] = [
+    {
+      id: '1',
+      name: 'Chicken Breast',
+      category: 'Meat',
+      unit: 'gram',
+    },
+    {
+      id: '2',
+      name: 'Rice',
+      category: 'Grains',
+      unit: 'gram',
+    },
+    {
+      id: '3',
+      name: 'Broccoli',
+      category: 'Vegetables',
+      unit: 'gram',
+    },
+  ]
+
+  const mockRecipes: Recipe[] = [
+    {
+      id: 'r1',
+      name: 'Chicken Rice Bowl',
+      description: 'Healthy chicken bowl',
+      servings: 2,
+      totalTime: 30,
+      ingredients: [
+        { ingredientId: '1', quantity: 400 },
+        { ingredientId: '2', quantity: 200 },
+        { ingredientId: '3', quantity: 150 },
+      ],
+      instructions: ['Cook chicken', 'Cook rice', 'Steam broccoli'],
+      tags: [],
+    },
+    {
+      id: 'r2',
+      name: 'Fried Rice',
+      description: 'Quick fried rice',
+      servings: 4,
+      totalTime: 20,
+      ingredients: [
+        { ingredientId: '2', quantity: 400 },
+        { ingredientId: '1', quantity: 200 },
+      ],
+      instructions: ['Cook rice', 'Fry with chicken'],
+      tags: [],
+    },
+  ]
+
+  describe('Basic consolidation', () => {
+    it('should generate list with single recipe meal', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      expect(result.items).toHaveLength(3)
+      expect(result.items[0]).toMatchObject({
+        ingredientId: '1',
+        quantity: 400,
+        unit: 'gram',
+        category: 'Meat',
+        checked: false,
+        mealPlanIds: ['m1'],
+      })
+    })
+
+    it('should consolidate same ingredient from multiple recipes', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-24',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r2',
+          servings: 4,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      // Should have 3 unique ingredients
+      expect(result.items).toHaveLength(3)
+
+      // Find chicken (id '1') - should be consolidated
+      const chicken = result.items.find(item => item.ingredientId === '1')
+      expect(chicken).toBeDefined()
+      expect(chicken?.quantity).toBe(600) // 400 + 200
+      expect(chicken?.mealPlanIds).toEqual(['m1', 'm2'])
+
+      // Find rice (id '2') - should be consolidated
+      const rice = result.items.find(item => item.ingredientId === '2')
+      expect(rice).toBeDefined()
+      expect(rice?.quantity).toBe(600) // 200 + 400
+      expect(rice?.mealPlanIds).toEqual(['m1', 'm2'])
+    })
+  })
+
+  describe('Servings scaling', () => {
+    it('should scale ingredients by servings ratio', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1', // Recipe has servings: 2
+          servings: 4, // Meal plan wants 4 servings (double)
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      const chicken = result.items.find(item => item.ingredientId === '1')
+      expect(chicken?.quantity).toBe(800) // 400 * (4/2) = 800
+    })
+
+    it('should scale down for fewer servings', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r2', // Recipe has servings: 4
+          servings: 2, // Meal plan wants 2 servings (half)
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      const rice = result.items.find(item => item.ingredientId === '2')
+      expect(rice?.quantity).toBe(200) // 400 * (2/4) = 200
+    })
+  })
+
+  describe('Smart rounding', () => {
+    it('should apply smart rounding to consolidated quantities', () => {
+      const recipes: Recipe[] = [
+        {
+          id: 'r3',
+          name: 'Test Recipe',
+          description: '',
+          servings: 3,
+          totalTime: 10,
+          ingredients: [
+            { ingredientId: '1', quantity: 333 }, // Will be 333.33... when scaled
+          ],
+          instructions: [],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r3',
+          servings: 2, // 333 * (2/3) = 222
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        recipes,
+        mockIngredients
+      )
+
+      const chicken = result.items.find(item => item.ingredientId === '1')
+      // 222 rounded to nearest 50g = 200
+      expect(chicken?.quantity).toBe(200)
+    })
+  })
+
+  describe('Category assignment', () => {
+    it('should assign category from ingredient library', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      expect(result.items[0].category).toBe('Meat')
+      expect(result.items[1].category).toBe('Grains')
+      expect(result.items[2].category).toBe('Vegetables')
+    })
+  })
+
+  describe('MealPlan tracking', () => {
+    it('should track which meal plans need each ingredient', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-24',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r2',
+          servings: 4,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      const chicken = result.items.find(item => item.ingredientId === '1')
+      expect(chicken?.mealPlanIds).toEqual(['m1', 'm2'])
+
+      const broccoli = result.items.find(item => item.ingredientId === '3')
+      expect(broccoli?.mealPlanIds).toEqual(['m1']) // Only in r1
+    })
+  })
+
+  describe('Edge cases', () => {
+    it('should handle empty meal plans', () => {
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Empty List',
+        [],
+        mockRecipes,
+        mockIngredients
+      )
+
+      expect(result.items).toHaveLength(0)
+      expect(result.name).toBe('Empty List')
+    })
+
+    it('should skip non-recipe meal plans', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'dining-out',
+        },
+        {
+          id: 'm2',
+          date: '2026-01-23',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      // Should only include items from m2 (recipe meal)
+      expect(result.items).toHaveLength(3)
+      result.items.forEach(item => {
+        expect(item.mealPlanIds).toEqual(['m2'])
+      })
+    })
+
+    it('should handle meals outside date range', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-22', // Before range
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-23', // In range
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+        {
+          id: 'm3',
+          date: '2026-01-25', // After range
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-24' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      // Should only include items from m2
+      result.items.forEach(item => {
+        expect(item.mealPlanIds).toEqual(['m2'])
+      })
+    })
+
+    it('should handle missing recipe', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'non-existent',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      expect(result.items).toHaveLength(0)
+    })
+
+    it('should handle missing ingredient', () => {
+      const recipes: Recipe[] = [
+        {
+          id: 'r3',
+          name: 'Test Recipe',
+          description: '',
+          servings: 2,
+          totalTime: 10,
+          ingredients: [
+            { ingredientId: 'non-existent', quantity: 100 },
+          ],
+          instructions: [],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r3',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        recipes,
+        mockIngredients
+      )
+
+      // Should skip ingredient with missing data
+      expect(result.items).toHaveLength(0)
+    })
+  })
+
+  describe('Generated list metadata', () => {
+    it('should set correct name and date range', () => {
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-30' },
+        'Weekly Groceries',
+        [],
+        mockRecipes,
+        mockIngredients
+      )
+
+      expect(result.name).toBe('Weekly Groceries')
+      expect(result.dateRange).toEqual({
+        start: '2026-01-23',
+        end: '2026-01-30',
+      })
+    })
+
+    it('should generate unique IDs for items', () => {
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        mockRecipes,
+        mockIngredients
+      )
+
+      const ids = result.items.map(item => item.id)
+      const uniqueIds = new Set(ids)
+      expect(uniqueIds.size).toBe(ids.length) // All IDs should be unique
+    })
+  })
+})

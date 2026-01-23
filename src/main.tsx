@@ -1,6 +1,5 @@
 import '@mantine/core/styles.css'
 import '@mantine/dates/styles.css'
-import '@mantine/modals/styles.css'
 import '@mantine/notifications/styles.css'
 
 import { PublicClientApplication } from '@azure/msal-browser'

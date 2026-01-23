@@ -10,7 +10,9 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { notifications } from '@mantine/notifications'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+
+import { useMealPlans } from '../../contexts/MealPlanContext'
 
 interface GroceryListGeneratorProps {
   opened: boolean
@@ -25,13 +27,16 @@ interface GroceryListGeneratorProps {
 export const GroceryListGenerator = ({
   opened,
   onClose,
-  onGenerate: _onGenerate,
+  onGenerate,
 }: GroceryListGeneratorProps) => {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
   ])
   const [name, setName] = useState('')
+
+  // Get data from contexts
+  const { mealPlans } = useMealPlans()
 
   // Helper to calculate date ranges
   const getDateRange = (days: number): [Date, Date] => {
@@ -53,18 +58,36 @@ export const GroceryListGenerator = ({
   }
 
   const handleGenerate = () => {
-    // Placeholder: Show "Coming soon" toast
-    notifications.show({
-      title: 'Coming soon',
-      message: 'Grocery list generation will be implemented in I8.5',
-      color: 'blue',
-    })
+    const [startDate, endDate] = dateRange
+    if (!startDate || !endDate) return
 
-    // This will be replaced with actual generation logic in I8.5
-    // const [startDate, endDate] = dateRange
-    // if (startDate && endDate) {
-    //   onGenerate({ startDate, endDate, name: name || undefined })
-    // }
+    // Generate default name if not provided
+    const listName =
+      name.trim() ||
+      `Week of ${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+
+    try {
+      // Call parent callback with date range and name
+      onGenerate({
+        startDate,
+        endDate,
+        name: listName,
+      })
+
+      notifications.show({
+        title: 'Grocery list generated',
+        message: `Created "${listName}"`,
+        color: 'green',
+      })
+
+      onClose()
+    } catch {
+      notifications.show({
+        title: 'Generation failed',
+        message: 'Failed to generate grocery list. Please try again.',
+        color: 'red',
+      })
+    }
   }
 
   // Generate button is disabled if date range is not fully selected
@@ -82,8 +105,21 @@ export const GroceryListGenerator = ({
         ) + 1
       : 0
 
-  // Placeholder: Meal count preview (will be connected to real data in I8.5)
-  const mealCount = 0
+  // Calculate meal count from actual meal plans in date range
+  const mealCount = useMemo(() => {
+    if (!startDate || !endDate) return 0
+
+    const startDateStr = startDate.toISOString().split('T')[0]
+    const endDateStr = endDate.toISOString().split('T')[0]
+
+    return mealPlans.filter(
+      mp =>
+        mp.type === 'recipe' &&
+        mp.recipeId &&
+        mp.date >= startDateStr &&
+        mp.date <= endDateStr
+    ).length
+  }, [startDate, endDate, mealPlans])
 
   return (
     <Modal

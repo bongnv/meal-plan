@@ -14,10 +14,19 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
+import { useIngredients } from '../../contexts/IngredientContext'
+import { useMealPlans } from '../../contexts/MealPlanContext'
+import { useRecipes } from '../../contexts/RecipeContext'
+import { generateGroceryList } from '../../utils/generateGroceryList'
 
 export const GroceryListsPage = () => {
   const navigate = useNavigate()
   const [modalOpened, setModalOpened] = useState(false)
+
+  // Get data from contexts
+  const { recipes } = useRecipes()
+  const { mealPlans } = useMealPlans()
+  const { ingredients } = useIngredients()
 
   // Stub data - will be replaced with real data from context in I8.7
   const stubGroceryLists: Array<{
@@ -43,8 +52,24 @@ export const GroceryListsPage = () => {
     endDate: Date
     name?: string
   }) => {
-    // Placeholder: Will be implemented in I8.5
-    console.log('Generate grocery list:', params)
+    // Generate grocery list from meal plans
+    const dateRange = {
+      start: params.startDate.toISOString().split('T')[0],
+      end: params.endDate.toISOString().split('T')[0],
+    }
+
+    const groceryList = generateGroceryList(
+      dateRange,
+      params.name || `Week of ${params.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      mealPlans,
+      recipes,
+      ingredients
+    )
+
+    // TODO I8.7: Save to context and navigate to detail page
+    // For now, just log and navigate to detail page with temporary data
+    console.log('Generated grocery list:', groceryList)
+    navigate(`/grocery-lists/${groceryList.id}`)
     setModalOpened(false)
   }
 

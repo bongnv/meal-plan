@@ -1,8 +1,13 @@
 import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { IngredientProvider } from '../../contexts/IngredientContext'
+import { MealPlanProvider } from '../../contexts/MealPlanContext'
+import { RecipeProvider } from '../../contexts/RecipeContext'
 
 import { GroceryListsPage } from './GroceryListsPage'
 
@@ -18,7 +23,14 @@ vi.mock('react-router-dom', async () => {
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MantineProvider>
-      <MemoryRouter>{component}</MemoryRouter>
+      <Notifications />
+      <MemoryRouter>
+        <IngredientProvider>
+          <RecipeProvider>
+            <MealPlanProvider>{component}</MealPlanProvider>
+          </RecipeProvider>
+        </IngredientProvider>
+      </MemoryRouter>
     </MantineProvider>
   )
 }

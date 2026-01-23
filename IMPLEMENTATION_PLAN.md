@@ -1182,7 +1182,7 @@ interface GroceryItem {
   - **Quality checks**: Run tests, verify modal opens/closes, save output to `tmp/`
   - ✅ **Results**: All 579 tests pass (12 new GroceryListGenerator tests), modal component created with date range pickers, optional name input, disabled Generate button logic, meal count preview placeholder, fully wired to GroceryListsPage with open/close functionality, "Coming soon" notification on generate click, output saved to `tmp/all-tests-i8.4.txt`
 
-- [ ] I8.5. Implement generation logic and connect to UI (TDD)
+- [x] I8.5. Implement generation logic and connect to UI (TDD)
   - Write utility tests in `src/utils/generateGroceryList.test.ts`
   - Test cases:
     - Basic consolidation by ingredientId
@@ -1202,6 +1202,7 @@ interface GroceryItem {
     - Show in temporary state (not persisted yet)
   - Update meal count preview with real data from MealPlanContext
   - **Quality checks**: Run tests, verify generation works in UI, save output to `tmp/`
+  - ✅ **Results**: All 610 tests pass (31 new tests: 17 quantityRounding + 14 generateGroceryList), generation logic implemented with smart rounding by unit type, consolidation by ingredientId with servings scaling, category assignment from ingredient library, meal plan tracking, fully integrated into GroceryListGenerator modal with real meal count calculation from MealPlanContext, navigates to detail page after generation (persistence deferred to I8.7), output saved to `tmp/all-tests-i8.5-complete.txt`, `tmp/build-i8.5-complete.txt`, `tmp/lint-i8.5.txt`
 
 - [ ] I8.6. Build GroceryListView component and integrate (TDD)
   - Write component tests in `src/components/groceryLists/GroceryListView.test.tsx`
