@@ -489,9 +489,7 @@ describe('RecipeForm', () => {
 
       // Should show custom name input
       await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText(/tomato/i)
-        ).toBeInTheDocument()
+        expect(screen.getByPlaceholderText(/tomato/i)).toBeInTheDocument()
       })
     })
 
@@ -605,9 +603,7 @@ describe('RecipeForm', () => {
       await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
 
       // Submit form
-      await user.click(
-        screen.getByRole('button', { name: /create recipe/i })
-      )
+      await user.click(screen.getByRole('button', { name: /create recipe/i }))
 
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -705,10 +701,7 @@ describe('RecipeForm', () => {
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
       await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(
-        screen.getByPlaceholderText(/total cooking time/i),
-        '30'
-      )
+      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -766,10 +759,7 @@ describe('RecipeForm', () => {
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
       await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(
-        screen.getByPlaceholderText(/total cooking time/i),
-        '30'
-      )
+      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -804,7 +794,7 @@ describe('RecipeForm', () => {
       await waitFor(() => {
         expect(mockOnSubmit).not.toHaveBeenCalled()
       })
-      
+
       // The error should be in the form error state
       const imageUrlInput = screen.getByPlaceholderText(/enter image url/i)
       expect(imageUrlInput).toBeInTheDocument()
@@ -828,10 +818,7 @@ describe('RecipeForm', () => {
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
       await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(
-        screen.getByPlaceholderText(/total cooking time/i),
-        '30'
-      )
+      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {

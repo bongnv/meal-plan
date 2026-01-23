@@ -58,7 +58,7 @@ export function validateRecipeImport(
   try {
     parsedData = JSON.parse(jsonString)
   } catch (error) {
-    console.log('JSON parse error:', error);
+    console.log('JSON parse error:', error)
     return {
       isValid: false,
       newIngredients: [],

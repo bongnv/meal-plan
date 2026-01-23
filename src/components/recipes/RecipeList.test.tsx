@@ -438,7 +438,10 @@ describe('RecipeList', () => {
       const image = screen.getByAltText('Chicken Stir Fry thumbnail')
       expect(image).toBeInTheDocument()
       // Should use fallback src since imageUrl is undefined
-      expect(image).toHaveAttribute('src', expect.stringContaining('data:image/svg+xml'))
+      expect(image).toHaveAttribute(
+        'src',
+        expect.stringContaining('data:image/svg+xml')
+      )
     })
 
     it('should handle broken image URLs gracefully', () => {

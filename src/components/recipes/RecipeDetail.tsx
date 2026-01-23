@@ -130,9 +130,7 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           )}
 
           {/* Recipe Description */}
-          <Text size="lg">
-            {recipe.description || 'No description'}
-          </Text>
+          <Text size="lg">{recipe.description || 'No description'}</Text>
         </Box>
 
         <Divider />

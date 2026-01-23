@@ -34,7 +34,12 @@ interface RecipeFormProps {
   onDelete?: () => void
 }
 
-export function RecipeForm({ recipe, onSubmit, onCancel, onDelete }: RecipeFormProps) {
+export function RecipeForm({
+  recipe,
+  onSubmit,
+  onCancel,
+  onDelete,
+}: RecipeFormProps) {
   const isEditMode = !!recipe
   const {
     ingredients,
@@ -45,9 +50,7 @@ export function RecipeForm({ recipe, onSubmit, onCancel, onDelete }: RecipeFormP
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },
   ] = useDisclosure(false)
-  const [showImagePreview, setShowImagePreview] = useState(
-    !!recipe?.imageUrl
-  )
+  const [showImagePreview, setShowImagePreview] = useState(!!recipe?.imageUrl)
 
   const form = useForm<RecipeFormValues>({
     validate: zodResolver(RecipeFormSchema),
@@ -149,7 +152,9 @@ export function RecipeForm({ recipe, onSubmit, onCancel, onDelete }: RecipeFormP
               label="Image URL (optional)"
               placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
               value={form.values.imageUrl || ''}
-              onChange={event => handleImageUrlChange(event.currentTarget.value)}
+              onChange={event =>
+                handleImageUrlChange(event.currentTarget.value)
+              }
               error={form.errors.imageUrl}
             />
             {showImagePreview && form.values.imageUrl && (
@@ -256,7 +261,9 @@ export function RecipeForm({ recipe, onSubmit, onCancel, onDelete }: RecipeFormP
                       placeholder={selectedIngredient?.name || 'Custom name'}
                       label={index === 0 ? 'Custom Name (optional)' : undefined}
                       style={{ flex: 2 }}
-                      {...form.getInputProps(`ingredients.${index}.displayName`)}
+                      {...form.getInputProps(
+                        `ingredients.${index}.displayName`
+                      )}
                     />
                     <ActionIcon
                       color="red"

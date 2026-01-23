@@ -264,7 +264,9 @@ describe('Recipe Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.imageUrl).toBe('https://example.com/image.jpg#section')
+        expect(result.data.imageUrl).toBe(
+          'https://example.com/image.jpg#section'
+        )
       }
     })
   })

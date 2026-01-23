@@ -1118,7 +1118,7 @@ interface GroceryItem {
   - **Quality checks**: Run tests, save output to `tmp/`
   - ✅ **Results**: All 521 tests pass (16 new GroceryList type tests), navigation added with shopping cart icon, routes configured, output saved to `tmp/all-tests-i8.1.txt`
 
-- [ ] I8.2. Build GroceryListsPage with stub data (TDD)
+- [x] I8.2. Build GroceryListsPage with stub data (TDD)
   - Write page tests in `src/pages/groceryLists/GroceryListsPage.test.tsx`
   - Create `GroceryListsPage` in `src/pages/groceryLists/GroceryListsPage.tsx`
   - **Use stub/mock data** for initial display:
@@ -1129,8 +1129,9 @@ interface GroceryItem {
   - Apply Mantine styling with responsive card layout
   - Test page renders, navigation works, button shows modal (even if empty)
   - **Quality checks**: Run tests, verify in browser, save output to `tmp/`
+  - ✅ **Results**: All 528 tests pass (7 new GroceryListsPage tests), page displays empty state with CTA, generate button in header and empty state, responsive card layout ready for real data, output saved to `tmp/all-tests-i8.2.txt`
 
-- [ ] I8.3. Build GroceryListDetailPage with placeholder content (TDD)
+- [x] I8.3. Build GroceryListDetailPage with placeholder content (TDD)
   - Write page tests in `src/pages/groceryLists/GroceryListDetailPage.test.tsx`
   - Create `GroceryListDetailPage` in `src/pages/groceryLists/GroceryListDetailPage.tsx`
   - **Display stub grocery list data**:
@@ -1140,6 +1141,7 @@ interface GroceryItem {
   - **Wire to parent immediately**: Clicking list card on GroceryListsPage navigates to detail
   - Apply Mantine styling
   - **Quality checks**: Run tests, verify full navigation flow, save output to `tmp/`
+  - ✅ **Results**: All 538 tests pass (10 new GroceryListDetailPage tests), detail page displays stub data with 3 items (Banana, Chicken Breast, Milk), checkboxes with visual feedback, action buttons (Back/Edit/Delete), progress badge, category badges, navigation from list cards working, output saved to `tmp/all-tests-i8.3.txt`
 
 - [ ] I8.4. Build Generator modal UI and wire to page (TDD)
   - Write component tests in `src/components/groceryLists/GroceryListGenerator.test.tsx`

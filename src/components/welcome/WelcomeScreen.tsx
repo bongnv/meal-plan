@@ -9,7 +9,7 @@ import {
   Overlay,
 } from '@mantine/core'
 import { IconCloudOff, IconAlertCircle } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import { FileInfo } from '@/utils/storage/ICloudStorageProvider'
 
@@ -28,11 +28,29 @@ export function WelcomeScreen() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+  const wasConnectedRef = useRef(false)
+
+  // Track if user was previously connected
+  useEffect(() => {
+    if (selectedFile) {
+      wasConnectedRef.current = true
+    }
+  }, [selectedFile])
 
   // Determine if welcome screen should be shown
   // Show until user has selected a file (connected to cloud storage)
   // Keep showing even if user has local data - that's when backup is most important!
   const shouldShow = !isDismissed && !selectedFile && !hasSelectedFile()
+
+  // Reset dismissed state only when user disconnects (was connected, now is not)
+  useEffect(() => {
+    if (wasConnectedRef.current && !selectedFile && !hasSelectedFile()) {
+      queueMicrotask(() => {
+        setIsDismissed(false)
+      })
+      wasConnectedRef.current = false
+    }
+  }, [selectedFile, hasSelectedFile])
 
   // Auto-open file selection modal after OAuth redirect
   // When user is authenticated but has no file selected

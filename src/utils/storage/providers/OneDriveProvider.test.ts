@@ -2,6 +2,8 @@ import { PublicClientApplication } from '@azure/msal-browser'
 import { Client } from '@microsoft/microsoft-graph-client'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { decompressData } from '../../compression'
+
 import { OneDriveProvider } from './OneDriveProvider'
 
 // Mock MSAL
@@ -290,6 +292,160 @@ describe('OneDriveProvider', () => {
       await expect(provider.downloadFile(fileInfo)).rejects.toThrow(
         'Download failed'
       )
+    })
+
+    it('should use sharing reference ID for shared files', async () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      // Mock compressed data stream
+      const mockStream = new ReadableStream()
+      const mockGet = vi.fn().mockResolvedValue(mockStream)
+      const mockApi = vi.fn().mockReturnValue({ get: mockGet })
+      mockGraphClient.api = mockApi
+
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+
+      // Mock decompression
+      vi.mocked(decompressData).mockResolvedValue('{"test":"data"}')
+
+      const sharedFileAtRoot = {
+        id: 'shared-id',
+        name: 'shared-data.json.gz',
+        path: '/shared-data.json.gz',
+        isSharedWithMe: true,
+        // No driveId for root-level shared files
+      }
+      await provider.downloadFile(sharedFileAtRoot)
+
+      // Should use sharing reference ID for root-level shared files
+      expect(mockApi).toHaveBeenCalledWith('/me/drive/items/shared-id/content')
+      expect(mockGet).toHaveBeenCalledTimes(1)
+    })
+
+    it('should use driveId + itemId for shared files inside folders', async () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      // Mock compressed data stream
+      const mockStream = new ReadableStream()
+      const mockGet = vi.fn().mockResolvedValue(mockStream)
+      const mockApi = vi.fn().mockReturnValue({ get: mockGet })
+      mockGraphClient.api = mockApi
+
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+
+      // Mock decompression
+      vi.mocked(decompressData).mockResolvedValue('{"test":"data"}')
+
+      const sharedFileInFolder = {
+        id: 'file-item-id',
+        name: 'data.json.gz',
+        path: '/SharedFolder/data.json.gz',
+        isSharedWithMe: true,
+        driveId: 'other-user-drive-id',
+      }
+      await provider.downloadFile(sharedFileInFolder)
+
+      // Should use driveId + itemId for files inside shared folders
+      expect(mockApi).toHaveBeenCalledWith(
+        '/drives/other-user-drive-id/items/file-item-id/content'
+      )
+      expect(mockGet).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('uploadFile for shared files', () => {
+    it('should use sharing reference ID for shared files at root', async () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockPut = vi.fn().mockResolvedValue({
+        id: 'uploaded-id',
+        name: 'shared-data.json.gz',
+      })
+      const mockApi = vi.fn().mockReturnValue({ put: mockPut })
+      mockGraphClient.api = mockApi
+
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+
+      const sharedFileAtRoot = {
+        id: 'shared-id',
+        name: 'shared-data.json.gz',
+        path: '/shared-data.json.gz',
+        isSharedWithMe: true,
+        // No driveId for root-level shared files
+      }
+      await provider.uploadFile(sharedFileAtRoot, '{"test":"data"}')
+
+      // Should use sharing reference ID for root-level shared files
+      expect(mockApi).toHaveBeenCalledWith('/me/drive/items/shared-id/content')
+      expect(mockPut).toHaveBeenCalledWith(expect.any(Blob))
+    })
+
+    it('should use driveId + itemId for shared files inside folders', async () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockPut = vi.fn().mockResolvedValue({
+        id: 'uploaded-id',
+        name: 'data.json.gz',
+      })
+      const mockApi = vi.fn().mockReturnValue({ put: mockPut })
+      mockGraphClient.api = mockApi
+
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+
+      const sharedFileInFolder = {
+        id: 'file-item-id',
+        name: 'data.json.gz',
+        path: '/SharedFolder/data.json.gz',
+        isSharedWithMe: true,
+        driveId: 'other-user-drive-id',
+      }
+      await provider.uploadFile(sharedFileInFolder, '{"test":"data"}')
+
+      // Should use driveId + itemId for files inside shared folders
+      expect(mockApi).toHaveBeenCalledWith(
+        '/drives/other-user-drive-id/items/file-item-id/content'
+      )
+      expect(mockPut).toHaveBeenCalledWith(expect.any(Blob))
     })
   })
 })

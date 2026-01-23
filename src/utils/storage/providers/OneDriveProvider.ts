@@ -117,18 +117,19 @@ export class OneDriveProvider implements ICloudStorageProvider {
    * @private
    */
   private getFilePath(fileInfo: FileInfo): string {
-    // For shared files, prefer driveId + itemId if available, otherwise use sharing reference
+    // For shared files, use driveId + itemId if available (files inside shared folders),
+    // otherwise use sharing reference ID (files shared directly at root)
     if (fileInfo.isSharedWithMe) {
-      if (fileInfo.driveId && fileInfo.id) {
-        // Use drive ID + item ID for direct access
+      if (fileInfo.driveId) {
+        // File inside a shared folder - use drive ID + item ID
         return `/drives/${fileInfo.driveId}/items/${fileInfo.id}/content`
       }
-      // Fallback to sharing reference ID
+      // File shared directly at root - use sharing reference ID
       return `/me/drive/items/${fileInfo.id}/content`
     }
 
     // For personal files, use path-based access
-    // Path should start with / (e.g., "/file.json.gz" or "/folder/file.json.gz")
+    // Path should start with "/" (e.g., "/file.json.gz" or "/folder/file.json.gz")
     return `/me/drive/root:${fileInfo.path}:/content`
   }
 
@@ -233,7 +234,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
 
           if (remoteItem.folder) {
             folders.push({
-              id: remoteItem.id, // Actual item ID in owner's drive
+              id: remoteItem.id, // Use actual item ID from owner's drive for navigation
               name: item.name,
               path: itemPath,
               isSharedWithMe: true, // Shared with me by others
@@ -241,11 +242,11 @@ export class OneDriveProvider implements ICloudStorageProvider {
             })
           } else if (remoteItem.file && item.name.endsWith('.json.gz')) {
             files.push({
-              id: item.id, // Use sharing reference ID for accessing shared content
+              id: item.id, // Use sharing reference ID for accessing shared content at root
               name: item.name,
               path: itemPath,
               isSharedWithMe: true, // Shared with me by others
-              driveId: remoteItem.parentReference?.driveId, // Drive ID for potential future use
+              // Don't set driveId for root-level shared files - use sharing reference ID only
             })
           }
         }
@@ -255,7 +256,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
       }
     } else {
       // List specific folder
-      // Use drive ID + item ID for shared folders, path for personal folders
+      // Use driveId + itemId for shared folders (accessing owner's drive), path for personal folders
       const apiEndpoint =
         folder.isSharedWithMe && folder.driveId
           ? `/drives/${folder.driveId}/items/${folder.id}/children`
@@ -282,6 +283,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
             name: item.name,
             path: itemPath,
             isSharedWithMe: folder.isSharedWithMe, // Inherit from parent folder
+            driveId: folder.driveId, // Inherit driveId for potential metadata use
           })
         }
       }

@@ -116,6 +116,27 @@ describe('WelcomeScreen', () => {
       // Welcome screen should still show to encourage backup
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
     })
+
+    it('should show welcome screen again after disconnect', async () => {
+      // Start connected
+      mockIsAuthenticated = true
+      mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test' }
+
+      renderWithProviders(<WelcomeScreen />)
+
+      // Should not show when connected
+      expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
+
+      // Simulate disconnect
+      mockSelectedFile = null
+
+      renderWithProviders(<WelcomeScreen />)
+
+      // Should show welcome screen after disconnect
+      await waitFor(() => {
+        expect(screen.getByText(/welcome/i)).toBeInTheDocument()
+      })
+    })
   })
 
   describe('UI Elements', () => {

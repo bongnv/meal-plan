@@ -6,7 +6,7 @@ export interface FileInfo {
   name: string
   path: string
   isSharedWithMe?: boolean
-  driveId?: string // For shared files, the drive ID where the file exists
+  driveId?: string // For shared files inside folders: drive ID + id are needed to access file content
 }
 
 /**
@@ -17,7 +17,7 @@ export interface FolderInfo {
   name: string
   path: string
   isSharedWithMe?: boolean
-  driveId?: string // For shared folders, the drive ID where the folder exists
+  driveId?: string // For shared folders: drive ID + id are needed to navigate into folder contents
 }
 
 /**
