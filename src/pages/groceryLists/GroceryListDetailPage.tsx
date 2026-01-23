@@ -242,8 +242,8 @@ export const GroceryListDetailPage = () => {
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to delete "{groceryList.name}"? This will
-            also delete all items in this list. This action cannot be undone.
+            Are you sure you want to delete "{groceryList.name}"? This will also
+            delete all items in this list. This action cannot be undone.
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button

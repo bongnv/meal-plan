@@ -1,5 +1,9 @@
 import { roundQuantity } from './quantityRounding'
-import { consolidateUnit, normalizeUnitForConsolidation, convertQuantity } from './unitConversion'
+import {
+  consolidateUnit,
+  normalizeUnitForConsolidation,
+  convertQuantity,
+} from './unitConversion'
 
 import type { GroceryList, GroceryItem } from '../types/groceryList'
 import type { Ingredient, IngredientCategory, Unit } from '../types/ingredient'
@@ -66,15 +70,25 @@ export function generateGroceryList(
         // Add to existing - convert to normalized unit first
         const existing = accumulated.get(key)!
         const normalizedUnit = normalizeUnitForConsolidation(ingredient.unit)
-        const existingNormalizedUnit = normalizeUnitForConsolidation(existing.unit)
-        
+        const existingNormalizedUnit = normalizeUnitForConsolidation(
+          existing.unit
+        )
+
         // If units can be combined (same normalized unit), add quantities
         if (normalizedUnit === existingNormalizedUnit) {
           // Convert ingredient quantity to normalized unit
-          const convertedQuantity = convertQuantity(scaledQuantity, ingredient.unit, normalizedUnit)
+          const convertedQuantity = convertQuantity(
+            scaledQuantity,
+            ingredient.unit,
+            normalizedUnit
+          )
           // Convert existing quantity to normalized unit
-          const existingConverted = convertQuantity(existing.quantity, existing.unit, normalizedUnit)
-          
+          const existingConverted = convertQuantity(
+            existing.quantity,
+            existing.unit,
+            normalizedUnit
+          )
+
           existing.quantity = existingConverted + convertedQuantity
           existing.unit = normalizedUnit
           existing.mealPlanIds.push(mealPlan.id)
@@ -102,8 +116,11 @@ export function generateGroceryList(
   const items: GroceryItem[] = Array.from(accumulated.values()).map(acc => {
     const roundedQuantity = roundQuantity(acc.quantity, acc.unit)
     // Apply unit consolidation after rounding (e.g., 1000g becomes 1kg)
-    const [consolidatedQuantity, consolidatedUnit] = consolidateUnit(roundedQuantity, acc.unit)
-    
+    const [consolidatedQuantity, consolidatedUnit] = consolidateUnit(
+      roundedQuantity,
+      acc.unit
+    )
+
     return {
       id: `gi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       listId, // Link item to the parent list

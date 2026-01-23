@@ -141,7 +141,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const list = result.current.getGroceryListById('non-existent')
       expect(list).toBeUndefined()
     })
@@ -155,7 +154,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const newList: GroceryList = {
         id: 'new-id-123',
@@ -189,7 +187,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const beforeTime = Date.now()
 
       const newList: GroceryList = {
@@ -218,7 +215,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const updatedList: GroceryList = {
         ...mockGroceryLists[0],
         name: 'Updated Name',
@@ -236,7 +232,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const updateTime = Date.now()
       const updatedList: GroceryList = {
@@ -258,7 +253,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const updatedList: GroceryList = {
         ...mockGroceryLists[0],
         name: 'Updated Name',
@@ -278,7 +272,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       act(() => {
         result.current.deleteGroceryList('1')
       })
@@ -293,7 +286,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       act(() => {
         result.current.deleteGroceryList('non-existent')
       })
@@ -307,7 +299,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const newItem: GroceryItem = {
         id: 'item-2',
@@ -334,7 +325,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const originalLastModified = result.current.getLastModified()
 
@@ -364,7 +354,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       act(() => {
         result.current.updateGroceryItem('item-1', {
           quantity: 5,
@@ -383,7 +372,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const originalLastModified = result.current.getLastModified()
 
       act(() => {
@@ -401,7 +389,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       act(() => {
         result.current.removeGroceryItem('item-1')
       })
@@ -415,7 +402,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const originalLastModified = result.current.getLastModified()
 
@@ -434,7 +420,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const lastModified = result.current.getLastModified()
       // getLastModified returns Date.now() which should be current time
       expect(lastModified).toBeGreaterThan(0)
@@ -448,7 +433,6 @@ describe('GroceryListContext', () => {
         wrapper: GroceryListProvider,
       })
 
-
       const lastModified = result.current.getLastModified()
       // Even with no lists, returns Date.now()
       expect(lastModified).toBeGreaterThan(0)
@@ -460,7 +444,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       const newLists: GroceryList[] = [
         {
@@ -487,7 +470,6 @@ describe('GroceryListContext', () => {
       const { result } = renderHook(() => useGroceryLists(), {
         wrapper: GroceryListProvider,
       })
-
 
       act(() => {
         result.current.replaceAllGroceryLists([])

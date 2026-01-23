@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { GroceryItem, GroceryList } from '../../types/groceryList'
 import { INGREDIENT_CATEGORIES, UNITS, Unit } from '../../types/ingredient'
 import { MealPlan } from '../../types/mealPlan'
+import { formatQuantity } from '../../utils/formatQuantity'
 
 interface GroceryListViewProps {
   groceryList: GroceryList
@@ -93,7 +94,10 @@ const ItemRow = ({
 
   // Handle saving edits
   const handleSave = () => {
-    if (onUpdateQuantity && (quantity !== item.quantity || unit !== item.unit)) {
+    if (
+      onUpdateQuantity &&
+      (quantity !== item.quantity || unit !== item.unit)
+    ) {
       onUpdateQuantity(item.id, quantity, unit)
     }
     if (onUpdateNotes && notes !== (item.notes || '')) {
@@ -143,7 +147,7 @@ const ItemRow = ({
                 minWidth: 0,
               }}
             >
-              {itemName} • {item.quantity} {item.unit}
+              {itemName} • {formatQuantity(item.quantity)} {item.unit}
               {item.notes && ` • ${item.notes}`}
             </Text>
           </Group>

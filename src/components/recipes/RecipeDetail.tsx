@@ -14,6 +14,7 @@ import { IconUsers, IconClock, IconPlus, IconMinus } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
+import { formatQuantity } from '../../utils/formatQuantity'
 
 import type { Recipe } from '../../types/recipe'
 
@@ -148,9 +149,9 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
                 ingredientData?.name ||
                 'Unknown Ingredient'
               const unit = ingredientData?.unit || ''
-              const adjustedQuantity = (
+              const adjustedQuantity = formatQuantity(
                 ingredient.quantity * servingMultiplier
-              ).toFixed(1)
+              )
 
               return (
                 <Checkbox

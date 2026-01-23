@@ -244,8 +244,8 @@ describe('RecipeDetail', () => {
 
       renderWithProviders(<RecipeDetail recipe={recipeWithDisplayName} />)
 
-      // Initial quantity
-      expect(screen.getByText(/400\.0/)).toBeInTheDocument()
+      // Initial quantity (now formatted without trailing .0)
+      expect(screen.getByText(/400/)).toBeInTheDocument()
       const pastaMatchesInitial = screen.getAllByText(/pasta/i)
       expect(pastaMatchesInitial.length).toBeGreaterThanOrEqual(1)
 
@@ -253,8 +253,8 @@ describe('RecipeDetail', () => {
       const increaseButton = screen.getByLabelText('Increase servings')
       await user.click(increaseButton)
 
-      // Quantity should be adjusted (400 * 5/4 = 500)
-      expect(screen.getByText(/500\.0/)).toBeInTheDocument()
+      // Quantity should be adjusted (400 * 5/4 = 500, formatted without .0)
+      expect(screen.getByText(/500/)).toBeInTheDocument()
       const pastaMatchesAfter = screen.getAllByText(/pasta/i)
       expect(pastaMatchesAfter.length).toBeGreaterThanOrEqual(1)
     })
@@ -318,14 +318,14 @@ describe('RecipeDetail', () => {
       const user = userEvent.setup()
       renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
-      // Initial quantities for 4 servings
-      expect(screen.getByText(/400\.0/)).toBeInTheDocument()
+      // Initial quantities for 4 servings (now formatted without trailing .0)
+      expect(screen.getByText(/400/)).toBeInTheDocument()
 
       const increaseButton = screen.getByLabelText('Increase servings')
       await user.click(increaseButton)
 
       // After increasing to 5 servings, quantities should be scaled
-      expect(screen.getByText(/500\.0/)).toBeInTheDocument()
+      expect(screen.getByText(/500/)).toBeInTheDocument()
     })
 
     it('should use initialServings prop if provided', () => {
@@ -334,8 +334,8 @@ describe('RecipeDetail', () => {
       )
 
       expect(screen.getByText(/6 servings/i)).toBeInTheDocument()
-      // Quantity should be scaled to 6 servings (400 * 6/4 = 600)
-      expect(screen.getByText(/600\.0/)).toBeInTheDocument()
+      // Quantity should be scaled to 6 servings (400 * 6/4 = 600, formatted without .0)
+      expect(screen.getByText(/600/)).toBeInTheDocument()
     })
 
     it('should toggle ingredient checkbox when clicked', async () => {

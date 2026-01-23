@@ -184,8 +184,12 @@ describe('GroceryListView', () => {
     const vegetablesHeadings = screen.getAllByText('Vegetables')
     expect(vegetablesHeadings.length).toBeGreaterThan(0)
     // Meat and Dairy should not appear as category headings (only in dropdown)
-    expect(screen.queryByRole('heading', { name: 'Meat' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Dairy' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Meat' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Dairy' })
+    ).not.toBeInTheDocument()
   })
 
   it('displays quantity with unit', () => {
@@ -203,7 +207,8 @@ describe('GroceryListView', () => {
       />
     )
 
-    expect(screen.getByText(/2.5 cup/)).toBeInTheDocument()
+    // Quantities are now formatted as fractions where applicable
+    expect(screen.getByText(/2 1\/2 cup/)).toBeInTheDocument()
     expect(screen.getByText(/500 gram/)).toBeInTheDocument()
     expect(screen.getByText(/1 liter/)).toBeInTheDocument()
     expect(screen.getByText(/3 piece/)).toBeInTheDocument()
@@ -227,7 +232,7 @@ describe('GroceryListView', () => {
     // Recipe names should appear in meal plan badges
     // Check that getRecipeName was called (which means badges are rendering recipe names)
     expect(mockGetRecipeName).toHaveBeenCalled()
-    
+
     // Verify the recipe names appear in the rendered output
     expect(screen.queryAllByText(/Chicken Salad/i).length).toBeGreaterThan(0)
     expect(screen.queryAllByText(/Beef Stir Fry/i).length).toBeGreaterThan(0)
@@ -450,7 +455,9 @@ describe('GroceryListView', () => {
       />
     )
 
-    expect(screen.getByText('No items in this grocery list')).toBeInTheDocument()
+    expect(
+      screen.getByText('No items in this grocery list')
+    ).toBeInTheDocument()
   })
 
   it('shows progress badge with checked/total count', () => {

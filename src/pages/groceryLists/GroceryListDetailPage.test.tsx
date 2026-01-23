@@ -299,7 +299,6 @@ describe('GroceryListDetailPage', () => {
       expect(await screen.findByText('Confirm Delete')).toBeInTheDocument()
     })
 
-
     it('should close modal when cancel is clicked', async () => {
       const { user } = renderWithProviders(<GroceryListDetailPage />)
 
@@ -309,7 +308,9 @@ describe('GroceryListDetailPage', () => {
       // Wait for modal to open
       await screen.findByText('Confirm Delete')
 
-      const cancelButtons = await screen.findAllByRole('button', { name: /cancel/i })
+      const cancelButtons = await screen.findAllByRole('button', {
+        name: /cancel/i,
+      })
       // Click the cancel button from the modal
       await user.click(cancelButtons[0])
 
