@@ -54,9 +54,16 @@ ${ingredientList}
 1. Parse the recipe from the URL or text I provide
 2. For each ingredient in the recipe:
    - Try to match it to an existing ingredient in the library by name
-   - If found and the unit matches**, use the matching ingredientId
-   - If the recipe uses a different name** (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
-   - If the unit doesn't match**, suggest a new ingredient with the recipe's unit instead
+   - If found and the unit matches, use the matching ingredientId
+   - If the recipe uses a different name (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
+   - If the recipe uses an unsupported unit (not in the list below), convert to the closest supported unit:
+     * pound (lb) → gram (1 lb = 454 grams)
+     * ounce (oz) → gram (1 oz = 28 grams)
+     * fluid ounce (fl oz) → milliliter (1 fl oz = 30 ml)
+     * pint → milliliter (1 pint = 473 ml)
+     * quart → liter (1 quart = 0.95 liter)
+     * gallon → liter (1 gallon = 3.8 liters)
+   - If the ingredient exists with a different supported unit, suggest a new ingredient with the recipe's unit
    - If no match exists, suggest a new ingredient with:
      - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
      - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other

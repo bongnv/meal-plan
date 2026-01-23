@@ -198,11 +198,12 @@ describe('generateRecipeImportPrompt', () => {
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
-    // Should mention unit matching
+    // Should mention unit handling
     expect(prompt.toLowerCase()).toMatch(/unit/)
 
-    // Should instruct to suggest new ingredient when unit doesn't match
-    expect(prompt.toLowerCase()).toMatch(/unit.*doesn't match|unit.*different/i)
+    // Should instruct to convert unsupported units
+    expect(prompt.toLowerCase()).toMatch(/unsupported unit/)
+    expect(prompt.toLowerCase()).toMatch(/pound.*gram/)
   })
 
   it('should provide unit conversion examples in instructions', () => {
