@@ -189,7 +189,11 @@ describe('WelcomeScreen', () => {
       await user.click(connectButton)
 
       // Rerender to reflect authentication state change
-      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
+      rerender(
+        <MantineProvider>
+          <WelcomeScreen />
+        </MantineProvider>
+      )
 
       await waitFor(() => {
         expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
@@ -224,7 +228,11 @@ describe('WelcomeScreen', () => {
       await user.click(connectButton)
 
       // Rerender to reflect authentication state change
-      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
+      rerender(
+        <MantineProvider>
+          <WelcomeScreen />
+        </MantineProvider>
+      )
 
       await waitFor(() => {
         expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
@@ -234,8 +242,16 @@ describe('WelcomeScreen', () => {
       await user.click(selectButton)
 
       // Simulate file selection completing
-      mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test.json.gz' }
-      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
+      mockSelectedFile = {
+        id: '1',
+        name: 'test.json.gz',
+        path: '/test.json.gz',
+      }
+      rerender(
+        <MantineProvider>
+          <WelcomeScreen />
+        </MantineProvider>
+      )
 
       // Verify connectProvider was called with file info
       await waitFor(() => {

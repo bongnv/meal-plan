@@ -1,6 +1,6 @@
 import { roundQuantity } from './quantityRounding'
 
-import type { GroceryList } from '../types/groceryList'
+import type { GroceryList, GroceryItem } from '../types/groceryList'
 import type { Ingredient, IngredientCategory, Unit } from '../types/ingredient'
 import type { MealPlan } from '../types/mealPlan'
 import type { Recipe } from '../types/recipe'
@@ -22,6 +22,7 @@ interface AccumulatedIngredient {
  * Generate a grocery list from meal plans within a date range.
  * Consolidates ingredients by ingredientId, scales quantities by servings,
  * and applies smart rounding based on unit type.
+ * Returns separate list metadata and items array for normalized storage.
  */
 export function generateGroceryList(
   dateRange: DateRange,
@@ -29,7 +30,7 @@ export function generateGroceryList(
   mealPlans: MealPlan[],
   recipes: Recipe[],
   ingredients: Ingredient[]
-): GroceryList {
+): { list: GroceryList; items: GroceryItem[] } {
   // Create lookup maps for fast access
   const recipeMap = new Map(recipes.map(r => [r.id, r]))
   const ingredientMap = new Map(ingredients.map(i => [i.id, i]))
@@ -78,8 +79,11 @@ export function generateGroceryList(
   }
 
   // Convert accumulated data to grocery items with smart rounding
-  const items = Array.from(accumulated.values()).map(acc => ({
+  const listId = `gl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+  const items: GroceryItem[] = Array.from(accumulated.values()).map(acc => ({
     id: `gi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    listId, // Link item to the parent list
     ingredientId: acc.ingredientId,
     quantity: roundQuantity(acc.quantity, acc.unit),
     unit: acc.unit,
@@ -88,11 +92,12 @@ export function generateGroceryList(
     mealPlanIds: acc.mealPlanIds,
   }))
 
-  return {
-    id: `gl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  const list: GroceryList = {
+    id: listId,
     name,
     dateRange,
     createdAt: Date.now(),
-    items,
   }
+
+  return { list, items }
 }

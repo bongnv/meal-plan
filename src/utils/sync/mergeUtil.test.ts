@@ -46,6 +46,8 @@ describe('mergeUtil', () => {
       const baseData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -54,6 +56,8 @@ describe('mergeUtil', () => {
       const localData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -62,6 +66,8 @@ describe('mergeUtil', () => {
       const remoteData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -77,6 +83,8 @@ describe('mergeUtil', () => {
       const baseData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -85,6 +93,8 @@ describe('mergeUtil', () => {
       const localData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -93,6 +103,8 @@ describe('mergeUtil', () => {
       const remoteData: SyncData = {
         recipes: [recipe1, recipe2],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -108,6 +120,8 @@ describe('mergeUtil', () => {
       const baseData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -116,6 +130,8 @@ describe('mergeUtil', () => {
       const localData: SyncData = {
         recipes: [recipe1, recipe2],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -124,6 +140,8 @@ describe('mergeUtil', () => {
       const remoteData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -139,6 +157,8 @@ describe('mergeUtil', () => {
       const baseData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -147,6 +167,8 @@ describe('mergeUtil', () => {
       const localData: SyncData = {
         recipes: [recipe1, recipe2],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -155,6 +177,8 @@ describe('mergeUtil', () => {
       const remoteData: SyncData = {
         recipes: [recipe1],
         mealPlans: [mealPlan1],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -171,6 +195,8 @@ describe('mergeUtil', () => {
       const baseData: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 1000,
         version: 1,
@@ -182,6 +208,8 @@ describe('mergeUtil', () => {
       const localData: SyncData = {
         recipes: [updatedRecipe1Local],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -190,6 +218,8 @@ describe('mergeUtil', () => {
       const remoteData: SyncData = {
         recipes: [updatedRecipe1Remote],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -214,6 +244,8 @@ describe('mergeUtil', () => {
       const partialMerged: SyncData = {
         recipes: [recipe1], // Base version still there
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -246,6 +278,8 @@ describe('mergeUtil', () => {
       const partialMerged: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -275,6 +309,8 @@ describe('mergeUtil', () => {
       const partialMerged: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,
@@ -314,6 +350,8 @@ describe('mergeUtil', () => {
       const partialMerged: SyncData = {
         recipes: [recipe1],
         mealPlans: [],
+        groceryLists: [],
+        groceryItems: [],
         ingredients: [],
         lastModified: 2000,
         version: 1,

@@ -14,6 +14,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { msalConfig } from './config/msalConfig'
 import { CloudStorageProvider } from './contexts/CloudStorageContext'
+import { GroceryListProvider } from './contexts/GroceryListContext'
 import { IngredientProvider } from './contexts/IngredientContext'
 import { MealPlanProvider } from './contexts/MealPlanContext'
 import { RecipeProvider } from './contexts/RecipeContext'
@@ -33,9 +34,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <RecipeProvider>
                 <MealPlanProvider>
                   <IngredientProvider>
-                    <SyncProvider>
-                      <App />
-                    </SyncProvider>
+                    <GroceryListProvider>
+                      <SyncProvider>
+                        <App />
+                      </SyncProvider>
+                    </GroceryListProvider>
                   </IngredientProvider>
                 </MealPlanProvider>
               </RecipeProvider>

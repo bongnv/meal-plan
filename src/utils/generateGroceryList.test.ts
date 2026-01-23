@@ -302,7 +302,7 @@ describe('generateGroceryList', () => {
       )
 
       expect(result.items).toHaveLength(0)
-      expect(result.name).toBe('Empty List')
+      expect(result.list.name).toBe('Empty List')
     })
 
     it('should skip non-recipe meal plans', () => {
@@ -411,9 +411,7 @@ describe('generateGroceryList', () => {
           description: '',
           servings: 2,
           totalTime: 10,
-          ingredients: [
-            { ingredientId: 'non-existent', quantity: 100 },
-          ],
+          ingredients: [{ ingredientId: 'non-existent', quantity: 100 }],
           instructions: [],
           tags: [],
         },
@@ -453,8 +451,8 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
-      expect(result.name).toBe('Weekly Groceries')
-      expect(result.dateRange).toEqual({
+      expect(result.list.name).toBe('Weekly Groceries')
+      expect(result.list.dateRange).toEqual({
         start: '2026-01-23',
         end: '2026-01-30',
       })

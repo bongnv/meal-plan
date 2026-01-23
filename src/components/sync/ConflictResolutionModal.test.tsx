@@ -194,7 +194,9 @@ describe('ConflictResolutionModal', () => {
       expect(screen.getByText('Meal 1')).toBeInTheDocument()
       expect(screen.getByText('Ingredient 1')).toBeInTheDocument()
       expect(
-        screen.getByText(/choose which version to keep for all 3 conflicting items/i)
+        screen.getByText(
+          /choose which version to keep for all 3 conflicting items/i
+        )
       ).toBeInTheDocument()
     })
 
@@ -231,7 +233,9 @@ describe('ConflictResolutionModal', () => {
       )
 
       expect(
-        screen.getByText(/choose which version to keep for all 1 conflicting item:/i)
+        screen.getByText(
+          /choose which version to keep for all 1 conflicting item:/i
+        )
       ).toBeInTheDocument()
     })
   })
@@ -360,7 +364,9 @@ describe('ConflictResolutionModal', () => {
 
     it('should handle resolution errors gracefully', async () => {
       const user = userEvent.setup()
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
       mockResolveConflict.mockRejectedValue(new Error('Resolution failed'))
 
       mockConflicts.push({

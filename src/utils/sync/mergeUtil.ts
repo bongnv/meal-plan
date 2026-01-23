@@ -4,6 +4,7 @@ import type {
   ConflictResolution,
   RecordChanges,
 } from './types'
+import type { GroceryList, GroceryItem } from '../../types/groceryList'
 import type { Ingredient } from '../../types/ingredient'
 import type { MealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -110,6 +111,8 @@ export function resolveConflicts(
     const recipes = [...partialMerged.recipes]
     const mealPlans = [...partialMerged.mealPlans]
     const ingredients = [...partialMerged.ingredients]
+    const groceryLists = [...partialMerged.groceryLists]
+    const groceryItems = [...partialMerged.groceryItems]
 
     for (const conflict of conflicts) {
       const resolution = resolutions.get(conflict.id)
@@ -158,6 +161,28 @@ export function resolveConflicts(
             ingredients.push(version as Ingredient)
           }
         }
+      } else if (conflict.entity === 'groceryList') {
+        const index = groceryLists.findIndex(gl => gl.id === conflict.entityId)
+        if (version === null) {
+          if (index >= 0) groceryLists.splice(index, 1)
+        } else {
+          if (index >= 0) {
+            groceryLists[index] = version as GroceryList
+          } else {
+            groceryLists.push(version as GroceryList)
+          }
+        }
+      } else if (conflict.entity === 'groceryItem') {
+        const index = groceryItems.findIndex(gi => gi.id === conflict.entityId)
+        if (version === null) {
+          if (index >= 0) groceryItems.splice(index, 1)
+        } else {
+          if (index >= 0) {
+            groceryItems[index] = version as GroceryItem
+          } else {
+            groceryItems.push(version as GroceryItem)
+          }
+        }
       }
     }
 
@@ -165,6 +190,8 @@ export function resolveConflicts(
       recipes,
       mealPlans,
       ingredients,
+      groceryLists,
+      groceryItems,
       lastModified: Date.now(),
       version: 1,
     }
@@ -205,6 +232,16 @@ function performThreeWayMerge(
     local.ingredients,
     remote.ingredients
   )
+  const groceryListChanges = detectChanges(
+    base.groceryLists,
+    local.groceryLists,
+    remote.groceryLists
+  )
+  const groceryItemChanges = detectChanges(
+    base.groceryItems,
+    local.groceryItems,
+    remote.groceryItems
+  )
 
   // Merge with conflict detection
   const recipes = mergeRecords(
@@ -231,11 +268,29 @@ function performThreeWayMerge(
     conflicts
   )
 
+  const groceryLists = mergeRecords(
+    base.groceryLists,
+    groceryListChanges.local,
+    groceryListChanges.remote,
+    'groceryList',
+    conflicts
+  )
+
+  const groceryItems = mergeRecords(
+    base.groceryItems,
+    groceryItemChanges.local,
+    groceryItemChanges.remote,
+    'groceryItem',
+    conflicts
+  )
+
   return {
     merged: {
       recipes,
       mealPlans,
       ingredients,
+      groceryLists,
+      groceryItems,
       lastModified: Date.now(),
       version: 1,
     },
@@ -308,7 +363,12 @@ function mergeRecords<T extends { id: string }>(
   base: T[],
   localChanges: RecordChanges<T>,
   remoteChanges: RecordChanges<T>,
-  entityType: 'recipe' | 'mealPlan' | 'ingredient',
+  entityType:
+    | 'recipe'
+    | 'mealPlan'
+    | 'ingredient'
+    | 'groceryList'
+    | 'groceryItem',
   conflicts: ConflictInfo[]
 ): T[] {
   const result = new Map<string, T>()

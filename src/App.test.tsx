@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import App from './App'
 import { CloudStorageProvider } from './contexts/CloudStorageContext'
+import { GroceryListProvider } from './contexts/GroceryListContext'
 import { IngredientProvider } from './contexts/IngredientContext'
 import { MealPlanProvider } from './contexts/MealPlanContext'
 import * as RecipeContext from './contexts/RecipeContext'
@@ -59,13 +60,15 @@ const renderApp = (initialRoute: string = '/') => {
       <RecipeProvider>
         <MealPlanProvider>
           <IngredientProvider>
-            <SyncProvider>
-              <MantineProvider>
-                <MemoryRouter initialEntries={[initialRoute]}>
-                  <App />
-                </MemoryRouter>
-              </MantineProvider>
-            </SyncProvider>
+            <GroceryListProvider>
+              <SyncProvider>
+                <MantineProvider>
+                  <MemoryRouter initialEntries={[initialRoute]}>
+                    <App />
+                  </MemoryRouter>
+                </MantineProvider>
+              </SyncProvider>
+            </GroceryListProvider>
           </IngredientProvider>
         </MealPlanProvider>
       </RecipeProvider>

@@ -9,11 +9,13 @@ import {
   Badge,
   SimpleGrid,
 } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { IconShoppingCart, IconPlus } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
+import { useGroceryLists } from '../../contexts/GroceryListContext'
 import { useIngredients } from '../../contexts/IngredientContext'
 import { useMealPlans } from '../../contexts/MealPlanContext'
 import { useRecipes } from '../../contexts/RecipeContext'
@@ -27,17 +29,13 @@ export const GroceryListsPage = () => {
   const { recipes } = useRecipes()
   const { mealPlans } = useMealPlans()
   const { ingredients } = useIngredients()
+  const {
+    groceryLists,
+    groceryItems,
+    generateGroceryList: saveGroceryList,
+  } = useGroceryLists()
 
-  // Stub data - will be replaced with real data from context in I8.7
-  const stubGroceryLists: Array<{
-    id: string
-    name: string
-    dateRange: { start: string; end: string }
-    itemCount: number
-    checkedCount: number
-  }> = []
-
-  const hasLists = stubGroceryLists.length > 0
+  const hasLists = groceryLists.length > 0
 
   const handleGenerateClick = () => {
     setModalOpened(true)
@@ -58,19 +56,25 @@ export const GroceryListsPage = () => {
       end: params.endDate.toISOString().split('T')[0],
     }
 
-    const groceryList = generateGroceryList(
+    const { list, items } = generateGroceryList(
       dateRange,
-      params.name || `Week of ${params.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      params.name ||
+        `Week of ${params.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
       mealPlans,
       recipes,
       ingredients
     )
 
-    // TODO I8.7: Save to context and navigate to detail page
-    // For now, just log and navigate to detail page with temporary data
-    console.log('Generated grocery list:', groceryList)
-    navigate(`/grocery-lists/${groceryList.id}`)
+    // Save to context
+    saveGroceryList(list, items)
     setModalOpened(false)
+
+    // Show success notification
+    notifications.show({
+      title: 'Grocery list created',
+      message: `${list.name} with ${items.length} items`,
+      color: 'green',
+    })
   }
 
   const handleListClick = (listId: string) => {
@@ -115,41 +119,43 @@ export const GroceryListsPage = () => {
 
         {hasLists && (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" mt="md">
-            {stubGroceryLists.map(list => (
-              <Card
-                key={list.id}
-                shadow="sm"
-                padding="lg"
-                radius="md"
-                withBorder
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleListClick(list.id)}
-              >
-                <Stack gap="xs">
-                  <Group justify="space-between" align="flex-start">
-                    <div>
-                      <Text fw={500} size="lg">
+            {groceryLists.map(list => {
+              const listItems = groceryItems.filter(
+                item => item.listId === list.id
+              )
+              const checkedCount = listItems.filter(item => item.checked).length
+              const itemCount = listItems.length
+
+              return (
+                <Card
+                  key={list.id}
+                  shadow="sm"
+                  padding="md"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleListClick(list.id)}
+                >
+                  <Group justify="space-between" align="center" wrap="nowrap">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text fw={500} size="md" lineClamp={1}>
                         {list.name}
                       </Text>
-                      <Text size="sm" c="dimmed">
+                      <Text size="xs" c="dimmed">
                         {list.dateRange.start} - {list.dateRange.end}
                       </Text>
                     </div>
                     <Badge
-                      color={
-                        list.checkedCount === list.itemCount ? 'green' : 'blue'
-                      }
+                      color={checkedCount === itemCount ? 'green' : 'blue'}
                       variant="light"
+                      size="lg"
                     >
-                      {list.checkedCount}/{list.itemCount}
+                      {checkedCount}/{itemCount}
                     </Badge>
                   </Group>
-                  <Text size="sm" c="dimmed">
-                    {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                  </Text>
-                </Stack>
-              </Card>
-            ))}
+                </Card>
+              )
+            })}
           </SimpleGrid>
         )}
       </Stack>

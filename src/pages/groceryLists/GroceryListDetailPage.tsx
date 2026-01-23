@@ -1,56 +1,29 @@
-import {
-  Button,
-  Checkbox,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Card,
-  Badge,
-} from '@mantine/core'
+import { Button, Container, Group, Stack, Text, Title } from '@mantine/core'
 import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react'
 import { useNavigate, useParams } from 'react-router-dom'
+
+import { GroceryListView } from '../../components/groceryLists/GroceryListView'
+import { useGroceryLists } from '../../contexts/GroceryListContext'
+import { useIngredients } from '../../contexts/IngredientContext'
+import { GroceryItem } from '../../types/groceryList'
+
+import type { IngredientCategory, Unit } from '../../types/ingredient'
 
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { ingredients } = useIngredients()
+  const {
+    getGroceryListById,
+    getItemsForList,
+    addGroceryItem,
+    updateGroceryItem: updateItem,
+    removeGroceryItem,
+  } = useGroceryLists()
 
-  // Stub data - will be replaced with real data from context in I8.7
-  const stubGroceryList = {
-    id: id || '1',
-    name: 'Week of Jan 23',
-    dateRange: {
-      start: '2026-01-23',
-      end: '2026-01-30',
-    },
-    items: [
-      {
-        id: 'item-1',
-        name: 'Banana',
-        quantity: 2,
-        unit: 'cup',
-        checked: false,
-        category: 'Fruits',
-      },
-      {
-        id: 'item-2',
-        name: 'Chicken Breast',
-        quantity: 500,
-        unit: 'gram',
-        checked: false,
-        category: 'Meat',
-      },
-      {
-        id: 'item-3',
-        name: 'Milk',
-        quantity: 1,
-        unit: 'liter',
-        checked: true,
-        category: 'Dairy',
-      },
-    ],
-  }
+  // Get grocery list from context
+  const groceryList = getGroceryListById(id || '')
+  const items = getItemsForList(id || '')
 
   const handleEdit = () => {
     // Will be implemented in I8.8
@@ -64,8 +37,73 @@ export const GroceryListDetailPage = () => {
     navigate('/grocery-lists')
   }
 
-  const handleCheckItem = (_itemId: string) => {
-    // Will be implemented in I8.7/I8.8
+  const handleCheckItem = (itemId: string) => {
+    const item = items.find(i => i.id === itemId)
+    if (!item) return
+
+    updateItem(itemId, { checked: !item.checked })
+  }
+
+  const handleUpdateQuantity = (
+    itemId: string,
+    quantity: number,
+    unit: string
+  ) => {
+    updateItem(itemId, { quantity, unit: unit as Unit })
+  }
+
+  const handleUpdateNotes = (itemId: string, notes: string) => {
+    updateItem(itemId, { notes })
+  }
+
+  const handleRemoveItem = (itemId: string) => {
+    removeGroceryItem(itemId)
+  }
+
+  const handleAddManualItem = (item: {
+    name: string
+    quantity: number
+    unit: string
+    category: string
+  }) => {
+    if (!groceryList) return
+
+    const newItem: GroceryItem = {
+      id: `manual-${Date.now()}`,
+      listId: groceryList.id,
+      ingredientId: null,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit as Unit,
+      category: item.category as IngredientCategory,
+      checked: false,
+      mealPlanIds: [],
+    }
+
+    addGroceryItem(newItem)
+  }
+
+  const getIngredientName = (ingredientId: string): string => {
+    const ingredient = ingredients.find(i => i.id === ingredientId)
+    return ingredient?.name || ingredientId
+  }
+
+  // Handle grocery list not found
+  if (!groceryList) {
+    return (
+      <Container size="xl">
+        <Stack gap="md">
+          <Button
+            variant="subtle"
+            leftSection={<IconArrowLeft size={18} />}
+            onClick={handleBack}
+          >
+            Back to Lists
+          </Button>
+          <Text>Grocery list not found</Text>
+        </Stack>
+      </Container>
+    )
   }
 
   return (
@@ -81,10 +119,9 @@ export const GroceryListDetailPage = () => {
 
         <Group justify="space-between" align="center">
           <div>
-            <Title order={1}>{stubGroceryList.name}</Title>
+            <Title order={1}>{groceryList.name}</Title>
             <Text size="sm" c="dimmed">
-              {stubGroceryList.dateRange.start} -{' '}
-              {stubGroceryList.dateRange.end}
+              {groceryList.dateRange.start} - {groceryList.dateRange.end}
             </Text>
           </div>
           <Group gap="sm">
@@ -106,59 +143,16 @@ export const GroceryListDetailPage = () => {
           </Group>
         </Group>
 
-        <Card withBorder shadow="sm" p="lg" radius="md">
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text fw={500} size="lg">
-                Grocery Items
-              </Text>
-              <Badge size="lg" variant="light">
-                {stubGroceryList.items.filter(item => item.checked).length} /{' '}
-                {stubGroceryList.items.length} checked
-              </Badge>
-            </Group>
-
-            <Stack gap="xs">
-              {stubGroceryList.items.map(item => (
-                <Card
-                  key={item.id}
-                  withBorder
-                  p="sm"
-                  radius="sm"
-                  style={{
-                    opacity: item.checked ? 0.6 : 1,
-                    transition: 'opacity 0.2s',
-                  }}
-                >
-                  <Group justify="space-between" wrap="nowrap">
-                    <Group gap="sm" wrap="nowrap">
-                      <Checkbox
-                        checked={item.checked}
-                        onChange={() => handleCheckItem(item.id)}
-                      />
-                      <div>
-                        <Text
-                          fw={500}
-                          style={{
-                            textDecoration: item.checked
-                              ? 'line-through'
-                              : 'none',
-                          }}
-                        >
-                          {item.name}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          {item.quantity} {item.unit}
-                        </Text>
-                      </div>
-                    </Group>
-                    <Badge variant="light">{item.category}</Badge>
-                  </Group>
-                </Card>
-              ))}
-            </Stack>
-          </Stack>
-        </Card>
+        <GroceryListView
+          groceryList={groceryList}
+          items={items}
+          onCheckItem={handleCheckItem}
+          onUpdateQuantity={handleUpdateQuantity}
+          onUpdateNotes={handleUpdateNotes}
+          onRemoveItem={handleRemoveItem}
+          onAddManualItem={handleAddManualItem}
+          getIngredientName={getIngredientName}
+        />
       </Stack>
     </Container>
   )

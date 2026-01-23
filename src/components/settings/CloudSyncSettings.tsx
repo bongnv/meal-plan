@@ -245,7 +245,11 @@ export function CloudSyncSettings() {
       </Stack>
 
       <FileSelectionModal
-        opened={cloudStorage.isAuthenticated && selectedFile === null && !isInitializing}
+        opened={
+          cloudStorage.isAuthenticated &&
+          selectedFile === null &&
+          !isInitializing
+        }
         onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />

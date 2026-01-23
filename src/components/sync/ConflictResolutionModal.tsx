@@ -96,10 +96,14 @@ export function ConflictResolutionModal({
                 </Table.Td>
                 <Table.Td>{conflict.itemName}</Table.Td>
                 <Table.Td>
-                  <Text size="xs">{formatTimestamp(conflict.localModified)}</Text>
+                  <Text size="xs">
+                    {formatTimestamp(conflict.localModified)}
+                  </Text>
                 </Table.Td>
                 <Table.Td>
-                  <Text size="xs">{formatTimestamp(conflict.remoteModified)}</Text>
+                  <Text size="xs">
+                    {formatTimestamp(conflict.remoteModified)}
+                  </Text>
                 </Table.Td>
               </Table.Tr>
             ))}

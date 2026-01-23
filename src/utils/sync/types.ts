@@ -1,3 +1,4 @@
+import type { GroceryList, GroceryItem } from '../../types/groceryList'
 import type { Ingredient } from '../../types/ingredient'
 import type { MealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -10,6 +11,8 @@ export interface SyncData {
   recipes: Recipe[]
   mealPlans: MealPlan[]
   ingredients: Ingredient[]
+  groceryLists: GroceryList[]
+  groceryItems: GroceryItem[]
   lastModified: number // Unix timestamp
   version: number // Data format version for future migrations
 }
@@ -28,11 +31,23 @@ export type ConflictType =
 export interface ConflictInfo {
   id: string // Unique conflict identifier
   type: ConflictType
-  entity: 'recipe' | 'mealPlan' | 'ingredient'
+  entity: 'recipe' | 'mealPlan' | 'ingredient' | 'groceryList' | 'groceryItem'
   entityId: string // ID of the conflicting entity
-  localVersion: Recipe | MealPlan | Ingredient | null // null if deleted locally
-  remoteVersion: Recipe | MealPlan | Ingredient | null // null if deleted remotely
-  baseVersion: Recipe | MealPlan | Ingredient | null // null if created after last sync
+  localVersion:
+    | Recipe
+    | MealPlan
+    | Ingredient
+    | GroceryList
+    | GroceryItem
+    | null // null if deleted locally
+  remoteVersion:
+    | Recipe
+    | MealPlan
+    | Ingredient
+    | GroceryList
+    | GroceryItem
+    | null // null if deleted remotely
+  baseVersion: Recipe | MealPlan | Ingredient | GroceryList | GroceryItem | null // null if created after last sync
 }
 
 /**

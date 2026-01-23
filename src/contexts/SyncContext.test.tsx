@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { GroceryListProvider } from './GroceryListContext'
 import { IngredientProvider } from './IngredientContext'
 import { MealPlanProvider } from './MealPlanContext'
 import { RecipeProvider } from './RecipeContext'
@@ -39,7 +40,9 @@ describe('SyncContext', () => {
     <RecipeProvider>
       <MealPlanProvider>
         <IngredientProvider>
-          <SyncProvider>{children}</SyncProvider>
+          <GroceryListProvider>
+            <SyncProvider>{children}</SyncProvider>
+          </GroceryListProvider>
         </IngredientProvider>
       </MealPlanProvider>
     </RecipeProvider>

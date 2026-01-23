@@ -41,9 +41,7 @@ describe('GroceryListGenerator', () => {
       />
     )
 
-    expect(
-      screen.queryByText('Generate Grocery List')
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText('Generate Grocery List')).not.toBeInTheDocument()
   })
 
   it('should render modal when opened', () => {
@@ -117,9 +115,7 @@ describe('GroceryListGenerator', () => {
     expect(
       screen.getByRole('button', { name: /^generate list$/i })
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /cancel/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
   })
 
   it('should call onClose when Cancel button is clicked', async () => {

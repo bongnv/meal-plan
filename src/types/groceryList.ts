@@ -7,7 +7,9 @@ import { IngredientCategorySchema, UnitSchema } from './ingredient'
  */
 export const GroceryItemSchema = z.object({
   id: z.string().min(1),
+  listId: z.string().min(1), // Reference to parent grocery list
   ingredientId: z.string().min(1).nullable(), // null = manually added item
+  name: z.string().optional(), // Optional name for manually added items (not in library)
   quantity: z.number().positive(),
   unit: UnitSchema,
   category: IngredientCategorySchema, // Denormalized from ingredient library
@@ -19,7 +21,7 @@ export const GroceryItemSchema = z.object({
 export type GroceryItem = z.infer<typeof GroceryItemSchema>
 
 /**
- * GroceryList represents a shopping list generated from meal plans
+ * GroceryList represents a shopping list metadata (items stored separately)
  */
 export const GroceryListSchema = z
   .object({
@@ -30,7 +32,6 @@ export const GroceryListSchema = z
       end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
     }),
     createdAt: z.number().nonnegative(), // Unix timestamp
-    items: z.array(GroceryItemSchema),
   })
   .refine(
     data => {

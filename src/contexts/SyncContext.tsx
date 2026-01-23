@@ -13,6 +13,7 @@ import { z } from 'zod'
 import { merge, resolveConflicts } from '../utils/sync/mergeUtil'
 
 import { useCloudStorage } from './CloudStorageContext'
+import { useGroceryLists } from './GroceryListContext'
 import { useIngredients } from './IngredientContext'
 import { useMealPlans } from './MealPlanContext'
 import { useRecipes } from './RecipeContext'
@@ -29,6 +30,8 @@ const SyncDataSchema = z.object({
   recipes: z.array(z.any()), // Could be more specific with Recipe schema
   mealPlans: z.array(z.any()),
   ingredients: z.array(z.any()),
+  groceryLists: z.array(z.any()).optional().default([]),
+  groceryItems: z.array(z.any()).optional().default([]),
   lastModified: z.number(),
   version: z.number(),
 })
@@ -49,7 +52,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
  */
 export interface SyncConflict {
   id: string
-  type: 'recipe' | 'mealPlan' | 'ingredient'
+  type: 'recipe' | 'mealPlan' | 'ingredient' | 'groceryList' | 'groceryItem'
   itemName: string
   localModified: number
   remoteModified: number
@@ -109,6 +112,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     replaceAllIngredients,
     getLastModified: getIngredientsLastModified,
   } = useIngredients()
+  const {
+    groceryLists,
+    groceryItems,
+    replaceAllGroceryLists,
+    replaceAllGroceryItems,
+    getLastModified: getGroceryListsLastModified,
+  } = useGroceryLists()
 
   /**
    * Helper function to apply merged data and finalize sync
@@ -126,7 +136,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     const currentStateTimestamp = Math.max(
       getRecipesLastModified(),
       getMealPlansLastModified(),
-      getIngredientsLastModified()
+      getIngredientsLastModified(),
+      getGroceryListsLastModified()
     )
     if (currentStateTimestamp !== expectedTimestamp) {
       throw new Error('Local state changed during sync operation')
@@ -136,6 +147,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     replaceAllRecipes(mergedData.recipes)
     replaceAllMealPlans(mergedData.mealPlans)
     replaceAllIngredients(mergedData.ingredients)
+    replaceAllGroceryLists(mergedData.groceryLists)
+    replaceAllGroceryItems(mergedData.groceryItems)
 
     // Step 9: Upload merged data to remote
     const uploadData = { ...mergedData, lastModified: Date.now() }
@@ -194,6 +207,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const recipesLastModified = getRecipesLastModified()
   const mealPlansLastModified = getMealPlansLastModified()
   const ingredientsLastModified = getIngredientsLastModified()
+  const groceryListsLastModified = getGroceryListsLastModified()
 
   // Set status to 'idle' when there are unsaved changes (local differs from base)
   useEffect(() => {
@@ -210,7 +224,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     const currentLocalTimestamp = Math.max(
       recipesLastModified,
       mealPlansLastModified,
-      ingredientsLastModified
+      ingredientsLastModified,
+      groceryListsLastModified
     )
 
     // Get base timestamp
@@ -225,6 +240,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     recipesLastModified,
     mealPlansLastModified,
     ingredientsLastModified,
+    groceryListsLastModified,
     cloudStorage.isAuthenticated,
     selectedFile,
     syncStatus,
@@ -247,6 +263,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     recipesLastModified,
     mealPlansLastModified,
     ingredientsLastModified,
+    groceryListsLastModified,
     cloudStorage.isAuthenticated,
     selectedFile,
     throttledSync,
@@ -308,7 +325,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       const initialStateTimestamp = Math.max(
         getRecipesLastModified(),
         getMealPlansLastModified(),
-        getIngredientsLastModified()
+        getIngredientsLastModified(),
+        getGroceryListsLastModified()
       )
 
       // Step 2: Load base version (last synced state)
@@ -320,6 +338,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
             recipes: [],
             mealPlans: [],
             ingredients: [],
+            groceryLists: [],
+            groceryItems: [],
             lastModified: 0,
             version: 1,
           }
@@ -329,6 +349,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         recipes,
         mealPlans,
         ingredients,
+        groceryLists,
+        groceryItems,
         lastModified: initialStateTimestamp,
         version: 1,
       }
@@ -351,6 +373,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           recipes: [],
           mealPlans: [],
           ingredients: [],
+          groceryLists: [],
+          groceryItems: [],
           lastModified: 0,
           version: 1,
         }
@@ -558,7 +582,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       const stateTimestamp = Math.max(
         getRecipesLastModified(),
         getMealPlansLastModified(),
-        getIngredientsLastModified()
+        getIngredientsLastModified(),
+        getGroceryListsLastModified()
       )
 
       // Create local data snapshot
@@ -566,6 +591,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         recipes,
         mealPlans,
         ingredients,
+        groceryLists,
+        groceryItems,
         lastModified: stateTimestamp,
         version: 1,
       }
@@ -603,9 +630,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Extract name from different entity types
       let itemName = 'Unknown'
       if (c.localVersion && 'name' in c.localVersion) {
-        itemName = c.localVersion.name
+        itemName = c.localVersion.name || 'Unknown'
       } else if (c.remoteVersion && 'name' in c.remoteVersion) {
-        itemName = c.remoteVersion.name
+        itemName = c.remoteVersion.name || 'Unknown'
       }
 
       return {

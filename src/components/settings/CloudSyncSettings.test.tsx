@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { GroceryListProvider } from '../../contexts/GroceryListContext'
 import { IngredientProvider } from '../../contexts/IngredientContext'
 import { MealPlanProvider } from '../../contexts/MealPlanContext'
 import { RecipeProvider } from '../../contexts/RecipeContext'
@@ -60,7 +61,9 @@ const AllProviders = ({ children }: { children: ReactNode }) => (
       <RecipeProvider>
         <MealPlanProvider>
           <IngredientProvider>
-            <SyncProvider>{children}</SyncProvider>
+            <GroceryListProvider>
+              <SyncProvider>{children}</SyncProvider>
+            </GroceryListProvider>
           </IngredientProvider>
         </MealPlanProvider>
       </RecipeProvider>

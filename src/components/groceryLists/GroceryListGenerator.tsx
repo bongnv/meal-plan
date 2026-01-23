@@ -74,12 +74,6 @@ export const GroceryListGenerator = ({
         name: listName,
       })
 
-      notifications.show({
-        title: 'Grocery list generated',
-        message: `Created "${listName}"`,
-        color: 'green',
-      })
-
       onClose()
     } catch {
       notifications.show({
@@ -96,10 +90,7 @@ export const GroceryListGenerator = ({
 
   // Calculate number of days in range
   const daysInRange =
-    startDate &&
-    endDate &&
-    startDate instanceof Date &&
-    endDate instanceof Date
+    startDate && endDate && startDate instanceof Date && endDate instanceof Date
       ? Math.ceil(
           (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         ) + 1
@@ -155,7 +146,9 @@ export const GroceryListGenerator = ({
             label="Custom Date Range"
             placeholder="Select date range"
             value={dateRange}
-            onChange={value => setDateRange(value as [Date | null, Date | null])}
+            onChange={value =>
+              setDateRange(value as [Date | null, Date | null])
+            }
             clearable
             numberOfColumns={2}
             size="sm"

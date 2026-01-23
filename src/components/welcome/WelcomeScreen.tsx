@@ -129,7 +129,11 @@ export function WelcomeScreen() {
       )}
 
       <FileSelectionModal
-        opened={cloudStorage.isAuthenticated && selectedFile === null && !isInitializing}
+        opened={
+          cloudStorage.isAuthenticated &&
+          selectedFile === null &&
+          !isInitializing
+        }
         onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />

@@ -32,7 +32,10 @@ function App() {
   const { conflicts } = useSyncContext()
 
   // Auto-open conflict resolution modal when conflicts are detected
-  const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] = useDisclosure(false)
+  const [
+    conflictModalOpened,
+    { open: openConflictModal, close: closeConflictModal },
+  ] = useDisclosure(false)
 
   const isActive = (path: string) => {
     if (path === '/') {
