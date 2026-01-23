@@ -84,6 +84,7 @@ export function validateRecipeImport(
   const importedRecipe = validation.data
   const existingIngredientIds = new Set(existingIngredients.map(ing => ing.id))
   const newIngredientIds = new Set<string>()
+  const idMapping: Record<string, string> = {} // Maps AI-suggested IDs to existing/new IDs
 
   // Step 3: Validate and collect ingredient references
   for (const ingredient of importedRecipe.ingredients) {
@@ -105,15 +106,28 @@ export function validateRecipeImport(
         continue
       }
 
-      // Add to new ingredients list (avoid duplicates)
-      if (!newIngredientIds.has(ingredientId)) {
-        newIngredientIds.add(ingredientId)
-        newIngredients.push({
-          id: ingredient.suggestedIngredient.id,
-          name: ingredient.suggestedIngredient.name,
-          category: ingredient.suggestedIngredient.category,
-          unit: ingredient.suggestedIngredient.unit,
-        })
+      // Check if an existing ingredient has the same name and unit (case-insensitive name match)
+      const matchingExisting = existingIngredients.find(
+        existing =>
+          existing.name.toLowerCase() ===
+            ingredient.suggestedIngredient!.name.toLowerCase() &&
+          existing.unit === ingredient.suggestedIngredient!.unit
+      )
+
+      if (matchingExisting) {
+        // Remap the AI-suggested ID to the existing ingredient's ID
+        idMapping[ingredientId] = matchingExisting.id
+      } else {
+        // Add to new ingredients list (avoid duplicates)
+        if (!newIngredientIds.has(ingredientId)) {
+          newIngredientIds.add(ingredientId)
+          newIngredients.push({
+            id: ingredient.suggestedIngredient.id,
+            name: ingredient.suggestedIngredient.name,
+            category: ingredient.suggestedIngredient.category,
+            unit: ingredient.suggestedIngredient.unit,
+          })
+        }
       }
     } else {
       // Ingredient not in library and no suggestion provided
@@ -132,11 +146,11 @@ export function validateRecipeImport(
     }
   }
 
-  // Step 4: Build final recipe with clean ingredients (remove suggestedIngredient field)
+  // Step 4: Build final recipe with clean ingredients (remove suggestedIngredient field and apply ID mapping)
   const cleanRecipe = {
     ...importedRecipe,
     ingredients: importedRecipe.ingredients.map(ing => ({
-      ingredientId: ing.ingredientId,
+      ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
       quantity: ing.quantity,
       ...(ing.displayName && { displayName: ing.displayName }),
     })),

@@ -847,6 +847,45 @@
   - Apply Mantine Modal styling
   - **Quality checks**: Run tests, verify modal behavior, save output to `tmp/`
 
+- [ ] I3.11. Handle token expiration during initialization (TDD)
+  - Write tests in `src/contexts/SyncContext.test.tsx` for token expiration scenarios
+  - Write component tests in `src/components/sync/ReconnectModal.test.tsx`
+  - **Problem**: When user returns to app after token expires, SyncContext tries to restore selected file from localStorage and may attempt auto-sync, but token acquisition fails with "Session expired" error
+  - **Current behavior**: Silent failure - user sees no sync indicator working, but no clear guidance
+  - **Goal**: Detect token expiration during initialization and prompt user to reconnect
+  - **Implementation Steps**:
+    1. Add token expiration detection to SyncContext initialization:
+       - Catch token expiration errors during initial file restoration
+       - Set a new state flag: `needsReconnect: boolean`
+       - Clear sync status but keep selectedFile info for reconnection
+    2. Create `ReconnectModal` component in `src/components/sync/ReconnectModal.tsx`:
+       - Display when `needsReconnect === true`
+       - Show friendly message: "Your OneDrive session has expired. Please reconnect to continue syncing."
+       - Show account info from previous session (name, email)
+       - Show selected file name that needs reconnection
+       - Two action buttons:
+         - "Reconnect to OneDrive" (primary) - calls `cloudStorage.connect()` then retries sync
+         - "Work Offline" (secondary) - calls `disconnectAndReset()` to clear cloud state
+       - Modal cannot be dismissed without action (closeOnClickOutside=false, closeOnEscape=false)
+       - After successful reconnect, automatically resumes sync
+    3. Update SyncContext:
+       - Add `needsReconnect` state and expose in context type
+       - Modify file restoration effect to catch token errors
+       - Add `clearReconnectFlag()` action for after successful reconnect
+       - Handle token expiration errors in auto-sync (set needsReconnect flag)
+    4. Integrate into App.tsx:
+       - Render ReconnectModal when `needsReconnect === true`
+       - Position before ConflictResolutionModal in modal stack
+    5. Update OneDriveProvider error messages:
+       - Return consistent error for token expiration: `'TOKEN_EXPIRED'`
+       - SyncContext checks error message to identify token expiration vs other errors
+  - **Edge cases to handle**:
+    - Token expires during active sync operation (not just initialization)
+    - User clicks "Work Offline" then later wants to reconnect (via settings)
+    - Multiple tabs open with expired token (use BroadcastChannel for state sync)
+  - Apply Mantine Modal, Button, Text, Alert components
+  - **Quality checks**: Run tests, manually test token expiration flow, save output to `tmp/`
+
 ## I4. State Management Improvements
 
 ### Implementation Steps

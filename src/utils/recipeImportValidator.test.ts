@@ -266,4 +266,193 @@ describe('validateRecipeImport', () => {
       )
     ).toBe(true)
   })
+
+  describe('deduplication logic', () => {
+    it('should not create new ingredient when existing one has same name and unit (case-insensitive)', () => {
+      const recipeData = {
+        id: 'recipe_123',
+        name: 'Garlic Bread',
+        description: 'Simple garlic bread',
+        ingredients: [
+          {
+            ingredientId: 'new_garlic',
+            quantity: 3,
+            suggestedIngredient: {
+              id: 'new_garlic',
+              name: 'garlic', // lowercase, but matches existing "Garlic"
+              category: 'Vegetables',
+              unit: 'clove', // same unit
+            },
+          },
+        ],
+        instructions: ['Toast bread', 'Add garlic'],
+        servings: 2,
+        totalTime: 10,
+        tags: ['Quick'],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.newIngredients).toHaveLength(0) // Should not add new ingredient
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('2') // Should use existing garlic ID
+    })
+
+    it('should create new ingredient when name matches but unit differs', () => {
+      const recipeData = {
+        id: 'recipe_123',
+        name: 'Garlic Soup',
+        description: 'Garlic soup recipe',
+        ingredients: [
+          {
+            ingredientId: 'new_garlic_gram',
+            quantity: 100,
+            suggestedIngredient: {
+              id: 'new_garlic_gram',
+              name: 'Garlic',
+              category: 'Vegetables',
+              unit: 'gram', // different unit from existing "clove"
+            },
+          },
+        ],
+        instructions: ['Make soup'],
+        servings: 4,
+        totalTime: 30,
+        tags: ['Soup'],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.newIngredients).toHaveLength(1) // Should add new ingredient with different unit
+      expect(result.newIngredients[0].name).toBe('Garlic')
+      expect(result.newIngredients[0].unit).toBe('gram')
+      expect(result.recipe?.ingredients[0].ingredientId).toBe(
+        'new_garlic_gram'
+      ) // Should keep new ID
+    })
+
+    it('should handle multiple ingredients with some matching and some new', () => {
+      const recipeData = {
+        id: 'recipe_123',
+        name: 'Mixed Recipe',
+        description: 'Mix of existing and new',
+        ingredients: [
+          { ingredientId: '1', quantity: 2 }, // Existing Olive Oil
+          {
+            ingredientId: 'suggested_basil',
+            quantity: 1,
+            suggestedIngredient: {
+              id: 'suggested_basil',
+              name: 'BASIL', // uppercase, but matches existing "Basil" with same unit
+              category: 'Herbs & Spices',
+              unit: 'bunch',
+            },
+          },
+          {
+            ingredientId: 'new_tomato',
+            quantity: 4,
+            suggestedIngredient: {
+              id: 'new_tomato',
+              name: 'Tomato', // truly new
+              category: 'Vegetables',
+              unit: 'piece',
+            },
+          },
+        ],
+        instructions: ['Mix everything'],
+        servings: 4,
+        totalTime: 20,
+        tags: ['Fresh'],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.newIngredients).toHaveLength(1) // Only tomato is new
+      expect(result.newIngredients[0].name).toBe('Tomato')
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Olive Oil unchanged
+      expect(result.recipe?.ingredients[1].ingredientId).toBe('3') // Basil remapped to existing ID
+      expect(result.recipe?.ingredients[2].ingredientId).toBe('new_tomato') // Tomato keeps new ID
+    })
+
+    it('should preserve displayName when remapping to existing ingredient', () => {
+      const recipeData = {
+        id: 'recipe_123',
+        name: 'Recipe with Display Names',
+        description: 'Test display names',
+        ingredients: [
+          {
+            ingredientId: 'suggested_garlic',
+            quantity: 2,
+            displayName: 'fresh garlic cloves',
+            suggestedIngredient: {
+              id: 'suggested_garlic',
+              name: 'Garlic',
+              category: 'Vegetables',
+              unit: 'clove',
+            },
+          },
+        ],
+        instructions: ['Use garlic'],
+        servings: 2,
+        totalTime: 10,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.newIngredients).toHaveLength(0)
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('2') // Remapped to existing garlic
+      expect(result.recipe?.ingredients[0].displayName).toBe(
+        'fresh garlic cloves'
+      ) // Display name preserved
+    })
+
+    it('should handle case variations correctly (mixed case)', () => {
+      const recipeData = {
+        id: 'recipe_123',
+        name: 'Test Case Sensitivity',
+        description: 'Testing case',
+        ingredients: [
+          {
+            ingredientId: 'new_oil',
+            quantity: 1,
+            suggestedIngredient: {
+              id: 'new_oil',
+              name: 'OLIVE oil', // Mixed case
+              category: 'Oils & Fats',
+              unit: 'tablespoon',
+            },
+          },
+        ],
+        instructions: ['Use oil'],
+        servings: 1,
+        totalTime: 5,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.newIngredients).toHaveLength(0) // Should match existing "Olive Oil"
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Remapped to existing
+    })
+  })
 })
