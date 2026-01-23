@@ -29,6 +29,7 @@ vi.mock('../../contexts/SyncContext', () => ({
     connectProvider: mockConnectProvider,
     shouldAutoOpenFileModal: mockShouldAutoOpenFileModal,
     dismissAutoOpenFileModal: mockDismissAutoOpenFileModal,
+    isInitializing: false,
   }),
 }))
 
@@ -127,12 +128,13 @@ describe('WelcomeScreen', () => {
       // Should not show when connected
       expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
 
-      // Simulate disconnect
+      // Simulate disconnect - user disconnects completely, not just file
+      mockIsAuthenticated = false
       mockSelectedFile = null
 
       renderWithProviders(<WelcomeScreen />)
 
-      // Should show welcome screen after disconnect
+      // Should show welcome screen after complete disconnect
       await waitFor(() => {
         expect(screen.getByText(/welcome/i)).toBeInTheDocument()
       })
@@ -176,12 +178,18 @@ describe('WelcomeScreen', () => {
   describe('Connect to OneDrive', () => {
     it('should open FileSelectionModal when connect button is clicked', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<WelcomeScreen />)
+      mockConnect.mockImplementation(async () => {
+        mockIsAuthenticated = true
+      })
+      const { rerender } = renderWithProviders(<WelcomeScreen />)
 
       const connectButton = screen.getByRole('button', {
         name: /connect to onedrive/i,
       })
       await user.click(connectButton)
+
+      // Rerender to reflect authentication state change
+      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
 
       await waitFor(() => {
         expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
@@ -205,13 +213,18 @@ describe('WelcomeScreen', () => {
 
     it('should hide welcome screen after file selection', async () => {
       const user = userEvent.setup()
-      mockConnect.mockResolvedValue(undefined)
-      renderWithProviders(<WelcomeScreen />)
+      mockConnect.mockImplementation(async () => {
+        mockIsAuthenticated = true
+      })
+      const { rerender } = renderWithProviders(<WelcomeScreen />)
 
       const connectButton = screen.getByRole('button', {
         name: /connect to onedrive/i,
       })
       await user.click(connectButton)
+
+      // Rerender to reflect authentication state change
+      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
 
       await waitFor(() => {
         expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
@@ -219,6 +232,10 @@ describe('WelcomeScreen', () => {
 
       const selectButton = screen.getByRole('button', { name: /select file/i })
       await user.click(selectButton)
+
+      // Simulate file selection completing
+      mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test.json.gz' }
+      rerender(<MantineProvider><WelcomeScreen /></MantineProvider>)
 
       // Verify connectProvider was called with file info
       await waitFor(() => {

@@ -24,6 +24,7 @@ vi.spyOn(SyncContext, 'useSyncContext').mockReturnValue({
   syncStatus: 'idle',
   lastSyncTime: null,
   selectedFile: null,
+  isInitializing: false,
   connectProvider: vi.fn(),
   disconnectAndReset: vi.fn(),
   syncNow: vi.fn(),

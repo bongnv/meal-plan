@@ -9,7 +9,7 @@ import {
   Overlay,
 } from '@mantine/core'
 import { IconCloudOff, IconAlertCircle } from '@tabler/icons-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 
 import { FileInfo } from '@/utils/storage/ICloudStorageProvider'
 
@@ -24,55 +24,19 @@ import { FileSelectionModal } from '../sync/FileSelectionModal'
  */
 export function WelcomeScreen() {
   const cloudStorage = useCloudStorage()
-  const { selectedFile, hasSelectedFile, connectProvider } = useSyncContext()
+  const { connectProvider, selectedFile, isInitializing } = useSyncContext()
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
-  const wasConnectedRef = useRef(false)
 
-  // Track if user was previously connected
-  useEffect(() => {
-    if (selectedFile) {
-      wasConnectedRef.current = true
-    }
-  }, [selectedFile])
-
-  // Determine if welcome screen should be shown
-  // Show until user has selected a file (connected to cloud storage)
-  // Keep showing even if user has local data - that's when backup is most important!
-  const shouldShow = !isDismissed && !selectedFile && !hasSelectedFile()
-
-  // Reset dismissed state only when user disconnects (was connected, now is not)
-  useEffect(() => {
-    if (wasConnectedRef.current && !selectedFile && !hasSelectedFile()) {
-      queueMicrotask(() => {
-        setIsDismissed(false)
-      })
-      wasConnectedRef.current = false
-    }
-  }, [selectedFile, hasSelectedFile])
-
-  // Auto-open file selection modal after OAuth redirect
-  // When user is authenticated but has no file selected
-  useEffect(() => {
-    if (
-      cloudStorage.isAuthenticated &&
-      !selectedFile &&
-      !isModalOpen &&
-      !isDismissed
-    ) {
-      queueMicrotask(() => {
-        setIsModalOpen(true)
-      })
-    }
-  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen, isDismissed])
+  // Hide entire welcome screen when dismissed or has selected file
+  if (isDismissed || selectedFile !== null) {
+    return null
+  }
 
   const handleConnect = async () => {
     try {
-      // Authenticate with OneDrive
+      // Authenticate with OneDrive - connectionState will change to pendingFileSelection
       await cloudStorage.connect(CloudProvider.ONEDRIVE)
-      // Open file selection modal
-      setIsModalOpen(true)
     } catch (error) {
       console.error('Failed to connect to OneDrive:', error)
       // Error will be visible to user via cloudStorage.error
@@ -87,17 +51,16 @@ export function WelcomeScreen() {
 
   const handleFileSelected = async (fileInfo: FileInfo) => {
     await connectProvider(fileInfo)
-    setIsModalOpen(false)
-    setIsDismissed(true)
   }
 
-  if (!shouldShow) {
-    return null
+  const handleModalClose = async () => {
+    // User canceled file selection - disconnect and return to welcome screen
+    await cloudStorage.disconnect()
   }
 
   return (
     <>
-      {!isModalOpen && (
+      {!cloudStorage.isAuthenticated && (
         <Overlay
           fixed
           color="var(--mantine-color-gray-0)"
@@ -166,8 +129,8 @@ export function WelcomeScreen() {
       )}
 
       <FileSelectionModal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        opened={cloudStorage.isAuthenticated && selectedFile === null && !isInitializing}
+        onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />
     </>

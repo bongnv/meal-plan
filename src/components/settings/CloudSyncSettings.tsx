@@ -10,7 +10,7 @@ import {
   Container,
 } from '@mantine/core'
 import { IconCloud, IconCloudOff } from '@tabler/icons-react'
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useCloudStorage } from '../../contexts/CloudStorageContext'
@@ -36,16 +36,13 @@ export function CloudSyncSettings() {
     syncStatus,
     connectProvider,
     disconnectAndReset,
+    isInitializing,
   } = useSyncContext()
 
   // Get cloud storage context (for provider and account info)
   const cloudStorage = useCloudStorage()
   const navigate = useNavigate()
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  // User is "connected" only when both authenticated AND has a file selected
-  const isConnected = cloudStorage.isAuthenticated && selectedFile !== null
   const isSyncing = syncStatus === 'syncing'
 
   // Get account info only when authenticated
@@ -53,28 +50,15 @@ export function CloudSyncSettings() {
     ? cloudStorage.getAccountInfo()
     : null
 
-  // Auto-open file selection modal after authentication (e.g., after OAuth redirect)
-  useEffect(() => {
-    if (cloudStorage.isAuthenticated && !selectedFile && !isModalOpen) {
-      queueMicrotask(() => {
-        setIsModalOpen(true)
-      })
-    }
-  }, [cloudStorage.isAuthenticated, selectedFile, isModalOpen])
-
   /**
    * Handle connect to OneDrive
-   * Opens FileSelectionModal for authentication and file selection
    */
   const handleConnect = async () => {
     try {
-      // Authenticate first (or skip if already authenticated)
+      // Authenticate - will trigger modal to show
       await cloudStorage.connect(CloudProvider.ONEDRIVE)
-      // Open modal for file selection
-      setIsModalOpen(true)
     } catch (error) {
       console.error('Authentication failed:', error)
-      // Modal won't open if authentication fails
     }
   }
 
@@ -82,8 +66,14 @@ export function CloudSyncSettings() {
    * Handle file selection from modal
    */
   const handleFileSelected = async (fileInfo: FileInfo) => {
-    setIsModalOpen(false)
     await connectProvider(fileInfo)
+  }
+
+  /**
+   * Handle modal close (user canceled)
+   */
+  const handleModalClose = async () => {
+    await cloudStorage.disconnect()
   }
 
   /**
@@ -142,7 +132,7 @@ export function CloudSyncSettings() {
       <Stack gap="lg">
         <Title order={2}>Cloud Storage Sync</Title>
 
-        {!isConnected && (
+        {selectedFile === null && (
           <Alert
             icon={<IconCloudOff size={16} />}
             title="Not Connected"
@@ -152,7 +142,7 @@ export function CloudSyncSettings() {
           </Alert>
         )}
 
-        {!isConnected ? (
+        {selectedFile === null ? (
           <Paper p="md" withBorder>
             <Stack gap="md">
               <Text size="sm" c="dimmed">
@@ -239,14 +229,14 @@ export function CloudSyncSettings() {
           </Alert>
         )}
 
-        {isConnected && (
+        {selectedFile !== null && (
           <Text size="xs" c="dimmed">
             Note: Auto-sync is enabled. Your changes are automatically synced to
             the cloud.
           </Text>
         )}
 
-        {!isConnected && (
+        {selectedFile === null && (
           <Text size="xs" c="dimmed">
             Connect to OneDrive to sync your data across devices and prevent
             data loss.
@@ -255,8 +245,8 @@ export function CloudSyncSettings() {
       </Stack>
 
       <FileSelectionModal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        opened={cloudStorage.isAuthenticated && selectedFile === null && !isInitializing}
+        onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />
     </Container>

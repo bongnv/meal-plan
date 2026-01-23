@@ -61,6 +61,7 @@ interface SyncContextType {
   lastSyncTime: number | null
   conflicts: SyncConflict[]
   selectedFile: FileInfo | null
+  isInitializing: boolean
 
   // Actions
   connectProvider: (fileInfo: FileInfo) => Promise<void>
@@ -81,6 +82,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
   // Store merge context when conflicts occur for later resolution
   const [conflictContext, setConflictContext] = useState<{
@@ -165,6 +167,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(SELECTED_FILE_KEY)
       }
     }
+    setIsInitializing(false)
   }, [cloudStorage.isAuthenticated])
 
   // Throttled auto-sync function (max once per minute)
@@ -251,8 +254,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   ])
 
   /**
-   * Select a file for syncing
-   * Note: Provider must already be authenticated via CloudStorageContext
+   * Select a file for synci and connection state
+    setSelectedFile(fileInfo)
+    setConnectionState('connected'eady be authenticated via CloudStorageContext
    *
    * @param fileInfo - File information for sync (persisted to localStorage)
    */
@@ -280,7 +284,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     localStorage.clear()
 
     // Reset sync state
-    setSelectedFile(null)
     setSyncStatus('idle')
     setLastSyncTime(null)
     setConflictContext(null)
@@ -622,6 +625,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         lastSyncTime,
         conflicts,
         selectedFile,
+        isInitializing,
         connectProvider,
         disconnectAndReset,
         syncNow,

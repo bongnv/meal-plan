@@ -23,9 +23,11 @@
 - Integrate continuously - no isolated components or separate "wiring" phase
 
 ## Decision Making
-- When multiple approaches are possible, present options to the user
-- Only proceed with changes after receiving user confirmation
+- **Always present multiple options** when there are different approaches to solve a problem
+- Discuss trade-offs, pros/cons of each option clearly
+- **Only proceed with implementation after user confirms** which approach to use
 - Avoid making assumptions about user preferences
+- When asked to make changes, first propose solutions and wait for user approval
 
 ## Development Approach
 - Follow Test-Driven Development (TDD) methodology, write tests first before implementing features
