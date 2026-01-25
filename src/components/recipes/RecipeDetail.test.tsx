@@ -354,22 +354,6 @@ describe('RecipeDetail', () => {
       expect(firstIngredientCheckbox).not.toBeChecked()
     })
 
-    it('should toggle instruction checkbox when clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
-
-      const checkboxes = screen.getAllByRole('checkbox')
-      // Instructions start after ingredients (3 ingredients + 4 instructions)
-      const firstInstructionCheckbox = checkboxes[3]
-
-      expect(firstInstructionCheckbox).not.toBeChecked()
-
-      await user.click(firstInstructionCheckbox)
-      expect(firstInstructionCheckbox).toBeChecked()
-
-      await user.click(firstInstructionCheckbox)
-      expect(firstInstructionCheckbox).not.toBeChecked()
-    })
   })
 
   describe('Edge Cases', () => {

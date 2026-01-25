@@ -8,6 +8,7 @@ import {
   Image,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from '@mantine/core'
 import { IconUsers, IconClock, IconPlus, IconMinus } from '@tabler/icons-react'
@@ -29,9 +30,6 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()
   )
-  const [checkedInstructions, setCheckedInstructions] = useState<Set<number>>(
-    new Set()
-  )
 
   const servingMultiplier = servings / recipe.servings
 
@@ -50,16 +48,6 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
       newSet.add(index)
     }
     setCheckedIngredients(newSet)
-  }
-
-  const toggleInstruction = (index: number) => {
-    const newSet = new Set(checkedInstructions)
-    if (newSet.has(index)) {
-      newSet.delete(index)
-    } else {
-      newSet.add(index)
-    }
-    setCheckedInstructions(newSet)
   }
 
   return (
@@ -181,19 +169,20 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           </Title>
           <Stack gap="md">
             {recipe.instructions.map((instruction, index) => (
-              <Checkbox
-                key={index}
-                checked={checkedInstructions.has(index)}
-                onChange={() => toggleInstruction(index)}
-                label={
-                  <Text>
-                    <Text component="span" fw={500}>
-                      Step {index + 1}.
-                    </Text>{' '}
-                    {instruction}
+              <Group key={index} align="flex-start" gap="md">
+                <ThemeIcon
+                  size="lg"
+                  radius="xl"
+                  variant="filled"
+                  color="yellow"
+                  style={{ flexShrink: 0 }}
+                >
+                  <Text size="sm" fw={600}>
+                    {index + 1}
                   </Text>
-                }
-              />
+                </ThemeIcon>
+                <Text style={{ flex: 1, paddingTop: 2 }}>{instruction}</Text>
+              </Group>
             ))}
           </Stack>
         </Box>
