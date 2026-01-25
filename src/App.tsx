@@ -14,7 +14,9 @@ import { Route, Routes, useLocation, Link } from 'react-router-dom'
 import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 import { ConflictResolutionModal } from './components/sync/ConflictResolutionModal'
+import { ReconnectModal } from './components/sync/ReconnectModal'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
+import { useCloudStorage } from './contexts/CloudStorageContext'
 import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
@@ -29,7 +31,13 @@ import { IngredientsPage } from './pages/settings/IngredientsPage'
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
-  const { conflicts } = useSyncContext()
+  const cloudStorage = useCloudStorage()
+  const {
+    conflicts,
+    needsReconnect,
+    selectedFile,
+    clearReconnectFlag,
+  } = useSyncContext()
 
   // Auto-open conflict resolution modal when conflicts are detected
   const [
@@ -68,9 +76,36 @@ function App() {
     }
   }, [conflicts, conflictModalOpened, openConflictModal, closeConflictModal])
 
+  // Handler for reconnect button
+  const handleReconnect = async () => {
+    try {
+      // Re-authenticate with OneDrive
+      if (cloudStorage.currentProvider) {
+        await cloudStorage.connect(cloudStorage.currentProvider)
+      }
+      // Clear reconnect flag - auto-sync will resume automatically
+      clearReconnectFlag()
+    } catch (error) {
+      console.error('Reconnect failed:', error)
+      // Keep reconnect modal open if reconnection fails
+    }
+  }
+
+  // Handler for work offline button
+  const handleWorkOffline = () => {
+    // Just clear the reconnect flag - keep data and selectedFile intact
+    clearReconnectFlag()
+  }
+
   return (
     <>
       <WelcomeScreen />
+      <ReconnectModal
+        opened={needsReconnect}
+        fileName={selectedFile?.name || 'Unknown file'}
+        onReconnect={handleReconnect}
+        onWorkOffline={handleWorkOffline}
+      />
       <ConflictResolutionModal
         opened={conflictModalOpened}
         onClose={closeConflictModal}

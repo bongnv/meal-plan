@@ -3,6 +3,7 @@ import { Client } from '@microsoft/microsoft-graph-client'
 
 import { loginRequest } from '../../../config/msalConfig'
 import { compressData, decompressData } from '../../compression'
+import { TokenExpiredError } from '../../errors/TokenExpiredError'
 import {
   ICloudStorageProvider,
   type FileInfo,
@@ -104,8 +105,8 @@ export class OneDriveProvider implements ICloudStorageProvider {
       return response.accessToken
     } catch (error) {
       console.error('[OneDrive] Token acquisition failed:', error)
-      throw new Error(
-        'Session expired. Please disconnect and reconnect to OneDrive.'
+      throw new TokenExpiredError(
+        'Session expired. Please reconnect to OneDrive.'
       )
     }
   }

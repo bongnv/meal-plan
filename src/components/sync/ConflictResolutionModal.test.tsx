@@ -25,11 +25,13 @@ vi.spyOn(SyncContext, 'useSyncContext').mockReturnValue({
   lastSyncTime: null,
   selectedFile: null,
   isInitializing: false,
+  needsReconnect: false,
   connectProvider: vi.fn(),
   disconnectAndReset: vi.fn(),
   syncNow: vi.fn(),
   importFromRemote: vi.fn(),
   uploadToRemote: vi.fn(),
+  clearReconnectFlag: vi.fn(),
   hasSelectedFile: vi.fn(),
 })
 

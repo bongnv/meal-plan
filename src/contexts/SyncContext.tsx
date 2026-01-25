@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { z } from 'zod'
 
+import { TokenExpiredError } from '../utils/errors/TokenExpiredError'
 import { merge, resolveConflicts } from '../utils/sync/mergeUtil'
 
 import { useCloudStorage } from './CloudStorageContext'
@@ -65,6 +66,7 @@ interface SyncContextType {
   conflicts: SyncConflict[]
   selectedFile: FileInfo | null
   isInitializing: boolean
+  needsReconnect: boolean
 
   // Actions
   connectProvider: (fileInfo: FileInfo) => Promise<void>
@@ -73,6 +75,7 @@ interface SyncContextType {
   importFromRemote: () => Promise<void>
   uploadToRemote: () => Promise<void>
   resolveConflict: (resolution: 'local' | 'remote') => Promise<void>
+  clearReconnectFlag: () => void
   hasSelectedFile: () => boolean
 }
 
@@ -86,6 +89,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
+  const [needsReconnect, setNeedsReconnect] = useState(false)
 
   // Store merge context when conflicts occur for later resolution
   const [conflictContext, setConflictContext] = useState<{
@@ -190,6 +194,21 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       await syncNow()
     } catch (error) {
       console.error('Auto-sync failed:', error)
+
+      // Check if token expired - if so, set reconnect flag instead of showing error
+      // Check both instance type and message content (Graph API may wrap our error)
+      const isTokenExpired =
+        error instanceof TokenExpiredError ||
+        (error instanceof Error &&
+          error.message.includes('Session expired'))
+
+      if (isTokenExpired) {
+        setNeedsReconnect(true)
+        setSyncStatus('idle')
+        return
+      }
+
+      // For other errors, show notification
       notifications.show({
         title: 'Sync Failed',
         message:
@@ -248,11 +267,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   // Auto-sync: immediate on first call, throttled on subsequent data changes
   useEffect(() => {
-    // Only auto-sync if we're connected and not already syncing
+    // Only auto-sync if we're connected, not already syncing, and don't need reconnect
     if (
       !cloudStorage.isAuthenticated ||
       !selectedFile ||
-      syncStatus === 'syncing'
+      syncStatus === 'syncing' ||
+      needsReconnect
     ) {
       return
     }
@@ -268,6 +288,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     selectedFile,
     throttledSync,
     syncStatus,
+    needsReconnect,
   ])
 
   /**
@@ -448,6 +469,20 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setConflictContext(null) // Clear any previous conflicts
     } catch (error) {
       console.error('Sync failed:', error)
+
+      // Check if token expired - set reconnect flag
+      // Check both instance type and message content (Graph API may wrap our error)
+      const isTokenExpired =
+        error instanceof TokenExpiredError ||
+        (error instanceof Error &&
+          error.message.includes('Session expired'))
+
+      if (isTokenExpired) {
+        setNeedsReconnect(true)
+        setSyncStatus('idle')
+        throw error
+      }
+
       setSyncStatus('error')
       throw error
     }
@@ -653,12 +688,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         conflicts,
         selectedFile,
         isInitializing,
+        needsReconnect,
         connectProvider,
         disconnectAndReset,
         syncNow,
         importFromRemote,
         uploadToRemote,
         resolveConflict,
+        clearReconnectFlag: () => setNeedsReconnect(false),
         hasSelectedFile,
       }}
     >
