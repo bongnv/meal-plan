@@ -3,31 +3,13 @@ import { z } from 'zod'
 import { Unit, UnitSchema } from './ingredient'
 
 /**
- * Ingredient interface
- * Represents a base ingredient from the ingredient library
- */
-export interface Ingredient {
-  id: string
-  name: string
-  unit: Unit
-}
-
-/**
- * Zod schema for Ingredient validation
- */
-export const IngredientSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  unit: UnitSchema,
-})
-
-/**
  * RecipeIngredient interface
  * Represents an ingredient with quantity as used in a specific recipe
  */
 export interface RecipeIngredient {
   ingredientId: string // references Ingredient.id
   quantity: number
+  unit?: Unit // optional during migration, will be required later
   displayName?: string // optional custom display name for this recipe
 }
 
@@ -37,6 +19,7 @@ export interface RecipeIngredient {
 export const RecipeIngredientSchema = z.object({
   ingredientId: z.string(),
   quantity: z.number(),
+  unit: UnitSchema.optional(), // optional for backward compatibility during migration
   displayName: z.string().optional(),
 })
 

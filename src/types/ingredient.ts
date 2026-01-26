@@ -13,6 +13,7 @@ export const UNITS = [
   'milliliter',
   'liter',
   'piece',
+  'whole',
   'clove',
   'slice',
   'bunch',

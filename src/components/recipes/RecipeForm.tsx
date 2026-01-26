@@ -21,6 +21,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
+import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
 import { IngredientForm } from '../ingredients/IngredientForm'
 
@@ -74,6 +75,7 @@ export function RecipeForm({
     form.insertListItem('ingredients', {
       ingredientId: '',
       quantity: 0,
+      unit: undefined, // Will be set when ingredient is selected
       displayName: '',
     })
   }
@@ -217,6 +219,7 @@ export function RecipeForm({
                 const selectedIngredient = getIngredientById(
                   ingredient.ingredientId
                 )
+                
                 return (
                   <Group key={index} align="flex-start">
                     <Select
@@ -246,17 +249,14 @@ export function RecipeForm({
                       style={{ flex: 1 }}
                       {...form.getInputProps(`ingredients.${index}.quantity`)}
                     />
-                    {selectedIngredient && (
-                      <div
-                        style={{
-                          marginTop: index === 0 ? 28 : 0,
-                          fontSize: '0.875rem',
-                          color: 'var(--mantine-color-dimmed)',
-                        }}
-                      >
-                        {selectedIngredient.unit}
-                      </div>
-                    )}
+                    <Select
+                      placeholder="Unit"
+                      label={index === 0 ? 'Unit' : undefined}
+                      data={UNITS.map(u => ({ value: u, label: u }))}
+                      style={{ flex: 1 }}
+                      searchable
+                      {...form.getInputProps(`ingredients.${index}.unit`)}
+                    />
                     <TextInput
                       placeholder={selectedIngredient?.name || 'Custom name'}
                       label={index === 0 ? 'Custom Name (optional)' : undefined}

@@ -1334,3 +1334,365 @@ interface GroceryItem {
   - Export/Print: Generate printable shopping list
   - Collapsible category sections
   - Custom category ordering
+
+## I9. Recipe-Level Unit Specification (Schema Refactor + Migration)
+
+**Goal**: Remove `unit` field from base `Ingredient` type and add it to `RecipeIngredient` to allow different recipes to measure the same ingredient in different units. Implement backward-compatible migration for both local storage and cloud data.
+
+**Rationale**:
+- Same ingredient can be measured differently across recipes (e.g., "Garlic" as cloves or grams)
+- More flexible and accurate recipe modeling
+- Cleaner ingredient library (focus on name and category)
+- Better alignment with real-world recipe patterns
+
+**Migration Strategy**:
+- New schema removes `unit` from `Ingredient`, adds it to `RecipeIngredient`
+- When loading old data: strip `unit` from ingredients, copy unit to each recipe ingredient reference
+- Support both local storage and cloud file imports
+- One-time migration transparent to users
+
+### Implementation Steps (Integration-First Approach)
+
+**Phase 1: Core Schema & Basic Integration**
+
+- [ ] I9.1. Update core types and integrate with RecipeForm UI (TDD)
+  - **Write tests first** for type changes:
+    - Test new `RecipeIngredient` schema with required unit field in `src/types/recipe.test.ts`
+    - Test `Ingredient` schema still validates without unit (temporary: keep unit optional)
+  - **Update `src/types/recipe.ts`**:
+    - Add `unit: Unit` field to `RecipeIngredient` interface
+    - Add `unit: UnitSchema` to `RecipeIngredientSchema` (required)
+    - Import and use `Ingredient` from ingredient.ts (remove duplicate)
+  - **Write RecipeForm tests** in `src/components/recipes/RecipeForm.test.tsx`:
+    - Test unit selector appears for each ingredient
+    - Test unit value is saved with recipe ingredient
+    - Test unit is required validation
+    - Test editing recipe populates existing units
+  - **Update RecipeForm UI** in `src/components/recipes/RecipeForm.tsx`:
+    - Add unit Select component next to quantity input for each ingredient row
+    - Update form schema to require unit for each recipe ingredient
+    - Keep showing ingredient library unit as reference (grayed out) during transition
+    - Layout: `[Ingredient Select][Quantity Input][Unit Select][Custom Name Input][Remove Button]`
+    - Default unit to ingredient library unit or 'piece' if library unit unavailable
+  - **Quality checks**: Run RecipeForm tests and build, save to `tmp/i9.1-integration.txt`
+  - **Verify**: All RecipeForm tests pass, TypeScript compiles, UI functional in browser
+  - **Result**: Can now create/edit recipes with per-ingredient units in UI
+
+- [ ] I9.2. Wire RecipeDetail to display new unit source (TDD)
+  - **Write tests first** in `src/components/recipes/RecipeDetail.test.tsx`:
+    - Test ingredient display shows unit from recipe ingredient (with fallback)
+    - Test backward compatibility: old recipes without unit use ingredient library unit
+  - **Update RecipeDetail** in `src/components/recipes/RecipeDetail.tsx`:
+    - Change to prefer recipe ingredient unit with fallback:
+      ```typescript
+      const ingredientData = getIngredientById(ingredient.ingredientId)
+      const displayName = ingredient.displayName || ingredientData?.name || 'Unknown'
+      const unit = ingredient.unit || ingredientData?.unit || 'piece' // Prefer recipe unit, fallback to library
+      ```
+  - **Verify**: All RecipeDetail tests pass, manual browser check shows units correctly
+  - **Quality checks**: Run RecipeDetail tests, save to `tmp/i9.2-detail.txt`
+  - **Result**: Recipe detail view works with both new and old data formats
+
+- [ ] I9.3. Update grocery list generation to use recipe-level units (TDD)
+  - **Write tests first** in `src/utils/generateGroceryList.test.ts`:
+    - Test consolidation uses recipe ingredient unit (with fallback)
+    - Test unit mismatch creates separate items
+    - Test backward compatibility: missing unit falls back to ingredient library
+  - **Update grocery list generator** in `src/utils/generateGroceryList.ts`:
+    - Change to prefer recipe ingredient unit:
+      ```typescript
+      const unit = recipeIngredient.unit || ingredient.unit // Prefer recipe, fallback to library
+      ```
+    - Update consolidation key to use this unit
+  - **Verify**: All generateGroceryList tests pass, consolidation logic works correctly
+  - **Result**: Grocery lists work with new schema, backward compatible
+  - **Integration check**: Test end-to-end flow (create recipe → add to meal plan → generate grocery list)ry.txt`
+  - **Result**: Grocery lists work with new schema, backward compatible
+
+**Phase 2: Migration Logic & Data Handling**
+
+- [ ] I9.4. Create migration utilities (TDD)
+  - **Write tests first** in `src/utils/migration/ingredientMigration.test.ts`:
+    - Test `migrateIngredient`: strips unit from old ingredient format
+    - Test `migrateRecipeIngredients`: adds unit to recipe ingredients from ingredient library
+    - Test edge cases: missing ingredient, missing unit, already migrated data
+  - **Create migration utilities** in `src/utils/migration/ingredientMigration.ts`:
+    ```typescript
+    // Migrate old ingredient format (with unit) to new format (without unit)
+    export function migrateIngredient(oldIngredient: any): Ingredient
+    
+    // Migrate recipe ingredients: add unit from ingredient library reference
+    export function migrateRecipeIngredients(
+      recipeIngredients: any[],
+      ingredientMap: Map<string, { unit: Unit }>
+    ): RecipeIngredient[]
+    
+    // Check if ingredient data needs migration (has unit field)
+    export function needsIngredientMigration(ingredient: any): boolean
+    
+    // Check if recipe needs migration (ingredients missing unit)
+  - **Verify**: All migration utility tests pass, edge cases handled correctly
+    export function needsRecipeMigration(recipe: any): boolean
+    ```
+  - **Quality checks**: Run migration tests, save to `tmp/i9.4-migration.txt`
+
+- [ ] I9.5. Integrate migration into storage layer (TDD)
+  - **Write tests first** in `src/utils/storage/IngredientStorage.test.ts` and `src/utils/storage/recipeStorage.test.ts`:
+    - Test loading old format data → returns migrated new format
+    - Test loading new format data → returns as-is (no double migration)
+    - Test saving always uses new format
+  - **Update IngredientStorage** in `src/utils/storage/IngredientStorage.ts`:
+    - In `loadIngredients()`: check each ingredient, migrate if needed
+    - Apply migration before Zod validation with new schema
+    - Log migration events for debugging
+  - **Update RecipeStorage** in `src/utils/storage/recipeStorage.ts`:
+    - In `loadRecipes()`: check each recipe, migrate ingredients if needed
+    - Verify**: All storage tests pass, migration logic integrated correctly
+  - **Manual test**: Clear localStorage, add old format data, reload app, verify migration
+  - **Build ingredient map from loaded ingredients for migration
+    - Apply migration before Zod validation with new schema
+  - **Quality checks**: Run storage tests, save to `tmp/i9.5-storage.txt`
+  - **Result**: Local storage auto-migrates on first load
+
+- [ ] I9.6. Integrate migration into SyncContext for cloud data (TDD)
+  - **Update SyncContext** in `src/contexts/SyncContext.tsx`:
+    - Import migration utilities
+    - In `importFromRemote()`: apply migration after parsing
+    - In `connectProvider()` merge flow: apply migration to remote data before merge
+    - Update `SyncDataSchema` validation to handle both formats temporarily
+    - Add migration logic:
+      ```typescript
+      // After parsing remote data, before using it
+      const migratedIngredients = validatedRemote.ingredients.map(ing => 
+        needsIngredientMigration(ing) ? migrateIngredient(ing) : ing
+      )
+      const ingredientMap = buildIngredientMap(migratedIngredients)
+      const migratedRecipes = validatedRemote.recipes.map(recipe => ({
+        ...recipe,
+        ingredients: needsRecipeMigration(recipe) 
+          ? migrateRecipeIngredients(recipe.ingredients, ingredientMap)
+      Quality checks**: Run full test suite to verify no regressions: `npm test`
+  - **Manual test**: Connect to cloud with old format data, verify migration works
+  - **Verify**: SyncContext correctly applies migration, data merges properly
+  - **Quality checks**: Save
+      ```
+  - **Test manually**: Connect to cloud with old format data, verify migration
+  - **Quality checks**: Save manual test results to `tmp/i9.6-sync.txt`
+  - **Result**: Cloud sync handles old format data transparently
+
+**Phase 3: Complete Schema Migration & UI Polish**
+
+- [ ] I9.7. Remove unit from Ingredient schema completely (TDD)
+  - **Write tests first** in `src/types/ingredient.test.ts`:
+    - Test new `Ingredient` schema without unit field (no longer optional)
+    - Test `IngredientFormSchema` without unit
+  - **Update ingredient types** in `src/types/ingredient.ts`:
+  - **Verify**: All type tests pass, TypeScript compilation succeeds, no type errors
+    - Remove `unit` field from `Ingredient` interface
+    - Remove `unit` from `IngredientSchema` 
+    - Remove `unit` from `IngredientFormSchema`
+    - Keep `UNITS` and `UnitSchema` exports (used by RecipeIngredient)
+  - **Quality checks**: Run ingredient type tests and build, save to `tmp/i9.7-types.txt`
+
+- [ ] I9.8. Update IngredientForm UI (remove unit field) (TDD)
+  - **Write tests first** in `src/components/ingredients/IngredientForm.test.tsx`:
+    - Update tests to remove unit field expectations
+    - Test form renders without unit selector
+    - Test form submission without unit
+  - **Update IngredientForm** in `src/components/ingredients/IngredientForm.tsx`:
+    - Remove unit Select component
+  - **Verify**: All IngredientForm tests pass, form works without unit field
+  - **Manual test**: Create/edit ingredient in browser, verify no unit field shown
+    - Remove unit from form validation
+    - Update form display to show only name and category
+  - **Update IngredientList** in `src/components/ingredients/IngredientList.tsx` (if it displays unit):
+    - Remove unit column from ingredient list display
+  - **Quality checks**: Run ingredient component tests, save to `tmp/i9.8-ingredient-ui.txt`
+
+- [ ] I9.9. Polish RecipeForm: remove library unit reference (TDD)
+  - **Update RecipeForm tests** in `src/components/recipes/RecipeForm.test.tsx`:
+    - Remove expectations for ingredient library unit display
+    - Verify unit must be explicitly selected (no auto-fill from library)
+  - **Verify**: All tests pass, unit field required, no library unit reference shown
+  - **Manual test**: Create recipe in browser, verify unit must be explicitly selected
+  - **Update RecipeForm** in `src/components/recipes/RecipeForm.tsx`:
+    - Remove grayed-out ingredient library unit display (no longer exists)
+    - Keep unit selector with no default (force explicit selection)
+    - Show validation error if unit not selected
+  - **Quality checks**: Run RecipeForm tests, save to `tmp/i9.9-recipe-form-polish.txt`
+
+- [ ] I9.10. Update RecipeDetail: remove fallback to library unit (TDD)
+  - **Update RecipeDetail tests** in `src/components/recipes/RecipeDetail.test.tsx`:
+    - Unit always comes from recipe ingredient (no fallback)
+    - Show 'piece' if unit somehow missing (edge case)
+  - **Update RecipeDetail** in `src/components/recipes/RecipeDetail.tsx`:
+  - **Verify**: All tests pass, unit always from recipe ingredient (no fallback)
+  - **Manual test**: View recipe details, verify units display correctly
+    - Simplify unit logic (migration complete, no fallback needed):
+      ```typescript
+      const unit = ingredient.unit || 'piece' // Unit should always exist after migration
+      ```
+  - **Quality checks**: Run RecipeDetail tests, save to `tmp/i9.10-detail-polish.txt`
+
+**Phase 4: Recipe Import & Validation**
+
+- [ ] I9.11. Update recipe import/validation for new schema (TDD)
+  - **Write tests first** in `src/utils/recipeImportValidator.test.ts`:
+    - Test imported recipe has unit in each ingredient → validates
+    - Test imported recipe missing unit → validation fails
+    - Update test data to include unit in recipe ingredients
+  - **Update validation** in `src/utils/recipeImportValidator.ts`:
+    - Update `ImportedIngredientSchema` to require unit in RecipeIngredient
+  - **Verify**: All validation tests pass, unit required in recipe ingredients
+  - **Manual test**: Copy AI prompt, verify instructions clear about unit placement
+    - Validation ensures unit is present in each recipe ingredient
+    - Deduplication logic (name + unit matching) remains the same
+  - **Update AI prompt generator** in `src/utils/aiPromptGenerator.ts`:
+    - Update instructions: unit specified at recipe ingredient level (not library)
+    - Update example JSON structure: show unit in recipe ingredients
+    - Update note: same ingredient can have different units in different recipes
+  - **Quality checks**: Run import validator tests, save to `tmp/i9.11-import.txt`
+
+  - **Verify**: All tests pass, preview shows unit from recipe ingredient
+  - **Manual test**: Import recipe via AI, verify unit shown correctly in preview
+- [ ] I9.12. Update RecipeImportModal display (TDD)
+  - **Write tests first** in `src/components/recipes/RecipeImportModal.test.tsx`:
+    - Test preview shows unit from recipe ingredient
+    - Test suggested ingredient creation (no unit in library)
+  - **Update RecipeImportModal** in `src/components/recipes/RecipeImportModal.tsx`:
+    - Update ingredient preview to use `ing.unit` (from recipe ingredient)
+    - Remove reference to `ingredient?.unit` (no longer exists in library)
+  - **Quality checks**: Run import modal tests, save to `tmp/i9.12-import-modal.txt`
+
+**Phase 5: Final Verification & Manual Testing**
+
+**Note**: By this phase, all unit/integration tests should already be passing from previous steps. This phase focuses on final verification and real-world testing scenarios.
+
+- [ ] I9.13. Final test suite verification
+  - Verify complete test suite still passes: `npm test`
+  - Verify no TypeScript compilation errors: `npm run build`
+  - Check test coverage for new migration code: `npm run test:coverage`
+  - All tests should already be passing from previous phases - this is final verification only
+  - **Quality checks**: Save full test output to `tmp/i9.13-all-tests-final.txt`
+  - **Quality checks**: Save build output to `tmp/i9.13-build-final.txt`
+  - **Quality checks**: Save coverage report to `tmp/i9.13-coverage.txt`
+
+**Phase 6: Code Cleanup & Migration Removal**
+
+**Note**: After migration has been deployed to production and users have migrated their data (wait 1-2 months), clean up migration code to simplify codebase.
+
+- [ ] I9.15. Remove migration utilities and fallback logic (TDD)
+  - **Timeline**: Deploy after sufficient time for all users to migrate (1-2 months post-release)
+  - **Write tests first** to verify clean code still works:
+    - Update storage tests to only test new format (remove old format tests)
+    - Update component tests to remove fallback logic tests
+    - Verify all tests still pass with simplified code
+  - **Remove migration utilities**:
+    - Delete `src/utils/migration/ingredientMigration.ts` (entire file)
+    - Delete `src/utils/migration/ingredientMigration.test.ts` (entire file)
+    - Remove migration folder if empty
+  - **Clean up storage layer**:
+    - Remove migration logic from `IngredientStorage.ts` (loadIngredients)
+    - Remove migration logic from `recipeStorage.ts` (loadRecipes)
+    - Remove migration imports and helper functions
+  - **Clean up SyncContext**:
+    - Remove migration logic from `importFromRemote()`
+    - Remove migration logic from `connectProvider()`
+    - Remove migration-related imports
+    - Simplify `SyncDataSchema` (no longer needs to accept old format)
+  - **Quality checks**: Run full test suite, save to `tmp/i9.15-cleanup-tests.txt`
+  - **Verify**: All tests pass, build succeeds, no migration code remains
+
+- [ ] I9.16. Remove temporary fallback logic from UI components (TDD)
+  - **Update RecipeDetail** in `src/components/recipes/RecipeDetail.tsx`:
+    - Remove fallback: `ingredient.unit || ingredientData?.unit || 'piece'`
+    - Simplify to: `ingredient.unit` (always present after migration)
+    - Update comments to remove references to backward compatibility
+  - **Update RecipeForm** in `src/components/recipes/RecipeForm.tsx`:
+    - Remove any comments about "temporary" or "during transition"
+    - Clean up unit selector logic if it has migration-related code
+  - **Update grocery list generator** in `src/utils/generateGroceryList.ts`:
+    - Remove fallback: `recipeIngredient.unit || ingredient.unit`
+    - Simplify to: `recipeIngredient.unit` (always present)
+  - **Quality checks**: Run component tests, save to `tmp/i9.16-cleanup-ui.txt`
+  - **Verify**: All tests pass, UI code is cleaner and simpler
+
+- [ ] I9.17. Update documentation and comments (No tests needed)
+  - **Update IMPLEMENTATION_PLAN.md**:
+    - Mark I9 as completed with cleanup date
+    - Add note about when migration code was removed
+  - **Update ARCHITECTURE.md** (if it exists):
+    - Document final schema (Ingredient without unit, RecipeIngredient with unit)
+    - Remove any references to old schema or migration
+  - **Update code comments**:
+    - Search codebase for "backward compatible", "migration", "old format", "temporary"
+    - Remove or update comments that reference the old schema
+    - Add clear comments about why unit is at recipe ingredient level
+  - **Update type documentation**:
+    - Update JSDoc comments in `src/types/ingredient.ts`
+    - Update JSDoc comments in `src/types/recipe.ts`
+    - Clarify that unit is recipe-specific, not ingredient-specific
+  - **Quality checks**: Run lint to verify documentation, save to `tmp/i9.17-docs.txt`
+
+- [ ] I9.18. Final verification after cleanup
+  - Run complete test suite: `npm test`
+  - Run TypeScript build: `npm run build`
+  - Run linter: `npm run lint`
+  - Check for any references to removed code: `git grep -i "ingredientMigration\|needsMigration\|migrateIngredient"`
+  - Verify no breaking changes for current users (migration already happened)
+  - **Quality checks**: Save final verification to `tmp/i9.18-final-verification.txt`
+  - **Result**: Codebase is clean, no migration code remains, all tests pass
+
+### Migration Notes
+
+**Data Migration Flow**:
+1. **Local Storage**: On first load after deploy, `loadIngredients()` and `loadRecipes()` detect old format and migrate automatically
+2. **Cloud Import**: When downloading cloud file, `SyncContext` applies migration before merging with local data
+3. **No User Action Required**: Migration is transparent, happens automatically on first load
+4. **Backward Compatibility Window**: Old format data can be read indefinitely, but all saves use new format
+
+**Schema Changes Summary**:
+```typescript
+// OLD Ingredient
+interface Ingredient {
+  id: string
+  name: string
+  category: IngredientCategory
+  unit: Unit  // ← REMOVED
+}
+
+// NEW Ingredient
+interface Ingredient {
+  id: string
+  name: string
+  category: IngredientCategory
+  // unit removed
+}
+
+// OLD RecipeIngredient
+interface RecipeIngredient {
+  ingredientId: string
+  quantity: number
+  displayName?: string
+}
+
+// NEW RecipeIngredient
+interface RecipeIngredient {
+  ingredientId: string
+  quantity: number
+  unit: Unit  // ← ADDED
+  displayName?: string
+}
+```
+
+**Testing Strategy**:
+- Unit tests verify migration logic in isolation
+- Integration tests verify storage layer applies migration correctly
+- Component tests verify UI works with new schema
+- Manual testing verifies real-world migration scenarios (local + cloud)
+
+**Rollback Plan**:
+- If critical issues found, can revert code changes
+- User data will have new format in storage (unit on recipe ingredient)
+- Would need reverse migration utility if rollback needed
+- Recommend: thorough testing before production deployment

@@ -437,6 +437,147 @@ describe('RecipeForm', () => {
       })
     })
 
+    it('should display unit selector for each ingredient', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Add an ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Should have unit selector
+      await waitFor(() => {
+        const unitSelects = screen.getAllByRole('textbox', { name: /unit/i })
+        expect(unitSelects.length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should save unit value with recipe ingredient', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Fill in basic recipe info
+      await user.type(screen.getByLabelText(/^name/i), 'Test Recipe')
+      await user.type(
+        screen.getByLabelText(/description/i),
+        'Test description'
+      )
+      await user.type(screen.getByLabelText(/servings/i), '4')
+      await user.type(screen.getByLabelText(/total time/i), '30')
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Select ingredient
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.type(ingredientSelect, 'Tomato')
+      await user.click(await screen.findByText('Tomato (piece)'))
+
+      // Fill quantity
+      const quantityInput = screen.getByPlaceholderText(/quantity/i)
+      await user.clear(quantityInput)
+      await user.type(quantityInput, '2')
+
+      // Select unit
+      const unitSelect = screen.getByRole('textbox', { name: /unit/i })
+      await user.click(unitSelect)
+      await user.click(await screen.findByText('gram'))
+
+      // Add instruction
+      const addInstructionButton = screen.getByRole('button', {
+        name: /add instruction/i,
+      })
+      await user.click(addInstructionButton)
+      await user.type(screen.getByPlaceholderText(/step 1/i), 'Cook it')
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /create recipe/i }))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ingredients: [
+              expect.objectContaining({
+                ingredientId: '1',
+                quantity: 2,
+                unit: 'gram',
+              }),
+            ],
+          })
+        )
+      })
+    })
+
+    it('should populate existing unit when editing recipe', async () => {
+      const recipeWithUnit: Recipe = {
+        id: '1',
+        name: 'Test',
+        description: 'Test',
+        servings: 4,
+        totalTime: 30,
+        ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
+        instructions: ['Step 1'],
+        tags: [],
+      }
+
+      renderWithProviders(
+        <RecipeForm
+          recipe={recipeWithUnit}
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      // Should display the existing unit - get the first visible input (not hidden)
+      await waitFor(() => {
+        const unitInputs = screen.getAllByDisplayValue('cup')
+        // Find the actual Select input (not the hidden one)
+        const visibleInput = unitInputs.find(
+          input => input.getAttribute('type') !== 'hidden'
+        )
+        expect(visibleInput).toBeInTheDocument()
+      })
+    })
+
+    it('should require manual unit selection (no auto-fill)', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+      )
+
+      // Add ingredient
+      const addIngredientButton = screen.getByRole('button', {
+        name: /add ingredient/i,
+      })
+      await user.click(addIngredientButton)
+
+      // Select ingredient
+      const ingredientSelect = screen.getByRole('textbox', {
+        name: /ingredient/i,
+      })
+      await user.click(ingredientSelect)
+      await user.type(ingredientSelect, 'Tomato')
+      await user.click(await screen.findByText('Tomato (piece)'))
+
+      // Unit should NOT auto-fill - should be empty
+      await waitFor(() => {
+        const unitSelect = screen.getByRole('textbox', { name: /unit/i })
+        expect(unitSelect).toHaveValue('')
+      })
+    })
+
     it('should support creating new ingredient inline', async () => {
       renderWithProviders(
         <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
@@ -591,6 +732,11 @@ describe('RecipeForm', () => {
       await user.clear(quantityInput)
       await user.type(quantityInput, '2')
 
+      // Need to manually select unit since auto-fill is removed
+      const unitSelect = screen.getByRole('textbox', { name: /unit/i })
+      await user.click(unitSelect)
+      await user.click(await screen.findByText('whole'))
+
       // Fill custom name
       const customNameInput = screen.getByPlaceholderText(/tomato/i)
       await user.type(customNameInput, 'diced tomatoes')
@@ -615,6 +761,7 @@ describe('RecipeForm', () => {
             {
               ingredientId: '1',
               quantity: 2,
+              unit: 'whole', // Manually selected
               displayName: 'diced tomatoes',
             },
           ],

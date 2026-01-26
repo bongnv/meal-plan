@@ -4,6 +4,58 @@ import { RecipeIngredientSchema, RecipeSchema } from './recipe'
 
 describe('RecipeIngredient Types', () => {
   describe('RecipeIngredientSchema', () => {
+    it('should validate RecipeIngredient with unit field', () => {
+      const ingredient = {
+        ingredientId: 'ingredient-123',
+        quantity: 2.5,
+        unit: 'cup',
+      }
+
+      const result = RecipeIngredientSchema.safeParse(ingredient)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual({
+          ingredientId: 'ingredient-123',
+          quantity: 2.5,
+          unit: 'cup',
+        })
+      }
+    })
+
+    it('should validate RecipeIngredient with unit and displayName', () => {
+      const ingredient = {
+        ingredientId: 'ingredient-123',
+        quantity: 2.5,
+        unit: 'gram',
+        displayName: 'chicken',
+      }
+
+      const result = RecipeIngredientSchema.safeParse(ingredient)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual({
+          ingredientId: 'ingredient-123',
+          quantity: 2.5,
+          unit: 'gram',
+          displayName: 'chicken',
+        })
+      }
+    })
+
+    it('should reject RecipeIngredient with invalid unit', () => {
+      const ingredient = {
+        ingredientId: 'ingredient-123',
+        quantity: 2.5,
+        unit: 'invalid-unit',
+      }
+
+      const result = RecipeIngredientSchema.safeParse(ingredient)
+
+      expect(result.success).toBe(false)
+    })
+
     it('should validate RecipeIngredient with ingredientId and quantity only (backward compatible)', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',

@@ -258,6 +258,84 @@ describe('RecipeDetail', () => {
       const pastaMatchesAfter = screen.getAllByText(/pasta/i)
       expect(pastaMatchesAfter.length).toBeGreaterThanOrEqual(1)
     })
+
+    it('should prefer recipe ingredient unit over library unit', () => {
+      const recipeWithRecipeUnit: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 400, unit: 'cup' }, // Override library unit (gram)
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithRecipeUnit} />)
+
+      // Should display recipe unit (cup), not library unit (gram)
+      expect(screen.getByText(/400 cup/i)).toBeInTheDocument()
+      expect(screen.queryByText(/gram/i)).not.toBeInTheDocument()
+    })
+
+    it('should fall back to library unit when recipe unit is not provided', () => {
+      const recipeWithoutUnit: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 400 }, // No unit specified
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithoutUnit} />)
+
+      // Should display library unit (gram)
+      expect(screen.getByText(/400 gram/i)).toBeInTheDocument()
+    })
+
+    it('should hide "whole" unit for natural reading', () => {
+      const recipeWithWholeUnit: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '3', quantity: 4, unit: 'whole' }, // 4 whole eggs
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithWholeUnit} />)
+
+      // Should display "4 Eggs" without "whole" for natural reading
+      expect(screen.getByText(/^4$/)).toBeInTheDocument()
+      expect(screen.getByText(/Eggs/i)).toBeInTheDocument()
+      expect(screen.queryByText(/whole/i)).not.toBeInTheDocument()
+    })
+
+    it('should display non-whole units normally', () => {
+      const recipeWithVariousUnits: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '1', quantity: 2, unit: 'cup' },
+          { ingredientId: '2', quantity: 100, unit: 'gram' },
+          { ingredientId: '3', quantity: 3, unit: 'tablespoon' },
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithVariousUnits} />)
+
+      // Should display all non-whole units
+      expect(screen.getByText(/2 cup/i)).toBeInTheDocument()
+      expect(screen.getByText(/100 gram/i)).toBeInTheDocument()
+      expect(screen.getByText(/3 tablespoon/i)).toBeInTheDocument()
+    })
+
+    it('should handle missing ingredient with recipe unit', () => {
+      const recipeWithMissingIngredient: Recipe = {
+        ...mockRecipe,
+        ingredients: [
+          { ingredientId: '999', quantity: 2, unit: 'cup' }, // Non-existent ingredient
+        ],
+      }
+
+      renderWithProviders(<RecipeDetail recipe={recipeWithMissingIngredient} />)
+
+      // Should use recipe unit even when ingredient not found
+      expect(screen.getByText(/2 cup/i)).toBeInTheDocument()
+      expect(screen.getByText(/Unknown Ingredient/i)).toBeInTheDocument()
+    })
   })
 
   describe('Instructions Display', () => {
