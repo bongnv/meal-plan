@@ -36,9 +36,9 @@ describe('generateGroceryList', () => {
       servings: 2,
       totalTime: 30,
       ingredients: [
-        { ingredientId: '1', quantity: 400 },
-        { ingredientId: '2', quantity: 200 },
-        { ingredientId: '3', quantity: 150 },
+        { ingredientId: '1', quantity: 400, unit: 'gram' },
+        { ingredientId: '2', quantity: 200, unit: 'gram' },
+        { ingredientId: '3', quantity: 150, unit: 'gram' },
       ],
       instructions: ['Cook chicken', 'Cook rice', 'Steam broccoli'],
       tags: [],
@@ -50,8 +50,8 @@ describe('generateGroceryList', () => {
       servings: 4,
       totalTime: 20,
       ingredients: [
-        { ingredientId: '2', quantity: 400 },
-        { ingredientId: '1', quantity: 200 },
+        { ingredientId: '2', quantity: 400, unit: 'gram' },
+        { ingredientId: '1', quantity: 200, unit: 'gram' },
       ],
       instructions: ['Cook rice', 'Fry with chicken'],
       tags: [],
@@ -201,7 +201,7 @@ describe('generateGroceryList', () => {
           servings: 2,
           totalTime: 10,
           ingredients: [
-            { ingredientId: '1', quantity: 600 }, // 600g
+            { ingredientId: '1', quantity: 600, unit: 'gram' }, // 600g
           ],
           instructions: [],
           tags: [],
@@ -259,7 +259,7 @@ describe('generateGroceryList', () => {
           servings: 1,
           totalTime: 5,
           ingredients: [
-            { ingredientId: '10', quantity: 750 }, // 750ml
+            { ingredientId: '10', quantity: 750, unit: 'milliliter' }, // 750ml
           ],
           instructions: [],
           tags: [],
@@ -336,7 +336,7 @@ describe('generateGroceryList', () => {
           servings: 3,
           totalTime: 10,
           ingredients: [
-            { ingredientId: '1', quantity: 333 }, // Will be 333.33... when scaled
+            { ingredientId: '1', quantity: 333, unit: 'gram' }, // Will be 333.33... when scaled
           ],
           instructions: [],
           tags: [],
@@ -553,7 +553,7 @@ describe('generateGroceryList', () => {
           description: '',
           servings: 2,
           totalTime: 10,
-          ingredients: [{ ingredientId: 'non-existent', quantity: 100 }],
+          ingredients: [{ ingredientId: 'non-existent', quantity: 100, unit: 'gram' }],
           instructions: [],
           tags: [],
         },
@@ -623,6 +623,161 @@ describe('generateGroceryList', () => {
       const ids = result.items.map(item => item.id)
       const uniqueIds = new Set(ids)
       expect(uniqueIds.size).toBe(ids.length) // All IDs should be unique
+    })
+  })
+
+  describe('Recipe-level units', () => {
+    it('should use recipe ingredient unit instead of library unit', () => {
+      const recipesWithUnits: Recipe[] = [
+        {
+          id: 'r1',
+          name: 'Chicken Rice Bowl',
+          description: 'Healthy chicken bowl',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [
+            { ingredientId: '1', quantity: 2, unit: 'cup' }, // Override library unit (gram)
+            { ingredientId: '2', quantity: 300, unit: 'gram' }, // Matches library unit
+          ],
+          instructions: ['Cook chicken', 'Cook rice'],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        recipesWithUnits,
+        mockIngredients
+      )
+
+      // Chicken should use recipe unit (cup), not library unit (gram)
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
+      expect(chicken).toMatchObject({
+        quantity: 2,
+        unit: 'cup',
+      })
+
+      // Rice should use recipe unit (gram)
+      const rice = result.items.find(item => item.name === 'Rice')
+      expect(rice).toMatchObject({
+        quantity: 300,
+        unit: 'gram',
+      })
+    })
+
+    it('should consolidate ingredients with same recipe unit', () => {
+      const recipesWithUnits: Recipe[] = [
+        {
+          id: 'r1',
+          name: 'Recipe 1',
+          description: 'Test',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
+          instructions: ['Cook'],
+          tags: [],
+        },
+        {
+          id: 'r2',
+          name: 'Recipe 2',
+          description: 'Test',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [{ ingredientId: '1', quantity: 3, unit: 'cup' }],
+          instructions: ['Cook'],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+        {
+          id: 'm2',
+          date: '2026-01-23',
+          mealType: 'dinner',
+          type: 'recipe',
+          recipeId: 'r2',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        recipesWithUnits,
+        mockIngredients
+      )
+
+      // Should consolidate both recipes into one item with 5 cups
+      expect(result.items).toHaveLength(1)
+      const chicken = result.items.find(item => item.name === 'Chicken Breast')
+      expect(chicken).toMatchObject({
+        quantity: 5,
+        unit: 'cup',
+        mealPlanIds: ['m1', 'm2'],
+      })
+    })
+
+    it('should handle "whole" unit without displaying it', () => {
+      const recipesWithWholeUnit: Recipe[] = [
+        {
+          id: 'r1',
+          name: 'Egg Recipe',
+          description: 'Test',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [
+            { ingredientId: '1', quantity: 4, unit: 'whole' }, // 4 whole items
+          ],
+          instructions: ['Cook'],
+          tags: [],
+        },
+      ]
+
+      const mealPlans: MealPlan[] = [
+        {
+          id: 'm1',
+          date: '2026-01-23',
+          mealType: 'lunch',
+          type: 'recipe',
+          recipeId: 'r1',
+          servings: 2,
+        },
+      ]
+
+      const result = generateGroceryList(
+        { start: '2026-01-23', end: '2026-01-23' },
+        'Test List',
+        mealPlans,
+        recipesWithWholeUnit,
+        mockIngredients
+      )
+
+      // Item should have 'whole' unit stored (for consolidation)
+      const item = result.items[0]
+      expect(item.unit).toBe('whole')
+      expect(item.quantity).toBe(4)
     })
   })
 })

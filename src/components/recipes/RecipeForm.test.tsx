@@ -551,7 +551,7 @@ describe('RecipeForm', () => {
       })
     })
 
-    it('should require manual unit selection (no auto-fill)', async () => {
+    it('should default unit to "whole" (no auto-fill from library)', async () => {
       const user = userEvent.setup()
       renderWithProviders(
         <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
@@ -571,10 +571,13 @@ describe('RecipeForm', () => {
       await user.type(ingredientSelect, 'Tomato')
       await user.click(await screen.findByText('Tomato (piece)'))
 
-      // Unit should NOT auto-fill - should be empty
+      // Unit should default to 'whole' (not auto-filled from library)
       await waitFor(() => {
-        const unitSelect = screen.getByRole('textbox', { name: /unit/i })
-        expect(unitSelect).toHaveValue('')
+        const unitInputs = screen.getAllByDisplayValue('whole')
+        const visibleInput = unitInputs.find(
+          input => input.getAttribute('type') !== 'hidden'
+        )
+        expect(visibleInput).toBeInTheDocument()
       })
     })
 
@@ -732,10 +735,7 @@ describe('RecipeForm', () => {
       await user.clear(quantityInput)
       await user.type(quantityInput, '2')
 
-      // Need to manually select unit since auto-fill is removed
-      const unitSelect = screen.getByRole('textbox', { name: /unit/i })
-      await user.click(unitSelect)
-      await user.click(await screen.findByText('whole'))
+      // Unit defaults to 'whole' - no need to manually select
 
       // Fill custom name
       const customNameInput = screen.getByPlaceholderText(/tomato/i)

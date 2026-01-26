@@ -136,7 +136,10 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
                 ingredient.displayName ||
                 ingredientData?.name ||
                 'Unknown Ingredient'
-              const unit = ingredientData?.unit || ''
+              // Use recipe ingredient unit (migration will ensure all recipes have units)
+              const unit = ingredient.unit || ''
+              // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
+              const displayUnit = unit === 'whole' ? '' : unit
               const adjustedQuantity = formatQuantity(
                 ingredient.quantity * servingMultiplier
               )
@@ -149,7 +152,7 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
                   label={
                     <Text>
                       <Text component="span" fw={500}>
-                        {adjustedQuantity} {unit}
+                        {adjustedQuantity} {displayUnit}
                       </Text>{' '}
                       {displayName}
                     </Text>

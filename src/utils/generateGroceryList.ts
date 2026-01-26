@@ -64,12 +64,14 @@ export function generateGroceryList(
       if (!ingredient) continue // Skip if ingredient not found
 
       const scaledQuantity = recipeIngredient.quantity * scaleFactor
+      // Use recipe ingredient unit (migration ensures all recipes have units)
+      const unit = recipeIngredient.unit || 'piece' // Fallback to piece if missing
       const key = recipeIngredient.ingredientId
 
       if (accumulated.has(key)) {
         // Add to existing - convert to normalized unit first
         const existing = accumulated.get(key)!
-        const normalizedUnit = normalizeUnitForConsolidation(ingredient.unit)
+        const normalizedUnit = normalizeUnitForConsolidation(unit)
         const existingNormalizedUnit = normalizeUnitForConsolidation(
           existing.unit
         )
@@ -79,7 +81,7 @@ export function generateGroceryList(
           // Convert ingredient quantity to normalized unit
           const convertedQuantity = convertQuantity(
             scaledQuantity,
-            ingredient.unit,
+            unit,
             normalizedUnit
           )
           // Convert existing quantity to normalized unit
@@ -98,11 +100,11 @@ export function generateGroceryList(
           existing.mealPlanIds.push(mealPlan.id)
         }
       } else {
-        // Create new entry (get unit and name from ingredient library)
+        // Create new entry (use recipe ingredient unit and ingredient library name)
         accumulated.set(key, {
           name: ingredient.name,
           quantity: scaledQuantity,
-          unit: ingredient.unit, // Get unit from ingredient library
+          unit: unit,
           category: ingredient.category,
           mealPlanIds: [mealPlan.id],
         })

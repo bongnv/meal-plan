@@ -75,7 +75,7 @@ export function RecipeForm({
     form.insertListItem('ingredients', {
       ingredientId: '',
       quantity: 0,
-      unit: undefined, // Will be set when ingredient is selected
+      unit: 'whole', // Default to 'whole' for countable items
       displayName: '',
     })
   }
