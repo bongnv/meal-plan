@@ -464,10 +464,7 @@ describe('RecipeForm', () => {
 
       // Fill in basic recipe info
       await user.type(screen.getByLabelText(/^name/i), 'Test Recipe')
-      await user.type(
-        screen.getByLabelText(/description/i),
-        'Test description'
-      )
+      await user.type(screen.getByLabelText(/description/i), 'Test description')
       await user.type(screen.getByLabelText(/servings/i), '4')
       await user.type(screen.getByLabelText(/total time/i), '30')
 

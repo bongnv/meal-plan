@@ -32,8 +32,7 @@ describe('IngredientStorageService', () => {
     })
 
     it('should return ingredients from localStorage', () => {
-      const mockIngredients: Ingredient[] = [
-      ]
+      const mockIngredients: Ingredient[] = []
 
       localStorage.setItem('ingredients', JSON.stringify(mockIngredients))
 
@@ -73,8 +72,7 @@ describe('IngredientStorageService', () => {
 
   describe('saveIngredients', () => {
     it('should save valid ingredients to localStorage', () => {
-      const mockIngredients: Ingredient[] = [
-      ]
+      const mockIngredients: Ingredient[] = []
 
       service.saveIngredients(mockIngredients)
 
@@ -83,10 +81,8 @@ describe('IngredientStorageService', () => {
     })
 
     it('should overwrite existing ingredients', () => {
-      const initial: Ingredient[] = [
-      ]
-      const updated: Ingredient[] = [
-      ]
+      const initial: Ingredient[] = []
+      const updated: Ingredient[] = []
 
       service.saveIngredients(initial)
       service.saveIngredients(updated)
@@ -102,8 +98,7 @@ describe('IngredientStorageService', () => {
           throw new Error('localStorage error')
         })
 
-      const mockIngredients: Ingredient[] = [
-      ]
+      const mockIngredients: Ingredient[] = []
 
       expect(() => service.saveIngredients(mockIngredients)).toThrow(
         'localStorage error'

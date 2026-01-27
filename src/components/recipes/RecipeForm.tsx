@@ -219,7 +219,7 @@ export function RecipeForm({
                 const selectedIngredient = getIngredientById(
                   ingredient.ingredientId
                 )
-                
+
                 return (
                   <Group key={index} align="flex-start">
                     <Select

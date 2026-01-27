@@ -48,9 +48,7 @@ describe('RecipeStorageService', () => {
           id: '1',
           name: 'Test Recipe',
           description: 'A test recipe',
-          ingredients: [
-            { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
-          ],
+          ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
           instructions: ['Step 1'],
           servings: 4,
           totalTime: 30,
@@ -202,9 +200,7 @@ describe('RecipeStorageService', () => {
           id: '1',
           name: 'Old Recipe',
           description: 'Recipe without displayName',
-          ingredients: [
-            { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
-          ],
+          ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
           instructions: ['Step 1'],
           servings: 4,
           totalTime: 30,
@@ -226,8 +222,18 @@ describe('RecipeStorageService', () => {
           name: 'New Recipe',
           description: 'Recipe with displayName',
           ingredients: [
-            { ingredientId: 'ing1', quantity: 400, unit: 'gram', displayName: 'chicken' },
-            { ingredientId: 'ing2', quantity: 2, unit: 'cup', displayName: 'tomatoes' },
+            {
+              ingredientId: 'ing1',
+              quantity: 400,
+              unit: 'gram',
+              displayName: 'chicken',
+            },
+            {
+              ingredientId: 'ing2',
+              quantity: 2,
+              unit: 'cup',
+              displayName: 'tomatoes',
+            },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -251,7 +257,12 @@ describe('RecipeStorageService', () => {
           name: 'Recipe with displayName',
           description: 'Has custom names',
           ingredients: [
-            { ingredientId: 'ing1', quantity: 400, unit: 'gram', displayName: 'chicken' },
+            {
+              ingredientId: 'ing1',
+              quantity: 400,
+              unit: 'gram',
+              displayName: 'chicken',
+            },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -262,9 +273,7 @@ describe('RecipeStorageService', () => {
           id: '2',
           name: 'Recipe without displayName',
           description: 'No custom names',
-          ingredients: [
-            { ingredientId: 'ing2', quantity: 2, unit: 'cup' },
-          ],
+          ingredients: [{ ingredientId: 'ing2', quantity: 2, unit: 'cup' }],
           instructions: ['Step 1'],
           servings: 2,
           totalTime: 15,
@@ -307,8 +316,7 @@ describe('RecipeStorageService', () => {
 
   describe('Migration on load', () => {
     it('should apply migration when loading recipes without units', () => {
-      const mockIngredients: any[] = [
-      ]
+      const mockIngredients: any[] = []
 
       const oldRecipes: Recipe[] = [
         {
@@ -370,8 +378,7 @@ describe('RecipeStorageService', () => {
     })
 
     it('should use "piece" fallback for unknown ingredients during migration', () => {
-      const mockIngredients: any[] = [
-      ]
+      const mockIngredients: any[] = []
 
       const recipes: Recipe[] = [
         {

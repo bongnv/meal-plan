@@ -200,8 +200,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Check both instance type and message content (Graph API may wrap our error)
       const isTokenExpired =
         error instanceof TokenExpiredError ||
-        (error instanceof Error &&
-          error.message.includes('Session expired'))
+        (error instanceof Error && error.message.includes('Session expired'))
 
       if (isTokenExpired) {
         setNeedsReconnect(true)
@@ -416,10 +415,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         }
 
         const validatedRemote = validationResult.data as SyncData
-        
+
         // Apply migration to remote data (converts old schema to new schema)
-        const migratedRecipes = migrateRecipes(validatedRemote.recipes, validatedRemote.ingredients)
-        
+        const migratedRecipes = migrateRecipes(
+          validatedRemote.recipes,
+          validatedRemote.ingredients
+        )
+
         remote = {
           ...validatedRemote,
           recipes: migratedRecipes,
@@ -483,8 +485,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Check both instance type and message content (Graph API may wrap our error)
       const isTokenExpired =
         error instanceof TokenExpiredError ||
-        (error instanceof Error &&
-          error.message.includes('Session expired'))
+        (error instanceof Error && error.message.includes('Session expired'))
 
       if (isTokenExpired) {
         setNeedsReconnect(true)
@@ -578,10 +579,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       }
 
       const validatedRemote = validationResult.data as SyncData
-      
+
       // Apply migration to remote data (converts old schema to new schema)
-      const migratedRecipes = migrateRecipes(validatedRemote.recipes, validatedRemote.ingredients)
-      
+      const migratedRecipes = migrateRecipes(
+        validatedRemote.recipes,
+        validatedRemote.ingredients
+      )
+
       const remote = {
         ...validatedRemote,
         recipes: migratedRecipes,

@@ -112,7 +112,7 @@ export function validateRecipeImport(
       const matchingExisting = existingIngredients.find(
         existing =>
           existing.name.toLowerCase() ===
-            ingredient.suggestedIngredient!.name.toLowerCase()
+          ingredient.suggestedIngredient!.name.toLowerCase()
       )
 
       if (matchingExisting) {

@@ -17,7 +17,7 @@ export class RecipeStorageService {
    * Load all recipes from localStorage
    * Returns empty array if no recipes found
    * Validates data with Zod schema and applies migration
-   * 
+   *
    * @param ingredients - Ingredient library for migration (copying units to recipe ingredients)
    */
   loadRecipes(ingredients: Ingredient[] = []): Recipe[] {
@@ -27,10 +27,10 @@ export class RecipeStorageService {
     }
     const parsed = JSON.parse(stored)
     const validated = z.array(RecipeSchema).parse(parsed)
-    
+
     // Apply migration to ensure all recipe ingredients have units
     const migrated = migrateRecipes(validated, ingredients)
-    
+
     return migrated
   }
 

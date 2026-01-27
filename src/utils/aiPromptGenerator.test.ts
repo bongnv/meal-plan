@@ -48,8 +48,7 @@ describe('generateRecipeImportPrompt', () => {
   })
 
   it('should include JSON schema definition', () => {
-    const ingredients: Ingredient[] = [
-    ]
+    const ingredients: Ingredient[] = []
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
@@ -71,8 +70,7 @@ describe('generateRecipeImportPrompt', () => {
   })
 
   it('should include instructions for AI', () => {
-    const ingredients: Ingredient[] = [
-    ]
+    const ingredients: Ingredient[] = []
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
@@ -86,8 +84,7 @@ describe('generateRecipeImportPrompt', () => {
   })
 
   it('should include example output format', () => {
-    const ingredients: Ingredient[] = [
-    ]
+    const ingredients: Ingredient[] = []
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
@@ -109,8 +106,7 @@ describe('generateRecipeImportPrompt', () => {
   })
 
   it('should instruct AI to suggest new ingredients with category', () => {
-    const ingredients: Ingredient[] = [
-    ]
+    const ingredients: Ingredient[] = []
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
@@ -159,8 +155,7 @@ describe('generateRecipeImportPrompt', () => {
   })
 
   it('should include displayName field in ingredient schema', () => {
-    const ingredients: Ingredient[] = [
-    ]
+    const ingredients: Ingredient[] = []
 
     const prompt = generateRecipeImportPrompt(ingredients)
 

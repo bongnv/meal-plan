@@ -681,9 +681,7 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
-          ingredients: [
-            { ingredientId: '1', quantity: 2.5, unit: 'cup' },
-          ],
+          ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
         },
@@ -693,9 +691,7 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
-          ingredients: [
-            { ingredientId: '1', quantity: 2.5, unit: 'cup' },
-          ],
+          ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
         },

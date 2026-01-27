@@ -25,9 +25,7 @@ describe('ReconnectModal', () => {
       { wrapper: Wrapper }
     )
 
-    expect(
-      screen.queryByText(/session has expired/i)
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/session has expired/i)).not.toBeInTheDocument()
   })
 
   it('should render when opened', () => {

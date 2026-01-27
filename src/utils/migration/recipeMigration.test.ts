@@ -6,8 +6,7 @@ import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
 describe('migrateRecipes', () => {
-  const mockIngredients: Ingredient[] = [
-  ]
+  const mockIngredients: Ingredient[] = []
 
   describe('Recipe ingredient unit migration', () => {
     it('should add unit to recipe ingredients that are missing it', () => {

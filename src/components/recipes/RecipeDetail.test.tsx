@@ -435,7 +435,6 @@ describe('RecipeDetail', () => {
       await user.click(firstIngredientCheckbox)
       expect(firstIngredientCheckbox).not.toBeChecked()
     })
-
   })
 
   describe('Edge Cases', () => {

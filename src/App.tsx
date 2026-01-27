@@ -32,12 +32,8 @@ function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
   const cloudStorage = useCloudStorage()
-  const {
-    conflicts,
-    needsReconnect,
-    selectedFile,
-    clearReconnectFlag,
-  } = useSyncContext()
+  const { conflicts, needsReconnect, selectedFile, clearReconnectFlag } =
+    useSyncContext()
 
   // Auto-open conflict resolution modal when conflicts are detected
   const [
