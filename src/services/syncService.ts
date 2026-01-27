@@ -1,8 +1,4 @@
 import { db, type MealPlanDB } from '../db/database'
-import {
-  migrateRecipes,
-  migrateRecipeTime,
-} from '../utils/migration/recipeMigration'
 
 import type { GroceryList, GroceryItem } from '../types/groceryList'
 import type { Ingredient } from '../types/ingredient'
@@ -49,51 +45,6 @@ export const createSyncService = (db: MealPlanDB) => ({
       lastModified,
       version: 1,
     }
-  },
-
-  /**
-   * Apply remote data to local database, migrating if needed
-   */
-  async applyRemoteData(remote: SyncData): Promise<void> {
-    // Apply migrations to remote data (converts old schema to new schema)
-    // 1. Ensure all recipe ingredients have units
-    const unitMigrated = migrateRecipes(remote.recipes, remote.ingredients)
-    // 2. Split totalTime into prepTime and cookTime
-    const timeMigrated = migrateRecipeTime(unitMigrated)
-
-    const migratedRemote = {
-      ...remote,
-      recipes: timeMigrated,
-    }
-
-    // Replace all data in database
-    await db.transaction(
-      'rw',
-      [
-        db.recipes,
-        db.mealPlans,
-        db.ingredients,
-        db.groceryLists,
-        db.groceryItems,
-      ],
-      async () => {
-        await db.recipes.clear()
-        await db.recipes.bulkAdd(migratedRemote.recipes)
-
-        await db.mealPlans.clear()
-        await db.mealPlans.bulkAdd(migratedRemote.mealPlans)
-
-        await db.ingredients.clear()
-        await db.ingredients.bulkAdd(migratedRemote.ingredients)
-
-        await db.groceryLists.clear()
-        await db.groceryLists.bulkAdd(migratedRemote.groceryLists)
-
-        await db.groceryItems.clear()
-        await db.groceryItems.bulkAdd(migratedRemote.groceryItems)
-      }
-    )
-    await db.updateLastModified()
   },
 
   /**
@@ -203,6 +154,7 @@ export const createSyncService = (db: MealPlanDB) => ({
         db.ingredients,
         db.groceryLists,
         db.groceryItems,
+        db.metadata,
       ],
       async () => {
         await db.recipes.clear()
@@ -220,10 +172,14 @@ export const createSyncService = (db: MealPlanDB) => ({
         await db.groceryItems.clear()
         await db.groceryItems.bulkAdd(merged.groceryItems)
 
-        // Update lastModified to match the merged data timestamp
+        // Update lastModified to MAX of current and merged
+        // This handles race condition: if user made changes during sync,
+        // we preserve the newer timestamp
+        const currentLastModified = await db.getLastModified()
+        const newLastModified = Math.max(currentLastModified, merged.lastModified)
         await db.metadata.put({
           key: 'lastModified',
-          value: merged.lastModified,
+          value: newLastModified,
         })
       }
     )

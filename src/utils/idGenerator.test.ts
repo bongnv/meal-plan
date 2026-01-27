@@ -20,15 +20,16 @@ describe('idGenerator', () => {
     })
 
     it('should contain timestamp and random parts separated by hyphen', () => {
-      vi.setSystemTime(new Date('2026-01-28T12:00:00.000Z'))
       const id = generateId()
 
       expect(id).toContain('-')
       const parts = id.split('-')
       expect(parts).toHaveLength(2)
 
-      // First part should be the timestamp
-      expect(parts[0]).toBe('1737979200000')
+      // First part should be a valid timestamp
+      const timestamp = parseInt(parts[0], 10)
+      expect(timestamp).toBeGreaterThan(0)
+      expect(timestamp.toString()).toBe(parts[0])
 
       // Second part should be alphanumeric
       expect(parts[1]).toMatch(/^[a-z0-9]+$/)

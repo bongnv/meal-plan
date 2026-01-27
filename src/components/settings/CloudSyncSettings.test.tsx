@@ -63,8 +63,6 @@ const AllProviders = ({ children }: { children: ReactNode }) => (
 const mockConnectProvider = vi.fn()
 const mockDisconnectAndReset = vi.fn()
 const mockSyncNow = vi.fn()
-const mockImportFromRemote = vi.fn()
-const mockUploadToRemote = vi.fn()
 const mockResolveConflict = vi.fn()
 const mockHasSelectedFile = vi.fn(() => false)
 
@@ -76,8 +74,6 @@ let mockSyncContextValue = {
   connectProvider: mockConnectProvider,
   disconnectAndReset: mockDisconnectAndReset,
   syncNow: mockSyncNow,
-  importFromRemote: mockImportFromRemote,
-  uploadToRemote: mockUploadToRemote,
   resolveConflict: mockResolveConflict,
   hasSelectedFile: mockHasSelectedFile,
 }
@@ -104,8 +100,6 @@ describe('CloudSyncSettings', () => {
       connectProvider: mockConnectProvider,
       disconnectAndReset: mockDisconnectAndReset,
       syncNow: mockSyncNow,
-      importFromRemote: mockImportFromRemote,
-      uploadToRemote: mockUploadToRemote,
       resolveConflict: mockResolveConflict,
       hasSelectedFile: mockHasSelectedFile,
     }
@@ -157,8 +151,6 @@ describe('CloudSyncSettings - Connected State', () => {
       connectProvider: mockConnectProvider,
       disconnectAndReset: mockDisconnectAndReset,
       syncNow: mockSyncNow,
-      importFromRemote: mockImportFromRemote,
-      uploadToRemote: mockUploadToRemote,
       resolveConflict: mockResolveConflict,
       hasSelectedFile: mockHasSelectedFile,
     }

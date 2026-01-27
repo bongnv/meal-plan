@@ -52,8 +52,6 @@ interface SyncContextType {
   connectProvider: (fileInfo: FileInfo) => Promise<void>
   disconnectAndReset: () => Promise<void>
   syncNow: () => Promise<void>
-  importFromRemote: () => Promise<void>
-  uploadToRemote: () => Promise<void>
   clearReconnectFlag: () => void
   hasSelectedFile: () => boolean
 }
@@ -296,76 +294,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Import data from remote file, overwriting all local data
-   */
-  const importFromRemote = async (): Promise<void> => {
-    if (!cloudStorage.currentProvider || !selectedFile) {
-      throw new Error('Not connected or no file selected')
-    }
-
-    try {
-      setSyncStatus('syncing')
-
-      // Download remote data
-      const remoteJson = await cloudStorage.downloadFile(selectedFile)
-      const parsedRemote = JSON.parse(remoteJson)
-
-      const validationResult = SyncDataSchema.safeParse(parsedRemote)
-      if (!validationResult.success) {
-        console.error('Remote data validation failed:', validationResult.error)
-        throw new Error('Invalid remote data format')
-      }
-
-      const remote = validationResult.data as SyncData
-
-      // Apply remote data (with migrations)
-      await syncService.applyRemoteData(remote)
-
-      setSyncStatus('synced')
-      setLastSyncTime(remote.lastModified)
-    } catch (error) {
-      console.error('Import from remote failed:', error)
-      setSyncStatus('error')
-      throw error
-    }
-  }
-
-  /**
-   * Upload local data to remote file, creating or overwriting
-   */
-  const uploadToRemote = async (): Promise<void> => {
-    if (!cloudStorage.currentProvider || !selectedFile) {
-      throw new Error('Not connected or no file selected')
-    }
-
-    try {
-      setSyncStatus('syncing')
-
-      // Get local snapshot
-      const localData = await syncService.getLocalSnapshot()
-
-      // Upload to remote
-      const updatedFileInfo = await cloudStorage.uploadFile(
-        selectedFile,
-        JSON.stringify(localData)
-      )
-
-      // Update selectedFile if ID was generated (new file)
-      if (!selectedFile.id && updatedFileInfo.id) {
-        setSelectedFile(updatedFileInfo)
-        localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
-      }
-
-      setSyncStatus('synced')
-      setLastSyncTime(localData.lastModified)
-    } catch (error) {
-      console.error('Upload to remote failed:', error)
-      setSyncStatus('error')
-      throw error
-    }
-  }
-
-  /**
    * Check if there's a stored file in localStorage
    */
   const hasSelectedFile = (): boolean => {
@@ -385,8 +313,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         connectProvider,
         disconnectAndReset,
         syncNow,
-        importFromRemote,
-        uploadToRemote,
         clearReconnectFlag: () => setNeedsReconnect(false),
         hasSelectedFile,
       }}
