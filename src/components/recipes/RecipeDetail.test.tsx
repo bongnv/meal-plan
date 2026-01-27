@@ -47,7 +47,8 @@ const mockRecipe: Recipe = {
     'Combine everything while hot',
   ],
   servings: 4,
-  totalTime: 30,
+  prepTime: 15,
+  cookTime: 15,
   tags: ['Italian', 'Pasta', 'Quick'],
   imageUrl: 'https://example.com/carbonara.jpg',
 }
@@ -97,10 +98,13 @@ describe('RecipeDetail', () => {
       expect(screen.getByText(/4 servings/i)).toBeInTheDocument()
     })
 
-    it('should display total time', () => {
+    it('should display prep and cook time', () => {
       renderWithProviders(<RecipeDetail recipe={mockRecipe} />)
 
-      expect(screen.getByText(/30 min/i)).toBeInTheDocument()
+      // Mock recipe has prepTime: 15, cookTime: 15
+      // Display shows separate sections for prep and cook
+      expect(screen.getByText('Prep: 15 min')).toBeInTheDocument()
+      expect(screen.getByText('Cook: 15 min')).toBeInTheDocument()
     })
 
     it('should display all tags', () => {

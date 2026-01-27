@@ -31,7 +31,8 @@ describe('generateGroceryList', () => {
       name: 'Chicken Rice Bowl',
       description: 'Healthy chicken bowl',
       servings: 2,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       ingredients: [
         { ingredientId: '1', quantity: 400, unit: 'gram' },
         { ingredientId: '2', quantity: 200, unit: 'gram' },
@@ -45,7 +46,8 @@ describe('generateGroceryList', () => {
       name: 'Fried Rice',
       description: 'Quick fried rice',
       servings: 4,
-      totalTime: 20,
+      prepTime: 10,
+      cookTime: 10,
       ingredients: [
         { ingredientId: '1', quantity: 200, unit: 'gram' },
         { ingredientId: '2', quantity: 400, unit: 'gram' },
@@ -195,7 +197,8 @@ describe('generateGroceryList', () => {
           name: 'Big Recipe',
           description: '',
           servings: 2,
-          totalTime: 10,
+          prepTime: 5,
+          cookTime: 5,
           ingredients: [
             { ingredientId: '1', quantity: 600, unit: 'gram' }, // 600g
           ],
@@ -252,7 +255,8 @@ describe('generateGroceryList', () => {
           name: 'Smoothie',
           description: '',
           servings: 1,
-          totalTime: 5,
+          prepTime: 3,
+          cookTime: 2,
           ingredients: [
             { ingredientId: '10', quantity: 750, unit: 'milliliter' }, // 750ml
           ],
@@ -329,7 +333,8 @@ describe('generateGroceryList', () => {
           name: 'Test Recipe',
           description: '',
           servings: 3,
-          totalTime: 10,
+          prepTime: 5,
+          cookTime: 5,
           ingredients: [
             { ingredientId: '1', quantity: 333, unit: 'gram' }, // Will be 333.33... when scaled
           ],
@@ -547,7 +552,8 @@ describe('generateGroceryList', () => {
           name: 'Test Recipe',
           description: '',
           servings: 2,
-          totalTime: 10,
+          prepTime: 5,
+          cookTime: 5,
           ingredients: [
             { ingredientId: '999', quantity: 100, unit: 'gram' }, // Non-existent ingredient
           ],
@@ -631,7 +637,8 @@ describe('generateGroceryList', () => {
           name: 'Chicken Rice Bowl',
           description: 'Healthy chicken bowl',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             { ingredientId: '1', quantity: 2, unit: 'cup' }, // Override library unit (gram)
             { ingredientId: '2', quantity: 300, unit: 'gram' }, // Matches library unit
@@ -680,7 +687,8 @@ describe('generateGroceryList', () => {
           name: 'Recipe 1',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
@@ -690,7 +698,8 @@ describe('generateGroceryList', () => {
           name: 'Recipe 2',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
@@ -740,7 +749,8 @@ describe('generateGroceryList', () => {
           name: 'Egg Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             { ingredientId: '1', quantity: 4, unit: 'whole' }, // 4 whole items
           ],

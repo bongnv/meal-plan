@@ -211,7 +211,7 @@ export function MealPlansPage() {
               <Group gap={4}>
                 <IconClock size={14} />
                 <Text size="xs" c="dimmed">
-                  {activeRecipe.totalTime} min
+                  {activeRecipe.prepTime + activeRecipe.cookTime} min
                 </Text>
               </Group>
             </Stack>

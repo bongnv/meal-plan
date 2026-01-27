@@ -16,7 +16,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             { ingredientId: '1', quantity: 400 }, // Missing unit
             { ingredientId: '2', quantity: 2 }, // Missing unit
@@ -47,7 +48,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             { ingredientId: '1', quantity: 2, unit: 'cup' }, // Already has unit (different from library)
           ],
@@ -69,7 +71,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             { ingredientId: 'unknown', quantity: 2 }, // Ingredient not in library
           ],
@@ -90,7 +93,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [],
           instructions: ['Cook it'],
           tags: [],
@@ -109,7 +113,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             {
               ingredientId: '1',
@@ -144,7 +149,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'A delicious test',
           servings: 4,
-          totalTime: 60,
+          prepTime: 30,
+          cookTime: 30,
           ingredients: [{ ingredientId: '1', quantity: 400 }],
           instructions: ['Step 1', 'Step 2'],
           tags: ['quick', 'easy'],
@@ -159,7 +165,8 @@ describe('migrateRecipes', () => {
         name: 'Test Recipe',
         description: 'A delicious test',
         servings: 4,
-        totalTime: 60,
+        prepTime: 30,
+        cookTime: 30,
         instructions: ['Step 1', 'Step 2'],
         tags: ['quick', 'easy'],
         imageUrl: 'https://example.com/image.jpg',
@@ -173,7 +180,8 @@ describe('migrateRecipes', () => {
           name: 'Test Recipe',
           description: 'Test',
           servings: 2,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [{ ingredientId: '1', quantity: 400 }],
           instructions: ['Cook it'],
           tags: [],

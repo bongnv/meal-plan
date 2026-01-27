@@ -209,7 +209,8 @@ describe('RecipeImportModal', () => {
       name: 'Test Recipe',
       description: 'Test Description',
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       tags: ['dinner'],
       ingredients: [
         {
@@ -316,7 +317,8 @@ describe('RecipeImportModal', () => {
       name: 'Chicken Recipe',
       description: 'A chicken dish',
       servings: 2,
-      totalTime: 45,
+      prepTime: 23,
+      cookTime: 22,
       tags: ['dinner'],
       ingredients: [
         {
@@ -365,7 +367,8 @@ describe('RecipeImportModal', () => {
       name: 'Simple Recipe',
       description: 'Basic recipe',
       servings: 2,
-      totalTime: 20,
+      prepTime: 10,
+      cookTime: 10,
       tags: ['quick'],
       ingredients: [
         {

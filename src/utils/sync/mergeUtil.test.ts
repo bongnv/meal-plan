@@ -15,7 +15,8 @@ describe('mergeUtil', () => {
     ingredients: [],
     instructions: [],
     servings: 4,
-    totalTime: 30,
+    prepTime: 15,
+    cookTime: 15,
     tags: [],
   }
 
@@ -26,7 +27,8 @@ describe('mergeUtil', () => {
     ingredients: [],
     instructions: [],
     servings: 2,
-    totalTime: 40,
+    prepTime: 20,
+    cookTime: 20,
     tags: [],
   }
 

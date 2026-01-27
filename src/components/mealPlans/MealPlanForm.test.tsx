@@ -18,7 +18,8 @@ const mockRecipes: Recipe[] = [
     ingredients: [],
     instructions: [],
     servings: 4,
-    totalTime: 30,
+    prepTime: 15,
+    cookTime: 15,
     tags: [],
   },
   {
@@ -28,7 +29,8 @@ const mockRecipes: Recipe[] = [
     ingredients: [],
     instructions: [],
     servings: 2,
-    totalTime: 20,
+    prepTime: 10,
+    cookTime: 10,
     tags: [],
   },
 ]

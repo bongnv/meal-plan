@@ -11,7 +11,10 @@ import {
 import { z } from 'zod'
 
 import { TokenExpiredError } from '../utils/errors/TokenExpiredError'
-import { migrateRecipes } from '../utils/migration/recipeMigration'
+import {
+  migrateRecipes,
+  migrateRecipeTime,
+} from '../utils/migration/recipeMigration'
 import { merge, resolveConflicts } from '../utils/sync/mergeUtil'
 
 import { useCloudStorage } from './CloudStorageContext'
@@ -416,15 +419,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         const validatedRemote = validationResult.data as SyncData
 
-        // Apply migration to remote data (converts old schema to new schema)
-        const migratedRecipes = migrateRecipes(
+        // Apply migrations to remote data (converts old schema to new schema)
+        // 1. Ensure all recipe ingredients have units
+        const unitMigrated = migrateRecipes(
           validatedRemote.recipes,
           validatedRemote.ingredients
         )
+        // 2. Split totalTime into prepTime and cookTime
+        const timeMigrated = migrateRecipeTime(unitMigrated)
 
         remote = {
           ...validatedRemote,
-          recipes: migratedRecipes,
+          recipes: timeMigrated,
         }
       }
 
@@ -580,15 +586,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
       const validatedRemote = validationResult.data as SyncData
 
-      // Apply migration to remote data (converts old schema to new schema)
-      const migratedRecipes = migrateRecipes(
+      // Apply migrations to remote data (converts old schema to new schema)
+      // 1. Ensure all recipe ingredients have units
+      const unitMigrated = migrateRecipes(
         validatedRemote.recipes,
         validatedRemote.ingredients
       )
+      // 2. Split totalTime into prepTime and cookTime
+      const timeMigrated = migrateRecipeTime(unitMigrated)
 
       const remote = {
         ...validatedRemote,
-        recipes: migratedRecipes,
+        recipes: timeMigrated,
       }
 
       // Apply remote data to React state (overwrites local)

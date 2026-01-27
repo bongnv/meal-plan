@@ -70,9 +70,8 @@ describe('RecipeForm', () => {
       expect(screen.getByPlaceholderText(/number of servings/i)).toHaveValue(
         '0'
       )
-      expect(screen.getByPlaceholderText(/total cooking time/i)).toHaveValue(
-        '0'
-      )
+      expect(screen.getByPlaceholderText(/preparation time/i)).toHaveValue('0')
+      expect(screen.getByPlaceholderText(/cooking time/i)).toHaveValue('0')
       expect(
         screen.getByRole('button', { name: /create recipe/i })
       ).toBeInTheDocument()
@@ -182,7 +181,8 @@ describe('RecipeForm', () => {
         'Test Description'
       )
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
-      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+      await user.type(screen.getByPlaceholderText(/preparation time/i), '15')
+      await user.type(screen.getByPlaceholderText(/cooking time/i), '15')
 
       // Add an ingredient
       await user.click(screen.getByRole('button', { name: /add ingredient/i }))
@@ -210,7 +210,8 @@ describe('RecipeForm', () => {
             name: 'Test Recipe',
             description: 'Test Description',
             servings: 4,
-            totalTime: 30,
+            prepTime: 15,
+            cookTime: 15,
             ingredients: expect.arrayContaining([
               expect.objectContaining({
                 ingredientId: '1',
@@ -243,7 +244,8 @@ describe('RecipeForm', () => {
       name: 'Existing Recipe',
       description: 'Existing Description',
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       ingredients: [{ ingredientId: 'flour', quantity: 2 }],
       instructions: ['Step 1', 'Step 2'],
       tags: ['dinner'],
@@ -268,9 +270,8 @@ describe('RecipeForm', () => {
       expect(screen.getByPlaceholderText(/number of servings/i)).toHaveValue(
         '4'
       )
-      expect(screen.getByPlaceholderText(/total cooking time/i)).toHaveValue(
-        '30'
-      )
+      expect(screen.getByPlaceholderText(/preparation time/i)).toHaveValue('15')
+      expect(screen.getByPlaceholderText(/cooking time/i)).toHaveValue('15')
       expect(
         screen.getByRole('button', { name: /update recipe/i })
       ).toBeInTheDocument()
@@ -349,7 +350,8 @@ describe('RecipeForm', () => {
         name: 'Test',
         description: 'Test',
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         ingredients: [],
         instructions: [],
         tags: ['dinner', 'easy'],
@@ -417,7 +419,8 @@ describe('RecipeForm', () => {
         name: 'Test',
         description: 'Test',
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         ingredients: [{ ingredientId: '1', quantity: 2 }],
         instructions: [],
         tags: [],
@@ -466,7 +469,8 @@ describe('RecipeForm', () => {
       await user.type(screen.getByLabelText(/^name/i), 'Test Recipe')
       await user.type(screen.getByLabelText(/description/i), 'Test description')
       await user.type(screen.getByLabelText(/servings/i), '4')
-      await user.type(screen.getByLabelText(/total time/i), '30')
+      await user.type(screen.getByLabelText(/prep time/i), '15')
+      await user.type(screen.getByLabelText(/cook time/i), '15')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -522,7 +526,8 @@ describe('RecipeForm', () => {
         name: 'Test',
         description: 'Test',
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
         instructions: ['Step 1'],
         tags: [],
@@ -639,7 +644,8 @@ describe('RecipeForm', () => {
         name: 'Test Recipe',
         description: 'Test Description',
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         ingredients: [
           { ingredientId: '1', quantity: 2, displayName: 'diced tomatoes' },
         ],
@@ -669,7 +675,8 @@ describe('RecipeForm', () => {
         name: 'Test Recipe',
         description: 'Test Description',
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         ingredients: [
           { ingredientId: '1', quantity: 2, displayName: 'diced tomatoes' },
         ],
@@ -709,8 +716,10 @@ describe('RecipeForm', () => {
       )
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
-      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+      await user.clear(screen.getByPlaceholderText(/preparation time/i))
+      await user.type(screen.getByPlaceholderText(/preparation time/i), '15')
+      await user.clear(screen.getByPlaceholderText(/cooking time/i))
+      await user.type(screen.getByPlaceholderText(/cooking time/i), '15')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -752,7 +761,8 @@ describe('RecipeForm', () => {
           name: 'Test Recipe',
           description: 'Test Description',
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           ingredients: [
             {
               ingredientId: '1',
@@ -843,8 +853,10 @@ describe('RecipeForm', () => {
       )
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
-      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+      await user.clear(screen.getByPlaceholderText(/preparation time/i))
+      await user.type(screen.getByPlaceholderText(/preparation time/i), '15')
+      await user.clear(screen.getByPlaceholderText(/cooking time/i))
+      await user.type(screen.getByPlaceholderText(/cooking time/i), '15')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -901,8 +913,10 @@ describe('RecipeForm', () => {
       )
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
-      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+      await user.clear(screen.getByPlaceholderText(/preparation time/i))
+      await user.type(screen.getByPlaceholderText(/preparation time/i), '15')
+      await user.clear(screen.getByPlaceholderText(/cooking time/i))
+      await user.type(screen.getByPlaceholderText(/cooking time/i), '15')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -960,8 +974,10 @@ describe('RecipeForm', () => {
       )
       await user.clear(screen.getByPlaceholderText(/number of servings/i))
       await user.type(screen.getByPlaceholderText(/number of servings/i), '4')
-      await user.clear(screen.getByPlaceholderText(/total cooking time/i))
-      await user.type(screen.getByPlaceholderText(/total cooking time/i), '30')
+      await user.clear(screen.getByPlaceholderText(/preparation time/i))
+      await user.type(screen.getByPlaceholderText(/preparation time/i), '15')
+      await user.clear(screen.getByPlaceholderText(/cooking time/i))
+      await user.type(screen.getByPlaceholderText(/cooking time/i), '15')
 
       // Add ingredient
       const addIngredientButton = screen.getByRole('button', {
@@ -1051,7 +1067,8 @@ describe('RecipeForm', () => {
         ingredients: [{ ingredientId: '1', quantity: 2 }],
         instructions: ['Step 1'],
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         tags: ['test'],
         imageUrl: 'https://example.com/recipe.jpg',
       }

@@ -102,7 +102,13 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
             <Group gap={4}>
               <IconClock size={18} />
               <Text size="sm" fw={500}>
-                {recipe.totalTime} min
+                Prep: {recipe.prepTime} min
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <IconClock size={18} />
+              <Text size="sm" fw={500}>
+                Cook: {recipe.cookTime} min
               </Text>
             </Group>
           </Group>

@@ -31,7 +31,8 @@ const ImportedRecipeSchema = RecipeSchema.extend({
     .array(ImportedIngredientSchema)
     .min(1, 'At least one ingredient is required'),
   servings: z.number().min(1, 'Servings must be at least 1'),
-  totalTime: z.number().min(1, 'Total time must be at least 1 minute'),
+  prepTime: z.number().min(1, 'Prep time must be at least 1 minute'),
+  cookTime: z.number().min(1, 'Cook time must be at least 1 minute'),
 })
 
 export interface ValidationResult {

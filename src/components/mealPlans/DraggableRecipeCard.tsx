@@ -53,7 +53,7 @@ export const DraggableRecipeCard = ({ recipe }: DraggableRecipeCardProps) => {
         <Group gap={4}>
           <IconClock size={14} />
           <Text size="xs" c="dimmed">
-            {recipe.totalTime} min
+            {recipe.prepTime + recipe.cookTime} min
           </Text>
         </Group>
       </Stack>

@@ -111,7 +111,7 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
               </Group>
               <Group gap={4}>
                 <IconClock size={16} />
-                <Text size="sm">{recipe.totalTime} min</Text>
+                <Text size="sm">{recipe.prepTime + recipe.cookTime} min</Text>
               </Group>
             </Group>
 

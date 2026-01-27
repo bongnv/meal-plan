@@ -199,7 +199,8 @@ describe('Recipe Types', () => {
       ],
       instructions: ['Step 1', 'Step 2'],
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       tags: ['test'],
     }
 

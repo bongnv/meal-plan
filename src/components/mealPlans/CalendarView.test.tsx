@@ -54,7 +54,8 @@ describe('CalendarView', () => {
         ingredients: [],
         instructions: [],
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         tags: [],
       }
     }

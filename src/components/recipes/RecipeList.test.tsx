@@ -28,7 +28,8 @@ const mockRecipes: Recipe[] = [
     ],
     instructions: ['Boil pasta', 'Cook bacon', 'Mix with eggs'],
     servings: 4,
-    totalTime: 30,
+    prepTime: 15,
+    cookTime: 15,
     tags: ['Italian', 'Pasta', 'Quick'],
     imageUrl: 'https://example.com/carbonara.jpg',
   },
@@ -42,7 +43,8 @@ const mockRecipes: Recipe[] = [
     ],
     instructions: ['Cut chicken', 'Stir fry vegetables', 'Add sauce'],
     servings: 2,
-    totalTime: 20,
+    prepTime: 10,
+    cookTime: 10,
     tags: ['Asian', 'Healthy'],
   },
   {
@@ -53,7 +55,8 @@ const mockRecipes: Recipe[] = [
     ingredients: [{ ingredientId: '5', quantity: 200 }],
     instructions: ['Mix ingredients', 'Bake', 'Frost'],
     servings: 8,
-    totalTime: 90,
+    prepTime: 45,
+    cookTime: 45,
     tags: ['Dessert', 'Baking'],
   },
 ]
@@ -122,7 +125,7 @@ describe('RecipeList', () => {
       expect(screen.getByText('Dessert')).toBeInTheDocument()
     })
 
-    it('should display servings and total time', () => {
+    it('should display servings and prep/cook time', () => {
       renderWithProviders(
         <RecipeList
           recipes={mockRecipes}
@@ -136,10 +139,10 @@ describe('RecipeList', () => {
       expect(screen.getByText('2 servings')).toBeInTheDocument()
       expect(screen.getByText('8 servings')).toBeInTheDocument()
 
-      // Check for time
-      expect(screen.getByText('30 min')).toBeInTheDocument()
-      expect(screen.getByText('20 min')).toBeInTheDocument()
-      expect(screen.getByText('90 min')).toBeInTheDocument()
+      // Check for time - each recipe displays prep+cook time
+      expect(screen.getAllByText('30 min').length).toBeGreaterThan(0) // 15+15
+      expect(screen.getAllByText('20 min').length).toBeGreaterThan(0) // 10+10
+      expect(screen.getAllByText('90 min').length).toBeGreaterThan(0) // 45+45
     })
 
     it('should render View, Edit, and Delete buttons for each recipe', () => {

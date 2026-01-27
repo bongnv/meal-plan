@@ -30,7 +30,8 @@ describe('MealPlansPage', () => {
       ingredients: [],
       instructions: [],
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       tags: [],
     },
     {
@@ -40,7 +41,8 @@ describe('MealPlansPage', () => {
       ingredients: [],
       instructions: [],
       servings: 2,
-      totalTime: 20,
+      prepTime: 10,
+      cookTime: 10,
       tags: [],
     },
   ]

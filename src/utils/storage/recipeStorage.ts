@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { RecipeSchema, type Recipe } from '../../types/recipe'
-import { migrateRecipes } from '../migration/recipeMigration'
+import { migrateRecipes, migrateRecipeTime } from '../migration/recipeMigration'
 
 import type { Ingredient } from '../../types/ingredient'
 
@@ -10,13 +10,13 @@ const STORAGE_KEY = 'recipes'
 /**
  * RecipeStorageService
  * Handles persistence of recipes to localStorage with Zod validation
- * Applies migration to ensure all recipe ingredients have units
+ * Applies migrations to ensure all recipe ingredients have units and time fields are split
  */
 export class RecipeStorageService {
   /**
    * Load all recipes from localStorage
    * Returns empty array if no recipes found
-   * Validates data with Zod schema and applies migration
+   * Validates data with Zod schema and applies migrations
    *
    * @param ingredients - Ingredient library for migration (copying units to recipe ingredients)
    */
@@ -28,10 +28,14 @@ export class RecipeStorageService {
     const parsed = JSON.parse(stored)
     const validated = z.array(RecipeSchema).parse(parsed)
 
-    // Apply migration to ensure all recipe ingredients have units
-    const migrated = migrateRecipes(validated, ingredients)
+    // Apply migrations in order:
+    // 1. Ensure all recipe ingredients have units
+    const unitMigrated = migrateRecipes(validated, ingredients)
 
-    return migrated
+    // 2. Split totalTime into prepTime and cookTime
+    const timeMigrated = migrateRecipeTime(unitMigrated)
+
+    return timeMigrated
   }
 
   /**

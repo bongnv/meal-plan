@@ -61,7 +61,8 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt).toContain('ingredients')
     expect(prompt).toContain('instructions')
     expect(prompt).toContain('servings')
-    expect(prompt).toContain('totalTime')
+    expect(prompt).toContain('prepTime')
+    expect(prompt).toContain('cookTime')
     expect(prompt).toContain('tags')
 
     // Should mention ingredient mapping
@@ -127,7 +128,8 @@ describe('generateRecipeImportPrompt', () => {
       'ingredients',
       'instructions',
       'servings',
-      'totalTime',
+      'prepTime',
+      'cookTime',
       'tags',
     ]
 

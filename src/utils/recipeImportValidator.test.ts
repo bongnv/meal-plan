@@ -22,7 +22,8 @@ describe('validateRecipeImport', () => {
       ],
       instructions: ['Boil pasta', 'Cook garlic in oil', 'Toss together'],
       servings: 4,
-      totalTime: 20,
+      prepTime: 10,
+      cookTime: 10,
       tags: ['Italian', 'Quick'],
     }
 
@@ -57,7 +58,8 @@ describe('validateRecipeImport', () => {
       ],
       instructions: ['Cook pasta', 'Add cheese'],
       servings: 2,
-      totalTime: 15,
+      prepTime: 8,
+      cookTime: 7,
       tags: ['Quick'],
     }
 
@@ -113,7 +115,8 @@ describe('validateRecipeImport', () => {
       ],
       instructions: ['Step 1'],
       servings: 2,
-      totalTime: 10,
+      prepTime: 5,
+      cookTime: 5,
       tags: [],
     }
 
@@ -136,7 +139,8 @@ describe('validateRecipeImport', () => {
       ],
       instructions: ['Step 1'],
       servings: 2,
-      totalTime: 10,
+      prepTime: 5,
+      cookTime: 5,
       tags: [],
     }
 
@@ -157,7 +161,8 @@ describe('validateRecipeImport', () => {
       ingredients: [],
       instructions: ['Step 1'],
       servings: 2,
-      totalTime: 10,
+      prepTime: 5,
+      cookTime: 5,
       tags: [],
     }
 
@@ -181,7 +186,8 @@ describe('validateRecipeImport', () => {
       ingredients: [{ ingredientId: '1', quantity: 1, unit: 'cup' }],
       instructions: ['Step 1'],
       servings: 2,
-      totalTime: 10,
+      prepTime: 5,
+      cookTime: 5,
       tags: [],
       imageUrl: 'https://example.com/image.jpg',
     }
@@ -225,7 +231,8 @@ describe('validateRecipeImport', () => {
       ],
       instructions: ['Step 1'],
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       tags: ['Test'],
     }
 
@@ -239,7 +246,7 @@ describe('validateRecipeImport', () => {
     expect(result.newIngredients.map(i => i.name)).toEqual(['Cheese', 'Pasta'])
   })
 
-  it('should validate servings and totalTime are positive numbers', () => {
+  it('should validate servings and prep/cook time are positive numbers', () => {
     const recipeData = {
       id: 'recipe_123',
       name: 'Test Recipe',
@@ -247,7 +254,8 @@ describe('validateRecipeImport', () => {
       ingredients: [{ ingredientId: '1', quantity: 1, unit: 'cup' }],
       instructions: ['Step 1'],
       servings: -1,
-      totalTime: 0,
+      prepTime: 0,
+      cookTime: 0,
       tags: [],
     }
 
@@ -287,7 +295,8 @@ describe('validateRecipeImport', () => {
         ],
         instructions: ['Toast bread', 'Add garlic'],
         servings: 2,
-        totalTime: 10,
+        prepTime: 5,
+        cookTime: 5,
         tags: ['Quick'],
       }
 
@@ -320,7 +329,8 @@ describe('validateRecipeImport', () => {
         ],
         instructions: ['Make soup'],
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         tags: ['Soup'],
       }
 
@@ -364,7 +374,8 @@ describe('validateRecipeImport', () => {
         ],
         instructions: ['Mix everything'],
         servings: 4,
-        totalTime: 20,
+        prepTime: 10,
+        cookTime: 10,
         tags: ['Fresh'],
       }
 
@@ -401,7 +412,8 @@ describe('validateRecipeImport', () => {
         ],
         instructions: ['Use garlic'],
         servings: 2,
-        totalTime: 10,
+        prepTime: 5,
+        cookTime: 5,
         tags: [],
       }
 
@@ -437,7 +449,8 @@ describe('validateRecipeImport', () => {
         ],
         instructions: ['Use spaghetti'],
         servings: 1,
-        totalTime: 5,
+        prepTime: 3,
+        cookTime: 2,
         tags: [],
       }
 

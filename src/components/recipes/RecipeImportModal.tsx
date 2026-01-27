@@ -208,8 +208,11 @@ export const RecipeImportModal = ({
                       {validationResult.recipe.servings}
                     </Text>
                     <Text size="sm">
-                      <strong>Total Time:</strong>{' '}
-                      {validationResult.recipe.totalTime} min
+                      <strong>Time:</strong>{' '}
+                      {validationResult.recipe.prepTime +
+                        validationResult.recipe.cookTime}{' '}
+                      min (Prep: {validationResult.recipe.prepTime}, Cook:{' '}
+                      {validationResult.recipe.cookTime})
                     </Text>
                   </Group>
 

@@ -34,7 +34,9 @@ export interface Recipe {
   ingredients: RecipeIngredient[]
   instructions: string[]
   servings: number
-  totalTime: number // in minutes
+  prepTime: number // preparation time in minutes
+  cookTime: number // cooking time in minutes
+  totalTime?: number // DEPRECATED: kept for backward compatibility during migration
   tags: string[]
   imageUrl?: string // optional
 }
@@ -49,7 +51,9 @@ export const RecipeSchema = z.object({
   ingredients: z.array(RecipeIngredientSchema),
   instructions: z.array(z.string()),
   servings: z.number(),
-  totalTime: z.number(),
+  prepTime: z.number().positive('Prep time must be positive'),
+  cookTime: z.number().positive('Cook time must be positive'),
+  totalTime: z.number().optional(), // DEPRECATED: backward compatibility
   tags: z.array(z.string()),
   imageUrl: z
     .string()
@@ -82,7 +86,8 @@ export const RecipeFormSchema = z.object({
     .array(z.string().min(1))
     .min(1, 'At least one instruction is required'),
   servings: z.number().min(1, 'Servings must be at least 1'),
-  totalTime: z.number().min(1, 'Total time must be at least 1 minute'),
+  prepTime: z.number().min(1, 'Prep time must be at least 1 minute'),
+  cookTime: z.number().min(1, 'Cook time must be at least 1 minute'),
   tags: z.array(z.string()),
   imageUrl: z
     .string()

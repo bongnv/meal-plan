@@ -59,7 +59,8 @@ export function RecipeForm({
       name: recipe?.name ?? '',
       description: recipe?.description ?? '',
       servings: recipe?.servings ?? 0,
-      totalTime: recipe?.totalTime ?? 0,
+      prepTime: recipe?.prepTime ?? 0,
+      cookTime: recipe?.cookTime ?? 0,
       ingredients: recipe?.ingredients ?? [],
       instructions: recipe?.instructions ?? [],
       tags: recipe?.tags ?? [],
@@ -187,11 +188,19 @@ export function RecipeForm({
             />
 
             <NumberInput
-              label="Total Time (minutes)"
-              placeholder="Total cooking time"
+              label="Prep Time (minutes)"
+              placeholder="Preparation time"
               required
               min={1}
-              {...form.getInputProps('totalTime')}
+              {...form.getInputProps('prepTime')}
+            />
+
+            <NumberInput
+              label="Cook Time (minutes)"
+              placeholder="Cooking time"
+              required
+              min={1}
+              {...form.getInputProps('cookTime')}
             />
           </Group>
 

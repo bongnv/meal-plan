@@ -36,7 +36,8 @@ describe('RecipeContext', () => {
       ingredients: [{ ingredientId: 'ing1', quantity: 2 }],
       instructions: ['Step 1'],
       servings: 4,
-      totalTime: 30,
+      prepTime: 15,
+      cookTime: 15,
       tags: ['dinner'],
     },
     {
@@ -46,7 +47,8 @@ describe('RecipeContext', () => {
       ingredients: [{ ingredientId: 'ing2', quantity: 1 }],
       instructions: ['Step 1', 'Step 2'],
       servings: 2,
-      totalTime: 15,
+      prepTime: 8,
+      cookTime: 7,
       tags: ['lunch'],
     },
   ]
@@ -150,7 +152,8 @@ describe('RecipeContext', () => {
         ingredients: [],
         instructions: ['Step 1'],
         servings: 3,
-        totalTime: 20,
+        prepTime: 10,
+        cookTime: 10,
         tags: ['snack'],
       }
 
@@ -193,7 +196,8 @@ describe('RecipeContext', () => {
         ingredients: [],
         instructions: ['Step 1'],
         servings: 3,
-        totalTime: 20,
+        prepTime: 10,
+        cookTime: 10,
         tags: ['snack'],
       }
 
@@ -252,7 +256,8 @@ describe('RecipeContext', () => {
         ingredients: [],
         instructions: [],
         servings: 2,
-        totalTime: 10,
+        prepTime: 5,
+        cookTime: 5,
         tags: [],
       }
 

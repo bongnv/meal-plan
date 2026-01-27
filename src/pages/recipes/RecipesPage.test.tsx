@@ -39,7 +39,8 @@ describe('RecipesPage', () => {
       ],
       instructions: ['Boil pasta', 'Mix eggs', 'Combine'],
       servings: 4,
-      totalTime: 25,
+      prepTime: 13,
+      cookTime: 12,
       tags: ['italian', 'pasta', 'quick'],
     },
     {
@@ -52,7 +53,8 @@ describe('RecipesPage', () => {
       ],
       instructions: ['Cook chicken', 'Add spices', 'Simmer'],
       servings: 6,
-      totalTime: 45,
+      prepTime: 23,
+      cookTime: 22,
       tags: ['indian', 'spicy'],
     },
     {
@@ -62,7 +64,8 @@ describe('RecipesPage', () => {
       ingredients: [{ ingredientId: 'ing5', quantity: 300 }],
       instructions: ['Chop vegetables', 'Mix', 'Serve'],
       servings: 2,
-      totalTime: 10,
+      prepTime: 5,
+      cookTime: 5,
       tags: ['vegetarian', 'quick'],
     },
   ]

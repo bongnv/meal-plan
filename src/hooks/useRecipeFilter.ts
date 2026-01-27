@@ -54,15 +54,16 @@ export function useRecipeFilter(
 
       // Filter by time range
       if (filters.timeRange) {
+        const totalTime = recipe.prepTime + recipe.cookTime
         switch (filters.timeRange) {
           case 'under-30':
-            if (recipe.totalTime >= 30) return false
+            if (totalTime >= 30) return false
             break
           case '30-60':
-            if (recipe.totalTime < 30 || recipe.totalTime > 60) return false
+            if (totalTime < 30 || totalTime > 60) return false
             break
           case 'over-60':
-            if (recipe.totalTime <= 60) return false
+            if (totalTime <= 60) return false
             break
         }
       }

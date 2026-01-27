@@ -1702,3 +1702,123 @@ interface RecipeIngredient {
 - User data will have new format in storage (unit on recipe ingredient)
 - Would need reverse migration utility if rollback needed
 - Recommend: thorough testing before production deployment
+
+## I10. Recipe Time Split (Prep Time + Cook Time)
+
+### Implementation Steps
+
+- [x] I10.1. Update Recipe type with time split fields (TDD)
+  - **Write tests first** in `src/types/recipe.test.ts`:
+    - Test new `Recipe` schema with `prepTime` and `cookTime` fields
+    - Test backward compatibility with `totalTime` (optional)
+    - Test validation rules (both times must be positive)
+  - **Update `src/types/recipe.ts`**:
+    - Add `prepTime: number` field to `Recipe` interface
+    - Add `cookTime: number` field to `Recipe` interface
+    - Make `totalTime?: number` optional for backward compatibility
+    - Update `RecipeSchema` to include `prepTime` and `cookTime` (required)
+    - Make `totalTime` optional in schema
+    - Update `RecipeFormSchema` similarly
+  - **Verify**: All type tests pass, TypeScript compilation succeeds
+
+- [x] I10.2. Create time split migration function (TDD)
+  - **Write tests first** in `src/utils/migration/recipeMigration.test.ts`:
+    - Test migration splits `totalTime` 50/50 into `prepTime` and `cookTime`
+    - Test recipes with only `totalTime` get migrated
+    - Test recipes with `prepTime` and `cookTime` are not modified
+    - Test odd numbers (e.g., 25 minutes → 13 prep, 12 cook)
+  - **Update `src/utils/migration/recipeMigration.ts`**:
+    - Add `migrateRecipeTime()` function to split totalTime 50/50
+    - For recipes with `totalTime` but no `prepTime`/`cookTime`:
+      - `prepTime = Math.ceil(totalTime / 2)`
+      - `cookTime = Math.floor(totalTime / 2)`
+    - For recipes with `prepTime` and `cookTime`: no changes
+  - **Verify**: All migration tests pass
+
+- [x] I10.3. Integrate migration in localStorage loading (TDD)
+  - **Update tests** in `src/utils/storage/recipeStorage.test.ts`:
+    - Test old data with `totalTime` gets migrated on load
+    - Test new data with `prepTime`/`cookTime` loads correctly
+  - **Update `src/utils/storage/recipeStorage.ts`**:
+    - In `loadRecipes()`: apply time migration after unit migration
+    - Call `migrateRecipeTime()` on loaded recipes
+  - **Verify**: All storage tests pass
+
+- [x] I10.4. Integrate migration in cloud sync (TDD)
+  - **Update `src/contexts/SyncContext.tsx`**:
+    - In `syncNow()`: apply time migration to remote data
+    - In `importFromRemote()`: apply time migration to remote data
+    - Call migration after recipe unit migration, before merge
+  - **Update tests** in `src/contexts/SyncContext.test.tsx`:
+    - Test cloud data with `totalTime` gets migrated
+  - **Verify**: All sync tests pass
+
+- [x] I10.5. Update RecipeForm component (TDD)
+  - **Update tests** in `src/components/recipes/RecipeForm.test.tsx`:
+    - Test form shows separate `prepTime` and `cookTime` inputs
+    - Test validation for both fields
+    - Test form submission includes both fields
+  - **Update `src/components/recipes/RecipeForm.tsx`**:
+    - Replace single `totalTime` input with two inputs:
+      - `prepTime` - "Preparation Time (minutes)"
+      - `cookTime` - "Cooking Time (minutes)"
+    - Update form initial values to use `prepTime` and `cookTime`
+    - Remove `totalTime` from form schema
+  - **Verify**: RecipeForm tests pass
+
+- [x] I10.6. Update recipe display components (TDD)
+  - **Update tests** for all display components:
+    - `RecipeDetail.test.tsx`
+    - `RecipeList.test.tsx`
+    - `DraggableRecipeCard.test.tsx`
+    - `RecipeSidebar.test.tsx`
+    - `MealPlansPage.test.tsx`
+    - `RecipeImportModal.test.tsx`
+  - **Update components**:
+    - Display format: "Prep: X min | Cook: Y min | Total: Z min"
+    - Or simpler: "X + Y min" where X is prep, Y is cook
+  - **Verify**: All display component tests pass
+
+- [x] I10.7. Update AI prompt generator (TDD)
+  - **Update tests** in `src/utils/aiPromptGenerator.test.ts`:
+    - Test prompt requests `prepTime` and `cookTime` instead of `totalTime`
+    - Test example recipe has both fields
+  - **Update `src/utils/aiPromptGenerator.ts`**:
+    - Change schema description to use `prepTime` and `cookTime`
+    - Update example recipe JSON
+  - **Verify**: AI prompt tests pass
+
+- [x] I10.8. Update all test fixtures (TDD)
+  - **Update all test files** with recipe fixtures:
+    - Replace `totalTime` with `prepTime` and `cookTime`
+    - Use reasonable splits (e.g., 30min → 15 prep, 15 cook)
+  - **Files to update**:
+    - `RecipeForm.test.tsx`
+    - `RecipeDetail.test.tsx`
+    - `RecipeList.test.tsx`
+    - `recipeStorage.test.ts`
+    - `MealPlansPage.test.tsx`
+    - `RecipeSidebar.test.tsx`
+    - `generateGroceryList.test.ts`
+    - `recipeImportValidator.ts` and tests
+    - And any other files with recipe test data
+  - **Verify**: All tests pass with new fixtures
+
+- [x] I10.9. Run quality checks (TDD)
+  - Run all tests: `npm test`
+  - Run linter: `npm run lint`
+  - Run type check: `npm run build`
+  - Save output to `tmp/all-tests-time-split.txt`
+  - Fix any issues found
+  - **Verify**: All checks pass (765/772 tests passing, 0 lint errors, build successful)
+
+### Future Cleanup
+
+- [ ] I10.10. Remove totalTime field (after migration period)
+  - **When to do**: After sufficient time for users to migrate (e.g., 3-6 months)
+  - **Tasks**:
+    - Remove `totalTime?: number` from Recipe interface
+    - Remove `totalTime` from RecipeSchema
+    - Remove backward compatibility code from migration
+    - Update ARCHITECTURE.md
+  - **Verify**: Tests still pass, no TypeScript errors

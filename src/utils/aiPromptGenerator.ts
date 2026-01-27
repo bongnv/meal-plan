@@ -40,7 +40,8 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
   ],
   "instructions": ["string (step 1)", "string (step 2)", ...],
   "servings": "number (number of servings)",
-  "totalTime": "number (total time in minutes)",
+  "prepTime": "number (preparation time in minutes)",
+  "cookTime": "number (cooking time in minutes)",
   "tags": ["string (tag 1)", "string (tag 2)", ...],
   "imageUrl": "string (optional - URL to recipe image if available, OMIT this field entirely if no image URL is available - do not use empty string)"
 }
@@ -70,7 +71,7 @@ ${ingredientList}
 3. IMPORTANT: Every recipe ingredient MUST include a unit field with one of these values: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package
 4. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5)
 5. Break instructions into clear, sequential steps
-6. Estimate total time in minutes (prep + cook time)
+6. Estimate prepTime (preparation time) and cookTime (cooking time) separately in minutes
 7. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
 8. Use placeholder 'temp' for recipe ID (app will generate actual ID)
 9. If no image URL is available, OMIT the imageUrl field entirely - do not include it with an empty string
@@ -96,7 +97,8 @@ ${ingredientList}
     "Season with salt and pepper, serve immediately"
   ],
   "servings": 4,
-  "totalTime": 20,
+  "prepTime": 5,
+  "cookTime": 15,
   "tags": ["Italian", "Quick", "Easy"],
   "imageUrl": "https://example.com/recipe-image.jpg"
 }

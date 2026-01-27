@@ -51,7 +51,8 @@ describe('RecipeStorageService', () => {
           ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: ['dinner'],
         },
       ]
@@ -102,7 +103,8 @@ describe('RecipeStorageService', () => {
           ingredients: [{ ingredientId: 'ing1', quantity: 2 }],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: ['dinner'],
         },
       ]
@@ -123,7 +125,8 @@ describe('RecipeStorageService', () => {
           ingredients: [],
           instructions: [],
           servings: 2,
-          totalTime: 15,
+          prepTime: 8,
+          cookTime: 7,
           tags: [],
         },
       ]
@@ -136,7 +139,8 @@ describe('RecipeStorageService', () => {
           ingredients: [],
           instructions: [],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: [],
         },
       ]
@@ -163,7 +167,8 @@ describe('RecipeStorageService', () => {
           ingredients: [],
           instructions: [],
           servings: 2,
-          totalTime: 15,
+          prepTime: 8,
+          cookTime: 7,
           tags: [],
         },
       ]
@@ -203,7 +208,8 @@ describe('RecipeStorageService', () => {
           ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: ['dinner'],
         },
       ]
@@ -237,7 +243,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: ['dinner'],
         },
       ]
@@ -266,7 +273,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: ['dinner'],
         },
         {
@@ -276,7 +284,8 @@ describe('RecipeStorageService', () => {
           ingredients: [{ ingredientId: 'ing2', quantity: 2, unit: 'cup' }],
           instructions: ['Step 1'],
           servings: 2,
-          totalTime: 15,
+          prepTime: 8,
+          cookTime: 7,
           tags: ['lunch'],
         },
       ]
@@ -301,7 +310,8 @@ describe('RecipeStorageService', () => {
         ],
         instructions: ['Step 1'],
         servings: 4,
-        totalTime: 30,
+        prepTime: 15,
+        cookTime: 15,
         tags: [],
       }
 
@@ -329,7 +339,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: [],
         },
       ]
@@ -364,7 +375,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: [],
         },
       ]
@@ -390,7 +402,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: [],
         },
       ]
@@ -414,7 +427,8 @@ describe('RecipeStorageService', () => {
           ],
           instructions: ['Step 1'],
           servings: 4,
-          totalTime: 30,
+          prepTime: 15,
+          cookTime: 15,
           tags: [],
         },
       ]
