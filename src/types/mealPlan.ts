@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export type MealType = 'lunch' | 'dinner'
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export type MealPlanType =
   | 'recipe'
@@ -101,7 +101,7 @@ export interface CopyResult {
 
 // Zod Schemas for validation
 
-export const MealTypeSchema = z.enum(['lunch', 'dinner'])
+export const MealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner', 'snack'])
 
 export const MealPlanTypeSchema = z.enum([
   'recipe',

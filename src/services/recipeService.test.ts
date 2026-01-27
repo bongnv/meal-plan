@@ -24,7 +24,7 @@ describe('recipeService', () => {
       },
       updateLastModified: vi.fn(),
       getLastModified: vi.fn(),
-      transaction: vi.fn((mode, tables, callback) => callback()),
+      transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
     service = createRecipeService(mockDb)
@@ -145,9 +145,9 @@ describe('recipeService', () => {
     it('should replace all recipes', async () => {
       const newRecipes = [createMockRecipe()]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.recipes.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.recipes.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)

@@ -23,7 +23,7 @@ describe('mealPlanService', () => {
       },
       updateLastModified: vi.fn(),
       getLastModified: vi.fn(),
-      transaction: vi.fn((mode, tables, callback) => callback()),
+      transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
     service = createMealPlanService(mockDb)
@@ -139,9 +139,9 @@ describe('mealPlanService', () => {
     it('should replace all meal plans', async () => {
       const newMealPlans = [createMockMealPlan()]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.mealPlans.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.mealPlans.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
@@ -158,7 +158,7 @@ describe('mealPlanService', () => {
   describe('generateTargetDates', () => {
     it('should generate single date for one-time copy', () => {
       const options = {
-        targetDate: '2026-02-01',
+        targetDate: new Date('2026-02-01'),
         frequency: 'one-time' as const,
       }
 
@@ -169,8 +169,8 @@ describe('mealPlanService', () => {
 
     it('should return empty array for recurring without end condition', () => {
       const options = {
-        targetDate: '2026-02-01',
-        frequency: 'daily' as const,
+        targetDate: new Date('2026-02-01'),
+        frequency: 'weekly' as const,
       }
 
       const result = service.generateTargetDates(options)

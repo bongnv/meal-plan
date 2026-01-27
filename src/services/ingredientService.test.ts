@@ -23,7 +23,7 @@ describe('ingredientService', () => {
       },
       updateLastModified: vi.fn(),
       getLastModified: vi.fn(),
-      transaction: vi.fn((mode, tables, callback) => callback()),
+      transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
     service = createIngredientService(mockDb)
@@ -88,7 +88,7 @@ describe('ingredientService', () => {
     it('should add a new ingredient', async () => {
       const ingredientData = {
         name: 'Salt',
-        category: 'Spices' as const,
+        category: 'Herbs & Spices' as const,
       }
 
       mockDb.ingredients.add = vi.fn().mockResolvedValue(undefined)
@@ -202,9 +202,9 @@ describe('ingredientService', () => {
         },
       ]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.ingredients.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.ingredients.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)

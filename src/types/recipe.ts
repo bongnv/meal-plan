@@ -56,7 +56,6 @@ export interface Recipe {
   servings: number
   prepTime: number // preparation time in minutes
   cookTime: number // cooking time in minutes
-  totalTime?: number // DEPRECATED: kept for backward compatibility during migration
   tags: string[]
   imageUrl?: string // optional
   createdAt: number // Unix timestamp
@@ -76,7 +75,6 @@ export const RecipeSchema = z.object({
   servings: z.number(),
   prepTime: z.number().positive('Prep time must be positive'),
   cookTime: z.number().positive('Cook time must be positive'),
-  totalTime: z.number().optional(), // DEPRECATED: backward compatibility
   tags: z.array(z.string()),
   imageUrl: z
     .string()

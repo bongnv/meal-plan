@@ -18,7 +18,7 @@ describe('syncService', () => {
       groceryItems: { toArray: vi.fn(), clear: vi.fn(), bulkAdd: vi.fn() },
       metadata: { put: vi.fn() },
       getLastModified: vi.fn(),
-      transaction: vi.fn((mode, tables, callback) => callback()),
+      transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
     service = createSyncService(mockDb)
@@ -184,9 +184,9 @@ describe('syncService', () => {
         version: 1,
       }
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.recipes.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.recipes.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.mealPlans.clear = vi.fn().mockResolvedValue(undefined)
@@ -224,9 +224,9 @@ describe('syncService', () => {
         version: 1,
       }
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.recipes.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.recipes.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.mealPlans.clear = vi.fn().mockResolvedValue(undefined)

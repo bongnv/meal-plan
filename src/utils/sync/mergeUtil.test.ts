@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
+import { Ingredient } from '@/types/ingredient'
+
 import { merge, resolveConflicts } from './mergeUtil'
 
 import type { SyncData, ConflictInfo, ConflictResolution } from './types'
@@ -406,11 +408,13 @@ describe('mergeUtil', () => {
       const result = resolveConflicts(partialMerged, [conflict], resolutions)
 
       expect(result.success).toBe(true)
-      expect(result.merged?.mealPlans[0].servings).toBe(6)
+      if (result.merged?.mealPlans[0].type === 'recipe') {
+        expect(result.merged.mealPlans[0].servings).toBe(6)
+      }
     })
 
     it('should handle conflicts for ingredients', () => {
-      const ingredient1 = {
+      const ingredient1: Ingredient = {
         id: 'ing1',
         name: 'Flour',
         category: 'Baking',
@@ -495,10 +499,13 @@ describe('mergeUtil', () => {
       const groceryItem1 = {
         id: 'gi1',
         listId: 'gl1',
+        name: 'Test Item',
         ingredientId: 'ing1',
         quantity: 2,
         unit: 'cup' as const,
+        category: 'Vegetables' as const,
         checked: false,
+        mealPlanIds: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       }

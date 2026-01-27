@@ -34,7 +34,7 @@ interface MealPlanFormProps {
 
 const mealPlanSchema = z.object({
   date: z.string().min(1, 'Date is required'),
-  mealType: z.enum(['lunch', 'dinner']),
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
   mealSelection: z.string().min(1, 'Meal selection is required'),
   servings: z.number().optional(),
   note: z.string().optional(),

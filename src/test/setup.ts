@@ -1,6 +1,7 @@
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll } from 'vitest'
 import '@testing-library/jest-dom/vitest'
+import 'fake-indexeddb/auto'
 
 // Mock window.matchMedia for Mantine components
 beforeAll(() => {

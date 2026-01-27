@@ -30,7 +30,7 @@ describe('groceryListService', () => {
         bulkAdd: vi.fn(),
       },
       updateLastModified: vi.fn(),
-      transaction: vi.fn((mode, tables, callback) => callback()),
+      transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
     service = createGroceryListService(mockDb)
@@ -131,9 +131,9 @@ describe('groceryListService', () => {
       const list = createMockList()
       const items = [createMockItem(), createMockItem({ id: 'item2' })]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.groceryLists.add = vi.fn().mockResolvedValue(undefined)
       mockDb.groceryItems.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
@@ -179,9 +179,9 @@ describe('groceryListService', () => {
 
   describe('deleteList', () => {
     it('should delete a list and all its items', async () => {
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.groceryLists.delete = vi.fn().mockResolvedValue(undefined)
 
       const mockWhere = {
@@ -256,9 +256,9 @@ describe('groceryListService', () => {
     it('should replace all grocery lists', async () => {
       const newLists = [createMockList()]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.groceryLists.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.groceryLists.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
@@ -276,9 +276,9 @@ describe('groceryListService', () => {
     it('should replace all grocery items', async () => {
       const newItems = [createMockItem()]
 
-      mockDb.transaction = vi.fn(async (mode, tables, callback) => {
+      mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
-      })
+      }) as any
       mockDb.groceryItems.clear = vi.fn().mockResolvedValue(undefined)
       mockDb.groceryItems.bulkAdd = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
