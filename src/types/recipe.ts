@@ -3,6 +3,25 @@ import { z } from 'zod'
 import { Unit, UnitSchema } from './ingredient'
 
 /**
+ * SubRecipe interface
+ * Represents a reference to another recipe used as a component in this recipe
+ */
+export interface SubRecipe {
+  recipeId: string // references another Recipe.id
+  servings: number // number of servings of the sub-recipe to include
+  displayName?: string // optional custom name (e.g., "Cilantro Rice (Filling)")
+}
+
+/**
+ * Zod schema for SubRecipe validation
+ */
+export const SubRecipeSchema = z.object({
+  recipeId: z.string(),
+  servings: z.number().positive('Servings must be positive'),
+  displayName: z.string().optional(),
+})
+
+/**
  * RecipeIngredient interface
  * Represents an ingredient with quantity as used in a specific recipe
  */
@@ -32,6 +51,7 @@ export interface Recipe {
   name: string
   description: string
   ingredients: RecipeIngredient[]
+  subRecipes: SubRecipe[] // schema defaults to empty array
   instructions: string[]
   servings: number
   prepTime: number // preparation time in minutes
@@ -49,6 +69,7 @@ export const RecipeSchema = z.object({
   name: z.string(),
   description: z.string(),
   ingredients: z.array(RecipeIngredientSchema),
+  subRecipes: z.array(SubRecipeSchema).default([]),
   instructions: z.array(z.string()),
   servings: z.number(),
   prepTime: z.number().positive('Prep time must be positive'),
@@ -82,6 +103,7 @@ export const RecipeFormSchema = z.object({
   ingredients: z
     .array(RecipeIngredientSchema)
     .min(1, 'At least one ingredient is required'),
+  subRecipes: z.array(SubRecipeSchema).default([]),
   instructions: z
     .array(z.string().min(1))
     .min(1, 'At least one instruction is required'),

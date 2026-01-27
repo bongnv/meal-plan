@@ -33,7 +33,10 @@ describe('validateRecipeImport', () => {
     )
 
     expect(result.isValid).toBe(true)
-    expect(result.recipe).toEqual(recipeData)
+    expect(result.recipe).toEqual({
+      ...recipeData,
+      subRecipes: [], // schema defaults to empty array
+    })
     expect(result.newIngredients).toEqual([])
     expect(result.errors).toEqual([])
   })

@@ -21,12 +21,16 @@ import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
+import { useRecipes } from '../../contexts/RecipeContext'
 import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
 import { IngredientForm } from '../ingredients/IngredientForm'
 
+import { SubRecipeCard } from './SubRecipeCard'
+import { SubRecipeSelector } from './SubRecipeSelector'
+
 import type { IngredientFormValues } from '../../types/ingredient'
-import type { Recipe, RecipeFormValues } from '../../types/recipe'
+import type { Recipe, RecipeFormValues, SubRecipe } from '../../types/recipe'
 
 interface RecipeFormProps {
   recipe?: Recipe
@@ -47,9 +51,14 @@ export function RecipeForm({
     getIngredientById,
     addIngredient: addIngredientToLibrary,
   } = useIngredients()
+  const { recipes } = useRecipes()
   const [
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },
+  ] = useDisclosure(false)
+  const [
+    subRecipeSelectorOpened,
+    { open: openSubRecipeSelector, close: closeSubRecipeSelector },
   ] = useDisclosure(false)
   const [showImagePreview, setShowImagePreview] = useState(!!recipe?.imageUrl)
 
@@ -62,6 +71,7 @@ export function RecipeForm({
       prepTime: recipe?.prepTime ?? 0,
       cookTime: recipe?.cookTime ?? 0,
       ingredients: recipe?.ingredients ?? [],
+      subRecipes: recipe?.subRecipes ?? [],
       instructions: recipe?.instructions ?? [],
       tags: recipe?.tags ?? [],
       imageUrl: recipe?.imageUrl,
@@ -91,6 +101,14 @@ export function RecipeForm({
 
   const removeInstruction = (index: number) => {
     form.removeListItem('instructions', index)
+  }
+
+  const addSubRecipe = (subRecipe: SubRecipe) => {
+    form.insertListItem('subRecipes', subRecipe)
+  }
+
+  const removeSubRecipe = (index: number) => {
+    form.removeListItem('subRecipes', index)
   }
 
   const handleCreateIngredient = async (values: IngredientFormValues) => {
@@ -209,6 +227,38 @@ export function RecipeForm({
             placeholder="Press Enter to add tags"
             {...form.getInputProps('tags')}
           />
+
+          <div>
+            <Group justify="space-between" mb="xs">
+              <Title order={4}>Sub-Recipes</Title>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                variant="light"
+                size="xs"
+                onClick={openSubRecipeSelector}
+              >
+                Add Sub-Recipe
+              </Button>
+            </Group>
+
+            <Stack gap="xs">
+              {form.values.subRecipes.map((subRecipe, index) => {
+                const subRecipeData = recipes.find(
+                  r => r.id === subRecipe.recipeId
+                )
+
+                return (
+                  <SubRecipeCard
+                    key={index}
+                    subRecipe={subRecipe}
+                    recipeData={subRecipeData}
+                    expandable={true}
+                    onRemove={() => removeSubRecipe(index)}
+                  />
+                )
+              })}
+            </Stack>
+          </div>
 
           <div>
             <Group justify="space-between" mb="xs">
@@ -364,6 +414,13 @@ export function RecipeForm({
           onCancel={closeCreateIngredient}
         />
       </Modal>
+
+      <SubRecipeSelector
+        open={subRecipeSelectorOpened}
+        onClose={closeSubRecipeSelector}
+        onAdd={addSubRecipe}
+        currentRecipeId={recipe?.id}
+      />
     </Paper>
   )
 }

@@ -39,6 +39,7 @@ describe('generateGroceryList', () => {
         { ingredientId: '3', quantity: 150, unit: 'gram' },
       ],
       instructions: ['Cook chicken', 'Cook rice', 'Steam broccoli'],
+      subRecipes: [],
       tags: [],
     },
     {
@@ -53,6 +54,7 @@ describe('generateGroceryList', () => {
         { ingredientId: '2', quantity: 400, unit: 'gram' },
       ],
       instructions: ['Cook rice', 'Fry with chicken'],
+      subRecipes: [],
       tags: [],
     },
   ]
@@ -203,6 +205,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '1', quantity: 600, unit: 'gram' }, // 600g
           ],
           instructions: [],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -261,6 +264,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '10', quantity: 750, unit: 'milliliter' }, // 750ml
           ],
           instructions: [],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -339,6 +343,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '1', quantity: 333, unit: 'gram' }, // Will be 333.33... when scaled
           ],
           instructions: [],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -558,6 +563,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '999', quantity: 100, unit: 'gram' }, // Non-existent ingredient
           ],
           instructions: [],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -644,6 +650,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '2', quantity: 300, unit: 'gram' }, // Matches library unit
           ],
           instructions: ['Cook chicken', 'Cook rice'],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -691,6 +698,7 @@ describe('generateGroceryList', () => {
           cookTime: 15,
           ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
+          subRecipes: [],
           tags: [],
         },
         {
@@ -702,6 +710,7 @@ describe('generateGroceryList', () => {
           cookTime: 15,
           ingredients: [{ ingredientId: '1', quantity: 2.5, unit: 'cup' }],
           instructions: ['Cook'],
+          subRecipes: [],
           tags: [],
         },
       ]
@@ -755,6 +764,7 @@ describe('generateGroceryList', () => {
             { ingredientId: '1', quantity: 4, unit: 'whole' }, // 4 whole items
           ],
           instructions: ['Cook'],
+          subRecipes: [],
           tags: [],
         },
       ]

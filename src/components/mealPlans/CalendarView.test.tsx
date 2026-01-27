@@ -53,6 +53,7 @@ describe('CalendarView', () => {
         description: 'Classic pasta dish',
         ingredients: [],
         instructions: [],
+        subRecipes: [],
         servings: 4,
         prepTime: 15,
         cookTime: 15,

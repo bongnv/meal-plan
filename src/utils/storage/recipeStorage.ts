@@ -1,7 +1,11 @@
 import { z } from 'zod'
 
 import { RecipeSchema, type Recipe } from '../../types/recipe'
-import { migrateRecipes, migrateRecipeTime } from '../migration/recipeMigration'
+import {
+  migrateRecipes,
+  migrateRecipeTime,
+  migrateRecipeSubRecipes,
+} from '../migration/recipeMigration'
 
 import type { Ingredient } from '../../types/ingredient'
 
@@ -35,7 +39,10 @@ export class RecipeStorageService {
     // 2. Split totalTime into prepTime and cookTime
     const timeMigrated = migrateRecipeTime(unitMigrated)
 
-    return timeMigrated
+    // 3. Ensure subRecipes field exists (for recipes created before subRecipes feature)
+    const subRecipesMigrated = migrateRecipeSubRecipes(timeMigrated)
+
+    return subRecipesMigrated
   }
 
   /**

@@ -208,7 +208,11 @@ export function MealPlanDetailPage() {
                 </Tooltip>
               </Group>
             </Group>
-            <RecipeDetail recipe={recipe} initialServings={mealPlan.servings} />
+            <RecipeDetail
+              recipe={recipe}
+              initialServings={mealPlan.servings}
+              getRecipeById={getRecipeById}
+            />
           </Box>
         ) : (
           /* Custom meal: Show simple details */

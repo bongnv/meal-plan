@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { RecipeIngredientSchema, RecipeSchema } from './recipe'
+import { RecipeIngredientSchema, RecipeSchema, SubRecipeSchema } from './recipe'
 
 describe('RecipeIngredient Types', () => {
   describe('RecipeIngredientSchema', () => {
     it('should validate RecipeIngredient with unit field', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
       }
 
       const result = RecipeIngredientSchema.safeParse(ingredient)
@@ -16,7 +16,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
         })
       }
     })
@@ -24,7 +24,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with unit and displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: 'chicken',
       }
 
@@ -34,7 +34,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
           displayName: 'chicken',
         })
       }
@@ -43,7 +43,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid unit', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         unit: 'invalid-unit',
       }
 
@@ -55,7 +55,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with ingredientId and quantity only (backward compatible)', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
       }
 
       const result = RecipeIngredientSchema.safeParse(ingredient)
@@ -64,7 +64,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
         })
       }
     })
@@ -72,7 +72,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with optional displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: 'chicken',
       }
 
@@ -82,7 +82,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
           displayName: 'chicken',
         })
       }
@@ -91,7 +91,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with empty string displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: '',
       }
 
@@ -101,7 +101,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
           displayName: '',
         })
       }
@@ -109,7 +109,7 @@ describe('RecipeIngredient Types', () => {
 
     it('should reject RecipeIngredient with missing ingredientId', () => {
       const ingredient = {
-        quantity: 2.5,
+        servings: 2.5,
         displayName: 'chicken',
       }
 
@@ -132,7 +132,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid quantity type', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: '2.5', // string instead of number
+        servings: '2.5', // string instead of number
         displayName: 'chicken',
       }
 
@@ -144,7 +144,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid displayName type', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: 123, // number instead of string
       }
 
@@ -156,7 +156,7 @@ describe('RecipeIngredient Types', () => {
     it('should handle displayName with special characters', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: 'chicken breast (boneless)',
       }
 
@@ -171,7 +171,7 @@ describe('RecipeIngredient Types', () => {
     it('should handle displayName with unicode characters', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        quantity: 2.5,
+        servings: 2.5,
         displayName: '鶏肉',
       }
 
@@ -194,7 +194,7 @@ describe('Recipe Types', () => {
       ingredients: [
         {
           ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          servings: 2.5,
         },
       ],
       instructions: ['Step 1', 'Step 2'],
@@ -321,5 +321,247 @@ describe('Recipe Types', () => {
         )
       }
     })
+  })
+})
+
+describe('SubRecipe Types', () => {
+  describe('SubRecipeSchema', () => {
+    it('should validate SubRecipe with all required fields', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: 2,
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual({
+          recipeId: 'recipe-456',
+          servings: 2,
+        })
+      }
+    })
+
+    it('should validate SubRecipe with optional displayName', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: 1.5,
+        displayName: 'Cilantro Rice (Filling)',
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual({
+          recipeId: 'recipe-456',
+          servings: 1.5,
+          displayName: 'Cilantro Rice (Filling)',
+        })
+      }
+    })
+
+    it('should validate SubRecipe with fractional quantity', () => {
+      const subRecipe = {
+        recipeId: 'recipe-789',
+        servings: 0.5,
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.quantity).toBe(0.5)
+      }
+    })
+
+    it('should reject SubRecipe with missing recipeId', () => {
+      const subRecipe = {
+        servings: 2,
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject SubRecipe with missing quantity', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject SubRecipe with zero quantity', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: 0,
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Quantity must be positive')
+      }
+    })
+
+    it('should reject SubRecipe with negative quantity', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: -1,
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Quantity must be positive')
+      }
+    })
+
+    it('should reject SubRecipe with invalid quantity type', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: '2', // string instead of number
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject SubRecipe with invalid displayName type', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: 2,
+        displayName: 123, // number instead of string
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should validate SubRecipe with empty string displayName', () => {
+      const subRecipe = {
+        recipeId: 'recipe-456',
+        servings: 2,
+        displayName: '',
+      }
+
+      const result = SubRecipeSchema.safeParse(subRecipe)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.displayName).toBe('')
+      }
+    })
+  })
+})
+
+describe('Recipe with SubRecipes', () => {
+  const validRecipe = {
+    id: 'recipe-123',
+    name: 'Burrito Bowl',
+    description: 'Delicious burrito bowl',
+    ingredients: [
+      {
+        ingredientId: 'ingredient-1',
+        servings: 2,
+        unit: 'cup',
+      },
+    ],
+    instructions: ['Step 1', 'Step 2'],
+    servings: 4,
+    prepTime: 15,
+    cookTime: 20,
+    tags: ['mexican', 'bowl'],
+  }
+
+  it('should validate Recipe with subRecipes array', () => {
+    const recipe = {
+      ...validRecipe,
+      subRecipes: [
+        {
+          recipeId: 'recipe-456',
+          servings: 1,
+        },
+        {
+          recipeId: 'recipe-789',
+          servings: 0.5,
+          displayName: 'Black Beans (Topup)',
+        },
+      ],
+    }
+
+    const result = RecipeSchema.safeParse(recipe)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.subRecipes).toHaveLength(2)
+      expect(result.data.subRecipes[0].recipeId).toBe('recipe-456')
+      expect(result.data.subRecipes[1].displayName).toBe('Black Beans (Topup)')
+    }
+  })
+
+  it('should validate Recipe without subRecipes (backward compatible)', () => {
+    const recipe = { ...validRecipe }
+
+    const result = RecipeSchema.safeParse(recipe)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.subRecipes).toEqual([]) // defaults to empty array
+    }
+  })
+
+  it('should validate Recipe with empty subRecipes array', () => {
+    const recipe = {
+      ...validRecipe,
+      subRecipes: [],
+    }
+
+    const result = RecipeSchema.safeParse(recipe)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.subRecipes).toEqual([])
+    }
+  })
+
+  it('should reject Recipe with invalid subRecipe (missing recipeId)', () => {
+    const recipe = {
+      ...validRecipe,
+      subRecipes: [
+        {
+          servings: 2, // missing recipeId
+        },
+      ],
+    }
+
+    const result = RecipeSchema.safeParse(recipe)
+
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject Recipe with invalid subRecipe (zero quantity)', () => {
+    const recipe = {
+      ...validRecipe,
+      subRecipes: [
+        {
+          recipeId: 'recipe-456',
+          servings: 0,
+        },
+      ],
+    }
+
+    const result = RecipeSchema.safeParse(recipe)
+
+    expect(result.success).toBe(false)
   })
 })

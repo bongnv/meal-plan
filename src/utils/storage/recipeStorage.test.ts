@@ -49,11 +49,12 @@ describe('RecipeStorageService', () => {
           name: 'Test Recipe',
           description: 'A test recipe',
           ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
           cookTime: 15,
-          tags: ['dinner'],
+          tags: [],
         },
       ]
 
@@ -101,11 +102,12 @@ describe('RecipeStorageService', () => {
           name: 'Test Recipe',
           description: 'A test recipe',
           ingredients: [{ ingredientId: 'ing1', quantity: 2 }],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
           cookTime: 15,
-          tags: ['dinner'],
+          tags: [],
         },
       ]
 
@@ -123,6 +125,7 @@ describe('RecipeStorageService', () => {
           name: 'Initial Recipe',
           description: 'Initial',
           ingredients: [],
+          subRecipes: [],
           instructions: [],
           servings: 2,
           prepTime: 8,
@@ -137,6 +140,7 @@ describe('RecipeStorageService', () => {
           name: 'New Recipe',
           description: 'New',
           ingredients: [],
+          subRecipes: [],
           instructions: [],
           servings: 4,
           prepTime: 15,
@@ -165,6 +169,7 @@ describe('RecipeStorageService', () => {
           name: 'Test Recipe',
           description: 'Test',
           ingredients: [],
+          subRecipes: [],
           instructions: [],
           servings: 2,
           prepTime: 8,
@@ -206,11 +211,12 @@ describe('RecipeStorageService', () => {
           name: 'Old Recipe',
           description: 'Recipe without displayName',
           ingredients: [{ ingredientId: 'ing1', quantity: 400, unit: 'gram' }],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
           cookTime: 15,
-          tags: ['dinner'],
+          tags: [],
         },
       ]
 
@@ -241,11 +247,12 @@ describe('RecipeStorageService', () => {
               displayName: 'tomatoes',
             },
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
           cookTime: 15,
-          tags: ['dinner'],
+          tags: [],
         },
       ]
 
@@ -271,22 +278,24 @@ describe('RecipeStorageService', () => {
               displayName: 'chicken',
             },
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
           cookTime: 15,
-          tags: ['dinner'],
+          tags: [],
         },
         {
           id: '2',
           name: 'Recipe without displayName',
           description: 'No custom names',
           ingredients: [{ ingredientId: 'ing2', quantity: 2, unit: 'cup' }],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 2,
           prepTime: 8,
           cookTime: 7,
-          tags: ['lunch'],
+          tags: [],
         },
       ]
 
@@ -308,6 +317,7 @@ describe('RecipeStorageService', () => {
           { ingredientId: 'ing2', quantity: 1 }, // no displayName
           { ingredientId: 'ing3', quantity: 3, displayName: 'pasta' },
         ],
+        subRecipes: [],
         instructions: ['Step 1'],
         servings: 4,
         prepTime: 15,
@@ -337,6 +347,7 @@ describe('RecipeStorageService', () => {
             { ingredientId: 'ing1', quantity: 400 }, // Missing unit
             { ingredientId: 'ing2', quantity: 2 }, // Missing unit
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
@@ -373,6 +384,7 @@ describe('RecipeStorageService', () => {
           ingredients: [
             { ingredientId: 'ing1', quantity: 2, unit: 'cup' }, // Already has unit (different from library)
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
@@ -400,6 +412,7 @@ describe('RecipeStorageService', () => {
           ingredients: [
             { ingredientId: 'unknown', quantity: 2 }, // Unknown ingredient
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,
@@ -425,6 +438,7 @@ describe('RecipeStorageService', () => {
           ingredients: [
             { ingredientId: 'ing1', quantity: 400 }, // Missing unit
           ],
+          subRecipes: [],
           instructions: ['Step 1'],
           servings: 4,
           prepTime: 15,

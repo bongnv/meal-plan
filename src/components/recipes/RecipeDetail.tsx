@@ -8,26 +8,37 @@ import {
   Image,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core'
-import { IconUsers, IconClock, IconPlus, IconMinus } from '@tabler/icons-react'
+import { IconPlus, IconMinus } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useIngredients } from '../../contexts/IngredientContext'
 import { formatQuantity } from '../../utils/formatQuantity'
+
+import { CookingSubRecipeCard } from './CookingSubRecipeCard'
 
 import type { Recipe } from '../../types/recipe'
 
 interface RecipeDetailProps {
   recipe: Recipe
   initialServings?: number // Override default servings (e.g., from meal plan)
+  getRecipeById: (id: string) => Recipe | undefined // Function to fetch sub-recipes
+  onRecipeClick?: (recipeId: string) => void // Callback when sub-recipe is clicked
 }
 
-export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
+export function RecipeDetail({
+  recipe,
+  initialServings,
+  getRecipeById,
+  onRecipeClick,
+}: RecipeDetailProps) {
   const { getIngredientById } = useIngredients()
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
+    new Set()
+  )
+  const [completedSubRecipes, setCompletedSubRecipes] = useState<Set<number>>(
     new Set()
   )
 
@@ -48,6 +59,16 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
       newSet.add(index)
     }
     setCheckedIngredients(newSet)
+  }
+
+  const toggleSubRecipeComplete = (index: number) => {
+    const newSet = new Set(completedSubRecipes)
+    if (newSet.has(index)) {
+      newSet.delete(index)
+    } else {
+      newSet.add(index)
+    }
+    setCompletedSubRecipes(newSet)
   }
 
   return (
@@ -78,7 +99,7 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           {/* Meta Information */}
           <Group gap="md" mb="md">
             <Group gap={4}>
-              <IconUsers size={18} />
+              <Text size="sm">🍽️</Text>
               <Text size="sm" fw={500}>
                 {servings} servings
               </Text>
@@ -100,13 +121,13 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
               </ActionIcon>
             </Group>
             <Group gap={4}>
-              <IconClock size={18} />
+              <Text size="sm">⏱️</Text>
               <Text size="sm" fw={500}>
                 Prep: {recipe.prepTime} min
               </Text>
             </Group>
             <Group gap={4}>
-              <IconClock size={18} />
+              <Text size="sm">🔥</Text>
               <Text size="sm" fw={500}>
                 Cook: {recipe.cookTime} min
               </Text>
@@ -127,6 +148,50 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           {/* Recipe Description */}
           <Text size="lg">{recipe.description || 'No description'}</Text>
         </Box>
+
+        {/* Sub-Recipes Section */}
+        {recipe.subRecipes && recipe.subRecipes.length > 0 && (
+          <>
+            <Divider />
+            <Box>
+              <Group justify="space-between" mb="md">
+                <Title order={2} size="h3">
+                  🔨 Make These First
+                </Title>
+                {recipe.subRecipes.length > 0 && (
+                  <Badge variant="light" color="blue" size="lg">
+                    {completedSubRecipes.size}/{recipe.subRecipes.length} Done
+                  </Badge>
+                )}
+              </Group>
+              <Stack gap="md">
+                {recipe.subRecipes.map((subRecipe, index) => {
+                  const subRecipeData = getRecipeById(subRecipe.recipeId)
+                  const scaledSubRecipeServings =
+                    subRecipe.servings * servingMultiplier
+                  const subRecipeServingMultiplier =
+                    scaledSubRecipeServings / (subRecipeData?.servings || 1)
+
+                  return (
+                    <CookingSubRecipeCard
+                      key={index}
+                      subRecipe={subRecipe}
+                      subRecipeData={subRecipeData}
+                      servingMultiplier={subRecipeServingMultiplier}
+                      isCompleted={completedSubRecipes.has(index)}
+                      onToggleComplete={() => toggleSubRecipeComplete(index)}
+                      onViewDetails={
+                        onRecipeClick
+                          ? () => onRecipeClick(subRecipe.recipeId)
+                          : undefined
+                      }
+                    />
+                  )
+                })}
+              </Stack>
+            </Box>
+          </>
+        )}
 
         <Divider />
 
@@ -178,19 +243,16 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
           </Title>
           <Stack gap="md">
             {recipe.instructions.map((instruction, index) => (
-              <Group key={index} align="flex-start" gap="md">
-                <ThemeIcon
+              <Group key={index} align="flex-start" gap="sm">
+                <Badge
                   size="lg"
-                  radius="xl"
-                  variant="filled"
-                  color="yellow"
-                  style={{ flexShrink: 0 }}
+                  variant="light"
+                  color="blue"
+                  style={{ minWidth: 32, flexShrink: 0 }}
                 >
-                  <Text size="sm" fw={600}>
-                    {index + 1}
-                  </Text>
-                </ThemeIcon>
-                <Text style={{ flex: 1, paddingTop: 2 }}>{instruction}</Text>
+                  {index + 1}
+                </Badge>
+                <Text style={{ flex: 1 }}>{instruction}</Text>
               </Group>
             ))}
           </Stack>

@@ -1822,3 +1822,422 @@ interface RecipeIngredient {
     - Remove backward compatibility code from migration
     - Update ARCHITECTURE.md
   - **Verify**: Tests still pass, no TypeScript errors
+
+## I11. Sub-Recipe Support (R1.7)
+
+### Feature Overview
+Enable recipes to include other recipes as components (sub-recipes), allowing users to build complex dishes from smaller, reusable recipes. For example, a "Bánh Mì Sandwich" recipe can include "Pickled Vegetables", "Pâté", and "Grilled Pork" as sub-recipes, while also having direct ingredients like baguette and cilantro.
+
+**Use Cases:**
+- **Meal assembly recipes**: Burrito bowls, ramen, bánh mì that combine multiple prepared components
+- **Batch cooking**: Make large quantities of sauces/bases and reference them in multiple recipes
+- **Recipe modularity**: Break complex recipes into logical sub-components
+- **Filling + Topping patterns**: Separate base components (rice, beans) from toppings
+
+**Design Decisions:**
+- **Data Model**: Separate `subRecipes` array alongside `ingredients` array (not unified)
+- **UX Approach**: Visual distinction with bordered cards for sub-recipes, simple rows for ingredients
+- **Display Order**: Single unified list maintains assembly order, sub-recipes visually highlighted
+- **Grocery Lists**: Auto-expand sub-recipes recursively to show all raw ingredients
+- **Max Nesting**: Limit to 2 levels deep to avoid complexity
+
+### Data Model
+
+```typescript
+// New interface for sub-recipe references
+interface SubRecipe {
+  id: string // unique ID for this sub-recipe instance in the parent recipe
+  recipeId: string // references another Recipe.id
+  quantity: number // serving multiplier (e.g., 1.5x the sub-recipe servings)
+  displayName?: string // optional custom name (e.g., "Cilantro Rice (Filling)")
+  order?: number // for explicit ordering in display
+}
+
+// Updated Recipe interface
+interface Recipe {
+  id: string
+  name: string
+  description: string
+  ingredients: RecipeIngredient[] // existing field
+  subRecipes?: SubRecipe[] // NEW: optional array of sub-recipes
+  instructions: string[]
+  servings: number
+  prepTime: number
+  cookTime: number
+  tags: string[]
+  imageUrl?: string
+}
+```
+
+**Zod Schema:**
+```typescript
+const SubRecipeSchema = z.object({
+  id: z.string(),
+  recipeId: z.string(),
+  quantity: z.number().positive(),
+  displayName: z.string().optional(),
+  order: z.number().optional(),
+})
+
+const RecipeSchema = z.object({
+  // ... existing fields
+  subRecipes: z.array(SubRecipeSchema).optional(),
+})
+```
+
+### Key Features
+
+1. **Separate Arrays**: `ingredients` and `subRecipes` are kept separate for clear intent
+2. **Serving Multiplier**: `quantity` field scales sub-recipe servings (e.g., 0.5 = half the sub-recipe)
+3. **Custom Display Names**: Optional `displayName` for context (e.g., "Black Beans (Topup)")
+4. **Order Field**: Optional `order` for explicit control (defaults to array position)
+5. **Recursive Expansion**: Grocery lists recursively expand sub-recipes to raw ingredients
+6. **Circular Detection**: Prevent Recipe A → Recipe B → Recipe A loops
+7. **Visual Distinction**: Sub-recipes displayed in bordered cards, ingredients as simple rows
+
+### Implementation Steps (Top-Down, Integrate-First)
+
+**Phase 1: Core Data Model & Type System**
+
+- [x] I11.1. Define SubRecipe types and update Recipe schema (TDD)
+  - **Write tests first** in `src/types/recipe.test.ts`:
+    - Test `SubRecipeSchema` validation (id, recipeId, quantity required)
+    - Test Recipe with `subRecipes` array validates correctly
+    - Test Recipe without `subRecipes` remains valid (backward compatible)
+    - Test quantity must be positive
+    - Test displayName and order are optional
+  - **Update `src/types/recipe.ts`**:
+    - Create `SubRecipe` interface with fields: id, recipeId, quantity, displayName?, order?
+    - Create `SubRecipeSchema` Zod schema
+    - Add `subRecipes?: SubRecipe[]` to `Recipe` interface (optional)
+    - Add `subRecipes: z.array(SubRecipeSchema).optional()` to `RecipeSchema`
+    - Export SubRecipe type and schema
+  - **Quality checks**: Run type tests, save to `tmp/all-tests-i11.1.txt`
+  - **Verify**: TypeScript compiles, all tests pass, backward compatible
+
+**Phase 2: UI Integration - Display Sub-Recipes**
+
+- [x] I11.2. Update RecipeDetail to display sub-recipes (TDD)
+  - **Write component tests** in `src/components/recipes/RecipeDetail.test.tsx`:
+    - Test display sub-recipes section when present
+    - Test no sub-recipes section when array empty/undefined
+    - Test sub-recipe shows: display name (or recipe name), quantity/servings
+    - Test sub-recipe links to sub-recipe detail page
+    - Test collapsible sub-recipe section (expand/collapse)
+  - **Update `RecipeDetail` component** in `src/components/recipes/RecipeDetail.tsx`:
+    - Add "Sub-Recipes" section after description, before ingredients
+    - Use Mantine Card with border for each sub-recipe
+    - Display format: "🍳 [displayName or recipe.name] (quantity× servings)"
+    - Add expand/collapse functionality using Mantine Collapse or Accordion
+    - When expanded, show sub-recipe's full ingredient list (read-only)
+    - Link sub-recipe name to navigate to that recipe's detail page
+    - **Integrate immediately**: Should work with existing RecipeDetail page
+  - **Quality checks**: Run RecipeDetail tests, manual browser check, save to `tmp/`
+
+- [x] I11.3. Build SubRecipeCard component for reuse (TDD)
+  - **Write component tests** in `src/components/recipes/SubRecipeCard.test.tsx`:
+    - Test render sub-recipe with display name
+    - Test fallback to recipe name when displayName absent
+    - Test quantity display (e.g., "2x")
+    - Test expand/collapse functionality
+    - Test view recipe link navigation
+  - **Create `SubRecipeCard` component** in `src/components/recipes/SubRecipeCard.tsx`:
+    - Accept props: `subRecipe: SubRecipe`, `expandable?: boolean`, `onRemove?: () => void`
+    - Visual design: Mantine Card with blue border, "🍳 SUB-RECIPE" badge
+    - Display: name, quantity, optional expand button
+    - When expanded: show ingredient list (read-only preview)
+    - When `onRemove` provided: show delete button (for edit mode)
+    - Use in RecipeDetail and later in RecipeForm
+  - **Quality checks**: Run SubRecipeCard tests, save to `tmp/`
+
+**Phase 3: Recipe Form - Create/Edit Sub-Recipes**
+
+- [x] I11.4. Add sub-recipe selection to RecipeForm (TDD)
+  - **Write component tests** in `src/components/recipes/RecipeForm.test.tsx`:
+    - Test "+ Add Sub-Recipe" button renders
+    - Test clicking opens sub-recipe selector modal
+    - Test adding sub-recipe to form
+    - Test removing sub-recipe from form
+    - Test editing sub-recipe quantity and displayName
+    - Test form submission includes subRecipes array
+    - Test backward compatibility: recipes without sub-recipes still work
+  - **Update `RecipeForm` component** in `src/components/recipes/RecipeForm.tsx`:
+    - Add "Sub-Recipes" section above "Ingredients" section
+    - Add "+ Add Sub-Recipe" button (next to "+ Add Ingredient" button)
+    - Display sub-recipes using SubRecipeCard component (with remove button)
+    - Store sub-recipes in form state
+    - Update form validation to include subRecipes array (optional)
+    - Update handleSubmit to include subRecipes in recipe data
+  - **Quality checks**: Run RecipeForm tests, save to `tmp/`
+
+- [x] I11.5. Build SubRecipeSelector modal (TDD)
+  - **Write component tests** in `src/components/recipes/SubRecipeSelector.test.tsx`:
+    - Test modal opens and closes
+    - Test recipe search/filter functionality
+    - Test recipe selection (radio buttons or clickable cards)
+    - Test quantity input (default 1)
+    - Test displayName input (optional)
+    - Test "Add" button adds sub-recipe and closes modal
+    - Test validation: cannot select current recipe (prevent self-reference)
+    - Test validation: cannot select if creates circular dependency
+  - **Create `SubRecipeSelector` modal** in `src/components/recipes/SubRecipeSelector.tsx`:
+    - Accept props: `open`, `onClose`, `onAdd: (subRecipe) => void`, `excludeRecipeIds?: string[]`
+    - UI elements:
+      - Search input (filter recipes by name)
+      - Recipe list (scrollable, clickable cards)
+      - Selected recipe preview (shows ingredients, times)
+      - Quantity input (default 1, must be positive)
+      - DisplayName input (optional, placeholder: "e.g., Filling, Topup")
+      - "Cancel" and "Add Sub-Recipe" buttons
+    - Validation:
+      - Disable recipes in `excludeRecipeIds` (prevent circular deps)
+      - Show warning if recipe has no ingredients yet (optional)
+    - Use Mantine Modal, TextInput, NumberInput, ScrollArea
+  - **Quality checks**: Run SubRecipeSelector tests, save to `tmp/`
+
+- [x] I11.6. Implement circular dependency detection (TDD)
+  - **Write utility tests** in `src/utils/recipes/circularDependency.test.ts`:
+    - Test direct circular: A → B → A
+    - Test indirect circular: A → B → C → A
+    - Test no circular: A → B → C (valid)
+    - Test self-reference: A → A
+    - Test deep nesting beyond 2 levels
+  - **Create utility** in `src/utils/recipes/circularDependency.ts`:
+    ```typescript
+    // Check if adding subRecipeId to recipe would create circular dependency
+    export function wouldCreateCircular(
+      recipeId: string,
+      subRecipeId: string,
+      allRecipes: Recipe[]
+    ): boolean
+    
+    // Get all recipe IDs that should be excluded (to prevent circular deps)
+    export function getExcludedRecipeIds(
+      recipeId: string,
+      allRecipes: Recipe[]
+    ): string[]
+    
+    // Get nesting depth for a recipe (max depth of sub-recipe chain)
+    export function getRecipeDepth(
+      recipeId: string,
+      allRecipes: Recipe[]
+    ): number
+    ```
+  - **Integrate into RecipeForm**:
+    - Call `getExcludedRecipeIds` when opening SubRecipeSelector
+    - Pass to modal as `excludeRecipeIds` prop
+    - Show warning if trying to add sub-recipe that creates circular dep
+  - **Quality checks**: Run circular dependency tests, save to `tmp/`
+
+**Phase 4: Grocery List Integration**
+
+- [ ] I11.7. Update grocery list generation to expand sub-recipes (TDD)
+  - **Write tests** in `src/utils/generateGroceryList.test.ts`:
+    - Test recipe with sub-recipes expands correctly
+    - Test ingredient quantities scale by both recipe servings AND sub-recipe quantity
+    - Test recursive expansion (sub-recipe with sub-recipes)
+    - Test circular dependency handling (should never happen, but safe fallback)
+    - Test max depth limit (stop at 2 levels)
+    - Test mealPlanIds tracking through sub-recipes
+  - **Update `generateGroceryList` utility** in `src/utils/generateGroceryList.ts`:
+    - Add recursive function: `expandRecipeIngredients(recipe, servingMultiplier, mealPlanId)`
+    - For each recipe:
+      1. Add direct ingredients (scaled by servingMultiplier)
+      2. For each sub-recipe:
+         - Fetch sub-recipe from RecipeContext
+         - Calculate nested multiplier: `servingMultiplier * (subRecipe.quantity / subRecipe.servings)`
+         - Recursively call `expandRecipeIngredients` with nested multiplier
+      3. Track mealPlanIds at all levels
+    - Add max depth limit (2 levels) to prevent infinite recursion
+    - Handle missing sub-recipes gracefully (log warning, skip)
+  - **Quality checks**: Run grocery list tests, save to `tmp/`
+
+- [ ] I11.8. Update GroceryListView to show sub-recipe sources (TDD)
+  - **Write tests** in `src/components/groceryLists/GroceryListView.test.tsx`:
+    - Test ingredient shows "from [recipe] via [sub-recipe]" when applicable
+    - Test ingredient shows just "from [recipe]" when direct
+    - Test multiple sources display correctly
+  - **Update `GroceryListView` component** in `src/components/groceryLists/GroceryListView.tsx`:
+    - Update meal plan references display to show recipe chain
+    - Format: "From: Burrito Bowl → Cilantro Rice" (when ingredient from sub-recipe)
+    - Format: "From: Burrito Bowl" (when ingredient direct)
+    - Add expandable/collapsible details for complex chains
+  - **Quality checks**: Run GroceryListView tests, save to `tmp/`
+
+**Phase 5: Recipe Storage & Migration**
+
+- [ ] I11.9. Update recipe storage to support sub-recipes (TDD)
+  - **Write tests** in `src/utils/storage/recipeStorage.test.ts`:
+    - Test save recipe with subRecipes array
+    - Test load recipe with subRecipes array
+    - Test backward compatibility: recipes without subRecipes load correctly
+    - Test subRecipes array preserves order
+  - **Update `RecipeStorageService`** in `src/utils/storage/recipeStorage.ts`:
+    - No changes needed - subRecipes is optional, schema already handles it
+    - Verify backward compatibility with existing recipes
+  - **Verify**: All storage tests pass, no breaking changes
+
+- [ ] I11.10. Update cloud sync to handle sub-recipes (TDD)
+  - **Update `SyncContext`** in `src/contexts/SyncContext.tsx`:
+    - No changes needed - Recipe schema already includes subRecipes
+    - Verify sync works with recipes containing sub-recipes
+  - **Test cloud sync scenarios**:
+    - Create recipe with sub-recipes locally → sync to cloud → verify
+    - Create recipe with sub-recipes on cloud → sync to local → verify
+    - Conflict resolution with sub-recipes
+  - **Quality checks**: Run sync tests, manual cloud sync test, save to `tmp/`
+
+**Phase 6: AI Recipe Import Integration**
+
+- [ ] I11.11. Update AI prompt template to support sub-recipes (TDD)
+  - **Update tests** in `src/utils/aiPromptGenerator.test.ts`:
+    - Test prompt includes subRecipes field in schema
+    - Test prompt includes instructions for sub-recipes
+    - Test prompt includes example with sub-recipes
+  - **Update `aiPromptGenerator`** in `src/utils/aiPromptGenerator.ts`:
+    - Add `subRecipes` field to Recipe schema in prompt
+    - Add instructions: "If recipe references other recipes as components, list them in subRecipes array"
+    - Add example output showing sub-recipe usage
+    - Include note: "Match sub-recipes by name to existing recipe library"
+  - **Quality checks**: Run prompt generator tests, save to `tmp/`
+
+- [ ] I11.12. Update recipe import validation for sub-recipes (TDD)
+  - **Update tests** in `src/utils/recipeImportValidator.test.ts`:
+    - Test imported recipe with subRecipes validates correctly
+    - Test sub-recipe references are validated (recipeId must exist)
+    - Test quantity validation (must be positive)
+    - Test displayName is optional
+  - **Update `recipeImportValidator`** in `src/utils/recipeImportValidator.ts`:
+    - Add subRecipes array validation
+    - Check recipeIds exist in recipe library (warn if not found)
+    - Validate quantity is positive number
+    - Handle optional displayName and order fields
+  - **Quality checks**: Run validator tests, save to `tmp/`
+
+- [ ] I11.13. Update RecipeImportModal to preview sub-recipes (TDD)
+  - **Update tests** in `src/components/recipes/RecipeImportModal.test.tsx`:
+    - Test review step shows sub-recipes section
+    - Test sub-recipes display with quantity and displayName
+    - Test warning for missing sub-recipe references
+  - **Update `RecipeImportModal`** in `src/components/recipes/RecipeImportModal.tsx`:
+    - Add "Sub-Recipes" section in Step 3 review UI
+    - Display sub-recipes using SubRecipeCard component
+    - Show warning icon for sub-recipes with invalid recipeId
+    - Allow import even if sub-recipes are invalid (convert to regular ingredients?)
+  - **Quality checks**: Run RecipeImportModal tests, save to `tmp/`
+
+**Phase 7: Polish & Edge Cases**
+
+- [ ] I11.14. Add visual indicators and tooltips (No tests needed)
+  - Add "Contains sub-recipes" badge to recipe cards in RecipeList
+  - Show sub-recipe count in recipe card (e.g., "3 sub-recipes, 5 ingredients")
+  - Add tooltip on sub-recipe card explaining serving multiplier
+  - Add help text in RecipeForm explaining sub-recipe feature
+  - Update empty states to mention sub-recipes
+
+- [ ] I11.15. Handle recipe deletion with sub-recipe references (TDD)
+  - **Write tests** in `src/contexts/RecipeContext.test.tsx`:
+    - Test deleting recipe checks for references
+    - Test warning modal when recipe is referenced by others
+    - Test force delete option (removes sub-recipe references)
+    - Test cancel deletion keeps recipe
+  - **Update `RecipeContext`** in `src/contexts/RecipeContext.tsx`:
+    - Add `getRecipeReferences(recipeId)` helper to find recipes using this as sub-recipe
+    - Update `deleteRecipe` to check references before deletion
+    - Show confirmation modal: "This recipe is used in X other recipes. Delete anyway?"
+    - Options: "Cancel" or "Delete and Remove References"
+    - If delete confirmed: remove sub-recipe entries from parent recipes
+  - **Quality checks**: Run RecipeContext tests, save to `tmp/`
+
+- [ ] I11.16. Update recipe search/filter to include sub-recipes (TDD)
+  - **Update tests** in `src/hooks/useRecipeFilter.test.ts` (or similar):
+    - Test search by ingredient also searches sub-recipe ingredients
+    - Test filter results show recipes with matching sub-recipes
+  - **Update filter logic**:
+    - When searching by ingredient: recursively search sub-recipe ingredients
+    - Add "Has sub-recipes" filter option
+    - Add "Used as sub-recipe" filter option
+  - **Quality checks**: Run filter tests, save to `tmp/`
+
+**Phase 8: Final Verification & Documentation**
+
+- [ ] I11.17. Run complete test suite and quality checks
+  - Run all tests: `npm test`
+  - Run linter: `npm run lint`
+  - Run type check: `npm run build`
+  - Check test coverage for new code: `npm run test:coverage`
+  - Save output to `tmp/all-tests-i11-final.txt`
+  - Fix any issues found
+
+- [ ] I11.18. Manual testing scenarios
+  - **Create recipe with sub-recipes**:
+    - Create simple sub-recipe (e.g., "Cilantro Rice")
+    - Create parent recipe (e.g., "Burrito Bowl") referencing sub-recipe
+    - Verify display in RecipeDetail (expandable sub-recipes)
+    - Verify edit in RecipeForm (can add/remove sub-recipes)
+  - **Test circular dependency prevention**:
+    - Try to add Recipe A as sub-recipe of Recipe B
+    - Then try to add Recipe B as sub-recipe of Recipe A (should be blocked)
+  - **Test grocery list generation**:
+    - Add recipe with sub-recipes to meal plan
+    - Generate grocery list
+    - Verify ingredients from sub-recipes are included and scaled correctly
+    - Verify meal plan references show recipe chain
+  - **Test AI import**:
+    - Copy AI prompt with sub-recipe example
+    - Import recipe with sub-recipes
+    - Verify sub-recipes are linked correctly
+  - **Test cloud sync**:
+    - Create recipe with sub-recipes
+    - Sync to cloud
+    - Load on different device/browser
+    - Verify sub-recipes work correctly
+
+- [ ] I11.19. Update documentation
+  - Update REQUIREMENTS.md: Mark R1.7 as complete
+  - Update ARCHITECTURE.md: Document sub-recipe data model and design decisions
+  - Update user-facing help text: Add sub-recipe usage examples
+  - Add code comments explaining recursive expansion logic
+  - Document max depth limit (2 levels) and rationale
+
+### Implementation Notes
+
+**Max Depth Rationale (2 levels):**
+- Level 0: Main recipe (e.g., "Ramen Bowl")
+- Level 1: Sub-recipes (e.g., "Tonkotsu Broth", "Chashu Pork")
+- Level 2: Sub-sub-recipes (e.g., "Tare Seasoning" used in broth)
+- Beyond 2 levels: Complexity outweighs benefits, risk of confusion
+
+**Serving Multiplier Examples:**
+- `quantity: 1` → Use sub-recipe at default servings
+- `quantity: 2` → Double the sub-recipe servings
+- `quantity: 0.5` → Half the sub-recipe servings
+- Scales all ingredient quantities in sub-recipe
+
+**Grocery List Expansion Example:**
+```
+Burrito Bowl (4 servings)
+├─ Cilantro Rice (sub-recipe, 1×)
+│  ├─ Rice: 2 cups (scales to 2 cups for 4 servings)
+│  ├─ Cilantro: 4 tbsp
+│  └─ Lime: 2 pieces
+├─ Black Beans (sub-recipe, 1×)
+│  ├─ Black Beans: 1 can
+│  └─ Onion: 0.5 piece
+└─ Lettuce: 2 cups (direct ingredient)
+
+Grocery List Output:
+- Rice: 2 cups (from Burrito Bowl → Cilantro Rice)
+- Cilantro: 4 tbsp (from Burrito Bowl → Cilantro Rice)
+- Lime: 2 pieces (from Burrito Bowl → Cilantro Rice)
+- Black Beans: 1 can (from Burrito Bowl → Black Beans)
+- Onion: 0.5 piece (from Burrito Bowl → Black Beans)
+- Lettuce: 2 cups (from Burrito Bowl)
+```
+
+**UI/UX Guidelines:**
+- Sub-recipes always visually distinct from ingredients (bordered cards vs simple rows)
+- Maintain order of components (sub-recipes and ingredients interspersed as needed)
+- Expandable sub-recipes show preview of ingredients (read-only in parent recipe)
+- Clear visual hierarchy: parent recipe > sub-recipes > ingredients
+- Prevent overwhelming users: limit depth, clear warnings for circular deps

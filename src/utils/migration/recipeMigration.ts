@@ -79,3 +79,21 @@ export function migrateRecipes(
     }),
   }))
 }
+
+/**
+ * Migrates recipes to ensure subRecipes field exists.
+ *
+ * Migration strategy:
+ * - If recipe already has subRecipes array, preserve it
+ * - If recipe is missing subRecipes (old schema), initialize to empty array
+ * - Does not mutate original recipes array
+ *
+ * @param recipes - Array of recipes to migrate
+ * @returns New array of migrated recipes with subRecipes field
+ */
+export function migrateRecipeSubRecipes(recipes: Recipe[]): Recipe[] {
+  return recipes.map(recipe => ({
+    ...recipe,
+    subRecipes: recipe.subRecipes ?? [],
+  }))
+}

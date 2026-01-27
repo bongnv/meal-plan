@@ -28,6 +28,7 @@ const mockRecipe: Recipe = {
   prepTime: 15,
   cookTime: 15,
   ingredients: [],
+  subRecipes: [],
   instructions: [],
   tags: [],
 }
