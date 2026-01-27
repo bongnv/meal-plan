@@ -23,6 +23,96 @@ interface AccumulatedIngredient {
   mealPlanIds: string[]
 }
 
+interface ExpandedIngredient {
+  ingredientId: string
+  quantity: number
+  unit: Unit
+  mealPlanId: string
+}
+
+const MAX_RECURSION_DEPTH = 3
+
+/**
+ * Recursively expand a recipe's ingredients, including sub-recipes.
+ * Returns a flat list of all ingredients with their scaled quantities.
+ *
+ * @param recipe - The recipe to expand
+ * @param servingMultiplier - How much to scale the recipe (mealPlan.servings / recipe.servings)
+ * @param mealPlanId - The meal plan ID to track ingredient sources
+ * @param recipeMap - Map of all recipes for sub-recipe lookup
+ * @param depth - Current recursion depth (prevents infinite loops)
+ * @param visited - Set of recipe IDs visited in current chain (prevents circular dependencies)
+ * @returns Array of expanded ingredients with scaled quantities
+ */
+function expandRecipeIngredients(
+  recipe: Recipe,
+  servingMultiplier: number,
+  mealPlanId: string,
+  recipeMap: Map<string, Recipe>,
+  depth: number = 0,
+  visited: Set<string> = new Set()
+): ExpandedIngredient[] {
+  const result: ExpandedIngredient[] = []
+
+  // Safety checks
+  if (depth >= MAX_RECURSION_DEPTH) {
+    console.warn(
+      `Max recursion depth (${MAX_RECURSION_DEPTH}) reached for recipe: ${recipe.name}`
+    )
+    return result
+  }
+
+  if (visited.has(recipe.id)) {
+    console.warn(`Circular dependency detected for recipe: ${recipe.name}`)
+    return result
+  }
+
+  // Mark this recipe as visited
+  const newVisited = new Set(visited)
+  newVisited.add(recipe.id)
+
+  // Add direct ingredients
+  for (const recipeIngredient of recipe.ingredients) {
+    result.push({
+      ingredientId: recipeIngredient.ingredientId,
+      quantity: recipeIngredient.quantity * servingMultiplier,
+      unit: recipeIngredient.unit || 'piece',
+      mealPlanId,
+    })
+  }
+
+  // Recursively expand sub-recipes
+  for (const subRecipe of recipe.subRecipes || []) {
+    const subRecipeData = recipeMap.get(subRecipe.recipeId)
+    if (!subRecipeData) {
+      console.warn(
+        `Sub-recipe not found: ${subRecipe.recipeId} (referenced in ${recipe.name})`
+      )
+      continue
+    }
+
+    // Calculate nested multiplier
+    // servingMultiplier scales the parent recipe
+    // subRecipe.servings / subRecipeData.servings scales the sub-recipe
+    const nestedMultiplier =
+      servingMultiplier * (subRecipe.servings / subRecipeData.servings)
+
+    // Recursively expand
+    const subIngredients = expandRecipeIngredients(
+      subRecipeData,
+      nestedMultiplier,
+      mealPlanId,
+      recipeMap,
+      depth + 1,
+      newVisited
+    )
+
+    result.push(...subIngredients)
+  }
+
+  return result
+}
+
 /**
  * Generate a grocery list from meal plans within a date range.
  * Consolidates ingredients by ingredientId, scales quantities by servings,
@@ -59,19 +149,26 @@ export function generateGroceryList(
 
     const scaleFactor = mealPlan.servings / recipe.servings
 
-    for (const recipeIngredient of recipe.ingredients) {
-      const ingredient = ingredientMap.get(recipeIngredient.ingredientId)
+    // Recursively expand recipe ingredients (including sub-recipes)
+    const expandedIngredients = expandRecipeIngredients(
+      recipe,
+      scaleFactor,
+      mealPlan.id,
+      recipeMap
+    )
+
+    for (const expandedIngredient of expandedIngredients) {
+      const ingredient = ingredientMap.get(expandedIngredient.ingredientId)
       if (!ingredient) continue // Skip if ingredient not found
 
-      const scaledQuantity = recipeIngredient.quantity * scaleFactor
-      // Use recipe ingredient unit (migration ensures all recipes have units)
-      const unit = recipeIngredient.unit || 'piece' // Fallback to piece if missing
-      const key = recipeIngredient.ingredientId
+      const key = expandedIngredient.ingredientId
 
       if (accumulated.has(key)) {
         // Add to existing - convert to normalized unit first
         const existing = accumulated.get(key)!
-        const normalizedUnit = normalizeUnitForConsolidation(unit)
+        const normalizedUnit = normalizeUnitForConsolidation(
+          expandedIngredient.unit
+        )
         const existingNormalizedUnit = normalizeUnitForConsolidation(
           existing.unit
         )
@@ -80,8 +177,8 @@ export function generateGroceryList(
         if (normalizedUnit === existingNormalizedUnit) {
           // Convert ingredient quantity to normalized unit
           const convertedQuantity = convertQuantity(
-            scaledQuantity,
-            unit,
+            expandedIngredient.quantity,
+            expandedIngredient.unit,
             normalizedUnit
           )
           // Convert existing quantity to normalized unit
@@ -93,20 +190,20 @@ export function generateGroceryList(
 
           existing.quantity = existingConverted + convertedQuantity
           existing.unit = normalizedUnit
-          existing.mealPlanIds.push(mealPlan.id)
+          existing.mealPlanIds.push(expandedIngredient.mealPlanId)
         } else {
           // Different unit types - shouldn't happen in practice but handle it
-          existing.quantity += scaledQuantity
-          existing.mealPlanIds.push(mealPlan.id)
+          existing.quantity += expandedIngredient.quantity
+          existing.mealPlanIds.push(expandedIngredient.mealPlanId)
         }
       } else {
         // Create new entry (use recipe ingredient unit and ingredient library name)
         accumulated.set(key, {
           name: ingredient.name,
-          quantity: scaledQuantity,
-          unit: unit,
+          quantity: expandedIngredient.quantity,
+          unit: expandedIngredient.unit,
           category: ingredient.category,
-          mealPlanIds: [mealPlan.id],
+          mealPlanIds: [expandedIngredient.mealPlanId],
         })
       }
     }

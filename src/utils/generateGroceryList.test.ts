@@ -794,4 +794,317 @@ describe('generateGroceryList', () => {
       expect(item.quantity).toBe(4)
     })
   })
+
+  describe('Sub-Recipe Expansion', () => {
+    it('should expand recipe with sub-recipes correctly', () => {
+      // Create a sub-recipe (e.g., cilantro rice)
+      const subRecipe: Recipe = {
+        id: 'rice_recipe',
+        name: 'Cilantro Rice',
+        description: 'Fluffy cilantro rice',
+        servings: 4,
+        prepTime: 5,
+        cookTime: 15,
+        ingredients: [
+          { ingredientId: 'rice_id', quantity: 200, unit: 'gram' },
+          { ingredientId: 'cilantro_id', quantity: 10, unit: 'gram' },
+        ],
+        instructions: ['Cook rice', 'Mix cilantro'],
+        tags: [],
+        subRecipes: [],
+      }
+
+      // Create main recipe that uses the sub-recipe
+      const mainRecipe: Recipe = {
+        id: 'burrito_bowl',
+        name: 'Burrito Bowl',
+        description: 'Bowl with rice, beans',
+        servings: 2,
+        prepTime: 10,
+        cookTime: 20,
+        ingredients: [
+          { ingredientId: 'beans_id', quantity: 200, unit: 'gram' },
+        ],
+        instructions: ['Prepare bowl'],
+        tags: [],
+        subRecipes: [
+          { recipeId: 'rice_recipe', servings: 2 }, // Half of the sub-recipe
+        ],
+      }
+
+      const mealPlan: MealPlan = {
+        id: 'mp1',
+        date: '2024-01-01',
+        type: 'recipe',
+        recipeId: 'burrito_bowl',
+        servings: 2,
+      }
+
+      const result = generateGroceryList(
+        { start: '2024-01-01', end: '2024-01-01' },
+        'Weekly List',
+        [mealPlan],
+        [mainRecipe, subRecipe],
+        [
+          { id: 'beans_id', name: 'Black Beans', category: 'pantry' },
+          { id: 'rice_id', name: 'Rice', category: 'pantry' },
+          { id: 'cilantro_id', name: 'Cilantro', category: 'produce' },
+        ]
+      )
+
+      expect(result.items).toHaveLength(3)
+
+      // Check beans (direct ingredient)
+      const beansItem = result.items.find(i => i.name === 'Black Beans')
+      expect(beansItem).toBeDefined()
+      expect(beansItem!.quantity).toBe(200)
+      expect(beansItem!.unit).toBe('gram')
+
+      // Check rice (from sub-recipe, scaled by 2/4 = 0.5)
+      const riceItem = result.items.find(i => i.name === 'Rice')
+      expect(riceItem).toBeDefined()
+      expect(riceItem!.quantity).toBe(100) // 200 * 0.5
+      expect(riceItem!.unit).toBe('gram')
+
+      // Check cilantro (from sub-recipe, scaled by 0.5)
+      // 10 * 0.5 = 5g, but grams are rounded to nearest 50g, so becomes 50g
+      const cilantroItem = result.items.find(i => i.name === 'Cilantro')
+      expect(cilantroItem).toBeDefined()
+      expect(cilantroItem!.quantity).toBe(50) // 10 * 0.5 = 5g → rounded to 50g
+      expect(cilantroItem!.unit).toBe('gram')
+    })
+
+    it('should scale quantities by both recipe servings and sub-recipe quantity', () => {
+      const subRecipe: Recipe = {
+        id: 'sauce_recipe',
+        name: 'Salsa',
+        description: 'Tomato salsa',
+        servings: 4,
+        prepTime: 5,
+        cookTime: 0,
+        ingredients: [
+          { ingredientId: 'tomato_id', quantity: 400, unit: 'gram' },
+        ],
+        instructions: ['Mix'],
+        tags: [],
+        subRecipes: [],
+      }
+
+      const mainRecipe: Recipe = {
+        id: 'taco_recipe',
+        name: 'Tacos',
+        description: 'Delicious tacos',
+        servings: 4,
+        prepTime: 10,
+        cookTime: 10,
+        ingredients: [{ ingredientId: 'meat_id', quantity: 400, unit: 'gram' }],
+        instructions: ['Cook meat'],
+        tags: [],
+        subRecipes: [
+          { recipeId: 'sauce_recipe', servings: 2 }, // Half of the sub-recipe
+        ],
+      }
+
+      const mealPlan: MealPlan = {
+        id: 'mp1',
+        date: '2024-01-01',
+        type: 'recipe',
+        recipeId: 'taco_recipe',
+        servings: 8, // Double the recipe
+        mealType: 'dinner',
+      }
+
+      const result = generateGroceryList(
+        { start: '2024-01-01', end: '2024-01-01' },
+        'Weekly List',
+        [mealPlan],
+        [mainRecipe, subRecipe],
+        [
+          { id: 'meat_id', name: 'Ground Meat', category: 'Meat' },
+          { id: 'tomato_id', name: 'Tomatoes', category: 'Vegetables' },
+        ]
+      )
+
+      expect(result.items).toHaveLength(2)
+
+      // Meat: 400 * (8/4) = 800
+      const meatItem = result.items.find(i => i.name === 'Ground Meat')
+      expect(meatItem!.quantity).toBe(800)
+
+      // Tomatoes: 400 * (8/4) * (2/4) = 400
+      // Wait, recalculating: main recipe 4 servings, meal plan 8 servings = 2x
+      // sub-recipe 4 servings, used quantity 2 = 2/4 = 0.5x
+      // So: 400 * (2) * (0.5) = 400
+      const tomatoItem = result.items.find(i => i.name === 'Tomatoes')
+      expect(tomatoItem!.quantity).toBe(400)
+    })
+
+    it('should handle recursive expansion (sub-recipe with sub-recipes)', () => {
+      // Level 2: spice blend
+      const spiceRecipe: Recipe = {
+        id: 'spice_blend',
+        name: 'Spice Blend',
+        description: 'Cumin and paprika',
+        servings: 1,
+        prepTime: 0,
+        cookTime: 0,
+        ingredients: [{ ingredientId: 'cumin_id', quantity: 10, unit: 'gram' }],
+        instructions: [],
+        tags: [],
+        subRecipes: [],
+      }
+
+      // Level 1: sauce with spice blend as sub-recipe
+      const sauceRecipe: Recipe = {
+        id: 'sauce_recipe',
+        name: 'Sauce',
+        description: 'Spiced sauce',
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        ingredients: [{ ingredientId: 'oil_id', quantity: 50, unit: 'milliliter' }],
+        instructions: [],
+        tags: [],
+        subRecipes: [{ recipeId: 'spice_blend', servings: 1 }],
+      }
+
+      // Level 0: main dish with sauce as sub-recipe
+      const mainRecipe: Recipe = {
+        id: 'main_dish',
+        name: 'Main Dish',
+        description: 'Delicious dish',
+        servings: 1,
+        prepTime: 10,
+        cookTime: 20,
+        ingredients: [
+          { ingredientId: 'protein_id', quantity: 200, unit: 'gram' },
+        ],
+        instructions: [],
+        tags: [],
+        subRecipes: [{ recipeId: 'sauce_recipe', servings: 2 }],
+      }
+
+      const mealPlan: MealPlan = {
+        id: 'mp1',
+        date: '2024-01-01',
+        type: 'recipe',
+        recipeId: 'main_dish',
+        servings: 1,
+        mealType: 'dinner',
+      }
+
+      const result = generateGroceryList(
+        { start: '2024-01-01', end: '2024-01-01' },
+        'Weekly List',
+        [mealPlan],
+        [mainRecipe, sauceRecipe, spiceRecipe],
+        [
+          { id: 'protein_id', name: 'Protein', category: 'Meat' },
+          { id: 'oil_id', name: 'Oil', category: 'Oils & Fats' },
+          { id: 'cumin_id', name: 'Cumin', category: 'Herbs & Spices' },
+        ]
+      )
+
+      expect(result.items).toHaveLength(3)
+
+      // Protein: 200 * 1 = 200
+      const proteinItem = result.items.find(i => i.name === 'Protein')
+      expect(proteinItem!.quantity).toBe(200)
+
+      // Oil: 50 * (2/2) = 50
+      const oilItem = result.items.find(i => i.name === 'Oil')
+      expect(oilItem!.quantity).toBe(50)
+
+      // Cumin: 10 * (2/2) = 10, but grams rounded to nearest 50g, so becomes 50g
+      const cuminItem = result.items.find(i => i.name === 'Cumin')
+      expect(cuminItem!.quantity).toBe(50) // 10g → rounded to 50g
+    })
+
+    it('should handle missing sub-recipe gracefully', () => {
+      const mainRecipe: Recipe = {
+        id: 'broken_recipe',
+        name: 'Broken Recipe',
+        description: 'References non-existent sub-recipe',
+        servings: 1,
+        prepTime: 10,
+        cookTime: 20,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 100, unit: 'gram' },
+        ],
+        instructions: [],
+        tags: [],
+        subRecipes: [{ recipeId: 'non_existent_recipe', servings: 1 }],
+      }
+
+      const mealPlan: MealPlan = {
+        id: 'mp1',
+        date: '2024-01-01',
+        type: 'recipe',
+        recipeId: 'broken_recipe',
+        servings: 1,
+        mealType: 'dinner',
+      }
+
+      const result = generateGroceryList(
+        { start: '2024-01-01', end: '2024-01-01' },
+        'Weekly List',
+        [mealPlan],
+        [mainRecipe],
+        [{ id: 'ingredient_id', name: 'Ingredient', category: 'pantry' }]
+      )
+
+      // Should still include the main recipe's ingredients
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0].name).toBe('Ingredient')
+      expect(result.items[0].quantity).toBe(100)
+    })
+
+    it('should track mealPlanIds through sub-recipes', () => {
+      const subRecipe: Recipe = {
+        id: 'sub_recipe',
+        name: 'Sub Recipe',
+        description: 'Sub',
+        servings: 1,
+        prepTime: 0,
+        cookTime: 0,
+        ingredients: [{ ingredientId: 'ing_id', quantity: 100, unit: 'gram' }],
+        instructions: [],
+        tags: [],
+        subRecipes: [],
+      }
+
+      const mainRecipe: Recipe = {
+        id: 'main_recipe',
+        name: 'Main Recipe',
+        description: 'Main',
+        servings: 1,
+        prepTime: 10,
+        cookTime: 10,
+        ingredients: [],
+        instructions: [],
+        tags: [],
+        subRecipes: [{ recipeId: 'sub_recipe', servings: 1 }],
+      }
+
+      const mealPlan: MealPlan = {
+        id: 'mp_123',
+        date: '2024-01-01',
+        type: 'recipe',
+        recipeId: 'main_recipe',
+        servings: 1,
+        mealType: 'dinner',
+      }
+
+      const result = generateGroceryList(
+        { start: '2024-01-01', end: '2024-01-01' },
+        'Weekly List',
+        [mealPlan],
+        [mainRecipe, subRecipe],
+        [{ id: 'ing_id', name: 'Ingredient', category: 'Other' }]
+      )
+
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0].mealPlanIds).toContain('mp_123')
+    })
+  })
 })
