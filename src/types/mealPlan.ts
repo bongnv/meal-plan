@@ -36,6 +36,8 @@ interface BaseMealPlan {
   mealType: MealType
   type: MealPlanType
   note?: string // Optional note for any meal (e.g., "make extra for leftovers", "John's favorite")
+  createdAt: number // Unix timestamp
+  updatedAt: number // Unix timestamp
 }
 
 export interface RecipeMealPlan extends BaseMealPlan {
@@ -116,6 +118,16 @@ const BaseMealPlanSchema = z.object({
   mealType: MealTypeSchema,
   type: MealPlanTypeSchema,
   note: z.string().optional(),
+  createdAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
+  updatedAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
 })
 
 export const RecipeMealPlanSchema = BaseMealPlanSchema.extend({

@@ -23,11 +23,13 @@ import {
   IconChevronUp,
   IconCopy,
 } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { useIngredients } from '../../contexts/IngredientContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { ingredientService } from '../../services/ingredientService'
+import { recipeService } from '../../services/recipeService'
 import { generateRecipeImportPrompt } from '../../utils/aiPromptGenerator'
 import {
   validateRecipeImport,
@@ -53,9 +55,10 @@ export const RecipeImportModal = ({
     new Set()
   )
 
-  const { ingredients, addIngredients, getIngredientById } = useIngredients()
-  const { addRecipe } = useRecipes()
   const navigate = useNavigate()
+
+  // Reactive queries
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
 
   // Generate the AI prompt with current ingredient library
   const prompt = generateRecipeImportPrompt(ingredients)
@@ -63,7 +66,7 @@ export const RecipeImportModal = ({
   // Helper to get ingredient name for display
   const getIngredientName = (ingredientId: string): string => {
     // Check existing ingredients
-    const existing = getIngredientById(ingredientId)
+    const existing = ingredients.find(ing => ing.id === ingredientId)
     if (existing) return existing.name
 
     // Check new ingredients from validation
@@ -95,13 +98,15 @@ export const RecipeImportModal = ({
     }
   }
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!validationResult?.isValid || !validationResult.recipe) return
 
     setImporting(true)
     try {
       // Step 1: Add all new ingredients at once and get generated IDs
-      const newIds = addIngredients(validationResult.newIngredients)
+      const newIds = await ingredientService.addMany(
+        validationResult.newIngredients
+      )
 
       // Step 2: Build ID mapping from placeholder IDs to generated IDs
       const idMapping: Record<string, string> = {}
@@ -117,8 +122,10 @@ export const RecipeImportModal = ({
       // Step 3: Import all sub-recipes first and build recipeId mapping
       // Process in reverse order to handle nested sub-recipes (deepest first)
       const subRecipeIdMapping: Record<string, string> = {}
-      const reversedSubRecipes = [...(validationResult.subRecipes || [])].reverse()
-      
+      const reversedSubRecipes = [
+        ...(validationResult.subRecipes || []),
+      ].reverse()
+
       for (const subRecipe of reversedSubRecipes) {
         // Remap ingredient IDs in sub-recipe
         const { id: subId, ...subRecipeWithoutId } = subRecipe
@@ -134,13 +141,13 @@ export const RecipeImportModal = ({
             recipeId: subRecipeIdMapping[sr.recipeId] || sr.recipeId,
           })),
         }
-        const newSubRecipeId = addRecipe(subRecipeWithMappedIds)
+        const newSubRecipeId = await recipeService.add(subRecipeWithMappedIds)
         subRecipeIdMapping[subId] = newSubRecipeId
       }
 
       // Step 4: Update ingredient IDs and sub-recipe IDs in main recipe
       const { id: _id, ...recipeWithoutId } = validationResult.recipe
-      
+
       const recipeWithMappedIds = {
         ...recipeWithoutId,
         ingredients: recipeWithoutId.ingredients.map(ing => ({
@@ -154,8 +161,8 @@ export const RecipeImportModal = ({
         })),
       }
 
-      // Step 5: Add main recipe (addRecipe will generate and return recipe ID)
-      const newRecipeId = addRecipe(recipeWithMappedIds)
+      // Step 5: Add main recipe (service will generate and return recipe ID)
+      const newRecipeId = await recipeService.add(recipeWithMappedIds)
 
       // Step 6: Navigate to recipe detail page with the generated ID
       navigate(`/recipes/${newRecipeId}`)

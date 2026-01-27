@@ -4,9 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import * as IngredientContext from '../../contexts/IngredientContext'
-import * as RecipeContext from '../../contexts/RecipeContext'
-
 import { RecipesPage } from './RecipesPage'
 
 // Mock the navigate function
@@ -18,6 +15,25 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+// Mock dexie-react-hooks
+vi.mock('dexie-react-hooks', () => ({
+  useLiveQuery: vi.fn(),
+}))
+
+// Mock recipeService
+vi.mock('../../services/recipeService', () => ({
+  recipeService: {
+    delete: vi.fn(),
+  },
+}))
+
+// Mock modals
+vi.mock('@mantine/modals', () => ({
+  modals: {
+    openConfirmModal: vi.fn(),
+  },
+}))
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
@@ -43,6 +59,8 @@ describe('RecipesPage', () => {
       prepTime: 13,
       cookTime: 12,
       tags: ['italian', 'pasta', 'quick'],
+      createdAt: 1640000000000,
+      updatedAt: 1640000000000,
     },
     {
       id: '2',
@@ -58,6 +76,8 @@ describe('RecipesPage', () => {
       prepTime: 23,
       cookTime: 22,
       tags: ['indian', 'spicy'],
+      createdAt: 1640000000000,
+      updatedAt: 1640000000000,
     },
     {
       id: '3',
@@ -70,6 +90,8 @@ describe('RecipesPage', () => {
       prepTime: 5,
       cookTime: 5,
       tags: ['vegetarian', 'quick'],
+      createdAt: 1640000000000,
+      updatedAt: 1640000000000,
     },
   ]
 
@@ -101,37 +123,21 @@ describe('RecipesPage', () => {
     },
   ]
 
-  const mockRecipeContext = {
-    recipes: mockRecipes,
-    loading: false,
-    error: null,
-    getRecipeById: vi.fn(),
-    addRecipe: vi.fn(),
-    updateRecipe: vi.fn(),
-    deleteRecipe: vi.fn(),
-    replaceAllRecipes: vi.fn(),
-    getLastModified: vi.fn(() => Date.now()),
-  }
-
-  const mockIngredientContext = {
-    ingredients: mockIngredients,
-    loading: false,
-    error: null,
-    getIngredientById: vi.fn(),
-    addIngredient: vi.fn(),
-    addIngredients: vi.fn(),
-    updateIngredient: vi.fn(),
-    deleteIngredient: vi.fn(),
-    replaceAllIngredients: vi.fn(),
-    getLastModified: vi.fn(() => Date.now()),
-  }
-
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    vi.spyOn(RecipeContext, 'useRecipes').mockReturnValue(mockRecipeContext)
-    vi.spyOn(IngredientContext, 'useIngredients').mockReturnValue(
-      mockIngredientContext
-    )
+    const { useLiveQuery } = await import('dexie-react-hooks')
+    vi.mocked(useLiveQuery).mockImplementation((queryFn: () => unknown) => {
+      const query = queryFn.toString()
+      // Return recipes for recipe queries
+      if (query.includes('recipes')) {
+        return mockRecipes
+      }
+      // Return ingredients for ingredient queries
+      if (query.includes('ingredients')) {
+        return mockIngredients
+      }
+      return []
+    })
   })
 
   it('should render with filter controls', () => {

@@ -11,13 +11,14 @@ import {
   Title,
 } from '@mantine/core'
 import { IconClock } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
 import { CalendarView } from '../../components/mealPlans/CalendarView'
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
-import { useMealPlans } from '../../contexts/MealPlanContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { mealPlanService } from '../../services/mealPlanService'
 
 import type { MealPlan, MealType, RecipeMealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -31,9 +32,8 @@ interface FormState {
 }
 
 export function MealPlansPage() {
-  const { mealPlans, addMealPlan, updateMealPlan, deleteMealPlan } =
-    useMealPlans()
-  const { recipes, getRecipeById } = useRecipes()
+  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
 
   const [formState, setFormState] = useState<FormState>({
@@ -67,14 +67,19 @@ export function MealPlansPage() {
     })
   }
 
-  const handleFormSubmit = (mealPlan: Partial<MealPlan>) => {
-    if (mealPlan.id) {
-      // For update, we need the complete MealPlan object
-      updateMealPlan(mealPlan as MealPlan)
-    } else {
-      // For add, we need all required fields except 'id'
-      const { id: _, ...mealPlanData } = mealPlan as MealPlan
-      addMealPlan(mealPlanData)
+  const handleFormSubmit = async (mealPlan: Partial<MealPlan>) => {
+    try {
+      if (mealPlan.id) {
+        // For update, we need the complete MealPlan object
+        await mealPlanService.update(mealPlan as MealPlan)
+      } else {
+        // For add, we need all required fields except 'id'
+        const { id: _, ...mealPlanData } = mealPlan as MealPlan
+        await mealPlanService.add(mealPlanData)
+      }
+      handleFormClose()
+    } catch (err) {
+      console.error('Failed to save meal plan:', err)
     }
   }
 
@@ -94,7 +99,7 @@ export function MealPlansPage() {
     }
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveRecipe(null)
     const { active, over } = event
 
@@ -135,13 +140,17 @@ export function MealPlansPage() {
       }
 
       // Add the recipe as a meal plan
-      addMealPlan({
-        date: dateString,
-        mealType: finalMealType,
-        type: 'recipe',
-        recipeId: recipe.id,
-        servings: recipe.servings,
-      } as Omit<RecipeMealPlan, 'id'>)
+      try {
+        await mealPlanService.add({
+          date: dateString,
+          mealType: finalMealType,
+          type: 'recipe',
+          recipeId: recipe.id,
+          servings: recipe.servings,
+        } as Omit<RecipeMealPlan, 'id'>)
+      } catch (err) {
+        console.error('Failed to add meal plan:', err)
+      }
     }
   }
 
@@ -157,10 +166,16 @@ export function MealPlansPage() {
           <Grid.Col span={{ base: 12, lg: 9 }}>
             <CalendarView
               mealPlans={mealPlans}
-              getRecipeById={getRecipeById}
+              getRecipeById={id => recipes.find(r => r.id === id)}
               onAddMeal={handleAddMeal}
               onEditMeal={handleEditMeal}
-              onDeleteMeal={mealPlan => deleteMealPlan(mealPlan.id)}
+              onDeleteMeal={async mealPlan => {
+                try {
+                  await mealPlanService.delete(mealPlan.id)
+                } catch (err) {
+                  console.error('Failed to delete meal plan:', err)
+                }
+              }}
             />
           </Grid.Col>
 
@@ -176,7 +191,14 @@ export function MealPlansPage() {
           recipes={recipes}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
-          onDelete={id => deleteMealPlan(id)}
+          onDelete={async id => {
+            try {
+              await mealPlanService.delete(id)
+              handleFormClose()
+            } catch (err) {
+              console.error('Failed to delete meal plan:', err)
+            }
+          }}
           opened={formState.opened}
           date={formState.date}
           mealType={formState.mealType}

@@ -51,6 +51,8 @@ describe('MealPlanStorageService', () => {
           type: 'recipe',
           recipeId: 'recipe-1',
           servings: 4,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -68,6 +70,8 @@ describe('MealPlanStorageService', () => {
           mealType: 'lunch',
           type: 'dining-out',
           customText: "Luigi's Italian Restaurant",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -87,6 +91,8 @@ describe('MealPlanStorageService', () => {
           recipeId: 'recipe-1',
           servings: 4,
           note: 'Make extra for leftovers',
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
         {
           id: '2',
@@ -94,12 +100,16 @@ describe('MealPlanStorageService', () => {
           mealType: 'lunch',
           type: 'takeout',
           customText: 'Thai food',
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
         {
           id: '3',
           date: '2026-01-22',
           mealType: 'dinner',
           type: 'leftovers',
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -165,6 +175,8 @@ describe('MealPlanStorageService', () => {
           type: 'recipe',
           recipeId: 'recipe-1',
           servings: 4,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -204,6 +216,8 @@ describe('MealPlanStorageService', () => {
           type: 'recipe',
           recipeId: 'recipe-1',
           servings: 4,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -214,6 +228,8 @@ describe('MealPlanStorageService', () => {
           mealType: 'lunch',
           type: 'takeout',
           customText: 'Pizza',
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -238,6 +254,8 @@ describe('MealPlanStorageService', () => {
           type: 'recipe',
           recipeId: 'recipe-1',
           servings: 4,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 

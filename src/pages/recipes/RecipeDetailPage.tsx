@@ -12,15 +12,21 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { recipeService } from '../../services/recipeService'
 
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getRecipeById, deleteRecipe, loading } = useRecipes()
+  const recipe = useLiveQuery(() => {
+    if (!id) return undefined
+    return db.recipes.get(id)
+  }, [id])
+  const loading = recipe === undefined
 
   if (loading) {
     return (
@@ -45,8 +51,6 @@ export function RecipeDetailPage() {
       </Container>
     )
   }
-
-  const recipe = getRecipeById(id)
 
   if (!recipe) {
     return (
@@ -77,10 +81,14 @@ export function RecipeDetailPage() {
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
-      onConfirm: () => {
+      onConfirm: async () => {
         if (id) {
-          deleteRecipe(id)
-          navigate('/recipes')
+          try {
+            await recipeService.delete(id)
+            navigate('/recipes')
+          } catch (err) {
+            console.error('Failed to delete recipe:', err)
+          }
         }
       },
     })
@@ -128,7 +136,6 @@ export function RecipeDetailPage() {
 
         <RecipeDetail
           recipe={recipe}
-          getRecipeById={getRecipeById}
           onRecipeClick={recipeId => navigate(`/recipes/${recipeId}`)}
         />
       </Stack>

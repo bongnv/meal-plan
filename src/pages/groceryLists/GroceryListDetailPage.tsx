@@ -9,13 +9,13 @@ import {
   Title,
 } from '@mantine/core'
 import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { GroceryListView } from '../../components/groceryLists/GroceryListView'
-import { useGroceryLists } from '../../contexts/GroceryListContext'
-import { useMealPlans } from '../../contexts/MealPlanContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { groceryListService } from '../../services/groceryListService'
 import { GroceryItem } from '../../types/groceryList'
 
 import type { IngredientCategory, Unit } from '../../types/ingredient'
@@ -23,27 +23,23 @@ import type { IngredientCategory, Unit } from '../../types/ingredient'
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { recipes } = useRecipes()
-  const { mealPlans } = useMealPlans()
-  const {
-    getGroceryListById,
-    getItemsForList,
-    addGroceryItem,
-    updateGroceryItem: updateItem,
-    updateGroceryList,
-    deleteGroceryList,
-    removeGroceryItem,
-  } = useGroceryLists()
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
+  const groceryList = useLiveQuery(() => {
+    if (!id) return undefined
+    return db.groceryLists.get(id)
+  }, [id])
+  const items =
+    useLiveQuery(() => {
+      if (!id) return []
+      return db.groceryItems.where('listId').equals(id).toArray()
+    }, [id]) ?? []
 
   // Modal states
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [deleteModalOpened, setDeleteModalOpened] = useState(false)
   const [editedName, setEditedName] = useState('')
   const [editedNote, setEditedNote] = useState('')
-
-  // Get grocery list from context
-  const groceryList = getGroceryListById(id || '')
-  const items = getItemsForList(id || '')
 
   const handleEdit = () => {
     if (groceryList) {
@@ -55,7 +51,7 @@ export const GroceryListDetailPage = () => {
 
   const handleSaveEdit = () => {
     if (groceryList && editedName.trim()) {
-      updateGroceryList({
+      groceryListService.updateList({
         ...groceryList,
         name: editedName.trim(),
         note: editedNote.trim() || undefined,
@@ -70,7 +66,7 @@ export const GroceryListDetailPage = () => {
 
   const handleConfirmDelete = () => {
     if (groceryList) {
-      deleteGroceryList(groceryList.id)
+      groceryListService.deleteList(groceryList.id)
       navigate('/grocery-lists')
     }
   }
@@ -83,7 +79,7 @@ export const GroceryListDetailPage = () => {
     const item = items.find(i => i.id === itemId)
     if (!item) return
 
-    updateItem(itemId, { checked: !item.checked })
+    groceryListService.updateItem(itemId, { checked: !item.checked })
   }
 
   const handleUpdateQuantity = (
@@ -91,15 +87,15 @@ export const GroceryListDetailPage = () => {
     quantity: number,
     unit: string
   ) => {
-    updateItem(itemId, { quantity, unit: unit as Unit })
+    groceryListService.updateItem(itemId, { quantity, unit: unit as Unit })
   }
 
   const handleUpdateNotes = (itemId: string, notes: string) => {
-    updateItem(itemId, { notes })
+    groceryListService.updateItem(itemId, { notes })
   }
 
   const handleRemoveItem = (itemId: string) => {
-    removeGroceryItem(itemId)
+    groceryListService.removeItem(itemId)
   }
 
   const handleAddManualItem = (item: {
@@ -119,9 +115,11 @@ export const GroceryListDetailPage = () => {
       category: item.category as IngredientCategory,
       checked: false,
       mealPlanIds: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
-    addGroceryItem(newItem)
+    groceryListService.addItem(newItem)
   }
 
   const getRecipeName = (recipeId: string): string => {

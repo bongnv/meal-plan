@@ -20,7 +20,13 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(item)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...item,
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 
@@ -40,7 +46,13 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(item)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...item,
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 
@@ -61,7 +73,13 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(item)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...item,
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 
@@ -159,7 +177,12 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(list)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...list,
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 
@@ -178,7 +201,12 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(list)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...list,
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 
@@ -197,7 +225,12 @@ describe('GroceryList Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual(list)
+        expect(result.data).toEqual(
+          expect.objectContaining({
+            ...list,
+            updatedAt: expect.any(Number),
+          })
+        )
       }
     })
 

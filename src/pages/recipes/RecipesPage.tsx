@@ -14,21 +14,23 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconFilter, IconSearch, IconX } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { RecipeImportModal } from '../../components/recipes/RecipeImportModal'
 import { RecipeList } from '../../components/recipes/RecipeList'
-import { useIngredients } from '../../contexts/IngredientContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
 import { useRecipeFilter } from '../../hooks/useRecipeFilter'
+import { recipeService } from '../../services/recipeService'
 
 import type { TimeRange } from '../../hooks/useRecipeFilter'
 
 export const RecipesPage = () => {
   const navigate = useNavigate()
-  const { recipes, deleteRecipe } = useRecipes()
-  const { ingredients } = useIngredients()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
 
   // Import modal state
   const [importModalOpened, setImportModalOpened] = useState(false)
@@ -89,7 +91,13 @@ export const RecipesPage = () => {
         ),
         labels: { confirm: 'Delete', cancel: 'Cancel' },
         confirmProps: { color: 'red' },
-        onConfirm: () => deleteRecipe(id),
+        onConfirm: async () => {
+          try {
+            await recipeService.delete(id)
+          } catch (err) {
+            console.error('Failed to delete recipe:', err)
+          }
+        },
       })
     }
   }

@@ -229,6 +229,8 @@ export function generateGroceryList(
       category: acc.category,
       checked: false,
       mealPlanIds: acc.mealPlanIds,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
   })
 
@@ -237,6 +239,7 @@ export function generateGroceryList(
     name,
     dateRange,
     createdAt: Date.now(),
+    updatedAt: Date.now(),
   }
 
   return { list, items }

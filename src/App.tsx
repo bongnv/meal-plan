@@ -8,12 +8,10 @@ import {
   IconCloud,
   IconShoppingCart,
 } from '@tabler/icons-react'
-import { useEffect } from 'react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
-import { ConflictResolutionModal } from './components/sync/ConflictResolutionModal'
 import { ReconnectModal } from './components/sync/ReconnectModal'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
 import { useCloudStorage } from './contexts/CloudStorageContext'
@@ -32,14 +30,7 @@ function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
   const cloudStorage = useCloudStorage()
-  const { conflicts, needsReconnect, selectedFile, clearReconnectFlag } =
-    useSyncContext()
-
-  // Auto-open conflict resolution modal when conflicts are detected
-  const [
-    conflictModalOpened,
-    { open: openConflictModal, close: closeConflictModal },
-  ] = useDisclosure(false)
+  const { needsReconnect, selectedFile, clearReconnectFlag } = useSyncContext()
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -62,15 +53,6 @@ function App() {
     { path: '/settings/ingredients', label: 'Ingredients', icon: IconCarrot },
     { path: '/settings/cloud-sync', label: 'Cloud Sync', icon: IconCloud },
   ]
-
-  // Auto-open conflict resolution modal when conflicts are detected
-  useEffect(() => {
-    if (conflicts.length > 0 && !conflictModalOpened) {
-      openConflictModal()
-    } else if (conflicts.length === 0 && conflictModalOpened) {
-      closeConflictModal()
-    }
-  }, [conflicts, conflictModalOpened, openConflictModal, closeConflictModal])
 
   // Handler for reconnect button
   const handleReconnect = async () => {
@@ -101,10 +83,6 @@ function App() {
         fileName={selectedFile?.name || 'Unknown file'}
         onReconnect={handleReconnect}
         onWorkOffline={handleWorkOffline}
-      />
-      <ConflictResolutionModal
-        opened={conflictModalOpened}
-        onClose={closeConflictModal}
       />
       <AppShell
         header={{ height: 60 }}

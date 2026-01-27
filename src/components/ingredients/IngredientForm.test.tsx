@@ -84,6 +84,8 @@ describe('IngredientForm', () => {
       id: '1',
       name: 'Tomato',
       category: 'Vegetables',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     it('should populate form with initial values', () => {

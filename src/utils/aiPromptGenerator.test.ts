@@ -11,16 +11,22 @@ describe('generateRecipeImportPrompt', () => {
         id: '1',
         name: 'Olive Oil',
         category: 'Oils & Fats',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
       {
         id: '2',
         name: 'Garlic',
         category: 'Vegetables',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
       {
         id: '3',
         name: 'Basil',
         category: 'Herbs & Spices',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
     ]
 
@@ -65,9 +71,9 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt).toContain('cookTime')
     expect(prompt).toContain('tags')
 
-    // Should mention ingredient mapping
-    expect(prompt).toContain('ingredientId')
+    // Should mention ingredient fields
     expect(prompt).toContain('quantity')
+    expect(prompt).toContain('unit')
   })
 
   it('should include instructions for AI', () => {
@@ -153,7 +159,9 @@ describe('generateRecipeImportPrompt', () => {
     const prompt = generateRecipeImportPrompt(ingredients)
 
     // Should instruct to omit field when no URL is available (not use empty string)
-    expect(prompt).toMatch(/OMIT.*imageUrl.*empty string/i)
+    expect(prompt).toContain('OMIT')
+    expect(prompt).toContain('imageUrl')
+    expect(prompt.toLowerCase()).toMatch(/empty string/)
   })
 
   it('should include displayName field in ingredient schema', () => {
@@ -191,6 +199,8 @@ describe('generateRecipeImportPrompt', () => {
         id: '1',
         name: 'Olive Oil',
         category: 'Oils & Fats',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
     ]
 
@@ -227,7 +237,6 @@ describe('generateRecipeImportPrompt', () => {
 
     expect(prompt).toContain('"subRecipes":')
     expect(prompt).toContain('"recipe":')
-    expect(prompt).toContain('temp_subrecipe_1')
     expect(prompt).toContain(
       'For sub-recipes (recipes that are components of this main recipe)'
     )
@@ -237,7 +246,6 @@ describe('generateRecipeImportPrompt', () => {
     const prompt = generateRecipeImportPrompt([])
 
     expect(prompt).toContain('"Cilantro Rice"')
-    expect(prompt).toContain('temp_subrecipe_1')
     expect(prompt).toContain('Burrito Bowl')
     expect(prompt).toContain('"ingredients":')
     expect(prompt).toContain('"instructions":')

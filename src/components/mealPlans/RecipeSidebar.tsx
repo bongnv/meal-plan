@@ -10,10 +10,10 @@ import {
   Title,
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 
-import { useIngredients } from '../../contexts/IngredientContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
 import { useRecipeFilter } from '../../hooks/useRecipeFilter'
 
 import { DraggableRecipeCard } from './DraggableRecipeCard'
@@ -21,8 +21,9 @@ import { DraggableRecipeCard } from './DraggableRecipeCard'
 import type { TimeRange } from '../../hooks/useRecipeFilter'
 
 export const RecipeSidebar = () => {
-  const { recipes } = useRecipes()
-  const { ingredients } = useIngredients()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
 
   // Filter state
   const [searchText, setSearchText] = useState('')

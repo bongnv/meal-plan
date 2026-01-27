@@ -18,10 +18,11 @@ import {
 import { useForm, zodResolver } from '@mantine/form'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useIngredients } from '../../contexts/IngredientContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { ingredientService } from '../../services/ingredientService'
 import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
 import { IngredientForm } from '../ingredients/IngredientForm'
@@ -46,12 +47,8 @@ export function RecipeForm({
   onDelete,
 }: RecipeFormProps) {
   const isEditMode = !!recipe
-  const {
-    ingredients,
-    getIngredientById,
-    addIngredient: addIngredientToLibrary,
-  } = useIngredients()
-  const { recipes } = useRecipes()
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },
@@ -113,7 +110,7 @@ export function RecipeForm({
 
   const handleCreateIngredient = async (values: IngredientFormValues) => {
     try {
-      await addIngredientToLibrary(values)
+      await ingredientService.add(values)
       closeCreateIngredient()
       // After creating, the new ingredient will be available in the dropdown
       // User can select it manually
@@ -275,8 +272,8 @@ export function RecipeForm({
 
             <Stack gap="xs">
               {form.values.ingredients.map((ingredient, index) => {
-                const selectedIngredient = getIngredientById(
-                  ingredient.ingredientId
+                const selectedIngredient = ingredients.find(
+                  ing => ing.id === ingredient.ingredientId
                 )
 
                 return (

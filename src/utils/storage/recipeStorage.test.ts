@@ -55,6 +55,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -108,6 +110,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -131,6 +135,8 @@ describe('RecipeStorageService', () => {
           prepTime: 8,
           cookTime: 7,
           tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -146,6 +152,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -175,6 +183,8 @@ describe('RecipeStorageService', () => {
           prepTime: 8,
           cookTime: 7,
           tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -217,6 +227,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -253,6 +265,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -284,6 +298,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
         {
           id: '2',
@@ -296,6 +312,8 @@ describe('RecipeStorageService', () => {
           prepTime: 8,
           cookTime: 7,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -323,6 +341,8 @@ describe('RecipeStorageService', () => {
         prepTime: 15,
         cookTime: 15,
         tags: [],
+        createdAt: 1640000000000,
+        updatedAt: 1640000000000,
       }
 
       service.saveRecipes([recipe])
@@ -353,6 +373,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -390,6 +412,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -418,6 +442,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -444,6 +470,8 @@ describe('RecipeStorageService', () => {
           prepTime: 15,
           cookTime: 15,
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -477,6 +505,8 @@ describe('RecipeStorageService', () => {
         instructions: ['Add beans', 'Cook rice'],
         tags: ['mexican', 'bowl'],
         subRecipes: [subRecipe],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       service.saveRecipes([recipeWithSubRecipes])
@@ -508,6 +538,8 @@ describe('RecipeStorageService', () => {
         instructions: ['Cook'],
         tags: [],
         subRecipes,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       service.saveRecipes([recipe])
@@ -533,6 +565,8 @@ describe('RecipeStorageService', () => {
         instructions: ['Cook'],
         tags: [],
         subRecipes: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       service.saveRecipes([recipeWithoutSubRecipes])
@@ -585,6 +619,8 @@ describe('RecipeStorageService', () => {
           { recipeId: 'sub_1', servings: 1 },
           { recipeId: 'sub_2', servings: 2 },
         ],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const recipe2: Recipe = {
@@ -600,6 +636,8 @@ describe('RecipeStorageService', () => {
         instructions: ['Cook'],
         tags: [],
         subRecipes: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       service.saveRecipes([recipe1, recipe2])

@@ -1,23 +1,27 @@
 import { Container, Loader, Text, Title } from '@mantine/core'
 import { modals } from '@mantine/modals'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { RecipeForm } from '../../components/recipes/RecipeForm'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { recipeService } from '../../services/recipeService'
 
 import type { RecipeFormValues } from '../../types/recipe'
 
 export function EditRecipePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { getRecipeById, updateRecipe, deleteRecipe, loading } = useRecipes()
-
-  const recipe = id ? getRecipeById(id) : null
+  const recipe = useLiveQuery(() => {
+    if (!id) return undefined
+    return db.recipes.get(id)
+  }, [id])
+  const loading = recipe === undefined
 
   const handleSubmit = async (values: RecipeFormValues) => {
     if (!id || !recipe) return
     const updatedRecipe = { ...recipe, ...values }
-    await updateRecipe(updatedRecipe)
+    await recipeService.update(updatedRecipe)
     navigate('/recipes')
   }
 
@@ -39,7 +43,7 @@ export function EditRecipePage() {
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: async () => {
-        await deleteRecipe(id)
+        await recipeService.delete(id)
         navigate('/recipes')
       },
     })

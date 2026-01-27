@@ -2,16 +2,19 @@ import { Container, Title } from '@mantine/core'
 import { useNavigate } from 'react-router-dom'
 
 import { RecipeForm } from '../../components/recipes/RecipeForm'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { recipeService } from '../../services/recipeService'
 
 import type { RecipeFormValues } from '../../types/recipe'
 
 export function CreateRecipePage() {
   const navigate = useNavigate()
-  const { addRecipe } = useRecipes()
 
   const handleSubmit = async (values: RecipeFormValues) => {
-    await addRecipe(values)
+    await recipeService.add({
+      ...values,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
     navigate('/recipes')
   }
 

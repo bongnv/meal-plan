@@ -3,36 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import * as IngredientContextModule from '../../contexts/IngredientContext'
-
 import { SubRecipeCard } from './SubRecipeCard'
 
-import type { Ingredient } from '../../types/ingredient'
 import type { Recipe, SubRecipe } from '../../types/recipe'
 
 // Mock the useIngredients hook
-vi.mock('../../contexts/IngredientContext', () => ({
-  useIngredients: vi.fn(),
-}))
-
-const mockIngredients: Ingredient[] = [
-  { id: '1', name: 'Flour', category: 'Grains' },
-  { id: '2', name: 'Eggs', category: 'Dairy' },
-]
-
-const defaultMockIngredientContext = {
-  ingredients: mockIngredients,
-  loading: false,
-  error: null,
-  getIngredientById: (id: string) => mockIngredients.find(i => i.id === id),
-  addIngredient: vi.fn(),
-  addIngredients: vi.fn(),
-  updateIngredient: vi.fn(),
-  deleteIngredient: vi.fn(),
-  replaceAllIngredients: vi.fn(),
-  getLastModified: vi.fn(() => Date.now()),
-}
-
 const mockSubRecipe: SubRecipe = {
   recipeId: 'sub1',
   servings: 8, // 8 servings (2x of the 4 servings recipe)
@@ -52,6 +27,8 @@ const mockRecipeData: Recipe = {
   prepTime: 30,
   cookTime: 0,
   tags: [],
+  createdAt: 1640000000000,
+  updatedAt: 1640000000000,
 }
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -62,9 +39,6 @@ describe('SubRecipeCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Set up default mock for useIngredients
-    vi.mocked(IngredientContextModule.useIngredients).mockReturnValue(
-      defaultMockIngredientContext
-    )
   })
 
   describe('Display', () => {

@@ -10,9 +10,10 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useIngredients } from '../../contexts/IngredientContext'
+import { db } from '../../db/database'
 import { formatQuantity } from '../../utils/formatQuantity'
 
 import type { Recipe, SubRecipe } from '../../types/recipe'
@@ -32,7 +33,8 @@ export function SubRecipeCard({
   onRemove,
   onClick,
 }: SubRecipeCardProps) {
-  const { getIngredientById } = useIngredients()
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const getIngredientById = (id: string) => ingredients.find(i => i.id === id)
   const [expanded, setExpanded] = useState(false)
 
   const displayName =

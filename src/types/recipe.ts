@@ -59,6 +59,8 @@ export interface Recipe {
   totalTime?: number // DEPRECATED: kept for backward compatibility during migration
   tags: string[]
   imageUrl?: string // optional
+  createdAt: number // Unix timestamp
+  updatedAt: number // Unix timestamp
 }
 
 /**
@@ -92,6 +94,16 @@ export const RecipeSchema = z.object({
         .optional()
     )
     .or(z.literal(undefined)),
+  createdAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
+  updatedAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
 })
 
 /**

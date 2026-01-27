@@ -108,6 +108,8 @@ function extractSubRecipes(
             id: newId,
             name: ingredientName,
             category: ingredientCategory || 'Other',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           })
         }
       }
@@ -230,6 +232,8 @@ export function validateRecipeImport(
           id: newId,
           name: ingredientName,
           category: (ingredientCategory as any) || 'Other', // Use provided category or default
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         })
       }
     }

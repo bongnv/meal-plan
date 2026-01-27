@@ -7,7 +7,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with unit field', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
       }
 
       const result = RecipeIngredientSchema.safeParse(ingredient)
@@ -16,7 +16,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
         })
       }
     })
@@ -24,7 +24,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with unit and displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: 'chicken',
       }
 
@@ -34,7 +34,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
           displayName: 'chicken',
         })
       }
@@ -43,7 +43,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid unit', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         unit: 'invalid-unit',
       }
 
@@ -55,7 +55,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with ingredientId and quantity only (backward compatible)', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
       }
 
       const result = RecipeIngredientSchema.safeParse(ingredient)
@@ -64,7 +64,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
         })
       }
     })
@@ -72,7 +72,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with optional displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: 'chicken',
       }
 
@@ -82,7 +82,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
           displayName: 'chicken',
         })
       }
@@ -91,7 +91,7 @@ describe('RecipeIngredient Types', () => {
     it('should validate RecipeIngredient with empty string displayName', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: '',
       }
 
@@ -101,7 +101,7 @@ describe('RecipeIngredient Types', () => {
       if (result.success) {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
           displayName: '',
         })
       }
@@ -109,7 +109,7 @@ describe('RecipeIngredient Types', () => {
 
     it('should reject RecipeIngredient with missing ingredientId', () => {
       const ingredient = {
-        servings: 2.5,
+        quantity: 2.5,
         displayName: 'chicken',
       }
 
@@ -132,7 +132,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid quantity type', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: '2.5', // string instead of number
+        quantity: '2.5', // string instead of number
         displayName: 'chicken',
       }
 
@@ -144,7 +144,7 @@ describe('RecipeIngredient Types', () => {
     it('should reject RecipeIngredient with invalid displayName type', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: 123, // number instead of string
       }
 
@@ -156,7 +156,7 @@ describe('RecipeIngredient Types', () => {
     it('should handle displayName with special characters', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: 'chicken breast (boneless)',
       }
 
@@ -171,7 +171,7 @@ describe('RecipeIngredient Types', () => {
     it('should handle displayName with unicode characters', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
-        servings: 2.5,
+        quantity: 2.5,
         displayName: '鶏肉',
       }
 
@@ -194,7 +194,7 @@ describe('Recipe Types', () => {
       ingredients: [
         {
           ingredientId: 'ingredient-123',
-          servings: 2.5,
+          quantity: 2.5,
         },
       ],
       instructions: ['Step 1', 'Step 2'],
@@ -202,12 +202,16 @@ describe('Recipe Types', () => {
       prepTime: 15,
       cookTime: 15,
       tags: ['test'],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     it('should validate Recipe with valid imageUrl', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'https://example.com/image.jpg',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -222,6 +226,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'http://example.com/image.jpg',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -247,6 +253,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -261,6 +269,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'not-a-valid-url',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -272,6 +282,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'ftp://example.com/image.jpg',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -283,6 +295,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'http://invalid url with spaces.com',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -294,6 +308,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'https://example.com/image.jpg?size=large&format=webp',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -310,6 +326,8 @@ describe('Recipe Types', () => {
       const recipe = {
         ...validRecipe,
         imageUrl: 'https://example.com/image.jpg#section',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
       const result = RecipeSchema.safeParse(recipe)
@@ -372,7 +390,7 @@ describe('SubRecipe Types', () => {
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.quantity).toBe(0.5)
+        expect(result.data.servings).toBe(0.5)
       }
     })
 
@@ -406,7 +424,7 @@ describe('SubRecipe Types', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Quantity must be positive')
+        expect(result.error.issues[0].message).toBe('Servings must be positive')
       }
     })
 
@@ -420,7 +438,7 @@ describe('SubRecipe Types', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Quantity must be positive')
+        expect(result.error.issues[0].message).toBe('Servings must be positive')
       }
     })
 
@@ -472,7 +490,7 @@ describe('Recipe with SubRecipes', () => {
     ingredients: [
       {
         ingredientId: 'ingredient-1',
-        servings: 2,
+        quantity: 2,
         unit: 'cup',
       },
     ],
@@ -481,6 +499,8 @@ describe('Recipe with SubRecipes', () => {
     prepTime: 15,
     cookTime: 20,
     tags: ['mexican', 'bowl'],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   }
 
   it('should validate Recipe with subRecipes array', () => {
@@ -497,6 +517,8 @@ describe('Recipe with SubRecipes', () => {
           displayName: 'Black Beans (Topup)',
         },
       ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     const result = RecipeSchema.safeParse(recipe)
@@ -524,6 +546,8 @@ describe('Recipe with SubRecipes', () => {
     const recipe = {
       ...validRecipe,
       subRecipes: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     const result = RecipeSchema.safeParse(recipe)
@@ -540,8 +564,12 @@ describe('Recipe with SubRecipes', () => {
       subRecipes: [
         {
           servings: 2, // missing recipeId
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     const result = RecipeSchema.safeParse(recipe)
@@ -556,8 +584,12 @@ describe('Recipe with SubRecipes', () => {
         {
           recipeId: 'recipe-456',
           servings: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
 
     const result = RecipeSchema.safeParse(recipe)

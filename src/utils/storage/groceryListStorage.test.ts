@@ -52,6 +52,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-01-30',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -91,6 +92,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-01-30',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -112,6 +114,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-01-30',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -132,6 +135,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-01-30',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -144,6 +148,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-02-06',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -193,6 +198,7 @@ describe('GroceryListStorageService', () => {
             end: '2026-01-30',
           },
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 

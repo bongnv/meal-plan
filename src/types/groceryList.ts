@@ -15,6 +15,16 @@ export const GroceryItemSchema = z.object({
   checked: z.boolean(),
   mealPlanIds: z.array(z.string().min(1)), // Which meal plans need this ingredient
   notes: z.string().optional(), // Optional user notes
+  createdAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
+  updatedAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
 })
 
 export type GroceryItem = z.infer<typeof GroceryItemSchema>
@@ -30,7 +40,16 @@ export const GroceryListSchema = z
       start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
       end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
     }),
-    createdAt: z.number().nonnegative(), // Unix timestamp
+    createdAt: z
+      .number()
+      .nonnegative()
+      .optional()
+      .default(() => Date.now()), // Unix timestamp
+    updatedAt: z
+      .number()
+      .nonnegative()
+      .optional()
+      .default(() => Date.now()), // Unix timestamp
     note: z.string().optional(), // Optional note for the grocery list
   })
   .refine(

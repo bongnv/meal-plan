@@ -9,23 +9,19 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconPlus } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
 import { IngredientForm } from '../../components/ingredients/IngredientForm'
 import { IngredientList } from '../../components/ingredients/IngredientList'
-import { useIngredients } from '../../contexts/IngredientContext'
+import { db } from '../../db/database'
+import { ingredientService } from '../../services/ingredientService'
 
 import type { IngredientFormValues } from '../../types/ingredient'
 
 export function IngredientsPage() {
-  const {
-    ingredients,
-    loading,
-    addIngredient,
-    updateIngredient,
-    deleteIngredient,
-    getIngredientById,
-  } = useIngredients()
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const loading = ingredients === undefined
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedIngredientId, setSelectedIngredientId] = useState<
@@ -33,8 +29,12 @@ export function IngredientsPage() {
   >(null)
 
   const handleCreate = async (values: IngredientFormValues) => {
-    await addIngredient(values)
-    setCreateModalOpen(false)
+    try {
+      await ingredientService.add(values)
+      setCreateModalOpen(false)
+    } catch (err) {
+      console.error('Failed to add ingredient:', err)
+    }
   }
 
   const handleEdit = (id: string) => {
@@ -44,9 +44,18 @@ export function IngredientsPage() {
 
   const handleUpdate = async (values: IngredientFormValues) => {
     if (selectedIngredientId) {
-      await updateIngredient({ ...values, id: selectedIngredientId })
-      setEditModalOpen(false)
-      setSelectedIngredientId(null)
+      try {
+        await ingredientService.update({
+          ...values,
+          id: selectedIngredientId,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        })
+        setEditModalOpen(false)
+        setSelectedIngredientId(null)
+      } catch (err) {
+        console.error('Failed to update ingredient:', err)
+      }
     }
   }
 
@@ -64,13 +73,19 @@ export function IngredientsPage() {
         ),
         labels: { confirm: 'Delete', cancel: 'Cancel' },
         confirmProps: { color: 'red' },
-        onConfirm: async () => await deleteIngredient(id),
+        onConfirm: async () => {
+          try {
+            await ingredientService.delete(id)
+          } catch (err) {
+            console.error('Failed to delete ingredient:', err)
+          }
+        },
       })
     }
   }
 
   const selectedIngredient = selectedIngredientId
-    ? getIngredientById(selectedIngredientId)
+    ? ingredients.find(i => i.id === selectedIngredientId)
     : undefined
 
   if (loading) {

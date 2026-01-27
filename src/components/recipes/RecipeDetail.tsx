@@ -11,9 +11,10 @@ import {
   Title,
 } from '@mantine/core'
 import { IconPlus, IconMinus } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useIngredients } from '../../contexts/IngredientContext'
+import { db } from '../../db/database'
 import { formatQuantity } from '../../utils/formatQuantity'
 
 import { CookingSubRecipeCard } from './CookingSubRecipeCard'
@@ -23,17 +24,16 @@ import type { Recipe } from '../../types/recipe'
 interface RecipeDetailProps {
   recipe: Recipe
   initialServings?: number // Override default servings (e.g., from meal plan)
-  getRecipeById: (id: string) => Recipe | undefined // Function to fetch sub-recipes
   onRecipeClick?: (recipeId: string) => void // Callback when sub-recipe is clicked
 }
 
 export function RecipeDetail({
   recipe,
   initialServings,
-  getRecipeById,
   onRecipeClick,
 }: RecipeDetailProps) {
-  const { getIngredientById } = useIngredients()
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()
@@ -166,7 +166,9 @@ export function RecipeDetail({
               </Group>
               <Stack gap="md">
                 {recipe.subRecipes.map((subRecipe, index) => {
-                  const subRecipeData = getRecipeById(subRecipe.recipeId)
+                  const subRecipeData = recipes.find(
+                    r => r.id === subRecipe.recipeId
+                  )
                   const scaledSubRecipeServings =
                     subRecipe.servings * servingMultiplier
                   const subRecipeServingMultiplier =
@@ -202,7 +204,9 @@ export function RecipeDetail({
           </Title>
           <Stack gap="xs">
             {recipe.ingredients.map((ingredient, index) => {
-              const ingredientData = getIngredientById(ingredient.ingredientId)
+              const ingredientData = ingredients.find(
+                i => i.id === ingredient.ingredientId
+              )
               const displayName =
                 ingredient.displayName ||
                 ingredientData?.name ||

@@ -33,6 +33,8 @@ const mockRecipes: Recipe[] = [
     cookTime: 15,
     tags: ['Italian', 'Pasta', 'Quick'],
     imageUrl: 'https://example.com/carbonara.jpg',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   },
   {
     id: '2',
@@ -48,6 +50,8 @@ const mockRecipes: Recipe[] = [
     prepTime: 10,
     cookTime: 10,
     tags: ['Asian', 'Healthy'],
+    createdAt: 1640000000000,
+    updatedAt: 1640000000000,
   },
   {
     id: '3',
@@ -61,6 +65,8 @@ const mockRecipes: Recipe[] = [
     prepTime: 45,
     cookTime: 45,
     tags: ['Dessert', 'Baking'],
+    createdAt: 1640000000000,
+    updatedAt: 1640000000000,
   },
 ]
 

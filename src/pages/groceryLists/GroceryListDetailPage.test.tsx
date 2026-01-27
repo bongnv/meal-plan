@@ -4,10 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { GroceryListProvider } from '../../contexts/GroceryListContext'
-import { IngredientProvider } from '../../contexts/IngredientContext'
-import { MealPlanProvider } from '../../contexts/MealPlanContext'
-import { RecipeProvider } from '../../contexts/RecipeContext'
 import { Ingredient } from '../../types/ingredient'
 
 import { GroceryListDetailPage } from './GroceryListDetailPage'
@@ -21,26 +17,54 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+// Mock dexie-react-hooks
+vi.mock('dexie-react-hooks', () => ({
+  useLiveQuery: vi.fn(),
+}))
+
+// Mock groceryListService - will be configured in beforeEach
+const mockUpdateList = vi.fn()
+const mockDeleteList = vi.fn()
+const mockAddItem = vi.fn()
+const mockUpdateItem = vi.fn()
+const mockRemoveItem = vi.fn()
+
+vi.mock('../../services/groceryListService', () => ({
+  groceryListService: {
+    updateList: (...args: any[]) => mockUpdateList(...args),
+    deleteList: (...args: any[]) => mockDeleteList(...args),
+    addItem: (...args: any[]) => mockAddItem(...args),
+    updateItem: (...args: any[]) => mockUpdateItem(...args),
+    removeItem: (...args: any[]) => mockRemoveItem(...args),
+  },
+}))
+
 const mockIngredients: Ingredient[] = [
   {
     id: 'banana-id',
     name: 'Banana',
     category: 'Fruits',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   },
   {
     id: 'chicken-id',
     name: 'Chicken Breast',
     category: 'Meat',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   },
   {
     id: 'milk-id',
     name: 'Milk',
     category: 'Dairy',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   },
 ]
 
-// Mock grocery list data
-const mockGroceryList = {
+// Mock grocery list data (mutable for tests that update it)
+let mockGroceryList = {
   id: '1',
   name: 'Week of Jan 23',
   dateRange: {
@@ -48,6 +72,7 @@ const mockGroceryList = {
     end: '2026-01-30',
   },
   createdAt: Date.now(),
+  updatedAt: Date.now(),
 }
 
 const mockGroceryItems = [
@@ -60,6 +85,8 @@ const mockGroceryItems = [
     checked: false,
     category: 'Fruits',
     mealPlanIds: ['meal-1'],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   },
 ]
 
@@ -123,27 +150,46 @@ const renderWithProviders = (
     user,
     ...render(
       <MantineProvider>
-        <IngredientProvider>
-          <RecipeProvider>
-            <MealPlanProvider>
-              <GroceryListProvider>
-                <MemoryRouter initialEntries={[route]}>
-                  <Routes>
-                    <Route path="/grocery-lists/:id" element={component} />
-                  </Routes>
-                </MemoryRouter>
-              </GroceryListProvider>
-            </MealPlanProvider>
-          </RecipeProvider>
-        </IngredientProvider>
+        <MemoryRouter initialEntries={[route]}>
+          <Routes>
+            <Route path="/grocery-lists/:id" element={component} />
+          </Routes>
+        </MemoryRouter>
       </MantineProvider>
     ),
   }
 }
 
 describe('GroceryListDetailPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+
+    // Reset mockGroceryList to default
+    mockGroceryList = {
+      id: '1',
+      name: 'Week of Jan 23',
+      dateRange: {
+        start: '2026-01-23',
+        end: '2026-01-30',
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    // Configure updateList mock to update mockGroceryList
+    mockUpdateList.mockImplementation(async list => {
+      mockGroceryList = list
+    })
+
+    const { useLiveQuery } = await import('dexie-react-hooks')
+    vi.mocked(useLiveQuery).mockImplementation(queryFn => {
+      const query = queryFn?.toString() || ''
+      if (query.includes('groceryLists.get')) return mockGroceryList
+      if (query.includes('groceryItems.where')) return mockGroceryItems
+      if (query.includes('recipes')) return []
+      if (query.includes('mealPlans')) return []
+      return undefined
+    })
   })
 
   describe('Page Rendering', () => {
@@ -261,8 +307,15 @@ describe('GroceryListDetailPage', () => {
       const saveButton = screen.getByRole('button', { name: /^save$/i })
       await user.click(saveButton)
 
-      // Wait for the new name to appear
-      expect(await screen.findByText('New List Name')).toBeInTheDocument()
+      // Verify the service was called with updated data
+      await waitFor(() => {
+        expect(mockUpdateList).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: '1',
+            name: 'New List Name',
+          })
+        )
+      })
     })
 
     it('should close modal when cancel is clicked', async () => {

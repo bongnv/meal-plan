@@ -12,9 +12,10 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconClock, IconSearch } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, useMemo } from 'react'
 
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
 import { getExcludedRecipeIds } from '../../utils/recipes/circularDependency'
 
 import type { SubRecipe } from '../../types/recipe'
@@ -32,7 +33,8 @@ export function SubRecipeSelector({
   onAdd,
   currentRecipeId,
 }: SubRecipeSelectorProps) {
-  const { recipes, getRecipeById } = useRecipes()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
   const [servings, setServings] = useState<number | string>(1)
@@ -52,7 +54,7 @@ export function SubRecipeSelector({
   }, [recipes, searchTerm])
 
   const selectedRecipe = selectedRecipeId
-    ? getRecipeById(selectedRecipeId)
+    ? recipes.find(r => r.id === selectedRecipeId)
     : null
 
   const handleAdd = () => {

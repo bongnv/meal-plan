@@ -11,29 +11,25 @@ import {
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconShoppingCart, IconPlus } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
-import { useGroceryLists } from '../../contexts/GroceryListContext'
-import { useIngredients } from '../../contexts/IngredientContext'
-import { useMealPlans } from '../../contexts/MealPlanContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { groceryListService } from '../../services/groceryListService'
 import { generateGroceryList } from '../../utils/generateGroceryList'
 
 export const GroceryListsPage = () => {
   const navigate = useNavigate()
   const [modalOpened, setModalOpened] = useState(false)
 
-  // Get data from contexts
-  const { recipes } = useRecipes()
-  const { mealPlans } = useMealPlans()
-  const { ingredients } = useIngredients()
-  const {
-    groceryLists,
-    groceryItems,
-    generateGroceryList: saveGroceryList,
-  } = useGroceryLists()
+  // Get data from queries
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const groceryLists = useLiveQuery(() => db.groceryLists.toArray(), []) ?? []
+  const groceryItems = useLiveQuery(() => db.groceryItems.toArray(), []) ?? []
 
   const hasLists = groceryLists.length > 0
 
@@ -65,8 +61,8 @@ export const GroceryListsPage = () => {
       ingredients
     )
 
-    // Save to context
-    saveGroceryList(list, items)
+    // Save to database
+    groceryListService.generateList(list, items)
     setModalOpened(false)
 
     // Show success notification

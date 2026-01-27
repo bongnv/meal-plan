@@ -10,9 +10,10 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { notifications } from '@mantine/notifications'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 
-import { useMealPlans } from '../../contexts/MealPlanContext'
+import { db } from '../../db/database'
 
 interface GroceryListGeneratorProps {
   opened: boolean
@@ -36,7 +37,8 @@ export const GroceryListGenerator = ({
   const [name, setName] = useState('')
 
   // Get data from contexts
-  const { mealPlans } = useMealPlans()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
 
   // Helper to calculate date ranges
   const getDateRange = (days: number): [Date, Date] => {

@@ -5,11 +5,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { GroceryListProvider } from '../../contexts/GroceryListContext'
-import { IngredientProvider } from '../../contexts/IngredientContext'
-import { MealPlanProvider } from '../../contexts/MealPlanContext'
-import { RecipeProvider } from '../../contexts/RecipeContext'
-
 import { GroceryListsPage } from './GroceryListsPage'
 
 const mockNavigate = vi.fn()
@@ -37,15 +32,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <MantineProvider>
       <Notifications />
-      <MemoryRouter>
-        <IngredientProvider>
-          <RecipeProvider>
-            <MealPlanProvider>
-              <GroceryListProvider>{component}</GroceryListProvider>
-            </MealPlanProvider>
-          </RecipeProvider>
-        </IngredientProvider>
-      </MemoryRouter>
+      <MemoryRouter>{component}</MemoryRouter>
     </MantineProvider>
   )
 }

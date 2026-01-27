@@ -12,9 +12,10 @@ import {
   Text,
 } from '@mantine/core'
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useIngredients } from '../../contexts/IngredientContext'
+import { db } from '../../db/database'
 import { formatQuantity } from '../../utils/formatQuantity'
 
 import type { Recipe, SubRecipe } from '../../types/recipe'
@@ -36,7 +37,7 @@ export function CookingSubRecipeCard({
   onToggleComplete,
   onViewDetails,
 }: CookingSubRecipeCardProps) {
-  const { getIngredientById } = useIngredients()
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
   const [expanded, setExpanded] = useState(false)
 
   if (!subRecipeData) {
@@ -142,8 +143,8 @@ export function CookingSubRecipeCard({
               </Text>
               <Stack gap={4}>
                 {subRecipeData.ingredients.map((ingredient, idx) => {
-                  const ingredientData = getIngredientById(
-                    ingredient.ingredientId
+                  const ingredientData = ingredients.find(
+                    ing => ing.id === ingredient.ingredientId
                   )
                   const scaledQuantity = ingredient.quantity * servingMultiplier
                   const displayUnit =

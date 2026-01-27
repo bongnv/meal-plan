@@ -13,16 +13,22 @@ describe('IngredientList', () => {
       id: '1',
       name: 'Tomato',
       category: 'Vegetables',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: '2',
       name: 'Onion',
       category: 'Vegetables',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: '3',
       name: 'Chicken Breast',
       category: 'Meat',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
   ]
 

@@ -4,10 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { GroceryListProvider } from '../../contexts/GroceryListContext'
-import { IngredientProvider } from '../../contexts/IngredientContext'
-import { MealPlanProvider } from '../../contexts/MealPlanContext'
-import { RecipeProvider } from '../../contexts/RecipeContext'
 import { SyncProvider } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 
@@ -58,15 +54,7 @@ vi.mock('../sync/FileSelectionModal', () => ({
 const AllProviders = ({ children }: { children: ReactNode }) => (
   <MantineProvider>
     <MemoryRouter>
-      <RecipeProvider>
-        <MealPlanProvider>
-          <IngredientProvider>
-            <GroceryListProvider>
-              <SyncProvider>{children}</SyncProvider>
-            </GroceryListProvider>
-          </IngredientProvider>
-        </MealPlanProvider>
-      </RecipeProvider>
+      <SyncProvider>{children}</SyncProvider>
     </MemoryRouter>
   </MantineProvider>
 )

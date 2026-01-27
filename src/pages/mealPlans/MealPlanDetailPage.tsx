@@ -13,14 +13,15 @@ import {
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconTrash, IconCopy } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { useMealPlans } from '../../contexts/MealPlanContext'
-import { useRecipes } from '../../contexts/RecipeContext'
+import { db } from '../../db/database'
+import { mealPlanService } from '../../services/mealPlanService'
 import {
   isRecipeMealPlan,
   isCustomMealPlan,
@@ -32,17 +33,16 @@ import type { MealPlan } from '../../types/mealPlan'
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const {
-    getMealPlanById,
-    updateMealPlan,
-    deleteMealPlan,
-    loading: mealPlansLoading,
-  } = useMealPlans()
-  const { recipes, getRecipeById } = useRecipes()
+  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const mealPlan = useLiveQuery(() => {
+    if (!id) return undefined
+    return db.mealPlans.get(id)
+  }, [id])
+  const loading = mealPlan === undefined
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [copyModalOpened, setCopyModalOpened] = useState(false)
 
-  if (mealPlansLoading) {
+  if (loading) {
     return (
       <Container>
         <Stack align="center" mt="xl">
@@ -68,8 +68,6 @@ export function MealPlanDetailPage() {
     )
   }
 
-  const mealPlan = getMealPlanById(id)
-
   if (!mealPlan) {
     return (
       <Container>
@@ -91,7 +89,7 @@ export function MealPlanDetailPage() {
 
   const handleFormSubmit = (updatedMealPlan: Partial<MealPlan>) => {
     if (updatedMealPlan.id) {
-      updateMealPlan(updatedMealPlan as MealPlan)
+      mealPlanService.update(updatedMealPlan as MealPlan)
     }
     setEditModalOpened(false)
   }
@@ -113,14 +111,14 @@ export function MealPlanDetailPage() {
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => {
-        deleteMealPlan(id)
+        mealPlanService.delete(id)
         navigate('/meal-plans')
       },
     })
   }
 
   const isRecipe = isRecipeMealPlan(mealPlan)
-  const recipe = isRecipe ? getRecipeById(mealPlan.recipeId) : null
+  const recipe = isRecipe ? recipes.find(r => r.id === mealPlan.recipeId) : null
   const mealDate = new Date(mealPlan.date)
   const formattedDate = mealDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -143,7 +141,7 @@ export function MealPlanDetailPage() {
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
         onDelete={id => {
-          deleteMealPlan(id)
+          mealPlanService.delete(id)
           navigate('/meal-plans')
         }}
         date={mealPlan.date}
@@ -208,11 +206,7 @@ export function MealPlanDetailPage() {
                 </Tooltip>
               </Group>
             </Group>
-            <RecipeDetail
-              recipe={recipe}
-              initialServings={mealPlan.servings}
-              getRecipeById={getRecipeById}
-            />
+            <RecipeDetail recipe={recipe} initialServings={mealPlan.servings} />
           </Box>
         ) : (
           /* Custom meal: Show simple details */

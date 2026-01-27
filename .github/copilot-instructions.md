@@ -12,6 +12,36 @@
 - Refer to ARCHITECTURE.md for technical architecture and technology decisions
 - Follow the architecture guidelines and tech stack defined in ARCHITECTURE.md for all implementations
 
+### 3-Layer Architecture
+The application follows a clean 3-layer architecture:
+
+**Layer 1: UI (User Interface)**
+- Location: `/src/pages/`, `/src/components/`, `/src/hooks/`
+- React components for presentation and user interaction
+- Custom hooks for managing UI state and calling services
+- Keep components focused on rendering and user events
+- No business logic in components
+
+**Layer 2: Services (Business Logic)**
+- Location: `/src/services/`, `/src/utils/`
+- **Stateless** services with pure business logic
+- All dependencies should be **injected** (db instance, other services)
+- Services handle CRUD operations, validation, transformations
+- Services are testable without React
+- No React hooks or components in services
+
+**Layer 3: Database**
+- Location: `/src/db/`
+- Dexie database instance and schema definitions
+- No business logic, just data persistence
+
+### Context Usage
+- React Context should **only** be used for:
+  - Global UI state (theme, auth status, modals)
+  - Sharing services across components
+- Business logic belongs in **services**, not contexts
+- Avoid "XxxContext" that duplicate service functionality
+
 ## Implementation Planning
 - Use IMPLEMENTATION_PLAN.md to plan features; mark REQUIREMENTS.md checkboxes when planned
 - Break down features into numbered, actionable implementation steps

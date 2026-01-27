@@ -13,9 +13,11 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useMealPlans } from '../../contexts/MealPlanContext'
+import { db } from '../../db/database'
+import { mealPlanService } from '../../services/mealPlanService'
 
 import type {
   CopyFrequency,
@@ -46,7 +48,7 @@ export function CopyMealPlanModal({
   mealPlanId,
   onClose,
 }: CopyMealPlanModalProps) {
-  const { copyMealPlan, generateCopyPreview, mealPlans } = useMealPlans()
+  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
 
   // Form state
   const [targetDate, setTargetDate] = useState<Date | null>(new Date())
@@ -71,7 +73,7 @@ export function CopyMealPlanModal({
   // If meal not found, don't render anything
   if (!meal) return null
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (!targetDate) return
 
     const options: CopyOptions = {
@@ -95,7 +97,7 @@ export function CopyMealPlanModal({
           : undefined,
     }
 
-    const result = generateCopyPreview(meal.id, options)
+    const result = await mealPlanService.generateCopyPreview(meal.id, options)
     setPreview(result)
     setShowPreview(true)
   }
@@ -124,7 +126,7 @@ export function CopyMealPlanModal({
           : undefined,
     }
 
-    copyMealPlan(meal.id, options, conflictResolution)
+    mealPlanService.copyMealPlan(meal.id, options, conflictResolution)
     onClose()
   }
 

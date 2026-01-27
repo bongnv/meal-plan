@@ -19,6 +19,8 @@ describe('mergeUtil', () => {
     prepTime: 15,
     cookTime: 15,
     tags: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   }
 
   const recipe2: Recipe = {
@@ -32,6 +34,8 @@ describe('mergeUtil', () => {
     prepTime: 20,
     cookTime: 20,
     tags: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   }
 
   const mealPlan1: MealPlan = {
@@ -41,6 +45,8 @@ describe('mergeUtil', () => {
     type: 'recipe',
     recipeId: '1',
     servings: 4,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   }
 
   // ingredient1 defined for potential future tests

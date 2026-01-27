@@ -15,13 +15,15 @@ const createMockRecipe = (id: string, subRecipeIds: string[] = []): Recipe => ({
   ingredients: [],
   subRecipes: subRecipeIds.map(subId => ({
     recipeId: subId,
-    quantity: 1,
+    servings: 1,
   })),
   instructions: ['Step 1'],
   servings: 4,
   prepTime: 10,
   cookTime: 20,
   tags: [],
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
 })
 
 describe('circularDependency', () => {

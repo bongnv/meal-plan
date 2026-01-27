@@ -57,6 +57,8 @@ export interface Ingredient {
   id: string
   name: string
   category: IngredientCategory
+  createdAt: number // Unix timestamp
+  updatedAt: number // Unix timestamp
 }
 
 // Zod schema for Ingredient
@@ -64,6 +66,16 @@ export const IngredientSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Ingredient name is required'),
   category: IngredientCategorySchema,
+  createdAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
+  updatedAt: z
+    .number()
+    .nonnegative()
+    .optional()
+    .default(() => Date.now()),
 })
 
 // Form values type (without id)

@@ -22,6 +22,8 @@ describe('useRecipeFilter', () => {
       cookTime: 12,
       tags: ['italian', 'pasta', 'quick'],
       imageUrl: undefined,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: '2',
@@ -38,6 +40,8 @@ describe('useRecipeFilter', () => {
       cookTime: 22,
       tags: ['indian', 'spicy', 'chicken'],
       imageUrl: undefined,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: '3',
@@ -51,6 +55,8 @@ describe('useRecipeFilter', () => {
       cookTime: 5,
       tags: ['vegetarian', 'quick', 'salad'],
       imageUrl: undefined,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: '4',
@@ -67,6 +73,8 @@ describe('useRecipeFilter', () => {
       cookTime: 60,
       tags: ['beef', 'comfort', 'slow-cook'],
       imageUrl: undefined,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
   ]
 

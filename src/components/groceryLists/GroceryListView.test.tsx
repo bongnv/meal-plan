@@ -26,6 +26,7 @@ describe('GroceryListView', () => {
       end: '2026-01-30',
     },
     createdAt: 1737000000000,
+    updatedAt: 1737000000000,
   }
 
   const mockItems: GroceryItem[] = [
@@ -39,6 +40,8 @@ describe('GroceryListView', () => {
       checked: false,
       mealPlanIds: ['meal-1', 'meal-2'],
       notes: 'Get organic',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: 'item-2',
@@ -49,6 +52,8 @@ describe('GroceryListView', () => {
       category: 'Meat',
       checked: false,
       mealPlanIds: ['meal-1'],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: 'item-3',
@@ -59,6 +64,8 @@ describe('GroceryListView', () => {
       category: 'Dairy',
       checked: true,
       mealPlanIds: ['meal-3'],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: 'item-4',
@@ -69,6 +76,8 @@ describe('GroceryListView', () => {
       category: 'Vegetables',
       checked: false,
       mealPlanIds: ['meal-2'],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
   ]
 
@@ -80,6 +89,8 @@ describe('GroceryListView', () => {
       type: 'recipe',
       recipeId: 'recipe-1',
       servings: 2,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: 'meal-2',
@@ -88,6 +99,8 @@ describe('GroceryListView', () => {
       type: 'recipe',
       recipeId: 'recipe-2',
       servings: 4,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
     {
       id: 'meal-3',
@@ -96,6 +109,8 @@ describe('GroceryListView', () => {
       type: 'recipe',
       recipeId: 'recipe-1',
       servings: 2,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     },
   ]
 

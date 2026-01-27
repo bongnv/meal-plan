@@ -25,6 +25,8 @@ describe('migrateRecipes', () => {
           instructions: ['Cook it'],
           subRecipes: [],
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -57,6 +59,8 @@ describe('migrateRecipes', () => {
           instructions: ['Cook it'],
           subRecipes: [],
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -81,6 +85,8 @@ describe('migrateRecipes', () => {
           instructions: ['Cook it'],
           subRecipes: [],
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -102,6 +108,8 @@ describe('migrateRecipes', () => {
           instructions: ['Cook it'],
           subRecipes: [],
           tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -129,6 +137,8 @@ describe('migrateRecipes', () => {
           subRecipes: [],
           instructions: ['Cook it'],
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -148,6 +158,7 @@ describe('migrateRecipes', () => {
     })
 
     it('should preserve all other recipe properties', () => {
+      const now = Date.now()
       const recipes: Recipe[] = [
         {
           id: 'r1',
@@ -161,6 +172,8 @@ describe('migrateRecipes', () => {
           subRecipes: [],
           tags: [],
           imageUrl: 'https://example.com/image.jpg',
+          createdAt: now,
+          updatedAt: now,
         },
       ]
 
@@ -176,6 +189,8 @@ describe('migrateRecipes', () => {
         instructions: ['Step 1', 'Step 2'],
         tags: [],
         imageUrl: 'https://example.com/image.jpg',
+        createdAt: now,
+        updatedAt: now,
       })
     })
 
@@ -192,6 +207,8 @@ describe('migrateRecipes', () => {
           subRecipes: [],
           instructions: ['Cook it'],
           tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ]
 
@@ -218,7 +235,10 @@ describe('migrateRecipes', () => {
           ],
           instructions: ['Cook it'],
           tags: [],
+          subRecipes: [],
           // subRecipes is missing (old schema)
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ] as Recipe[]
 
@@ -240,6 +260,8 @@ describe('migrateRecipes', () => {
           subRecipes: [{ recipeId: 'r2', servings: 1 }],
           instructions: ['Cook it'],
           tags: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ]
 
@@ -267,6 +289,9 @@ describe('migrateRecipes', () => {
           ],
           instructions: ['Cook it'],
           tags: [],
+          subRecipes: [],
+          createdAt: 1640000000000,
+          updatedAt: 1640000000000,
         },
       ] as Recipe[]
 
