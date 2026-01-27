@@ -3,7 +3,6 @@ import { zodResolver, useForm } from '@mantine/form'
 
 import {
   INGREDIENT_CATEGORIES,
-  UNITS,
   IngredientFormSchema,
 } from '../../types/ingredient'
 
@@ -11,7 +10,6 @@ import type {
   Ingredient,
   IngredientCategory,
   IngredientFormValues,
-  Unit,
 } from '../../types/ingredient'
 
 interface IngredientFormProps {
@@ -29,7 +27,6 @@ export function IngredientForm({
     initialValues: {
       name: ingredient?.name || '',
       category: (ingredient?.category || '') as IngredientCategory,
-      unit: (ingredient?.unit || '') as Unit,
     },
     validate: zodResolver(IngredientFormSchema),
   })
@@ -53,15 +50,6 @@ export function IngredientForm({
           placeholder="Select a category"
           data={INGREDIENT_CATEGORIES}
           {...form.getInputProps('category')}
-          searchable
-          required
-        />
-
-        <Select
-          label="Unit"
-          placeholder="Select a unit"
-          data={UNITS}
-          {...form.getInputProps('unit')}
           searchable
           required
         />

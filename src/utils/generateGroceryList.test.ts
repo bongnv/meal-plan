@@ -12,19 +12,16 @@ describe('generateGroceryList', () => {
       id: '1',
       name: 'Chicken Breast',
       category: 'Meat',
-      unit: 'gram',
     },
     {
       id: '2',
       name: 'Rice',
       category: 'Grains',
-      unit: 'gram',
     },
     {
       id: '3',
       name: 'Broccoli',
       category: 'Vegetables',
-      unit: 'gram',
     },
   ]
 
@@ -36,9 +33,6 @@ describe('generateGroceryList', () => {
       servings: 2,
       totalTime: 30,
       ingredients: [
-        { ingredientId: '1', quantity: 400, unit: 'gram' },
-        { ingredientId: '2', quantity: 200, unit: 'gram' },
-        { ingredientId: '3', quantity: 150, unit: 'gram' },
       ],
       instructions: ['Cook chicken', 'Cook rice', 'Steam broccoli'],
       tags: [],
@@ -50,8 +44,6 @@ describe('generateGroceryList', () => {
       servings: 4,
       totalTime: 20,
       ingredients: [
-        { ingredientId: '2', quantity: 400, unit: 'gram' },
-        { ingredientId: '1', quantity: 200, unit: 'gram' },
       ],
       instructions: ['Cook rice', 'Fry with chicken'],
       tags: [],
@@ -84,7 +76,6 @@ describe('generateGroceryList', () => {
       expect(chicken).toMatchObject({
         name: 'Chicken Breast',
         quantity: 400,
-        unit: 'gram',
         category: 'Meat',
         checked: false,
         mealPlanIds: ['m1'],
@@ -247,7 +238,6 @@ describe('generateGroceryList', () => {
           id: '10',
           name: 'Milk',
           category: 'Dairy',
-          unit: 'milliliter',
         },
       ]
 
@@ -553,7 +543,6 @@ describe('generateGroceryList', () => {
           description: '',
           servings: 2,
           totalTime: 10,
-          ingredients: [{ ingredientId: 'non-existent', quantity: 100, unit: 'gram' }],
           instructions: [],
           tags: [],
         },
@@ -667,14 +656,12 @@ describe('generateGroceryList', () => {
       const chicken = result.items.find(item => item.name === 'Chicken Breast')
       expect(chicken).toMatchObject({
         quantity: 2,
-        unit: 'cup',
       })
 
       // Rice should use recipe unit (gram)
       const rice = result.items.find(item => item.name === 'Rice')
       expect(rice).toMatchObject({
         quantity: 300,
-        unit: 'gram',
       })
     })
 
@@ -686,7 +673,6 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
-          ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
         },
@@ -696,7 +682,6 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
-          ingredients: [{ ingredientId: '1', quantity: 3, unit: 'cup' }],
           instructions: ['Cook'],
           tags: [],
         },
@@ -734,7 +719,6 @@ describe('generateGroceryList', () => {
       const chicken = result.items.find(item => item.name === 'Chicken Breast')
       expect(chicken).toMatchObject({
         quantity: 5,
-        unit: 'cup',
         mealPlanIds: ['m1', 'm2'],
       })
     })

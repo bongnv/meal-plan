@@ -11,6 +11,7 @@ import {
 import { z } from 'zod'
 
 import { TokenExpiredError } from '../utils/errors/TokenExpiredError'
+import { migrateRecipes } from '../utils/migration/recipeMigration'
 import { merge, resolveConflicts } from '../utils/sync/mergeUtil'
 
 import { useCloudStorage } from './CloudStorageContext'
@@ -414,7 +415,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           throw new Error('Invalid remote data format')
         }
 
-        remote = validationResult.data as SyncData
+        const validatedRemote = validationResult.data as SyncData
+        
+        // Apply migration to remote data (converts old schema to new schema)
+        const migratedRecipes = migrateRecipes(validatedRemote.recipes, validatedRemote.ingredients)
+        
+        remote = {
+          ...validatedRemote,
+          recipes: migratedRecipes,
+        }
       }
 
       // Step 4.5: Check if anything changed - skip upload if not
@@ -568,7 +577,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         throw new Error('Invalid remote data format')
       }
 
-      const remote = validationResult.data as SyncData
+      const validatedRemote = validationResult.data as SyncData
+      
+      // Apply migration to remote data (converts old schema to new schema)
+      const migratedRecipes = migrateRecipes(validatedRemote.recipes, validatedRemote.ingredients)
+      
+      const remote = {
+        ...validatedRemote,
+        recipes: migratedRecipes,
+      }
 
       // Apply remote data to React state (overwrites local)
       replaceAllRecipes(remote.recipes)

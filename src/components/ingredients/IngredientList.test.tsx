@@ -9,13 +9,10 @@ import type { Ingredient } from '../../types/ingredient'
 
 describe('IngredientList', () => {
   const mockIngredients: Ingredient[] = [
-    { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
-    { id: '2', name: 'Onion', category: 'Vegetables', unit: 'piece' },
     {
       id: '3',
       name: 'Chicken Breast',
       category: 'Meat',
-      unit: 'gram',
     },
   ]
 

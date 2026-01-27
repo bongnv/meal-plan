@@ -33,8 +33,6 @@ describe('IngredientStorageService', () => {
 
     it('should return ingredients from localStorage', () => {
       const mockIngredients: Ingredient[] = [
-        { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
-        { id: '2', name: 'Onion', category: 'Vegetables', unit: 'piece' },
       ]
 
       localStorage.setItem('ingredients', JSON.stringify(mockIngredients))
@@ -76,7 +74,6 @@ describe('IngredientStorageService', () => {
   describe('saveIngredients', () => {
     it('should save valid ingredients to localStorage', () => {
       const mockIngredients: Ingredient[] = [
-        { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
       ]
 
       service.saveIngredients(mockIngredients)
@@ -87,10 +84,8 @@ describe('IngredientStorageService', () => {
 
     it('should overwrite existing ingredients', () => {
       const initial: Ingredient[] = [
-        { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
       ]
       const updated: Ingredient[] = [
-        { id: '2', name: 'Onion', category: 'Vegetables', unit: 'piece' },
       ]
 
       service.saveIngredients(initial)
@@ -108,7 +103,6 @@ describe('IngredientStorageService', () => {
         })
 
       const mockIngredients: Ingredient[] = [
-        { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
       ]
 
       expect(() => service.saveIngredients(mockIngredients)).toThrow(

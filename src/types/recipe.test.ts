@@ -8,7 +8,6 @@ describe('RecipeIngredient Types', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
         quantity: 2.5,
-        unit: 'cup',
       }
 
       const result = RecipeIngredientSchema.safeParse(ingredient)
@@ -18,7 +17,6 @@ describe('RecipeIngredient Types', () => {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
           quantity: 2.5,
-          unit: 'cup',
         })
       }
     })
@@ -27,7 +25,6 @@ describe('RecipeIngredient Types', () => {
       const ingredient = {
         ingredientId: 'ingredient-123',
         quantity: 2.5,
-        unit: 'gram',
         displayName: 'chicken',
       }
 
@@ -38,7 +35,6 @@ describe('RecipeIngredient Types', () => {
         expect(result.data).toEqual({
           ingredientId: 'ingredient-123',
           quantity: 2.5,
-          unit: 'gram',
           displayName: 'chicken',
         })
       }

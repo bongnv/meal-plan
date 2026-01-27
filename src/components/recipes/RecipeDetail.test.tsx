@@ -26,9 +26,6 @@ vi.mock('../../contexts/IngredientContext', () => ({
 }))
 
 const mockIngredients: Ingredient[] = [
-  { id: '1', name: 'Spaghetti', category: 'Grains', unit: 'gram' },
-  { id: '2', name: 'Bacon', category: 'Meat', unit: 'gram' },
-  { id: '3', name: 'Eggs', category: 'Dairy', unit: 'piece' },
 ]
 
 const mockRecipe: Recipe = {
@@ -312,9 +309,6 @@ describe('RecipeDetail', () => {
       const recipeWithVariousUnits: Recipe = {
         ...mockRecipe,
         ingredients: [
-          { ingredientId: '1', quantity: 2, unit: 'cup' },
-          { ingredientId: '2', quantity: 100, unit: 'gram' },
-          { ingredientId: '3', quantity: 3, unit: 'tablespoon' },
         ],
       }
 

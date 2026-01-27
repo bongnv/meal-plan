@@ -6,9 +6,6 @@ import { validateRecipeImport } from './recipeImportValidator'
 
 describe('validateRecipeImport', () => {
   const mockIngredients: Ingredient[] = [
-    { id: '1', name: 'Olive Oil', category: 'Oils & Fats', unit: 'tablespoon' },
-    { id: '2', name: 'Garlic', category: 'Vegetables', unit: 'clove' },
-    { id: '3', name: 'Basil', category: 'Herbs & Spices', unit: 'bunch' },
   ]
 
   it('should validate a valid recipe with existing ingredients', () => {
@@ -51,7 +48,6 @@ describe('validateRecipeImport', () => {
             id: 'ing_new1',
             name: 'Parmesan Cheese',
             category: 'Dairy',
-            unit: 'cup',
           },
         },
       ],
@@ -73,7 +69,6 @@ describe('validateRecipeImport', () => {
       id: 'ing_new1',
       name: 'Parmesan Cheese',
       category: 'Dairy',
-      unit: 'cup',
     })
   })
 
@@ -210,7 +205,6 @@ describe('validateRecipeImport', () => {
             id: 'ing_new1',
             name: 'Cheese',
             category: 'Dairy',
-            unit: 'cup',
           },
         },
         {
@@ -220,7 +214,6 @@ describe('validateRecipeImport', () => {
             id: 'ing_new2',
             name: 'Pasta',
             category: 'Grains',
-            unit: 'gram',
           },
         },
       ],
@@ -301,20 +294,20 @@ describe('validateRecipeImport', () => {
       expect(result.recipe?.ingredients[0].ingredientId).toBe('2') // Should use existing garlic ID
     })
 
-    it('should create new ingredient when name matches but unit differs', () => {
+    it('should not create new ingredient when name matches existing ingredient', () => {
       const recipeData = {
         id: 'recipe_123',
         name: 'Garlic Soup',
         description: 'Garlic soup recipe',
         ingredients: [
           {
-            ingredientId: 'new_garlic_gram',
+            ingredientId: 'new_garlic',
             quantity: 100,
+            unit: 'gram',
             suggestedIngredient: {
-              id: 'new_garlic_gram',
-              name: 'Garlic',
+              id: 'new_garlic',
+              name: 'Garlic', // Matches existing ingredient name
               category: 'Vegetables',
-              unit: 'gram', // different unit from existing "clove"
             },
           },
         ],
@@ -330,12 +323,8 @@ describe('validateRecipeImport', () => {
       )
 
       expect(result.isValid).toBe(true)
-      expect(result.newIngredients).toHaveLength(1) // Should add new ingredient with different unit
-      expect(result.newIngredients[0].name).toBe('Garlic')
-      expect(result.newIngredients[0].unit).toBe('gram')
-      expect(result.recipe?.ingredients[0].ingredientId).toBe(
-        'new_garlic_gram'
-      ) // Should keep new ID
+      expect(result.newIngredients).toHaveLength(0) // Should not add new ingredient (name matches)
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('2') // Should use existing Garlic ID
     })
 
     it('should handle multiple ingredients with some matching and some new', () => {
@@ -352,7 +341,6 @@ describe('validateRecipeImport', () => {
               id: 'suggested_basil',
               name: 'BASIL', // uppercase, but matches existing "Basil" with same unit
               category: 'Herbs & Spices',
-              unit: 'bunch',
             },
           },
           {
@@ -362,7 +350,6 @@ describe('validateRecipeImport', () => {
               id: 'new_tomato',
               name: 'Tomato', // truly new
               category: 'Vegetables',
-              unit: 'piece',
             },
           },
         ],
@@ -399,7 +386,6 @@ describe('validateRecipeImport', () => {
               id: 'suggested_garlic',
               name: 'Garlic',
               category: 'Vegetables',
-              unit: 'clove',
             },
           },
         ],
@@ -435,7 +421,6 @@ describe('validateRecipeImport', () => {
               id: 'new_oil',
               name: 'OLIVE oil', // Mixed case
               category: 'Oils & Fats',
-              unit: 'tablespoon',
             },
           },
         ],

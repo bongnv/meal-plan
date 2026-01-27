@@ -26,19 +26,16 @@ const mockIngredients: Ingredient[] = [
     id: 'banana-id',
     name: 'Banana',
     category: 'Fruits',
-    unit: 'piece',
   },
   {
     id: 'chicken-id',
     name: 'Chicken Breast',
     category: 'Meat',
-    unit: 'gram',
   },
   {
     id: 'milk-id',
     name: 'Milk',
     category: 'Dairy',
-    unit: 'liter',
   },
 ]
 
@@ -59,7 +56,6 @@ const mockGroceryItems = [
     listId: '1',
     name: 'Banana',
     quantity: 2,
-    unit: 'cup',
     checked: false,
     category: 'Fruits',
     mealPlanIds: ['meal-1'],

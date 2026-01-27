@@ -17,9 +17,6 @@ vi.mock('../../contexts/IngredientContext', () => ({
 }))
 
 const mockIngredients: Ingredient[] = [
-  { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
-  { id: '2', name: 'Onion', category: 'Vegetables', unit: 'piece' },
-  { id: '3', name: 'Chicken Breast', category: 'Meat', unit: 'gram' },
 ]
 
 const defaultMockIngredientContext = {
@@ -512,7 +509,6 @@ describe('RecipeForm', () => {
               expect.objectContaining({
                 ingredientId: '1',
                 quantity: 2,
-                unit: 'gram',
               }),
             ],
           })
@@ -527,7 +523,6 @@ describe('RecipeForm', () => {
         description: 'Test',
         servings: 4,
         totalTime: 30,
-        ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
         instructions: ['Step 1'],
         tags: [],
       }

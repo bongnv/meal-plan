@@ -11,10 +11,7 @@ describe('generateRecipeImportPrompt', () => {
         id: '1',
         name: 'Olive Oil',
         category: 'Oils & Fats',
-        unit: 'tablespoon',
       },
-      { id: '2', name: 'Garlic', category: 'Vegetables', unit: 'clove' },
-      { id: '3', name: 'Basil', category: 'Herbs & Spices', unit: 'bunch' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -42,7 +39,6 @@ describe('generateRecipeImportPrompt', () => {
 
   it('should include JSON schema definition', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Tomato', category: 'Vegetables', unit: 'piece' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -66,7 +62,6 @@ describe('generateRecipeImportPrompt', () => {
 
   it('should include instructions for AI', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Salt', category: 'Condiments', unit: 'pinch' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -82,7 +77,6 @@ describe('generateRecipeImportPrompt', () => {
 
   it('should include example output format', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', category: 'Baking', unit: 'cup' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -106,7 +100,6 @@ describe('generateRecipeImportPrompt', () => {
 
   it('should instruct AI to suggest new ingredients with category', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Butter', category: 'Dairy', unit: 'tablespoon' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -157,7 +150,6 @@ describe('generateRecipeImportPrompt', () => {
 
   it('should include displayName field in ingredient schema', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Chicken Breast', category: 'Poultry', unit: 'gram' },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)
@@ -192,7 +184,6 @@ describe('generateRecipeImportPrompt', () => {
         id: '1',
         name: 'Olive Oil',
         category: 'Oils & Fats',
-        unit: 'tablespoon',
       },
     ]
 

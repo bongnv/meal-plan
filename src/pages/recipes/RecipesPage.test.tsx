@@ -71,31 +71,26 @@ describe('RecipesPage', () => {
     {
       id: 'ing1',
       name: 'Pasta',
-      unit: 'gram' as const,
       category: 'Grains' as const,
     },
     {
       id: 'ing2',
       name: 'Eggs',
-      unit: 'piece' as const,
       category: 'Dairy' as const,
     },
     {
       id: 'ing3',
       name: 'Chicken',
-      unit: 'gram' as const,
       category: 'Poultry' as const,
     },
     {
       id: 'ing4',
       name: 'Curry Powder',
-      unit: 'gram' as const,
       category: 'Herbs & Spices' as const,
     },
     {
       id: 'ing5',
       name: 'Lettuce',
-      unit: 'gram' as const,
       category: 'Vegetables' as const,
     },
   ]

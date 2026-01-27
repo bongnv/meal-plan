@@ -125,7 +125,6 @@ export function validateRecipeImport(
             id: ingredient.suggestedIngredient.id,
             name: ingredient.suggestedIngredient.name,
             category: ingredient.suggestedIngredient.category,
-            unit: ingredient.suggestedIngredient.unit,
           })
         }
       }

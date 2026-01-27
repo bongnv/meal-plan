@@ -93,7 +93,6 @@ export function IngredientList({
             <Table.Tr>
               <Table.Th>Name</Table.Th>
               <Table.Th>Category</Table.Th>
-              <Table.Th>Unit</Table.Th>
               <Table.Th style={{ width: 100 }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -105,11 +104,6 @@ export function IngredientList({
                 </Table.Td>
                 <Table.Td>
                   <Badge variant="light">{ingredient.category}</Badge>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {ingredient.unit}
-                  </Text>
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">

@@ -16,10 +16,10 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
       ? ingredients
           .map(
             ing =>
-              `  - ID: ${ing.id}, Name: "${ing.name}", Category: ${ing.category}, Unit: ${ing.unit}`
+              `  - ID: ${ing.id}, Name: "${ing.name}", Category: ${ing.category}`
           )
           .join('\n')
-      : '  (No ingredients in library yet - you will need to suggest new ingredients with categories and units)'
+      : '  (No ingredients in library yet - you will need to suggest new ingredients with categories)'
 
   return `Please parse the following recipe and convert it to JSON format matching this schema:
 
@@ -34,6 +34,7 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
     {
       "ingredientId": "string (reference to ingredient ID from library below, or suggest new ingredient)",
       "quantity": "number (numeric quantity)",
+      "unit": "string (REQUIRED - one of: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package)",
       "displayName": "string (optional - recipe-specific name as it appears in the recipe, e.g., 'Truss Tomatoes' instead of 'Tomato')"
     }
   ],
@@ -53,28 +54,27 @@ ${ingredientList}
 
 1. Parse the recipe from the URL or text I provide
 2. For each ingredient in the recipe:
-   - Try to match it to an existing ingredient in the library by name
-   - If found and the unit matches, use the matching ingredientId
+   - Try to match it to an existing ingredient in the library by name (case-insensitive)
+   - If found, use the existing ingredientId
    - If the recipe uses a different name (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
-   - If the recipe uses an unsupported unit (not in the list below), convert to the closest supported unit:
+   - Determine the appropriate unit from the recipe and convert unsupported units:
      * pound (lb) → gram (1 lb = 454 grams)
      * ounce (oz) → gram (1 oz = 28 grams)
      * fluid ounce (fl oz) → milliliter (1 fl oz = 30 ml)
      * pint → milliliter (1 pint = 473 ml)
      * quart → liter (1 quart = 0.95 liter)
      * gallon → liter (1 gallon = 3.8 liters)
-   - If the ingredient exists with a different supported unit, suggest a new ingredient with the recipe's unit
-   - If no match exists, suggest a new ingredient with:
+   - If no match exists in the library, suggest a new ingredient with:
      - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
      - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other
-     - An appropriate unit from: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, clove, slice, bunch, pinch, dash, can, package
-3. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5)
-4. Break instructions into clear, sequential steps
-5. Estimate total time in minutes (prep + cook time)
-6. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
-7. Use placeholder 'temp' for recipe ID (app will generate actual ID)
-8. If no image URL is available, OMIT the imageUrl field entirely - do not include it with an empty string
-9. Return ONLY the JSON object, no additional text
+3. IMPORTANT: Every recipe ingredient MUST include a unit field with one of these values: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package
+4. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5)
+5. Break instructions into clear, sequential steps
+6. Estimate total time in minutes (prep + cook time)
+7. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
+8. Use placeholder 'temp' for recipe ID (app will generate actual ID)
+9. If no image URL is available, OMIT the imageUrl field entirely - do not include it with an empty string
+10. Return ONLY the JSON object, no additional text
 
 ## Example Output Format
 
@@ -84,9 +84,9 @@ ${ingredientList}
   "name": "Garlic Pasta",
   "description": "Simple and delicious pasta with garlic and olive oil",
   "ingredients": [
-    { "ingredientId": "1", "quantity": 4, "displayName": "olive oil" },
-    { "ingredientId": "2", "quantity": 4 },
-    { "ingredientId": "new_1", "quantity": 500, "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains", "unit": "gram" } }
+    { "ingredientId": "1", "quantity": 4, "unit": "tablespoon", "displayName": "olive oil" },
+    { "ingredientId": "2", "quantity": 4, "unit": "clove" },
+    { "ingredientId": "new_1", "quantity": 500, "unit": "gram", "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains" } }
   ],
   "instructions": [
     "Boil water and cook pasta according to package directions",

@@ -125,7 +125,7 @@ export function RecipeForm({
   const ingredientSelectData = [
     ...ingredients.map(ing => ({
       value: ing.id,
-      label: `${ing.name} (${ing.unit})`,
+      label: ing.name,
     })),
     { value: '__create_new__', label: '+ Create New Ingredient' },
   ]

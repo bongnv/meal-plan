@@ -253,7 +253,7 @@ export const RecipeImportModal = ({
 
                         return (
                           <List.Item key={index}>
-                            {ing.quantity} {ingredient?.unit} {displayText}
+                            {ing.quantity} {ing.unit} {displayText}
                             {isNew && (
                               <Badge size="xs" color="blue" ml="xs">
                                 New

@@ -63,16 +63,11 @@ const mockRecipes: Recipe[] = [
 ]
 
 const mockIngredients: Ingredient[] = [
-  { id: 'ing1', name: 'Spaghetti', category: 'Grains', unit: 'gram' },
-  { id: 'ing2', name: 'Parmesan', category: 'Dairy', unit: 'gram' },
-  { id: 'ing3', name: 'Chicken', category: 'Meat', unit: 'gram' },
   {
     id: 'ing4',
     name: 'Curry Powder',
     category: 'Herbs & Spices',
-    unit: 'gram',
   },
-  { id: 'ing5', name: 'Lettuce', category: 'Vegetables', unit: 'gram' },
 ]
 
 const defaultMockRecipeContext = {

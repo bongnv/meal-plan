@@ -26,7 +26,6 @@ const mockIngredientContext = {
       id: '1',
       name: 'Tomato',
       category: 'Vegetables' as const,
-      unit: 'piece' as const,
     },
   ],
   loading: false,

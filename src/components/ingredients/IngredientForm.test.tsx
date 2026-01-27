@@ -19,7 +19,6 @@ describe('IngredientForm', () => {
       expect(
         screen.getByRole('textbox', { name: /category/i })
       ).toBeInTheDocument()
-      expect(screen.getByRole('textbox', { name: /unit/i })).toBeInTheDocument()
       expect(
         screen.getByRole('button', { name: /create ingredient/i })
       ).toBeInTheDocument()
@@ -38,8 +37,6 @@ describe('IngredientForm', () => {
       await user.type(screen.getByRole('textbox', { name: /name/i }), 'Tomato')
       await user.click(screen.getByRole('textbox', { name: /category/i }))
       await user.click(screen.getByText('Vegetables'))
-      await user.click(screen.getByRole('textbox', { name: /unit/i }))
-      await user.click(screen.getByText('piece'))
       await user.click(
         screen.getByRole('button', { name: /create ingredient/i })
       )
@@ -47,7 +44,6 @@ describe('IngredientForm', () => {
       expect(onSubmit).toHaveBeenCalledWith({
         name: 'Tomato',
         category: 'Vegetables',
-        unit: 'piece',
       })
     })
 
@@ -88,7 +84,6 @@ describe('IngredientForm', () => {
       id: '1',
       name: 'Tomato',
       category: 'Vegetables',
-      unit: 'piece',
     }
 
     it('should populate form with initial values', () => {
@@ -108,9 +103,6 @@ describe('IngredientForm', () => {
       )
       expect(screen.getByRole('textbox', { name: /category/i })).toHaveValue(
         'Vegetables'
-      )
-      expect(screen.getByRole('textbox', { name: /unit/i })).toHaveValue(
-        'piece'
       )
       expect(
         screen.getByRole('button', { name: /update ingredient/i })
@@ -135,8 +127,6 @@ describe('IngredientForm', () => {
         screen.getByRole('textbox', { name: /name/i }),
         'Cherry Tomato'
       )
-      await user.click(screen.getByRole('textbox', { name: /unit/i }))
-      await user.click(screen.getByText('gram'))
       await user.click(
         screen.getByRole('button', { name: /update ingredient/i })
       )
@@ -144,7 +134,6 @@ describe('IngredientForm', () => {
       expect(onSubmit).toHaveBeenCalledWith({
         name: 'Cherry Tomato',
         category: 'Vegetables',
-        unit: 'gram',
       })
     })
   })

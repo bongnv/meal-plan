@@ -4,6 +4,7 @@ import { generateId } from '../idGenerator'
 
 import { RecipeStorageService } from './recipeStorage'
 
+import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
 describe('RecipeStorageService', () => {
@@ -48,7 +49,6 @@ describe('RecipeStorageService', () => {
           id: '1',
           name: 'Test Recipe',
           description: 'A test recipe',
-          ingredients: [{ ingredientId: 'ing1', quantity: 2 }],
           instructions: ['Step 1'],
           servings: 4,
           totalTime: 30,
@@ -201,8 +201,6 @@ describe('RecipeStorageService', () => {
           name: 'Old Recipe',
           description: 'Recipe without displayName',
           ingredients: [
-            { ingredientId: 'ing1', quantity: 2 },
-            { ingredientId: 'ing2', quantity: 1 },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -225,8 +223,6 @@ describe('RecipeStorageService', () => {
           name: 'New Recipe',
           description: 'Recipe with displayName',
           ingredients: [
-            { ingredientId: 'ing1', quantity: 2, displayName: 'chicken' },
-            { ingredientId: 'ing2', quantity: 1, displayName: 'tomatoes' },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -250,7 +246,6 @@ describe('RecipeStorageService', () => {
           name: 'Recipe with displayName',
           description: 'Has custom names',
           ingredients: [
-            { ingredientId: 'ing1', quantity: 2, displayName: 'chicken' },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -261,7 +256,6 @@ describe('RecipeStorageService', () => {
           id: '2',
           name: 'Recipe without displayName',
           description: 'No custom names',
-          ingredients: [{ ingredientId: 'ing2', quantity: 1 }],
           instructions: ['Step 1'],
           servings: 2,
           totalTime: 15,
@@ -299,6 +293,121 @@ describe('RecipeStorageService', () => {
       expect(loaded[0].ingredients[0].displayName).toBe('olive oil')
       expect(loaded[0].ingredients[1].displayName).toBeUndefined()
       expect(loaded[0].ingredients[2].displayName).toBe('pasta')
+    })
+  })
+
+  describe('Migration on load', () => {
+    it('should apply migration when loading recipes without units', () => {
+      const mockIngredients = [
+      ]
+
+      const oldRecipes: Recipe[] = [
+        {
+          id: '1',
+          name: 'Test Recipe',
+          description: 'Test',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 400 }, // Missing unit
+            { ingredientId: 'ing2', quantity: 2 }, // Missing unit
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: [],
+        },
+      ]
+
+      localStorage.setItem('recipes', JSON.stringify(oldRecipes))
+
+      const loaded = service.loadRecipes(mockIngredients)
+
+      // Should have units copied from ingredient library
+      expect(loaded[0].ingredients[0]).toEqual({
+        ingredientId: 'ing1',
+        quantity: 400,
+      })
+      expect(loaded[0].ingredients[1]).toEqual({
+        ingredientId: 'ing2',
+        quantity: 2,
+      })
+    })
+
+    it('should preserve existing units when loading recipes', () => {
+      const mockIngredients = [
+      ]
+
+      const recipesWithUnits: Recipe[] = [
+        {
+          id: '1',
+          name: 'Test Recipe',
+          description: 'Test',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 2, unit: 'cup' }, // Already has unit (different from library)
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: [],
+        },
+      ]
+
+      localStorage.setItem('recipes', JSON.stringify(recipesWithUnits))
+
+      const loaded = service.loadRecipes(mockIngredients)
+
+      // Should preserve existing unit, not override with library unit
+      expect(loaded[0].ingredients[0].unit).toBe('cup')
+    })
+
+    it('should use "piece" fallback for unknown ingredients during migration', () => {
+      const mockIngredients = [
+      ]
+
+      const recipes: Recipe[] = [
+        {
+          id: '1',
+          name: 'Test Recipe',
+          description: 'Test',
+          ingredients: [
+            { ingredientId: 'unknown', quantity: 2 }, // Unknown ingredient
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: [],
+        },
+      ]
+
+      localStorage.setItem('recipes', JSON.stringify(recipes))
+
+      const loaded = service.loadRecipes(mockIngredients)
+
+      // Should use 'piece' as fallback
+      expect(loaded[0].ingredients[0].unit).toBe('piece')
+    })
+
+    it('should work when no ingredients provided to loadRecipes', () => {
+      const recipes: Recipe[] = [
+        {
+          id: '1',
+          name: 'Test Recipe',
+          description: 'Test',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 400 }, // Missing unit
+          ],
+          instructions: ['Step 1'],
+          servings: 4,
+          totalTime: 30,
+          tags: [],
+        },
+      ]
+
+      localStorage.setItem('recipes', JSON.stringify(recipes))
+
+      const loaded = service.loadRecipes() // No ingredients provided
+
+      // Should use 'piece' as fallback since no ingredients available
+      expect(loaded[0].ingredients[0].unit).toBe('piece')
     })
   })
 })

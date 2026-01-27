@@ -57,7 +57,6 @@ export interface Ingredient {
   id: string
   name: string
   category: IngredientCategory
-  unit: Unit
 }
 
 // Zod schema for Ingredient
@@ -65,7 +64,6 @@ export const IngredientSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Ingredient name is required'),
   category: IngredientCategorySchema,
-  unit: UnitSchema,
 })
 
 // Form values type (without id)
@@ -78,7 +76,6 @@ export const IngredientFormSchema = z.object({
   category: z.enum(INGREDIENT_CATEGORIES, {
     errorMap: () => ({ message: 'Category is required' }),
   }),
-  unit: z.enum(UNITS, { errorMap: () => ({ message: 'Unit is required' }) }),
 })
 
 export type IngredientFormValues = z.infer<typeof IngredientFormSchema>
