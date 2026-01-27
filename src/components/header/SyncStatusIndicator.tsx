@@ -44,7 +44,7 @@ function getTooltipLabel(
   switch (status) {
     case 'syncing':
       return 'Syncing...'
-    case 'success':
+    case 'synced':
       return `Synced successfully\n${formatRelativeTime(lastSyncTime)}`
     case 'error':
       return 'Sync failed - Click to retry'
@@ -63,7 +63,7 @@ function getStatusIcon(status: SyncStatus, isConnected: boolean) {
   switch (status) {
     case 'syncing':
       return <Loader size={20} />
-    case 'success':
+    case 'synced':
       return <IconCloudCheck size={20} />
     case 'error':
       return <IconCloudX size={20} />
@@ -82,7 +82,7 @@ function getStatusColor(status: SyncStatus, isConnected: boolean): string {
   switch (status) {
     case 'syncing':
       return 'blue'
-    case 'success':
+    case 'synced':
       return 'green'
     case 'error':
       return 'red'

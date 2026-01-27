@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { migrateRecipes, migrateRecipeSubRecipes } from './recipeMigration'
+import {
+  migrateRecipes,
+  migrateRecipeSubRecipes,
+  migrateRecipeTime,
+} from './recipeMigration'
 
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
@@ -300,6 +304,152 @@ describe('migrateRecipes', () => {
 
       // Original should be unchanged
       expect(recipes).toEqual(original)
+    })
+  })
+
+  describe('migrateRecipeTime', () => {
+    it('should preserve existing prepTime and cookTime', () => {
+      const recipes: Recipe[] = [
+        {
+          id: 'r1',
+          name: 'Test Recipe',
+          description: 'Test',
+          servings: 2,
+          prepTime: 10,
+          cookTime: 20,
+          ingredients: [{ ingredientId: '1', quantity: 400, unit: 'gram' }],
+          instructions: ['Cook it'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
+      const migrated = migrateRecipeTime(recipes)
+
+      expect(migrated[0].prepTime).toBe(10)
+      expect(migrated[0].cookTime).toBe(20)
+    })
+
+    it('should split totalTime 50/50 when prepTime and cookTime are missing', () => {
+      const recipes = [
+        {
+          id: 'r1',
+          name: 'Test Recipe',
+          description: 'Test',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [{ ingredientId: '1', quantity: 400, unit: 'gram' }],
+          instructions: ['Cook it'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ] as any[]
+
+      const migrated = migrateRecipeTime(recipes)
+
+      expect(migrated[0].prepTime).toBe(15) // Math.ceil(30 / 2)
+      expect(migrated[0].cookTime).toBe(15) // Math.floor(30 / 2)
+    })
+
+    it('should give extra minute to prepTime for odd totalTime', () => {
+      const recipes = [
+        {
+          id: 'r1',
+          name: 'Test Recipe',
+          description: 'Test',
+          servings: 2,
+          totalTime: 25,
+          ingredients: [{ ingredientId: '1', quantity: 400, unit: 'gram' }],
+          instructions: ['Cook it'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ] as any[]
+
+      const migrated = migrateRecipeTime(recipes)
+
+      expect(migrated[0].prepTime).toBe(13) // Math.ceil(25 / 2)
+      expect(migrated[0].cookTime).toBe(12) // Math.floor(25 / 2)
+    })
+
+    it('should default to 0 when neither prepTime/cookTime nor totalTime exist', () => {
+      const recipes = [
+        {
+          id: 'r1',
+          name: 'Test Recipe',
+          description: 'Test',
+          servings: 2,
+          ingredients: [{ ingredientId: '1', quantity: 400, unit: 'gram' }],
+          instructions: ['Cook it'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ] as any[]
+
+      const migrated = migrateRecipeTime(recipes)
+
+      expect(migrated[0].prepTime).toBe(0)
+      expect(migrated[0].cookTime).toBe(0)
+    })
+
+    it('should handle empty recipes array', () => {
+      const migrated = migrateRecipeTime([])
+      expect(migrated).toEqual([])
+    })
+
+    it('should not mutate original recipes array', () => {
+      const recipes = [
+        {
+          id: 'r1',
+          name: 'Test Recipe',
+          description: 'Test',
+          servings: 2,
+          totalTime: 30,
+          ingredients: [{ ingredientId: '1', quantity: 400, unit: 'gram' }],
+          instructions: ['Cook it'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ] as any[]
+
+      const original = JSON.parse(JSON.stringify(recipes))
+      migrateRecipeTime(recipes)
+
+      // Original should be unchanged
+      expect(recipes).toEqual(original)
+    })
+
+    it('should handle recipes with totalTime of 1', () => {
+      const recipes = [
+        {
+          id: 'r1',
+          name: 'Quick Recipe',
+          description: 'Very fast',
+          servings: 1,
+          totalTime: 1,
+          ingredients: [{ ingredientId: '1', quantity: 1, unit: 'piece' }],
+          instructions: ['Quick'],
+          subRecipes: [],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ] as any[]
+
+      const migrated = migrateRecipeTime(recipes)
+
+      expect(migrated[0].prepTime).toBe(1) // Math.ceil(1 / 2)
+      expect(migrated[0].cookTime).toBe(0) // Math.floor(1 / 2)
     })
   })
 })

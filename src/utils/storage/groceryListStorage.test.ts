@@ -181,6 +181,138 @@ describe('GroceryListStorageService', () => {
     })
   })
 
+  describe('loadGroceryItems', () => {
+    it('should return an empty array when no grocery items are stored', () => {
+      const items = service.loadGroceryItems()
+      expect(items).toEqual([])
+    })
+
+    it('should load grocery items from localStorage', () => {
+      const mockItems = [
+        {
+          id: '1',
+          listId: 'list1',
+          name: 'Flour',
+          quantity: 2,
+          unit: 'cup' as const,
+          category: 'Baking' as const,
+          checked: false,
+          mealPlanIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
+      localStorage.setItem('groceryItems', JSON.stringify(mockItems))
+
+      const items = service.loadGroceryItems()
+      expect(items).toEqual(mockItems)
+    })
+
+    it('should throw error if localStorage data is corrupted', () => {
+      localStorage.setItem('groceryItems', 'invalid json')
+
+      expect(() => service.loadGroceryItems()).toThrow()
+    })
+
+    it('should throw error if data fails Zod validation', () => {
+      const invalidItems = [
+        {
+          id: '1',
+          // missing required fields
+        },
+      ]
+
+      localStorage.setItem('groceryItems', JSON.stringify(invalidItems))
+
+      expect(() => service.loadGroceryItems()).toThrow()
+    })
+  })
+
+  describe('saveGroceryItems', () => {
+    it('should save grocery items to localStorage', () => {
+      const mockItems = [
+        {
+          id: '1',
+          listId: 'list1',
+          name: 'Flour',
+          quantity: 2,
+          unit: 'cup' as const,
+          category: 'Baking' as const,
+          checked: false,
+          mealPlanIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
+      service.saveGroceryItems(mockItems)
+
+      const stored = localStorage.getItem('groceryItems')
+      expect(stored).toBeTruthy()
+      expect(JSON.parse(stored!)).toEqual(mockItems)
+    })
+
+    it('should overwrite existing grocery items', () => {
+      const firstItems = [
+        {
+          id: '1',
+          listId: 'list1',
+          name: 'Flour',
+          quantity: 2,
+          unit: 'cup' as const,
+          category: 'Baking' as const,
+          checked: false,
+          mealPlanIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
+      const secondItems = [
+        {
+          id: '2',
+          listId: 'list2',
+          name: 'Sugar',
+          quantity: 3,
+          unit: 'tablespoon' as const,
+          category: 'Baking' as const,
+          checked: true,
+          mealPlanIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
+      service.saveGroceryItems(firstItems)
+      service.saveGroceryItems(secondItems)
+
+      const stored = localStorage.getItem('groceryItems')
+      expect(JSON.parse(stored!)).toEqual(secondItems)
+      expect(JSON.parse(stored!)).toHaveLength(1)
+      expect(JSON.parse(stored!)[0].id).toBe('2')
+    })
+
+    it('should handle empty array', () => {
+      service.saveGroceryItems([])
+
+      const stored = localStorage.getItem('groceryItems')
+      expect(stored).toBeTruthy()
+      expect(JSON.parse(stored!)).toEqual([])
+    })
+
+    it('should validate data before saving', () => {
+      const invalidItems = [
+        {
+          id: '1',
+          // missing required fields
+        },
+      ] as any
+
+      expect(() => service.saveGroceryItems(invalidItems)).toThrow()
+    })
+  })
+
   describe('error handling', () => {
     it('should handle localStorage quota exceeded', () => {
       // Mock localStorage to throw quota exceeded error

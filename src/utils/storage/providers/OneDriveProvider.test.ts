@@ -448,4 +448,368 @@ describe('OneDriveProvider', () => {
       expect(mockPut).toHaveBeenCalledWith(expect.any(Blob))
     })
   })
+
+  describe('listFoldersAndFiles', () => {
+    beforeEach(() => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+    })
+
+    it('should list root folders and files from personal drive', async () => {
+      const mockPersonalResponse = {
+        value: [
+          {
+            id: 'folder1',
+            name: 'MyFolder',
+            folder: {},
+          },
+          {
+            id: 'file1',
+            name: 'data.json.gz',
+            file: {},
+          },
+          {
+            id: 'file2',
+            name: 'other.txt',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSharedResponse = {
+        value: [],
+      }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockPersonalResponse)
+        .mockResolvedValueOnce(mockSharedResponse)
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const result = await provider.listFoldersAndFiles()
+
+      expect(result.folders).toHaveLength(1)
+      expect(result.folders[0]).toEqual({
+        id: 'folder1',
+        name: 'MyFolder',
+        path: '/MyFolder',
+        isSharedWithMe: false,
+      })
+
+      expect(result.files).toHaveLength(1)
+      expect(result.files[0]).toEqual({
+        id: 'file1',
+        name: 'data.json.gz',
+        path: '/data.json.gz',
+        isSharedWithMe: false,
+      })
+    })
+
+    it('should list root including shared items', async () => {
+      const mockPersonalResponse = {
+        value: [
+          {
+            id: 'file1',
+            name: 'personal.json.gz',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSharedResponse = {
+        value: [
+          {
+            id: 'shared-ref-1',
+            name: 'SharedFolder',
+            remoteItem: {
+              id: 'remote-folder-id',
+              folder: {},
+              parentReference: {
+                driveId: 'other-drive-id',
+              },
+            },
+          },
+          {
+            id: 'shared-ref-2',
+            name: 'shared-file.json.gz',
+            remoteItem: {
+              id: 'remote-file-id',
+              file: {},
+            },
+          },
+        ],
+      }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockPersonalResponse)
+        .mockResolvedValueOnce(mockSharedResponse)
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const result = await provider.listFoldersAndFiles()
+
+      expect(result.folders).toHaveLength(1)
+      expect(result.folders[0]).toEqual({
+        id: 'remote-folder-id',
+        name: 'SharedFolder',
+        path: '/SharedFolder',
+        isSharedWithMe: true,
+        driveId: 'other-drive-id',
+      })
+
+      expect(result.files).toHaveLength(2)
+      expect(result.files[0].isSharedWithMe).toBe(false)
+      expect(result.files[1]).toEqual({
+        id: 'shared-ref-2',
+        name: 'shared-file.json.gz',
+        path: '/shared-file.json.gz',
+        isSharedWithMe: true,
+      })
+    })
+
+    it('should list items in a personal folder', async () => {
+      const mockResponse = {
+        value: [
+          {
+            id: 'subfolder1',
+            name: 'SubFolder',
+            folder: {},
+          },
+          {
+            id: 'file1',
+            name: 'nested.json.gz',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi.fn().mockResolvedValue(mockResponse)
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const folder = {
+        id: 'folder1',
+        name: 'MyFolder',
+        path: '/MyFolder',
+        isSharedWithMe: false,
+      }
+
+      const result = await provider.listFoldersAndFiles(folder)
+
+      expect(mockApi).toHaveBeenCalledWith('/me/drive/root:/MyFolder:/children')
+      expect(result.folders).toHaveLength(1)
+      expect(result.folders[0]).toEqual({
+        id: 'subfolder1',
+        name: 'SubFolder',
+        path: '/MyFolder/SubFolder',
+        isSharedWithMe: false,
+      })
+
+      expect(result.files).toHaveLength(1)
+      expect(result.files[0]).toEqual({
+        id: 'file1',
+        name: 'nested.json.gz',
+        path: '/MyFolder/nested.json.gz',
+        isSharedWithMe: false,
+      })
+    })
+
+    it('should list items in a shared folder using driveId', async () => {
+      const mockResponse = {
+        value: [
+          {
+            id: 'file1',
+            name: 'shared-nested.json.gz',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi.fn().mockResolvedValue(mockResponse)
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const sharedFolder = {
+        id: 'remote-folder-id',
+        name: 'SharedFolder',
+        path: '/SharedFolder',
+        isSharedWithMe: true,
+        driveId: 'other-drive-id',
+      }
+
+      const result = await provider.listFoldersAndFiles(sharedFolder)
+
+      expect(mockApi).toHaveBeenCalledWith(
+        '/drives/other-drive-id/items/remote-folder-id/children'
+      )
+      expect(result.files).toHaveLength(1)
+      expect(result.files[0]).toEqual({
+        id: 'file1',
+        name: 'shared-nested.json.gz',
+        path: '/SharedFolder/shared-nested.json.gz',
+        isSharedWithMe: true,
+        driveId: 'other-drive-id',
+      })
+    })
+
+    it('should handle shared items query failure gracefully', async () => {
+      const mockPersonalResponse = {
+        value: [
+          {
+            id: 'file1',
+            name: 'personal.json.gz',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockPersonalResponse)
+        .mockRejectedValueOnce(new Error('Shared items not available'))
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const result = await provider.listFoldersAndFiles()
+
+      // Should still return personal items even if shared items fail
+      expect(result.files).toHaveLength(1)
+      expect(result.files[0].isSharedWithMe).toBe(false)
+    })
+
+    it('should filter out non-.json.gz files', async () => {
+      const mockResponse = {
+        value: [
+          {
+            id: 'file1',
+            name: 'data.json.gz',
+            file: {},
+          },
+          {
+            id: 'file2',
+            name: 'document.docx',
+            file: {},
+          },
+          {
+            id: 'file3',
+            name: 'image.png',
+            file: {},
+          },
+        ],
+      }
+
+      const mockSharedResponse = { value: [] }
+
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockGet = vi
+        .fn()
+        .mockResolvedValueOnce(mockResponse)
+        .mockResolvedValueOnce(mockSharedResponse)
+      const mockApi = vi
+        .fn()
+        .mockReturnValue({ select: mockSelect, get: mockGet })
+      mockGraphClient.api = mockApi
+      mockSelect.mockReturnValue({ get: mockGet })
+
+      const result = await provider.listFoldersAndFiles()
+
+      expect(result.files).toHaveLength(1)
+      expect(result.files[0].name).toBe('data.json.gz')
+    })
+  })
+
+  describe('getAccount with MSAL not ready', () => {
+    it('should handle MSAL not ready gracefully', () => {
+      mockMsalInstance.getAllAccounts.mockImplementation(() => {
+        throw new Error('MSAL not initialized')
+      })
+
+      expect(provider.isAuthenticated()).toBe(false)
+    })
+  })
+
+  describe('getAccountInfo with fallback', () => {
+    it('should use username as fallback when name is not available', () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: '',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const accountInfo = provider.getAccountInfo()
+
+      expect(accountInfo).toEqual({
+        name: 'user@example.com',
+        email: 'user@example.com',
+      })
+    })
+  })
+
+  describe('downloadFile with invalid response type', () => {
+    it('should throw error when response is not ReadableStream', async () => {
+      const mockAccount = {
+        homeAccountId: '123',
+        environment: 'login.windows.net',
+        tenantId: 'tenant-id',
+        username: 'user@example.com',
+        localAccountId: 'local-id',
+        name: 'Test User',
+      }
+      mockMsalInstance.getAllAccounts.mockReturnValue([mockAccount])
+
+      const mockGet = vi.fn().mockResolvedValue('not a stream')
+      const mockApi = vi.fn().mockReturnValue({ get: mockGet })
+      mockGraphClient.api = mockApi
+
+      mockMsalInstance.acquireTokenSilent.mockResolvedValue({
+        accessToken: 'mock-token',
+      })
+
+      const fileInfo = {
+        id: 'test-id',
+        name: 'data.json.gz',
+        path: '/data.json.gz',
+      }
+
+      await expect(provider.downloadFile(fileInfo)).rejects.toThrow(
+        'Unexpected response type from OneDrive API'
+      )
+    })
+  })
 })

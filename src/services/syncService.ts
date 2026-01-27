@@ -219,9 +219,14 @@ export const createSyncService = (db: MealPlanDB) => ({
 
         await db.groceryItems.clear()
         await db.groceryItems.bulkAdd(merged.groceryItems)
+
+        // Update lastModified to match the merged data timestamp
+        await db.metadata.put({
+          key: 'lastModified',
+          value: merged.lastModified,
+        })
       }
     )
-    await db.updateLastModified()
   },
 })
 

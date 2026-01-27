@@ -34,12 +34,11 @@ const SyncDataSchema = z.object({
  * LocalStorage keys
  */
 const SELECTED_FILE_KEY = 'mealplan_selected_file'
-const SYNC_BASE_KEY = 'syncBase'
 
 /**
  * Sync status states
  */
-export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error'
 
 interface SyncContextType {
   // State
@@ -124,31 +123,33 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   // Track lastModified timestamp for auto-sync trigger
   const lastModified = useLiveQuery(() => db.getLastModified(), [])
 
-  // Set status to 'idle' when there are unsaved changes (local differs from base)
+  // Set status to 'idle' when there are unsaved changes (local differs from last sync)
   useEffect(() => {
-    // Only check when status is 'success' - don't interrupt syncing or override error
+    // Only check when status is 'synced' - don't interrupt syncing or override error
     if (
       !cloudStorage.isAuthenticated ||
       !selectedFile ||
-      syncStatus !== 'success'
+      syncStatus !== 'synced'
     ) {
       return
     }
 
     // Get current local timestamp - handle undefined from useLiveQuery
-    if (lastModified === undefined) {
+    if (lastModified === undefined || lastSyncTime === null) {
       return
     }
 
-    // Get base timestamp
-    const baseJson = localStorage.getItem(SYNC_BASE_KEY)
-    const baseTimestamp = baseJson ? JSON.parse(baseJson).lastModified : 0
-
-    // If local changed since last sync, set status to idle
-    if (lastModified !== baseTimestamp) {
+    // If local changed after last sync, set status to idle
+    if (lastModified > lastSyncTime) {
       setSyncStatus('idle')
     }
-  }, [lastModified, cloudStorage.isAuthenticated, selectedFile, syncStatus])
+  }, [
+    lastModified,
+    lastSyncTime,
+    cloudStorage.isAuthenticated,
+    selectedFile,
+    syncStatus,
+  ])
 
   // Auto-sync: immediate on first call, throttled on subsequent data changes
   useEffect(() => {
@@ -261,8 +262,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Apply merged data
       await syncService.applyMergedData(mergeResult.merged)
 
-      // Upload merged data to remote
-      const uploadData = { ...mergeResult.merged, lastModified: Date.now() }
+      // Upload merged data to remote (use merged lastModified)
+      const uploadData = mergeResult.merged
       const updatedFileInfo = await cloudStorage.uploadFile(
         selectedFile,
         JSON.stringify(uploadData)
@@ -274,11 +275,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
       }
 
-      // Save as new base
-      localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(uploadData))
-
-      setSyncStatus('success')
-      setLastSyncTime(Date.now())
+      setSyncStatus('synced')
+      setLastSyncTime(uploadData.lastModified)
     } catch (error) {
       console.error('Sync failed:', error)
 
@@ -323,11 +321,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Apply remote data (with migrations)
       await syncService.applyRemoteData(remote)
 
-      // Save as new base
-      localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(remote))
-
-      setSyncStatus('success')
-      setLastSyncTime(Date.now())
+      setSyncStatus('synced')
+      setLastSyncTime(remote.lastModified)
     } catch (error) {
       console.error('Import from remote failed:', error)
       setSyncStatus('error')
@@ -361,11 +356,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
       }
 
-      // Save as new base
-      localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(localData))
-
-      setSyncStatus('success')
-      setLastSyncTime(Date.now())
+      setSyncStatus('synced')
+      setLastSyncTime(localData.lastModified)
     } catch (error) {
       console.error('Upload to remote failed:', error)
       setSyncStatus('error')

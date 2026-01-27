@@ -190,16 +190,16 @@ describe('SyncStatusIndicator', () => {
 
   describe('when sync succeeds', () => {
     it('should show success indicator with checkmark', () => {
-      mockSyncContext.syncStatus = 'success'
+      mockSyncContext.syncStatus = 'synced'
 
       renderWithProviders(<SyncStatusIndicator />)
 
       const indicator = screen.getByRole('button', { name: /sync/i })
-      expect(indicator).toHaveAttribute('data-status', 'success')
+      expect(indicator).toHaveAttribute('data-status', 'synced')
     })
 
     it('should show success tooltip', async () => {
-      mockSyncContext.syncStatus = 'success'
+      mockSyncContext.syncStatus = 'synced'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -323,7 +323,7 @@ describe('SyncStatusIndicator', () => {
       expect(indicator).toHaveAttribute('data-status', 'syncing')
 
       // Transition to success
-      mockSyncContext.syncStatus = 'success'
+      mockSyncContext.syncStatus = 'synced'
       mockSyncContext.lastSyncTime = Date.now()
       rerender(
         <MantineProvider>
@@ -331,7 +331,7 @@ describe('SyncStatusIndicator', () => {
         </MantineProvider>
       )
       indicator = screen.getByRole('button', { name: /sync/i })
-      expect(indicator).toHaveAttribute('data-status', 'success')
+      expect(indicator).toHaveAttribute('data-status', 'synced')
     })
 
     it('should transition from idle to syncing to error', async () => {
