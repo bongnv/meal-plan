@@ -4,7 +4,7 @@ import { generateId } from '../idGenerator'
 
 import { RecipeStorageService } from './recipeStorage'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe, SubRecipe } from '../../types/recipe'
 
 describe('RecipeStorageService', () => {
   let service: RecipeStorageService
@@ -453,6 +453,162 @@ describe('RecipeStorageService', () => {
 
       // Should use 'piece' as fallback since no ingredients available
       expect(loaded[0].ingredients[0].unit).toBe('piece')
+    })
+  })
+
+  describe('Sub-Recipes Support', () => {
+    it('should save and load recipe with subRecipes array', () => {
+      const subRecipe: SubRecipe = {
+        recipeId: 'sauce_recipe_id',
+        servings: 2,
+        displayName: 'Cilantro Sauce',
+      }
+
+      const recipeWithSubRecipes: Recipe = {
+        id: 'burrito_bowl_id',
+        name: 'Burrito Bowl',
+        description: 'Bowl with rice and beans',
+        servings: 4,
+        prepTime: 10,
+        cookTime: 15,
+        ingredients: [
+          { ingredientId: 'beans_id', quantity: 200, unit: 'gram' },
+        ],
+        instructions: ['Add beans', 'Cook rice'],
+        tags: ['mexican', 'bowl'],
+        subRecipes: [subRecipe],
+      }
+
+      service.saveRecipes([recipeWithSubRecipes])
+      const loaded = service.loadRecipes()[0]
+
+      expect(loaded.subRecipes).toBeDefined()
+      expect(loaded.subRecipes).toHaveLength(1)
+      expect(loaded.subRecipes[0]).toEqual(subRecipe)
+      expect(loaded.subRecipes[0].displayName).toBe('Cilantro Sauce')
+    })
+
+    it('should preserve subRecipes array order', () => {
+      const subRecipes: SubRecipe[] = [
+        { recipeId: 'recipe_1', servings: 1 },
+        { recipeId: 'recipe_2', servings: 2 },
+        { recipeId: 'recipe_3', servings: 3 },
+      ]
+
+      const recipe: Recipe = {
+        id: 'main_recipe_id',
+        name: 'Main Recipe',
+        description: 'Recipe with multiple sub-recipes',
+        servings: 4,
+        prepTime: 10,
+        cookTime: 20,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 100, unit: 'gram' },
+        ],
+        instructions: ['Cook'],
+        tags: [],
+        subRecipes,
+      }
+
+      service.saveRecipes([recipe])
+      const loaded = service.loadRecipes()[0]
+
+      expect(loaded.subRecipes).toHaveLength(3)
+      expect(loaded.subRecipes[0].recipeId).toBe('recipe_1')
+      expect(loaded.subRecipes[1].recipeId).toBe('recipe_2')
+      expect(loaded.subRecipes[2].recipeId).toBe('recipe_3')
+    })
+
+    it('should handle recipes without subRecipes (backward compatibility)', () => {
+      const recipeWithoutSubRecipes: Recipe = {
+        id: 'old_recipe_id',
+        name: 'Old Recipe',
+        description: 'Recipe without sub-recipes',
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 50, unit: 'gram' },
+        ],
+        instructions: ['Cook'],
+        tags: [],
+        subRecipes: [],
+      }
+
+      service.saveRecipes([recipeWithoutSubRecipes])
+      const loaded = service.loadRecipes()[0]
+
+      expect(loaded.subRecipes).toBeDefined()
+      expect(loaded.subRecipes).toEqual([])
+    })
+
+    it('should load old recipes without subRecipes field and add empty array', () => {
+      // Simulate old recipe data without subRecipes field
+      const oldRecipeData = {
+        id: 'old_recipe_id',
+        name: 'Old Recipe',
+        description: 'Recipe without sub-recipes field',
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 50, unit: 'gram' },
+        ],
+        instructions: ['Cook'],
+        tags: [],
+        // No subRecipes field - simulating old schema
+      }
+
+      localStorage.setItem('recipes', JSON.stringify([oldRecipeData]))
+
+      const loaded = service.loadRecipes()
+
+      expect(loaded).toHaveLength(1)
+      expect(loaded[0].subRecipes).toBeDefined()
+      expect(loaded[0].subRecipes).toEqual([])
+    })
+
+    it('should save and load multiple recipes with different subRecipes counts', () => {
+      const recipe1: Recipe = {
+        id: 'recipe_1',
+        name: 'Recipe with sub-recipes',
+        description: 'Has sub-recipes',
+        servings: 2,
+        prepTime: 10,
+        cookTime: 10,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 100, unit: 'gram' },
+        ],
+        instructions: ['Cook'],
+        tags: [],
+        subRecipes: [
+          { recipeId: 'sub_1', servings: 1 },
+          { recipeId: 'sub_2', servings: 2 },
+        ],
+      }
+
+      const recipe2: Recipe = {
+        id: 'recipe_2',
+        name: 'Recipe without sub-recipes',
+        description: 'No sub-recipes',
+        servings: 1,
+        prepTime: 5,
+        cookTime: 5,
+        ingredients: [
+          { ingredientId: 'ingredient_id', quantity: 50, unit: 'gram' },
+        ],
+        instructions: ['Cook'],
+        tags: [],
+        subRecipes: [],
+      }
+
+      service.saveRecipes([recipe1, recipe2])
+
+      const loaded = service.loadRecipes()
+
+      expect(loaded).toHaveLength(2)
+      expect(loaded[0].subRecipes).toHaveLength(2)
+      expect(loaded[1].subRecipes).toHaveLength(0)
     })
   })
 })

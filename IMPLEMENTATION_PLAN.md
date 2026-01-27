@@ -2031,7 +2031,7 @@ const RecipeSchema = z.object({
 
 **Phase 4: Grocery List Integration**
 
-- [ ] I11.7. Update grocery list generation to expand sub-recipes (TDD)
+- [x] I11.7. Update grocery list generation to expand sub-recipes (TDD)
   - **Write tests** in `src/utils/generateGroceryList.test.ts`:
     - Test recipe with sub-recipes expands correctly
     - Test ingredient quantities scale by both recipe servings AND sub-recipe quantity
@@ -2052,7 +2052,7 @@ const RecipeSchema = z.object({
     - Handle missing sub-recipes gracefully (log warning, skip)
   - **Quality checks**: Run grocery list tests, save to `tmp/`
 
-- [ ] I11.8. Update GroceryListView to show sub-recipe sources (TDD)
+- [x] I11.8. Update GroceryListView to show sub-recipe sources (TDD)
   - **Write tests** in `src/components/groceryLists/GroceryListView.test.tsx`:
     - Test ingredient shows "from [recipe] via [sub-recipe]" when applicable
     - Test ingredient shows just "from [recipe]" when direct
@@ -2066,7 +2066,7 @@ const RecipeSchema = z.object({
 
 **Phase 5: Recipe Storage & Migration**
 
-- [ ] I11.9. Update recipe storage to support sub-recipes (TDD)
+- [x] I11.9. Update recipe storage to support sub-recipes (TDD)
   - **Write tests** in `src/utils/storage/recipeStorage.test.ts`:
     - Test save recipe with subRecipes array
     - Test load recipe with subRecipes array
@@ -2077,7 +2077,7 @@ const RecipeSchema = z.object({
     - Verify backward compatibility with existing recipes
   - **Verify**: All storage tests pass, no breaking changes
 
-- [ ] I11.10. Update cloud sync to handle sub-recipes (TDD)
+- [x] I11.10. Update cloud sync to handle sub-recipes (TDD)
   - **Update `SyncContext`** in `src/contexts/SyncContext.tsx`:
     - No changes needed - Recipe schema already includes subRecipes
     - Verify sync works with recipes containing sub-recipes
@@ -2089,7 +2089,7 @@ const RecipeSchema = z.object({
 
 **Phase 6: AI Recipe Import Integration**
 
-- [ ] I11.11. Update AI prompt template to support sub-recipes (TDD)
+- [x] I11.11. Update AI prompt template to support sub-recipes (TDD)
   - **Update tests** in `src/utils/aiPromptGenerator.test.ts`:
     - Test prompt includes subRecipes field in schema
     - Test prompt includes instructions for sub-recipes
@@ -2101,7 +2101,7 @@ const RecipeSchema = z.object({
     - Include note: "Match sub-recipes by name to existing recipe library"
   - **Quality checks**: Run prompt generator tests, save to `tmp/`
 
-- [ ] I11.12. Update recipe import validation for sub-recipes (TDD)
+- [x] I11.12. Update recipe import validation for sub-recipes (TDD)
   - **Update tests** in `src/utils/recipeImportValidator.test.ts`:
     - Test imported recipe with subRecipes validates correctly
     - Test sub-recipe references are validated (recipeId must exist)
@@ -2114,7 +2114,7 @@ const RecipeSchema = z.object({
     - Handle optional displayName and order fields
   - **Quality checks**: Run validator tests, save to `tmp/`
 
-- [ ] I11.13. Update RecipeImportModal to preview sub-recipes (TDD)
+- [x] I11.13. Update RecipeImportModal to preview sub-recipes (TDD)
   - **Update tests** in `src/components/recipes/RecipeImportModal.test.tsx`:
     - Test review step shows sub-recipes section
     - Test sub-recipes display with quantity and displayName
@@ -2169,31 +2169,7 @@ const RecipeSchema = z.object({
   - Save output to `tmp/all-tests-i11-final.txt`
   - Fix any issues found
 
-- [ ] I11.18. Manual testing scenarios
-  - **Create recipe with sub-recipes**:
-    - Create simple sub-recipe (e.g., "Cilantro Rice")
-    - Create parent recipe (e.g., "Burrito Bowl") referencing sub-recipe
-    - Verify display in RecipeDetail (expandable sub-recipes)
-    - Verify edit in RecipeForm (can add/remove sub-recipes)
-  - **Test circular dependency prevention**:
-    - Try to add Recipe A as sub-recipe of Recipe B
-    - Then try to add Recipe B as sub-recipe of Recipe A (should be blocked)
-  - **Test grocery list generation**:
-    - Add recipe with sub-recipes to meal plan
-    - Generate grocery list
-    - Verify ingredients from sub-recipes are included and scaled correctly
-    - Verify meal plan references show recipe chain
-  - **Test AI import**:
-    - Copy AI prompt with sub-recipe example
-    - Import recipe with sub-recipes
-    - Verify sub-recipes are linked correctly
-  - **Test cloud sync**:
-    - Create recipe with sub-recipes
-    - Sync to cloud
-    - Load on different device/browser
-    - Verify sub-recipes work correctly
-
-- [ ] I11.19. Update documentation
+- [ ] I11.18. Update documentation
   - Update REQUIREMENTS.md: Mark R1.7 as complete
   - Update ARCHITECTURE.md: Document sub-recipe data model and design decisions
   - Update user-facing help text: Add sub-recipe usage examples

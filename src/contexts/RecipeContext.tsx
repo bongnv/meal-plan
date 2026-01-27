@@ -42,8 +42,12 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   })
 
   const recipes = recipesState.recipes
-  const setRecipes = (newRecipes: Recipe[]) => {
-    setRecipesState({ recipes: newRecipes, error: recipesState.error })
+  const setRecipes = (newRecipes: Recipe[] | ((prev: Recipe[]) => Recipe[])) => {
+    if (typeof newRecipes === 'function') {
+      setRecipesState(prev => ({ recipes: newRecipes(prev.recipes), error: prev.error }))
+    } else {
+      setRecipesState({ recipes: newRecipes, error: recipesState.error })
+    }
   }
 
   const [loading, _setLoading] = useState(false)
@@ -62,9 +66,12 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         ...recipe,
         id: generateId(),
       }
-      const updatedRecipes = [...recipes, newRecipe]
-      setRecipes(updatedRecipes)
-      storageService.saveRecipes(updatedRecipes)
+      // Use functional update to avoid stale state when adding multiple recipes in succession
+      setRecipes(prevRecipes => {
+        const updatedRecipes = [...prevRecipes, newRecipe]
+        storageService.saveRecipes(updatedRecipes)
+        return updatedRecipes
+      })
       setLastModified(Date.now())
       setError(null)
       return newRecipe.id

@@ -7,6 +7,7 @@ import {
   Group,
   Stack,
   Text,
+  Tooltip,
 } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
@@ -69,9 +70,14 @@ export function SubRecipeCard({
               <Text fw={500} size="sm" mt={4}>
                 {displayName}
               </Text>
-              <Text size="xs" c="dimmed">
-                {subRecipe.servings} servings
-              </Text>
+              <Tooltip
+                label={`Uses ${subRecipe.servings} serving${subRecipe.servings !== 1 ? 's' : ''} of ${recipeData?.servings || '?'} from this recipe`}
+                withArrow
+              >
+                <Text size="xs" c="dimmed" style={{ cursor: 'help' }}>
+                  {subRecipe.servings} servings
+                </Text>
+              </Tooltip>
             </Box>
           </Group>
 

@@ -962,7 +962,9 @@ describe('generateGroceryList', () => {
         servings: 2,
         prepTime: 5,
         cookTime: 10,
-        ingredients: [{ ingredientId: 'oil_id', quantity: 50, unit: 'milliliter' }],
+        ingredients: [
+          { ingredientId: 'oil_id', quantity: 50, unit: 'milliliter' },
+        ],
         instructions: [],
         tags: [],
         subRecipes: [{ recipeId: 'spice_blend', servings: 1 }],

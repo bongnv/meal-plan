@@ -1,7 +1,11 @@
 import {
+  ActionIcon,
   Alert,
   Badge,
+  Box,
   Button,
+  Card,
+  Collapse,
   Divider,
   Group,
   List,
@@ -12,7 +16,13 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
-import { IconAlertCircle, IconCheck, IconCopy } from '@tabler/icons-react'
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconChevronDown,
+  IconChevronUp,
+  IconCopy,
+} from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -39,13 +49,31 @@ export const RecipeImportModal = ({
   const [validationResult, setValidationResult] =
     useState<ValidationResult | null>(null)
   const [importing, setImporting] = useState(false)
+  const [expandedSubRecipes, setExpandedSubRecipes] = useState<Set<number>>(
+    new Set()
+  )
 
-  const { ingredients, addIngredients } = useIngredients()
+  const { ingredients, addIngredients, getIngredientById } = useIngredients()
   const { addRecipe } = useRecipes()
   const navigate = useNavigate()
 
   // Generate the AI prompt with current ingredient library
   const prompt = generateRecipeImportPrompt(ingredients)
+
+  // Helper to get ingredient name for display
+  const getIngredientName = (ingredientId: string): string => {
+    // Check existing ingredients
+    const existing = getIngredientById(ingredientId)
+    if (existing) return existing.name
+
+    // Check new ingredients from validation
+    const newIng = validationResult?.newIngredients.find(
+      ing => ing.id === ingredientId
+    )
+    if (newIng) return newIng.name
+
+    return ingredientId // Fallback to ID
+  }
 
   const handleCopyPrompt = async () => {
     try {
@@ -81,20 +109,55 @@ export const RecipeImportModal = ({
         idMapping[ingredient.id] = newIds[index]
       })
 
-      // Step 3: Update ingredient IDs in recipe to use generated IDs
+      // Also add mappings for existing ingredients (ID -> ID for consistency)
+      ingredients.forEach(ing => {
+        idMapping[ing.id] = ing.id
+      })
+
+      // Step 3: Import all sub-recipes first and build recipeId mapping
+      // Process in reverse order to handle nested sub-recipes (deepest first)
+      const subRecipeIdMapping: Record<string, string> = {}
+      const reversedSubRecipes = [...(validationResult.subRecipes || [])].reverse()
+      
+      for (const subRecipe of reversedSubRecipes) {
+        // Remap ingredient IDs in sub-recipe
+        const { id: subId, ...subRecipeWithoutId } = subRecipe
+        const subRecipeWithMappedIds = {
+          ...subRecipeWithoutId,
+          ingredients: subRecipeWithoutId.ingredients.map(ing => ({
+            ...ing,
+            ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
+          })),
+          // Recursively update sub-recipe references if any
+          subRecipes: subRecipeWithoutId.subRecipes?.map(sr => ({
+            ...sr,
+            recipeId: subRecipeIdMapping[sr.recipeId] || sr.recipeId,
+          })),
+        }
+        const newSubRecipeId = addRecipe(subRecipeWithMappedIds)
+        subRecipeIdMapping[subId] = newSubRecipeId
+      }
+
+      // Step 4: Update ingredient IDs and sub-recipe IDs in main recipe
       const { id: _id, ...recipeWithoutId } = validationResult.recipe
+      
       const recipeWithMappedIds = {
         ...recipeWithoutId,
         ingredients: recipeWithoutId.ingredients.map(ing => ({
           ...ing,
           ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
         })),
+        // Update sub-recipe references to use generated IDs
+        subRecipes: recipeWithoutId.subRecipes?.map(sr => ({
+          ...sr,
+          recipeId: subRecipeIdMapping[sr.recipeId] || sr.recipeId,
+        })),
       }
 
-      // Step 4: Add recipe (addRecipe will generate and return recipe ID)
+      // Step 5: Add main recipe (addRecipe will generate and return recipe ID)
       const newRecipeId = addRecipe(recipeWithMappedIds)
 
-      // Step 5: Navigate to recipe detail page with the generated ID
+      // Step 6: Navigate to recipe detail page with the generated ID
       navigate(`/recipes/${newRecipeId}`)
 
       // Close modal
@@ -121,6 +184,7 @@ export const RecipeImportModal = ({
     setJsonInput('')
     setValidationResult(null)
     setImporting(false)
+    setExpandedSubRecipes(new Set())
     onClose()
   }
 
@@ -215,6 +279,125 @@ export const RecipeImportModal = ({
                       {validationResult.recipe.cookTime})
                     </Text>
                   </Group>
+
+                  {validationResult.subRecipes &&
+                    validationResult.subRecipes.length > 0 && (
+                      <Alert color="blue" title="Sub-Recipes Included">
+                        <Text size="sm" mb="md">
+                          This recipe includes{' '}
+                          {validationResult.subRecipes.length} sub-recipe(s):
+                        </Text>
+                        <Stack gap="sm">
+                          {validationResult.subRecipes.map((subRecipe, idx) => {
+                            const isExpanded = expandedSubRecipes.has(idx)
+                            return (
+                              <Card
+                                key={idx}
+                                withBorder
+                                padding="sm"
+                                style={{
+                                  borderColor: 'var(--mantine-color-blue-4)',
+                                }}
+                              >
+                                <Group justify="space-between" mb="xs">
+                                  <Text size="sm" fw={500}>
+                                    {subRecipe.name}
+                                  </Text>
+                                  <Group gap="xs">
+                                    <Badge size="xs" variant="light">
+                                      {subRecipe.servings} servings
+                                    </Badge>
+                                    <ActionIcon
+                                      variant="subtle"
+                                      size="sm"
+                                      onClick={() => {
+                                        setExpandedSubRecipes(prev => {
+                                          const next = new Set(prev)
+                                          if (isExpanded) {
+                                            next.delete(idx)
+                                          } else {
+                                            next.add(idx)
+                                          }
+                                          return next
+                                        })
+                                      }}
+                                      aria-label={
+                                        isExpanded
+                                          ? 'Collapse details'
+                                          : 'Expand details'
+                                      }
+                                    >
+                                      {isExpanded ? (
+                                        <IconChevronUp size={16} />
+                                      ) : (
+                                        <IconChevronDown size={16} />
+                                      )}
+                                    </ActionIcon>
+                                  </Group>
+                                </Group>
+
+                                <Collapse in={isExpanded}>
+                                  <Box>
+                                    {subRecipe.ingredients.length > 0 && (
+                                      <Stack gap={4} mb="xs">
+                                        <Text size="xs" fw={500} c="dimmed">
+                                          Ingredients:
+                                        </Text>
+                                        <Stack gap={2}>
+                                          {subRecipe.ingredients.map(
+                                            (ing, ingIdx) => {
+                                              const ingredientName =
+                                                ing.displayName ||
+                                                getIngredientName(
+                                                  ing.ingredientId
+                                                )
+                                              return (
+                                                <Text
+                                                  key={ingIdx}
+                                                  size="xs"
+                                                  c="dimmed"
+                                                >
+                                                  • {ing.quantity} {ing.unit}{' '}
+                                                  {ingredientName}
+                                                </Text>
+                                              )
+                                            }
+                                          )}
+                                        </Stack>
+                                      </Stack>
+                                    )}
+                                    {subRecipe.instructions.length > 0 && (
+                                      <Stack gap={4}>
+                                        <Text size="xs" fw={500} c="dimmed">
+                                          Instructions:
+                                        </Text>
+                                        <Stack gap={2}>
+                                          {subRecipe.instructions.map(
+                                            (step, stepIdx) => (
+                                              <Text
+                                                key={stepIdx}
+                                                size="xs"
+                                                c="dimmed"
+                                              >
+                                                {stepIdx + 1}. {step}
+                                              </Text>
+                                            )
+                                          )}
+                                        </Stack>
+                                      </Stack>
+                                    )}
+                                  </Box>
+                                </Collapse>
+                              </Card>
+                            )
+                          })}
+                        </Stack>
+                        <Text size="sm" mt="md" c="dimmed">
+                          All sub-recipes will be imported along with the main
+                          recipe.
+                        </Text>
+                      </Alert>
+                    )}
 
                   {validationResult.recipe.tags.length > 0 && (
                     <Group gap="xs">

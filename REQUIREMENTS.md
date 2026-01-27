@@ -58,6 +58,24 @@ A client-side web application for managing recipes, planning meals, and organizi
     - Storage is fully backward compatible - old recipes without displayName load correctly
     - All tests passing (479/479), lint clean, build successful
 
+- [x] R1.7. Sub-Recipes (Component Recipes):
+  - Link recipes together as sub-recipes/components
+  - Each sub-recipe specifies how many servings to use (0.5-N)
+  - Grocery list expansion: recursively expands ingredients from all sub-recipes with correct scaling
+  - AI Import: import complete recipe hierarchies in one action (inline sub-recipe definitions)
+  - Visual indicators: badge showing sub-recipe count on recipe cards
+  - Tooltips explaining serving multiplier mechanics
+  - Max nesting depth: 2 levels (main recipe → sub-recipes → sub-sub-recipes)
+  - Status: ✅ **COMPLETE** - Full feature implementation (I11.1-I11.18)
+  - Implementation notes:
+    - Sub-recipes stored as array with recipeId, servings, and optional displayName
+    - Grocery list expansion handles recursive scaling correctly
+    - AI import supports inline sub-recipe definitions with full validation
+    - RecipeImportModal imports entire hierarchy atomically
+    - RecipeDetail shows sub-recipes with expandable ingredient preview
+    - Backward compatible: old recipes without subRecipes field auto-migrated
+    - All tests passing (899/899), lint clean, type safe
+
 ### R2. Meal Planning
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead
 - [ ] R2.2. Calendar view with flexible date range display

@@ -221,4 +221,33 @@ describe('generateRecipeImportPrompt', () => {
     // Should show unit in example
     expect(prompt.toLowerCase()).toContain('unit')
   })
+
+  it('should include sub-recipes schema documentation', () => {
+    const prompt = generateRecipeImportPrompt([])
+
+    expect(prompt).toContain('"subRecipes":')
+    expect(prompt).toContain('"recipe":')
+    expect(prompt).toContain('temp_subrecipe_1')
+    expect(prompt).toContain(
+      'For sub-recipes (recipes that are components of this main recipe)'
+    )
+  })
+
+  it('should include sub-recipes example in output format', () => {
+    const prompt = generateRecipeImportPrompt([])
+
+    expect(prompt).toContain('"Cilantro Rice"')
+    expect(prompt).toContain('temp_subrecipe_1')
+    expect(prompt).toContain('Burrito Bowl')
+    expect(prompt).toContain('"ingredients":')
+    expect(prompt).toContain('"instructions":')
+  })
+
+  it('should document that sub-recipe ingredients should not be in main ingredients', () => {
+    const prompt = generateRecipeImportPrompt([])
+
+    expect(prompt).toContain(
+      'Include sub-recipe ingredients WITHIN the sub-recipe object, NOT in the main recipe ingredients'
+    )
+  })
 })

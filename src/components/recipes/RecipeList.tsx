@@ -36,8 +36,12 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
         <Title order={2} c="dimmed">
           No recipes yet
         </Title>
-        <Text c="dimmed" size="lg">
+        <Text c="dimmed" size="lg" ta="center">
           Start building your recipe collection!
+        </Text>
+        <Text c="dimmed" size="sm" ta="center" maw={500}>
+          Create recipes with ingredients, instructions, and even link
+          sub-recipes together to build complex dishes.
         </Text>
         <Button size="lg" mt="md" onClick={() => navigate('/recipes/new')}>
           Create Your First Recipe
@@ -114,6 +118,14 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
                 <Text size="sm">{recipe.prepTime + recipe.cookTime} min</Text>
               </Group>
             </Group>
+
+            {/* Sub-recipes indicator */}
+            {recipe.subRecipes && recipe.subRecipes.length > 0 && (
+              <Badge variant="light" color="grape" size="sm">
+                {recipe.subRecipes.length} sub-recipe
+                {recipe.subRecipes.length > 1 ? 's' : ''}
+              </Badge>
+            )}
 
             <Group gap="xs" mt="auto">
               <ActionIcon

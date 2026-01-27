@@ -5,7 +5,8 @@ import { Ingredient } from '../types/ingredient'
  * and return structured JSON data that matches our recipe schema.
  *
  * The prompt includes the current ingredient library to help the AI
- * map ingredients to existing IDs, reducing manual work for the user.
+ * match ingredients to existing ones. New ingredients are created automatically
+ * with the category specified by the AI.
  *
  * @param ingredients - Array of ingredients from the ingredient library
  * @returns A formatted prompt string ready to be copied and used with AI tools
@@ -13,13 +14,8 @@ import { Ingredient } from '../types/ingredient'
 export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
   const ingredientList =
     ingredients.length > 0
-      ? ingredients
-          .map(
-            ing =>
-              `  - ID: ${ing.id}, Name: "${ing.name}", Category: ${ing.category}`
-          )
-          .join('\n')
-      : '  (No ingredients in library yet - you will need to suggest new ingredients with categories)'
+      ? ingredients.map(ing => `  - ${ing.name}`).join('\n')
+      : '  (No ingredients in library yet - any ingredients you include will be added automatically)'
 
   return `Please parse the following recipe and convert it to JSON format matching this schema:
 
@@ -27,15 +23,32 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
 
 \`\`\`json
 {
-  "id": "string (generate a unique ID like 'recipe_1234567890')",
   "name": "string (recipe name)",
   "description": "string (brief description)",
   "ingredients": [
     {
-      "ingredientId": "string (reference to ingredient ID from library below, or suggest new ingredient)",
+      "name": "string (ingredient name - will be matched to library or created as new)",
       "quantity": "number (numeric quantity)",
       "unit": "string (REQUIRED - one of: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package)",
-      "displayName": "string (optional - recipe-specific name as it appears in the recipe, e.g., 'Truss Tomatoes' instead of 'Tomato')"
+      "category": "string (REQUIRED for new ingredients - one of: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other)",
+      "displayName": "string (optional - recipe-specific name as it appears in the recipe, e.g., 'Boneless Chicken Breast' instead of just 'Chicken')"
+    }
+  ],
+  "subRecipes": [
+    {
+      "recipe": {
+        "name": "string (sub-recipe name)",
+        "description": "string",
+        "ingredients": [...],
+        "instructions": [...],
+        "servings": "number",
+        "prepTime": "number",
+        "cookTime": "number",
+        "tags": [...],
+        "subRecipes": []
+      },
+      "servings": "number (how many servings of this sub-recipe to use in the main recipe)",
+      "displayName": "string (optional - custom name for this component)"
     }
   ],
   "instructions": ["string (step 1)", "string (step 2)", ...],
@@ -55,9 +68,10 @@ ${ingredientList}
 
 1. Parse the recipe from the URL or text I provide
 2. For each ingredient in the recipe:
-   - Try to match it to an existing ingredient in the library by name (case-insensitive)
-   - If found, use the existing ingredientId
-   - If the recipe uses a different name (e.g., "Truss Tomatoes" vs "Tomato"), include it as displayName
+   - Use the generic ingredient name (e.g., "Chicken", "Tomato", "Rice")
+   - The app will automatically match to existing ingredients or create new ones
+   - If the ingredient is NOT in the library, include a category (choose the best match from the list in schema above)
+   - If the recipe uses a specific variety (e.g., "Boneless Chicken Breast"), put the generic name in 'name' and the specific variety in 'displayName'
    - Determine the appropriate unit from the recipe and convert unsupported units:
      * pound (lb) → gram (1 lb = 454 grams)
      * ounce (oz) → gram (1 oz = 28 grams)
@@ -65,44 +79,83 @@ ${ingredientList}
      * pint → milliliter (1 pint = 473 ml)
      * quart → liter (1 quart = 0.95 liter)
      * gallon → liter (1 gallon = 3.8 liters)
-   - If no match exists in the library, suggest a new ingredient with:
-     - A unique sequential placeholder ID (like "new_1", "new_2", "new_3" - app will generate actual IDs)
-     - An appropriate category from: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other
-3. IMPORTANT: Every recipe ingredient MUST include a unit field with one of these values: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package
-4. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5)
-5. Break instructions into clear, sequential steps
-6. Estimate prepTime (preparation time) and cookTime (cooking time) separately in minutes
-7. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
-8. Use placeholder 'temp' for recipe ID (app will generate actual ID)
-9. If no image URL is available, OMIT the imageUrl field entirely - do not include it with an empty string
-10. Return ONLY the JSON object, no additional text
+3. Every recipe ingredient MUST include a unit field from the list in step 2 (cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package)
+4. For sub-recipes (recipes that are components of this main recipe):
+   - Identify sub-recipes mentioned in instructions (e.g., "Make cilantro rice", "Prepare the sauce")
+   - Add them to the subRecipes array with the FULL recipe object inline:
+     * recipe: Complete recipe object with name, description, ingredients, instructions, servings, prepTime, cookTime, tags, subRecipes (see schema above)
+     * Do NOT include IDs - the app will generate them automatically
+     * servings: how many servings of that sub-recipe to use in the main recipe
+     * displayName: optional descriptive name (e.g., "Cilantro Rice", "Special Sauce")
+   - IMPORTANT: Include sub-recipe ingredients WITHIN the sub-recipe object, NOT in the main recipe ingredients
+   - Sub-recipes can also have sub-recipes (nesting is allowed)
+   - If no sub-recipes, use empty array: "subRecipes": []
+5. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5). If quantity is missing, omit the ingredient.
+6. Break instructions into clear, sequential steps. Keep each step concise and actionable.
+7. Estimate prepTime (preparation time) and cookTime (cooking time) separately in minutes. Both must be positive numbers.
+8. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
+9. Only include imageUrl if you have found a valid image URL. Omit entirely if not available - do NOT use empty string or null.
+10. CRITICAL: Validate the JSON structure is complete and valid before returning.
+11. Return ONLY the JSON object, no additional text, no explanations.
 
 ## Example Output Format
 
 \`\`\`json
 {
-  "id": "temp",
-  "name": "Garlic Pasta",
-  "description": "Simple and delicious pasta with garlic and olive oil",
+  "name": "Burrito Bowl",
+  "description": "Fresh burrito bowl with cilantro rice and beans",
   "ingredients": [
-    { "ingredientId": "1", "quantity": 4, "unit": "tablespoon", "displayName": "olive oil" },
-    { "ingredientId": "2", "quantity": 4, "unit": "clove" },
-    { "ingredientId": "new_1", "quantity": 500, "unit": "gram", "displayName": "Homemade Pasta", "suggestedIngredient": { "id": "new_1", "name": "Pasta", "category": "Grains" } }
+    { "name": "Black Beans", "quantity": 200, "unit": "gram", "category": "Legumes" },
+    { "name": "Cheese", "quantity": 50, "unit": "gram", "category": "Dairy", "displayName": "Cheddar Cheese" }
+  ],
+  "subRecipes": [
+    {
+      "recipe": {
+        "name": "Cilantro Rice",
+        "description": "Fresh cilantro-infused rice",
+        "ingredients": [
+          { "name": "Rice", "quantity": 200, "unit": "gram", "category": "Grains" },
+          { "name": "Cilantro", "quantity": 20, "unit": "gram", "category": "Herbs & Spices", "displayName": "Fresh Cilantro" },
+          { "name": "Lime Juice", "quantity": 1, "unit": "tablespoon", "category": "Condiments" }
+        ],
+        "instructions": [
+          "Cook rice according to package directions",
+          "Chop cilantro finely",
+          "Mix cooked rice with cilantro and lime juice"
+        ],
+        "servings": 4,
+        "prepTime": 5,
+        "cookTime": 15,
+        "tags": ["Side", "Mexican"],
+        "subRecipes": []
+      },
+      "servings": 2,
+      "displayName": "Cilantro Rice"
+    }
   ],
   "instructions": [
-    "Boil water and cook pasta according to package directions",
-    "Heat olive oil in a pan over medium heat",
-    "Add minced garlic and sauté until fragrant",
-    "Drain pasta and toss with garlic oil",
-    "Season with salt and pepper, serve immediately"
+    "Make cilantro rice using the sub-recipe",
+    "Heat black beans in a pot",
+    "Assemble bowl with rice, beans, and cheese",
+    "Top with your favorite toppings"
   ],
   "servings": 4,
-  "prepTime": 5,
+  "prepTime": 10,
   "cookTime": 15,
-  "tags": ["Italian", "Quick", "Easy"],
-  "imageUrl": "https://example.com/recipe-image.jpg"
+  "tags": ["Mexican", "Bowls", "Vegetarian"],
+  "imageUrl": "https://example.com/burrito-bowl.jpg"
 }
 \`\`\`
+
+---
+
+## Important Notes
+
+- **Quality**: Return well-structured, valid JSON with no errors or omissions
+- **Consistency**: Use consistent naming and formatting throughout
+- **Clarity**: Ingredient names should be singular and generic ("Tomato" not "Tomatoes")
+- **Categories**: Only use the exact categories listed in the schema
+- **Sub-recipes**: Only create sub-recipes for distinct recipe components mentioned explicitly in instructions
 
 ---
 

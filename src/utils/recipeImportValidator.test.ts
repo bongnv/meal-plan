@@ -467,4 +467,184 @@ describe('validateRecipeImport', () => {
       expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Remapped to existing
     })
   })
+
+  describe('Sub-Recipes Validation', () => {
+    it('should accept recipe with valid subRecipes array', () => {
+      const recipeData = {
+        id: 'temp',
+        name: 'Burrito Bowl',
+        description: 'Bowl with rice',
+        ingredients: [{ ingredientId: '1', quantity: 200, unit: 'gram' }],
+        subRecipes: [
+          {
+            recipe: {
+              id: 'temp_subrecipe_1',
+              name: 'Cilantro Rice',
+              description: 'Rice with cilantro',
+              ingredients: [{ ingredientId: '2', quantity: 200, unit: 'gram' }],
+              instructions: ['Cook rice', 'Mix cilantro'],
+              servings: 4,
+              prepTime: 5,
+              cookTime: 15,
+              tags: [],
+              subRecipes: [],
+            },
+            servings: 2,
+            displayName: 'Cilantro Rice',
+          },
+        ],
+        instructions: ['Make rice', 'Add beans'],
+        servings: 4,
+        prepTime: 10,
+        cookTime: 15,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.recipe?.subRecipes).toBeDefined()
+      expect(result.recipe?.subRecipes).toHaveLength(1)
+      expect(result.recipe?.subRecipes[0].recipeId).toBe('temp_subrecipe_1')
+      expect(result.recipe?.subRecipes[0].servings).toBe(2)
+      expect(result.recipe?.subRecipes[0].displayName).toBe('Cilantro Rice')
+      expect(result.subRecipes).toHaveLength(1)
+      expect(result.subRecipes[0].id).toBe('temp_subrecipe_1')
+    })
+
+    it('should accept recipe with empty subRecipes array', () => {
+      const recipeData = {
+        id: 'temp',
+        name: 'Simple Recipe',
+        description: 'No sub-recipes',
+        ingredients: [{ ingredientId: '1', quantity: 100, unit: 'gram' }],
+        subRecipes: [],
+        instructions: ['Cook'],
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.recipe?.subRecipes).toEqual([])
+    })
+
+    it('should accept recipe with multiple subRecipes', () => {
+      const recipeData = {
+        id: 'temp',
+        name: 'Complex Bowl',
+        description: 'Bowl with multiple components',
+        ingredients: [{ ingredientId: '1', quantity: 100, unit: 'gram' }],
+        subRecipes: [
+          {
+            recipe: {
+              id: 'temp_subrecipe_1',
+              name: 'Rice',
+              description: 'Cooked rice',
+              ingredients: [{ ingredientId: '2', quantity: 100, unit: 'gram' }],
+              instructions: ['Cook'],
+              servings: 2,
+              prepTime: 5,
+              cookTime: 15,
+              tags: [],
+              subRecipes: [],
+            },
+            servings: 2,
+          },
+          {
+            recipe: {
+              id: 'temp_subrecipe_2',
+              name: 'Sauce',
+              description: 'Special sauce',
+              ingredients: [{ ingredientId: '3', quantity: 50, unit: 'gram' }],
+              instructions: ['Mix'],
+              servings: 1,
+              prepTime: 5,
+              cookTime: 1,
+              tags: [],
+              subRecipes: [],
+            },
+            servings: 1,
+            displayName: 'Special Sauce',
+          },
+        ],
+        instructions: ['Assemble'],
+        servings: 4,
+        prepTime: 15,
+        cookTime: 20,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      if (!result.isValid) {
+        console.log('Validation errors:', result.errors)
+      }
+
+      expect(result.isValid).toBe(true)
+      expect(result.recipe?.subRecipes).toHaveLength(2)
+      expect(result.subRecipes).toHaveLength(2)
+    })
+
+    it('should reject recipe with invalid subRecipe structure', () => {
+      const recipeData = {
+        id: 'temp',
+        name: 'Invalid Recipe',
+        description: 'Bad sub-recipe',
+        ingredients: [{ ingredientId: '1', quantity: 100, unit: 'gram' }],
+        subRecipes: [
+          { recipeId: 'temp_subrecipe_1' }, // Missing servings
+        ],
+        instructions: ['Cook'],
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+    })
+
+    it('should handle recipe without subRecipes field (backward compatibility)', () => {
+      const recipeData = {
+        id: 'temp',
+        name: 'Old Format Recipe',
+        description: 'Recipe without subRecipes field',
+        ingredients: [{ ingredientId: '1', quantity: 100, unit: 'gram' }],
+        // No subRecipes field
+        instructions: ['Cook'],
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        tags: [],
+      }
+
+      const result = validateRecipeImport(
+        JSON.stringify(recipeData),
+        mockIngredients
+      )
+
+      expect(result.isValid).toBe(true)
+      expect(result.recipe?.subRecipes).toBeDefined()
+      expect(result.recipe?.subRecipes).toEqual([])
+    })
+  })
 })
