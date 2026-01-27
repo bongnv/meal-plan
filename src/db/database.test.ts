@@ -99,7 +99,10 @@ describe('MealPlanDB', () => {
       }
 
       await db.recipes.bulkAdd([recipe1, recipe2])
-      const dessertRecipes = await db.recipes.where('tags').equals('dessert').toArray()
+      const dessertRecipes = await db.recipes
+        .where('tags')
+        .equals('dessert')
+        .toArray()
 
       expect(dessertRecipes).toHaveLength(1)
       expect(dessertRecipes[0].id).toBe('r1')
@@ -376,7 +379,7 @@ describe('MealPlanDB', () => {
       }
 
       await db.groceryItems.bulkAdd([unchecked, checked])
-      
+
       // Query all items and filter by checked status
       const allItems = await db.groceryItems.toArray()
       const checkedItems = allItems.filter(item => item.checked === true)
@@ -423,9 +426,9 @@ describe('MealPlanDB', () => {
 
     it('should update existing lastModified timestamp', async () => {
       await db.metadata.put({ key: 'lastModified', value: 1000 })
-      
+
       await db.updateLastModified()
-      
+
       const lastModified = await db.getLastModified()
       expect(lastModified).toBeGreaterThan(1000)
     })
