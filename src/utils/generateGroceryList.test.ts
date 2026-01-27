@@ -351,9 +351,7 @@ describe('generateGroceryList', () => {
         servings: 8,
         prepTime: 40,
         cookTime: 45,
-        ingredients: [
-          { ingredientId: 'ing1', quantity: 500, unit: 'gram' },
-        ],
+        ingredients: [{ ingredientId: 'ing1', quantity: 500, unit: 'gram' }],
         instructions: ['Make cake', 'Add frosting'],
         subRecipes: [{ recipeId: 'subrecipe1', servings: 4 }],
         tags: [],
@@ -582,7 +580,7 @@ describe('generateGroceryList', () => {
 
     it('should prevent deep recursion beyond max depth', () => {
       const recipes: Recipe[] = []
-      
+
       // Create a chain of 5 recipes (exceeds MAX_RECURSION_DEPTH of 3)
       for (let i = 0; i < 5; i++) {
         recipes.push({
@@ -617,7 +615,7 @@ describe('generateGroceryList', () => {
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-      const result = generateGroceryList(
+      generateGroceryList(
         dateRange,
         'Deep Test',
         mealPlans,
@@ -669,7 +667,9 @@ describe('generateGroceryList', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 10,
-        ingredients: [{ ingredientId: 'nonexistent', quantity: 100, unit: 'gram' }],
+        ingredients: [
+          { ingredientId: 'nonexistent', quantity: 100, unit: 'gram' },
+        ],
         instructions: ['Cook'],
         subRecipes: [],
         tags: [],
@@ -728,7 +728,7 @@ describe('generateGroceryList', () => {
 
       expect(result.list.id).toMatch(/^gl_/)
       expect(result.items.every(item => item.id.startsWith('gi_'))).toBe(true)
-      
+
       // All IDs should be unique
       const itemIds = result.items.map(item => item.id)
       expect(new Set(itemIds).size).toBe(itemIds.length)
@@ -736,7 +736,7 @@ describe('generateGroceryList', () => {
 
     it('should set timestamps', () => {
       const now = Date.now()
-      
+
       const dateRange = { start: '2026-01-20', end: '2026-01-27' }
       const mealPlans: MealPlan[] = [
         {

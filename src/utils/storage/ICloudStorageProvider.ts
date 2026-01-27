@@ -10,6 +10,15 @@ export interface FileInfo {
 }
 
 /**
+ * Check if FileInfo represents an existing file (has an ID)
+ * @param fileInfo - File information to check
+ * @returns true if the file exists (has ID), false if it's a new file to be created
+ */
+export function isExistingFile(fileInfo: FileInfo): boolean {
+  return fileInfo.id !== '' && fileInfo.id !== null && fileInfo.id !== undefined
+}
+
+/**
  * Folder information for cloud storage browsing
  */
 export interface FolderInfo {

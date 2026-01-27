@@ -60,6 +60,29 @@ export class MealPlanDB extends Dexie {
   async updateLastModified(): Promise<void> {
     await this.metadata.put({ key: 'lastModified', value: Date.now() })
   }
+
+  // Clear all data from database
+  async clearAllData(): Promise<void> {
+    await this.transaction(
+      'rw',
+      [
+        this.recipes,
+        this.mealPlans,
+        this.ingredients,
+        this.groceryLists,
+        this.groceryItems,
+        this.metadata,
+      ],
+      async () => {
+        await this.recipes.clear()
+        await this.mealPlans.clear()
+        await this.ingredients.clear()
+        await this.groceryLists.clear()
+        await this.groceryItems.clear()
+        await this.metadata.clear()
+      }
+    )
+  }
 }
 
 // Export singleton instance

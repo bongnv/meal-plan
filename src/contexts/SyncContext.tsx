@@ -13,11 +13,14 @@ import { z } from 'zod'
 import { db } from '../db/database'
 import { syncService } from '../services/syncService'
 import { TokenExpiredError } from '../utils/errors/TokenExpiredError'
+import {
+  isExistingFile,
+  type FileInfo,
+} from '../utils/storage/ICloudStorageProvider'
 
 import { useCloudStorage } from './CloudStorageContext'
 
 import type { SyncData } from '../services/syncService'
-import type { FileInfo } from '../utils/storage/ICloudStorageProvider'
 
 // Zod schema for validating remote sync data
 const SyncDataSchema = z.object({
@@ -173,15 +176,21 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   ])
 
   /**
-   * Select a file for synci and connection state
-    setSelectedFile(fileInfo)
-    setConnectionState('connected'eady be authenticated via CloudStorageContext
+   * Select a file for sync
+   * For existing files: clears local data first (remote is source of truth)
+   * For new files: keeps local data (will be uploaded)
    *
    * @param fileInfo - File information for sync (persisted to localStorage)
    */
   const connectProvider = async (fileInfo: FileInfo): Promise<void> => {
     if (!cloudStorage.isAuthenticated) {
       throw new Error('Provider not authenticated')
+    }
+
+    // Only clear local data if opening an existing file
+    // For new files, we keep local data to upload it
+    if (isExistingFile(fileInfo)) {
+      await db.clearAllData()
     }
 
     // Update file selection
@@ -224,7 +233,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
       // Download remote data (or use empty for new files)
       let remote: SyncData
-      const isNewFile = !selectedFile.id
+      const isNewFile = !isExistingFile(selectedFile)
 
       if (isNewFile) {
         // New file doesn't exist yet, treat as empty remote
@@ -268,7 +277,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       )
 
       // Update selectedFile if ID was generated (new file)
-      if (!selectedFile.id && updatedFileInfo.id) {
+      if (!isExistingFile(selectedFile) && updatedFileInfo.id) {
         setSelectedFile(updatedFileInfo)
         localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
       }

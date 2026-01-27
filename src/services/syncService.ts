@@ -176,7 +176,10 @@ export const createSyncService = (db: MealPlanDB) => ({
         // This handles race condition: if user made changes during sync,
         // we preserve the newer timestamp
         const currentLastModified = await db.getLastModified()
-        const newLastModified = Math.max(currentLastModified, merged.lastModified)
+        const newLastModified = Math.max(
+          currentLastModified,
+          merged.lastModified
+        )
         await db.metadata.put({
           key: 'lastModified',
           value: newLastModified,
