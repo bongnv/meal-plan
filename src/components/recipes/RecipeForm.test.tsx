@@ -17,6 +17,9 @@ vi.mock('../../contexts/IngredientContext', () => ({
 }))
 
 const mockIngredients: Ingredient[] = [
+  { id: '1', name: 'Tomato', category: 'Vegetables' },
+  { id: '2', name: 'Flour', category: 'Grains' },
+  { id: '3', name: 'Chicken Breast', category: 'Meat' },
 ]
 
 const defaultMockIngredientContext = {
@@ -189,9 +192,9 @@ describe('RecipeForm', () => {
       await user.click(ingredientSelect)
       // Select Tomato from dropdown
       await waitFor(() => {
-        expect(screen.getByText(/tomato \(piece\)/i)).toBeInTheDocument()
+        expect(screen.getByText(/tomato/i)).toBeInTheDocument()
       })
-      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.click(screen.getByText(/tomato/i))
       await user.type(screen.getByLabelText(/quantity/i), '2')
 
       // Add an instruction
@@ -404,7 +407,7 @@ describe('RecipeForm', () => {
 
       // Should see Tomato in the dropdown
       await waitFor(() => {
-        expect(screen.getByText(/tomato \(piece\)/i)).toBeInTheDocument()
+        expect(screen.getByText(/tomato/i)).toBeInTheDocument()
       })
     })
 
@@ -480,7 +483,7 @@ describe('RecipeForm', () => {
       })
       await user.click(ingredientSelect)
       await user.type(ingredientSelect, 'Tomato')
-      await user.click(await screen.findByText('Tomato (piece)'))
+      await user.click(await screen.findByText('Tomato'))
 
       // Fill quantity
       const quantityInput = screen.getByPlaceholderText(/quantity/i)
@@ -523,6 +526,7 @@ describe('RecipeForm', () => {
         description: 'Test',
         servings: 4,
         totalTime: 30,
+        ingredients: [{ ingredientId: '1', quantity: 2, unit: 'cup' }],
         instructions: ['Step 1'],
         tags: [],
       }
@@ -564,7 +568,7 @@ describe('RecipeForm', () => {
       })
       await user.click(ingredientSelect)
       await user.type(ingredientSelect, 'Tomato')
-      await user.click(await screen.findByText('Tomato (piece)'))
+      await user.click(await screen.findByText('Tomato'))
 
       // Unit should default to 'whole' (not auto-filled from library)
       await waitFor(() => {
@@ -621,10 +625,10 @@ describe('RecipeForm', () => {
       await user.type(ingredientSelect, 'Tomato')
 
       await waitFor(() => {
-        expect(screen.getByText('Tomato (piece)')).toBeInTheDocument()
+        expect(screen.getByText('Tomato')).toBeInTheDocument()
       })
 
-      await user.click(screen.getByText('Tomato (piece)'))
+      await user.click(screen.getByText('Tomato'))
 
       // Should show custom name input
       await waitFor(() => {
@@ -723,7 +727,7 @@ describe('RecipeForm', () => {
       })
       await user.click(ingredientSelect)
       await user.type(ingredientSelect, 'Tomato')
-      await user.click(await screen.findByText('Tomato (piece)'))
+      await user.click(await screen.findByText('Tomato'))
 
       // Fill quantity
       const quantityInput = screen.getByPlaceholderText(/quantity/i)
@@ -784,7 +788,7 @@ describe('RecipeForm', () => {
       })
       await user.click(ingredientSelect)
       await user.type(ingredientSelect, 'Chicken')
-      await user.click(await screen.findByText('Chicken Breast (gram)'))
+      await user.click(await screen.findByText('Chicken Breast'))
 
       // Custom name input should have library name as placeholder
       await waitFor(() => {
@@ -854,7 +858,7 @@ describe('RecipeForm', () => {
         name: /ingredient/i,
       })
       await user.click(ingredientSelect)
-      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.click(screen.getByText(/tomato/i))
       await user.clear(screen.getByLabelText(/quantity/i))
       await user.type(screen.getByLabelText(/quantity/i), '2')
 
@@ -912,7 +916,7 @@ describe('RecipeForm', () => {
         name: /ingredient/i,
       })
       await user.click(ingredientSelect)
-      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.click(screen.getByText(/tomato/i))
       await user.clear(screen.getByLabelText(/quantity/i))
       await user.type(screen.getByLabelText(/quantity/i), '2')
 
@@ -971,7 +975,7 @@ describe('RecipeForm', () => {
         name: /ingredient/i,
       })
       await user.click(ingredientSelect)
-      await user.click(screen.getByText(/tomato \(piece\)/i))
+      await user.click(screen.getByText(/tomato/i))
       await user.clear(screen.getByLabelText(/quantity/i))
       await user.type(screen.getByLabelText(/quantity/i), '2')
 

@@ -33,6 +33,9 @@ describe('generateGroceryList', () => {
       servings: 2,
       totalTime: 30,
       ingredients: [
+        { ingredientId: '1', quantity: 400, unit: 'gram' },
+        { ingredientId: '2', quantity: 200, unit: 'gram' },
+        { ingredientId: '3', quantity: 150, unit: 'gram' },
       ],
       instructions: ['Cook chicken', 'Cook rice', 'Steam broccoli'],
       tags: [],
@@ -44,6 +47,8 @@ describe('generateGroceryList', () => {
       servings: 4,
       totalTime: 20,
       ingredients: [
+        { ingredientId: '1', quantity: 200, unit: 'gram' },
+        { ingredientId: '2', quantity: 400, unit: 'gram' },
       ],
       instructions: ['Cook rice', 'Fry with chicken'],
       tags: [],
@@ -543,6 +548,9 @@ describe('generateGroceryList', () => {
           description: '',
           servings: 2,
           totalTime: 10,
+          ingredients: [
+            { ingredientId: '999', quantity: 100, unit: 'gram' }, // Non-existent ingredient
+          ],
           instructions: [],
           tags: [],
         },
@@ -673,6 +681,9 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
+          ingredients: [
+            { ingredientId: '1', quantity: 2.5, unit: 'cup' },
+          ],
           instructions: ['Cook'],
           tags: [],
         },
@@ -682,6 +693,9 @@ describe('generateGroceryList', () => {
           description: 'Test',
           servings: 2,
           totalTime: 30,
+          ingredients: [
+            { ingredientId: '1', quantity: 2.5, unit: 'cup' },
+          ],
           instructions: ['Cook'],
           tags: [],
         },

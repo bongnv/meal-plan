@@ -6,6 +6,9 @@ import { validateRecipeImport } from './recipeImportValidator'
 
 describe('validateRecipeImport', () => {
   const mockIngredients: Ingredient[] = [
+    { id: '1', name: 'Spaghetti', category: 'Grains' },
+    { id: '2', name: 'Garlic', category: 'Vegetables' },
+    { id: '3', name: 'Basil', category: 'Herbs & Spices' },
   ]
 
   it('should validate a valid recipe with existing ingredients', () => {
@@ -14,8 +17,8 @@ describe('validateRecipeImport', () => {
       name: 'Garlic Pasta',
       description: 'Simple pasta with garlic',
       ingredients: [
-        { ingredientId: '1', quantity: 2 },
-        { ingredientId: '2', quantity: 4 },
+        { ingredientId: '1', quantity: 2, unit: 'cup' },
+        { ingredientId: '2', quantity: 4, unit: 'clove' },
       ],
       instructions: ['Boil pasta', 'Cook garlic in oil', 'Toss together'],
       servings: 4,
@@ -40,10 +43,11 @@ describe('validateRecipeImport', () => {
       name: 'Pasta with Cheese',
       description: 'Pasta with parmesan',
       ingredients: [
-        { ingredientId: '1', quantity: 2 },
+        { ingredientId: '1', quantity: 2, unit: 'cup' },
         {
           ingredientId: 'ing_new1',
           quantity: 0.5,
+          unit: 'cup',
           suggestedIngredient: {
             id: 'ing_new1',
             name: 'Parmesan Cheese',
@@ -128,7 +132,7 @@ describe('validateRecipeImport', () => {
       name: 'Test Recipe',
       description: 'Test',
       ingredients: [
-        { ingredientId: 'unknown_id', quantity: 1 }, // ID not in library, no suggestion
+        { ingredientId: 'unknown_id', quantity: 1, unit: 'cup' }, // ID not in library, no suggestion
       ],
       instructions: ['Step 1'],
       servings: 2,
@@ -174,7 +178,7 @@ describe('validateRecipeImport', () => {
       id: 'recipe_123',
       name: 'Test Recipe',
       description: 'Test',
-      ingredients: [{ ingredientId: '1', quantity: 1 }],
+      ingredients: [{ ingredientId: '1', quantity: 1, unit: 'cup' }],
       instructions: ['Step 1'],
       servings: 2,
       totalTime: 10,
@@ -197,10 +201,11 @@ describe('validateRecipeImport', () => {
       name: 'Complex Recipe',
       description: 'Many new ingredients',
       ingredients: [
-        { ingredientId: '1', quantity: 1 },
+        { ingredientId: '1', quantity: 1, unit: 'cup' },
         {
           ingredientId: 'ing_new1',
           quantity: 2,
+          unit: 'cup',
           suggestedIngredient: {
             id: 'ing_new1',
             name: 'Cheese',
@@ -210,6 +215,7 @@ describe('validateRecipeImport', () => {
         {
           ingredientId: 'ing_new2',
           quantity: 3,
+          unit: 'gram',
           suggestedIngredient: {
             id: 'ing_new2',
             name: 'Pasta',
@@ -238,7 +244,7 @@ describe('validateRecipeImport', () => {
       id: 'recipe_123',
       name: 'Test Recipe',
       description: 'Test',
-      ingredients: [{ ingredientId: '1', quantity: 1 }],
+      ingredients: [{ ingredientId: '1', quantity: 1, unit: 'cup' }],
       instructions: ['Step 1'],
       servings: -1,
       totalTime: 0,
@@ -261,7 +267,7 @@ describe('validateRecipeImport', () => {
   })
 
   describe('deduplication logic', () => {
-    it('should not create new ingredient when existing one has same name and unit (case-insensitive)', () => {
+    it('should not create new ingredient when existing one has same name (case-insensitive)', () => {
       const recipeData = {
         id: 'recipe_123',
         name: 'Garlic Bread',
@@ -270,11 +276,12 @@ describe('validateRecipeImport', () => {
           {
             ingredientId: 'new_garlic',
             quantity: 3,
+            unit: 'clove',
             suggestedIngredient: {
               id: 'new_garlic',
               name: 'garlic', // lowercase, but matches existing "Garlic"
               category: 'Vegetables',
-              unit: 'clove', // same unit
+              // No unit - ingredients don't have units (I9.7)
             },
           },
         ],
@@ -333,19 +340,21 @@ describe('validateRecipeImport', () => {
         name: 'Mixed Recipe',
         description: 'Mix of existing and new',
         ingredients: [
-          { ingredientId: '1', quantity: 2 }, // Existing Olive Oil
+          { ingredientId: '1', quantity: 2, unit: 'cup' }, // Existing Spaghetti
           {
             ingredientId: 'suggested_basil',
             quantity: 1,
+            unit: 'tablespoon',
             suggestedIngredient: {
               id: 'suggested_basil',
-              name: 'BASIL', // uppercase, but matches existing "Basil" with same unit
+              name: 'BASIL', // uppercase, but matches existing "Basil" by name
               category: 'Herbs & Spices',
             },
           },
           {
             ingredientId: 'new_tomato',
             quantity: 4,
+            unit: 'whole',
             suggestedIngredient: {
               id: 'new_tomato',
               name: 'Tomato', // truly new
@@ -367,7 +376,7 @@ describe('validateRecipeImport', () => {
       expect(result.isValid).toBe(true)
       expect(result.newIngredients).toHaveLength(1) // Only tomato is new
       expect(result.newIngredients[0].name).toBe('Tomato')
-      expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Olive Oil unchanged
+      expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Spaghetti unchanged
       expect(result.recipe?.ingredients[1].ingredientId).toBe('3') // Basil remapped to existing ID
       expect(result.recipe?.ingredients[2].ingredientId).toBe('new_tomato') // Tomato keeps new ID
     })
@@ -381,6 +390,7 @@ describe('validateRecipeImport', () => {
           {
             ingredientId: 'suggested_garlic',
             quantity: 2,
+            unit: 'clove',
             displayName: 'fresh garlic cloves',
             suggestedIngredient: {
               id: 'suggested_garlic',
@@ -415,16 +425,17 @@ describe('validateRecipeImport', () => {
         description: 'Testing case',
         ingredients: [
           {
-            ingredientId: 'new_oil',
+            ingredientId: 'new_spaghetti',
             quantity: 1,
+            unit: 'cup',
             suggestedIngredient: {
-              id: 'new_oil',
-              name: 'OLIVE oil', // Mixed case
-              category: 'Oils & Fats',
+              id: 'new_spaghetti',
+              name: 'SPAGHETTI', // Mixed case
+              category: 'Grains',
             },
           },
         ],
-        instructions: ['Use oil'],
+        instructions: ['Use spaghetti'],
         servings: 1,
         totalTime: 5,
         tags: [],
@@ -436,7 +447,7 @@ describe('validateRecipeImport', () => {
       )
 
       expect(result.isValid).toBe(true)
-      expect(result.newIngredients).toHaveLength(0) // Should match existing "Olive Oil"
+      expect(result.newIngredients).toHaveLength(0) // Should match existing "Spaghetti"
       expect(result.recipe?.ingredients[0].ingredientId).toBe('1') // Remapped to existing
     })
   })

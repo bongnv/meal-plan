@@ -80,10 +80,11 @@ A client-side web application for managing recipes, planning meals, and organizi
 ### R4. Settings/Configuration
 - [x] R4.1. Ingredient Library Management:
   - View all defined ingredients
-  - Add new ingredients with name, category, and standard unit
+  - Add new ingredients with name and category
   - Edit existing ingredients
   - Delete unused ingredients
   - Categories: produce, dairy, meat, pantry, frozen, bakery, other
+  - Note: Units are specified at recipe level (I9), not in ingredient library
 - [ ] R4.2. Data Management (OneDrive Sync):
   - Microsoft account authentication using MSAL.js
   - Cloud as source of truth (local data is cache for offline use)

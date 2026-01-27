@@ -3,16 +3,16 @@ import type { Recipe } from '../../types/recipe'
 
 /**
  * Migrates recipes from old schema (ingredients without units) to new schema
- * (ingredients with units from the ingredient library).
+ * (ingredients with units at recipe level).
  *
  * Migration strategy:
  * - If recipe ingredient already has a unit, preserve it
- * - If recipe ingredient is missing unit, copy from ingredient library
- * - If ingredient not found in library, use 'piece' as fallback
+ * - If recipe ingredient is missing unit, try to copy from old ingredient library (pre-I9.7 data)
+ * - If ingredient doesn't have a unit (post-I9.7), use 'piece' as fallback
  * - Does not mutate original recipes array
  *
  * @param recipes - Array of recipes to migrate
- * @param ingredients - Ingredient library for looking up units
+ * @param ingredients - Ingredient library (may have units for pre-I9.7 data)
  * @returns New array of migrated recipes
  */
 export function migrateRecipes(
@@ -30,9 +30,9 @@ export function migrateRecipes(
         return recipeIngredient
       }
 
-      // Otherwise, copy unit from ingredient library
+      // Try to get unit from ingredient library (for old pre-I9.7 data)
       const ingredient = ingredientMap.get(recipeIngredient.ingredientId)
-      const unit = ingredient?.unit || 'piece' // Fallback to 'piece' if not found
+      const unit = (ingredient as any)?.unit || 'piece' // Fallback to 'piece'
 
       return {
         ...recipeIngredient,

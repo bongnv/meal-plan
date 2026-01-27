@@ -62,7 +62,7 @@ describe('IngredientStorageService', () => {
 
     it('should throw error when Zod validation fails', () => {
       const invalidIngredients = [
-        { id: '1', name: '', category: 'Vegetables', unit: 'piece' }, // Invalid: empty name
+        { id: '1', name: '', category: 'Vegetables' }, // Invalid: empty name
       ]
 
       localStorage.setItem('ingredients', JSON.stringify(invalidIngredients))
@@ -121,7 +121,7 @@ describe('IngredientStorageService', () => {
 
     it('should validate ingredients before saving', () => {
       const invalidIngredients = [
-        { id: '1', name: '', category: 'Vegetables', unit: 'piece' }, // Invalid: empty name
+        { id: '1', name: '', category: 'Vegetables' }, // Invalid: empty name
       ] as Ingredient[]
 
       expect(() => service.saveIngredients(invalidIngredients)).toThrow()

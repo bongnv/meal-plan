@@ -34,6 +34,11 @@ describe('IngredientContext', () => {
   describe('Provider initialization', () => {
     it('should load ingredients on mount', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients
@@ -78,6 +83,11 @@ describe('IngredientContext', () => {
   describe('getIngredientById', () => {
     it('should return ingredient by id', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients
@@ -172,6 +182,11 @@ describe('IngredientContext', () => {
   describe('updateIngredient', () => {
     it('should update an existing ingredient', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients
@@ -201,6 +216,11 @@ describe('IngredientContext', () => {
 
     it('should handle update errors gracefully', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients
@@ -238,6 +258,16 @@ describe('IngredientContext', () => {
   describe('deleteIngredient', () => {
     it('should delete an ingredient', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
+        {
+          id: '2',
+          name: 'Onion',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients
@@ -262,6 +292,11 @@ describe('IngredientContext', () => {
 
     it('should handle delete errors gracefully', async () => {
       const mockIngredients: Ingredient[] = [
+        {
+          id: '1',
+          name: 'Tomato',
+          category: 'Vegetables',
+        },
       ]
       mockIngredientStorageService.loadIngredients.mockReturnValue(
         mockIngredients

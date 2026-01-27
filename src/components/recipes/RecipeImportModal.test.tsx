@@ -215,10 +215,12 @@ describe('RecipeImportModal', () => {
         {
           ingredientId: 'ing_new1',
           quantity: 1,
+          unit: 'cup',
           suggestedIngredient: {
             id: 'ing_new1',
             name: 'Sugar',
             category: 'Baking',
+            unit: 'cup',
           },
         },
       ],
@@ -320,11 +322,13 @@ describe('RecipeImportModal', () => {
         {
           ingredientId: 'ing_new1',
           quantity: 500,
+          unit: 'gram',
           displayName: 'chicken',
           suggestedIngredient: {
             id: 'ing_new1',
             name: 'Chicken Breast',
             category: 'Poultry',
+            unit: 'gram',
           },
         },
       ],
@@ -367,10 +371,12 @@ describe('RecipeImportModal', () => {
         {
           ingredientId: 'ing_new1',
           quantity: 2,
+          unit: 'piece',
           suggestedIngredient: {
             id: 'ing_new1',
             name: 'Tomato',
             category: 'Vegetables',
+            unit: 'piece',
           },
         },
       ],

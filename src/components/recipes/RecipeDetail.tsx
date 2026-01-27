@@ -136,8 +136,8 @@ export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
                 ingredient.displayName ||
                 ingredientData?.name ||
                 'Unknown Ingredient'
-              // Use recipe ingredient unit (migration will ensure all recipes have units)
-              const unit = ingredient.unit || ''
+              // Use recipe ingredient unit (migration ensures all recipes have units)
+              const unit = ingredient.unit || 'piece'
               // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
               const displayUnit = unit === 'whole' ? '' : unit
               const adjustedQuantity = formatQuantity(

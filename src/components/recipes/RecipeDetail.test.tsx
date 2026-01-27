@@ -26,6 +26,9 @@ vi.mock('../../contexts/IngredientContext', () => ({
 }))
 
 const mockIngredients: Ingredient[] = [
+  { id: '1', name: 'Spaghetti', category: 'Grains' },
+  { id: '2', name: 'Bacon', category: 'Meat' },
+  { id: '3', name: 'Eggs', category: 'Dairy' },
 ]
 
 const mockRecipe: Recipe = {
@@ -33,9 +36,9 @@ const mockRecipe: Recipe = {
   name: 'Spaghetti Carbonara',
   description: 'A classic Italian pasta dish with eggs, cheese, and bacon',
   ingredients: [
-    { ingredientId: '1', quantity: 400 },
-    { ingredientId: '2', quantity: 200 },
-    { ingredientId: '3', quantity: 4 },
+    { ingredientId: '1', quantity: 400, unit: 'gram' },
+    { ingredientId: '2', quantity: 200, unit: 'gram' },
+    { ingredientId: '3', quantity: 4, unit: 'whole' },
   ],
   instructions: [
     'Boil pasta in salted water',
@@ -309,6 +312,9 @@ describe('RecipeDetail', () => {
       const recipeWithVariousUnits: Recipe = {
         ...mockRecipe,
         ingredients: [
+          { ingredientId: '1', quantity: 2, unit: 'cup' },
+          { ingredientId: '2', quantity: 100, unit: 'gram' },
+          { ingredientId: '3', quantity: 3, unit: 'tablespoon' },
         ],
       }
 

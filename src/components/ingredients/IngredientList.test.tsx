@@ -10,6 +10,16 @@ import type { Ingredient } from '../../types/ingredient'
 describe('IngredientList', () => {
   const mockIngredients: Ingredient[] = [
     {
+      id: '1',
+      name: 'Tomato',
+      category: 'Vegetables',
+    },
+    {
+      id: '2',
+      name: 'Onion',
+      category: 'Vegetables',
+    },
+    {
       id: '3',
       name: 'Chicken Breast',
       category: 'Meat',
@@ -60,10 +70,9 @@ describe('IngredientList', () => {
         />
       )
 
+      // Should display category badges and filter options
       expect(screen.getAllByText('Vegetables')).toHaveLength(3) // Filter option + 2 badges
       expect(screen.getAllByText('Meat')).toHaveLength(2) // Filter option + 1 badge
-      expect(screen.getAllByText('piece')).toHaveLength(2)
-      expect(screen.getByText('gram')).toBeInTheDocument()
     })
   })
 

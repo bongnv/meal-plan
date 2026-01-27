@@ -12,6 +12,16 @@ describe('generateRecipeImportPrompt', () => {
         name: 'Olive Oil',
         category: 'Oils & Fats',
       },
+      {
+        id: '2',
+        name: 'Garlic',
+        category: 'Vegetables',
+      },
+      {
+        id: '3',
+        name: 'Basil',
+        category: 'Herbs & Spices',
+      },
     ]
 
     const prompt = generateRecipeImportPrompt(ingredients)

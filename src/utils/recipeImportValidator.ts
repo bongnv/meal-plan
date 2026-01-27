@@ -14,13 +14,14 @@ import { RecipeSchema } from '../types/recipe'
 const ImportedIngredientSchema = z.object({
   ingredientId: z.string(),
   quantity: z.number(),
+  unit: UnitSchema, // Unit is at recipe ingredient level (post-I9.7)
   displayName: z.string().optional(),
   suggestedIngredient: z
     .object({
       id: z.string(),
       name: z.string(),
       category: IngredientCategorySchema,
-      unit: UnitSchema,
+      // No unit field - ingredients don't have units after I9.7
     })
     .optional(),
 })
@@ -106,12 +107,12 @@ export function validateRecipeImport(
         continue
       }
 
-      // Check if an existing ingredient has the same name and unit (case-insensitive name match)
+      // Check if an existing ingredient has the same name (case-insensitive)
+      // Note: Ingredients no longer have units (I9.7), match by name only
       const matchingExisting = existingIngredients.find(
         existing =>
           existing.name.toLowerCase() ===
-            ingredient.suggestedIngredient!.name.toLowerCase() &&
-          existing.unit === ingredient.suggestedIngredient!.unit
+            ingredient.suggestedIngredient!.name.toLowerCase()
       )
 
       if (matchingExisting) {
@@ -151,6 +152,7 @@ export function validateRecipeImport(
     ingredients: importedRecipe.ingredients.map(ing => ({
       ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
       quantity: ing.quantity,
+      unit: ing.unit, // Preserve unit from recipe ingredient
       ...(ing.displayName && { displayName: ing.displayName }),
     })),
   }

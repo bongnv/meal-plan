@@ -32,12 +32,12 @@ describe('migrateRecipes', () => {
       expect(migrated[0].ingredients[0]).toEqual({
         ingredientId: '1',
         quantity: 400,
-        unit: 'gram', // Copied from ingredient library
+        unit: 'piece', // Default fallback (ingredients don't have units)
       })
       expect(migrated[0].ingredients[1]).toEqual({
         ingredientId: '2',
         quantity: 2,
-        unit: 'cup', // Copied from ingredient library
+        unit: 'piece', // Default fallback (ingredients don't have units)
       })
     })
 
@@ -128,6 +128,7 @@ describe('migrateRecipes', () => {
       expect(migrated[0].ingredients[0]).toEqual({
         ingredientId: '1',
         quantity: 400,
+        unit: 'piece', // Migration adds default unit
         displayName: 'boneless chicken',
       })
     })

@@ -56,6 +56,7 @@ const mockGroceryItems = [
     listId: '1',
     name: 'Banana',
     quantity: 2,
+    unit: 'cup',
     checked: false,
     category: 'Fruits',
     mealPlanIds: ['meal-1'],

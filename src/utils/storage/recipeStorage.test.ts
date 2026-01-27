@@ -4,7 +4,6 @@ import { generateId } from '../idGenerator'
 
 import { RecipeStorageService } from './recipeStorage'
 
-import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
 describe('RecipeStorageService', () => {
@@ -49,6 +48,9 @@ describe('RecipeStorageService', () => {
           id: '1',
           name: 'Test Recipe',
           description: 'A test recipe',
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
+          ],
           instructions: ['Step 1'],
           servings: 4,
           totalTime: 30,
@@ -201,6 +203,7 @@ describe('RecipeStorageService', () => {
           name: 'Old Recipe',
           description: 'Recipe without displayName',
           ingredients: [
+            { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -223,6 +226,8 @@ describe('RecipeStorageService', () => {
           name: 'New Recipe',
           description: 'Recipe with displayName',
           ingredients: [
+            { ingredientId: 'ing1', quantity: 400, unit: 'gram', displayName: 'chicken' },
+            { ingredientId: 'ing2', quantity: 2, unit: 'cup', displayName: 'tomatoes' },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -246,6 +251,7 @@ describe('RecipeStorageService', () => {
           name: 'Recipe with displayName',
           description: 'Has custom names',
           ingredients: [
+            { ingredientId: 'ing1', quantity: 400, unit: 'gram', displayName: 'chicken' },
           ],
           instructions: ['Step 1'],
           servings: 4,
@@ -256,6 +262,9 @@ describe('RecipeStorageService', () => {
           id: '2',
           name: 'Recipe without displayName',
           description: 'No custom names',
+          ingredients: [
+            { ingredientId: 'ing2', quantity: 2, unit: 'cup' },
+          ],
           instructions: ['Step 1'],
           servings: 2,
           totalTime: 15,
@@ -298,7 +307,7 @@ describe('RecipeStorageService', () => {
 
   describe('Migration on load', () => {
     it('should apply migration when loading recipes without units', () => {
-      const mockIngredients = [
+      const mockIngredients: any[] = [
       ]
 
       const oldRecipes: Recipe[] = [
@@ -321,20 +330,21 @@ describe('RecipeStorageService', () => {
 
       const loaded = service.loadRecipes(mockIngredients)
 
-      // Should have units copied from ingredient library
+      // Should have units added via migration (defaults to 'piece')
       expect(loaded[0].ingredients[0]).toEqual({
         ingredientId: 'ing1',
         quantity: 400,
+        unit: 'piece',
       })
       expect(loaded[0].ingredients[1]).toEqual({
         ingredientId: 'ing2',
         quantity: 2,
+        unit: 'piece',
       })
     })
 
     it('should preserve existing units when loading recipes', () => {
-      const mockIngredients = [
-      ]
+      const mockIngredients: any[] = []
 
       const recipesWithUnits: Recipe[] = [
         {
@@ -360,7 +370,7 @@ describe('RecipeStorageService', () => {
     })
 
     it('should use "piece" fallback for unknown ingredients during migration', () => {
-      const mockIngredients = [
+      const mockIngredients: any[] = [
       ]
 
       const recipes: Recipe[] = [

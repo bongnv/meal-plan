@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import { migrateRecipes } from '../migration/recipeMigration'
 import { RecipeSchema, type Recipe } from '../../types/recipe'
+import { migrateRecipes } from '../migration/recipeMigration'
 
 import type { Ingredient } from '../../types/ingredient'
 
