@@ -1,5 +1,181 @@
 # Meal Plan - Implementation Plan
 
+## I0. Homepage/Dashboard (R0.1-R0.6)
+
+**Design Philosophy:** User-centric, focused on answering two key questions:
+1. "What's my next meal?" → Next Meal section with upcoming meals
+2. "What do I need to buy?" → Shopping list preview with quick access
+
+**Simplified Approach:** No clutter, no stats for stats' sake. Show what matters NOW.
+
+### Implementation Steps (Top-Down, Integrate-First)
+
+**Phase 1: Helper Functions & Logic (TDD)**
+
+- [x] I0.1. Create upcoming meals utility functions (TDD)
+  - **Write tests first** in `src/utils/mealPlanning/upcomingMeals.test.ts`:
+    - Test `getNextMeal()`: returns next upcoming meal after current time
+    - Test `getUpcomingMeals(count)`: returns next N meals sorted by date/time
+    - Test `getMealTime()`: converts meal type to time string
+    - Test `formatMealDate()`: formats date relative to today ("TODAY", "TOMORROW", "Thu, Jan 30")
+    - Test edge cases: no meals, past meals only, same-day lunch/dinner
+  - **Implement functions** in `src/utils/mealPlanning/upcomingMeals.ts`:
+    ```typescript
+    export function getNextMeal(mealPlans: MealPlan[]): MealPlan | null
+    export function getUpcomingMeals(mealPlans: MealPlan[], count: number): MealPlan[]
+    export function getMealTime(mealType: 'lunch' | 'dinner'): string
+    export function formatMealDate(date: string, mealType: string): string
+    ```
+  - **Quality checks**: Run tests, save output to `tmp/i0.1-tests.txt`
+
+**Phase 2: HomePage Component (TDD, Top-Down)**
+
+- [x] I0.2. Create HomePage component structure with tests
+  - **Write tests first** in `src/pages/HomePage.test.tsx`:
+    - Test renders without crashing
+    - Test "Next Meal" section displays upcoming meal
+    - Test "Coming Up" section shows next 3-4 meals
+    - Test "Shopping List" section shows active list preview
+    - Test quick actions buttons render
+    - Test navigation on button clicks
+    - Test empty states: no meals, no shopping list
+    - Mock `useLiveQuery` to return test data
+    - Mock `useNavigate` to verify navigation
+  - **Create component skeleton** in `src/pages/HomePage.tsx`:
+    - Import dependencies (Mantine, Dexie, Router, icons)
+    - Set up `useLiveQuery` hooks for data fetching
+    - Create basic structure with placeholder sections
+    - Return empty/loading states
+  - **Quality checks**: Run tests (should pass basic rendering), save to `tmp/i0.2-tests.txt`
+
+- [x] I0.3. Implement "Next Meal" section
+  - **Update component**:
+    - Use `getNextMeal()` utility to find next meal (returns most imminent meal after current time)
+    - Render large card with meal details
+    - Show recipe name (or custom text), date/time, servings
+    - Add "Start Cooking" button that navigates to meal plan detail
+    - Handle empty state: "No meals planned yet" with CTAs
+  - **Update tests**: Verify Next Meal rendering with various scenarios
+  - **Style with Mantine**: Card, Title, Text, Button, Group, Badge
+  - **Quality checks**: Run tests, verify visually ✅
+
+- [x] I0.4. Implement "Coming Up" section
+  - **Update component**:
+    - Use `getUpcomingMeals(mealPlans, 4)` to get next 3-4 meals (skip first if shown in Next Meal)
+    - Render list of upcoming meals with date, recipe name, meal type
+    - Click meal card to view recipe details
+    - Add "View All Meals" link to calendar
+    - Only show section when there are upcoming meals (after next meal)
+  - **Update tests**: Verify Coming Up section displays correctly
+  - **Style with Mantine**: Stack, Group, Text, Card
+  - **Quality checks**: Run tests ✅
+
+- [x] I0.5. Implement "Shopping List" section
+  - **Update component**:
+    - Query grocery lists and items from Dexie
+    - Find most recent list (sorted by createdAt)
+    - Show list name, total item count, and checked count
+    - Add "View List" and "Check Off Items" buttons
+    - Handle empty state: "No active shopping list" with "Generate" and "Create" buttons
+  - **Update tests**: Verify shopping list preview and empty state
+  - **Style with Mantine**: Card, Stack, Badge, Button
+  - **Quality checks**: Run tests ✅
+
+- [x] I0.6. Implement "Quick Actions" section
+  - **Add quick action buttons**:
+    - "Plan a Meal" → navigate to `/meal-plans`
+    - "Browse Recipes" → navigate to `/recipes`
+    - "New Grocery List" → navigate to `/grocery-lists` (could open modal in future)
+    - Optional: "Add Recipe" → navigate to `/recipes/new`
+  - **Update tests**: Verify navigation on button clicks
+  - **Style with Mantine**: Group, Button with icons
+  - **Quality checks**: Run tests, save to `tmp/i0.6-tests.txt`
+
+**Phase 3: Integration & Routing**
+
+- [x] I0.7. Update App.tsx routing
+  - **Replace placeholder home route** with `<HomePage />`:
+    ```tsx
+    <Route path="/" element={<HomePage />} />
+    ```
+  - **Test navigation**: Click home logo/link returns to homepage
+  - **Quality checks**: Verify routing works from all pages
+
+- [x] I0.8. Responsive design and polish
+  - **Mobile optimization**:
+    - Stack sections vertically on mobile
+    - Ensure touch targets are large enough
+    - Test on small screens
+  - **Visual polish**:
+    - Consistent spacing and padding
+    - Icon colors and sizes
+    - Empty state messaging
+    - Loading states
+  - **Accessibility**:
+    - ARIA labels on buttons
+    - Semantic HTML
+    - Keyboard navigation
+  - **Quality checks**: 
+    - Run all tests: `npm test` → save to `tmp/i0.8-all-tests.txt` ✅
+    - Run linter: `npm run lint` → save to `tmp/i0.8-lint.txt` ✅
+    - Build check: `npm run build` → save to `tmp/i0.8-build.txt` ✅
+    - Manual testing: navigate through all sections, click all buttons
+    - Test empty states: clear data and verify UX
+
+### Implementation Complete! ✅
+
+**Files Created:**
+- `/src/pages/HomePage.tsx` (~220 lines)
+- `/src/pages/HomePage.test.tsx` (~415 lines)
+- `/src/utils/mealPlanning/upcomingMeals.ts` (~95 lines)
+- `/src/utils/mealPlanning/upcomingMeals.test.ts` (~360 lines)
+
+**Files Modified:**
+- `/src/App.tsx` - Added HomePage import and route
+- `/src/App.test.tsx` - Updated test expectations for new homepage
+
+**Test Results:**
+- All 586 tests passing ✅
+- Lint clean ✅
+- Build successful ✅
+
+**Total Time:** ~4 hours
+
+### Component Structure
+
+```
+/src/pages/HomePage.tsx          (~220 lines, all-in-one)
+/src/pages/HomePage.test.tsx     (tests)
+/src/utils/mealPlanning/upcomingMeals.ts       (utility functions)
+/src/utils/mealPlanning/upcomingMeals.test.ts  (utility tests)
+```
+
+### Key Design Decisions
+
+1. **No separate components**: Keep everything in HomePage.tsx for simplicity
+2. **Smart defaults**: Show most relevant data automatically
+3. **Clear CTAs**: Every empty state has obvious next action
+4. **Time-aware**: Display "TODAY", "TOMORROW", or specific dates
+5. **Mobile-first**: Responsive design from the start
+6. **No loading spinners**: Use `useLiveQuery` default values (`?? []`)
+
+### Dependencies
+
+- ✅ Mantine UI (already installed)
+- ✅ Dexie with useLiveQuery (already installed)
+- ✅ React Router (already installed)
+- ✅ @tabler/icons-react (already installed)
+- ✅ Day.js for date handling (already installed)
+
+### Estimated Time
+
+- Helper functions: 1 hour (tests + implementation)
+- HomePage component: 2-3 hours (tests + implementation)
+- Integration & polish: 1 hour
+- **Total: 4-5 hours**
+
+---
+
 ## I1. Create, Edit, and Delete Recipes (R1.1)
 
 ### Implementation Steps

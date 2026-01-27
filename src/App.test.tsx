@@ -37,6 +37,11 @@ vi.mock('./pages/recipes/EditRecipePage', () => ({
   EditRecipePage: () => <div>Edit Recipe Page</div>,
 }))
 
+// Mock dexie-react-hooks
+vi.mock('dexie-react-hooks', () => ({
+  useLiveQuery: vi.fn(() => []),
+}))
+
 const renderApp = (initialRoute: string = '/') => {
   return render(
     <CloudStorageProvider>
@@ -57,8 +62,8 @@ describe('App', () => {
 
     // Check for navigation header
     expect(screen.getByRole('navigation')).toBeInTheDocument()
-    // Check for home page content
-    expect(screen.getByText(/home page - coming soon/i)).toBeInTheDocument()
+    // Check for home page content (Next Meal section)
+    expect(screen.getByText(/Next Meal/i)).toBeInTheDocument()
   })
 
   it('should render create recipe page at /recipes/new', () => {

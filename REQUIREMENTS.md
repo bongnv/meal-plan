@@ -6,21 +6,24 @@ A client-side web application for managing recipes, planning meals, and organizi
 ## Core Features
 
 ### R0. Dashboard/Home Page
-- [ ] R0.1. Overview dashboard as the landing page
-- [ ] R0.2. Display quick stats:
-  - Total number of recipes
-  - Upcoming meals this week
-  - Active grocery lists
-- [ ] R0.3. Quick actions:
-  - Create new recipe
+- [x] R0.1. Overview dashboard as the landing page
+- [x] R0.2. Display quick stats:
+  - ~~Total number of recipes~~ (Simplified: Focus on next meal)
+  - ~~Upcoming meals this week~~ (Replaced with "Coming Up" section)
+  - ~~Active grocery lists~~ (Replaced with single active list preview)
+- [x] R0.3. Quick actions:
+  - ~~Create new recipe~~ (Available via quick actions)
   - Plan a meal
-  - View recipes
+  - ~~View recipes~~ (Browse recipes)
   - Generate grocery list
-- [ ] R0.4. Recent activity feed:
-  - Recently added recipes
-  - Recently planned meals
-- [ ] R0.5. This week's meal plan preview (if available)
-- [ ] R0.6. Navigation links to main sections (Recipes, Meal Plans, Grocery Lists)
+- [x] R0.4. Recent activity feed:
+  - ~~Recently added recipes~~ (Simplified: Removed to reduce clutter)
+  - ~~Recently planned meals~~ (Replaced with "Next Meal" + "Coming Up")
+- [x] R0.5. This week's meal plan preview (if available)
+  - Replaced with focused "Next Meal" + "Coming Up" sections
+- [x] R0.6. Navigation links to main sections (Recipes, Meal Plans, Grocery Lists)
+  - Available via sidebar navigation
+- **Implementation:** I0.1-I0.8 (Focused design: Next Meal + Shopping List)
 
 ### R1. Recipe Management
 - [x] R1.1. Create, edit, and delete recipes

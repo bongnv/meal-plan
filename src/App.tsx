@@ -18,6 +18,7 @@ import { useCloudStorage } from './contexts/CloudStorageContext'
 import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
+import { HomePage } from './pages/HomePage'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
@@ -154,15 +155,7 @@ function App() {
 
         <AppShell.Main>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <div>
-                  <h1>Meal Plan</h1>
-                  <p>Home page - coming soon</p>
-                </div>
-              }
-            />
+            <Route path="/" element={<HomePage />} />
             <Route path="/recipes" element={<RecipesPage />} />
             <Route path="/recipes/new" element={<CreateRecipePage />} />
             <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
