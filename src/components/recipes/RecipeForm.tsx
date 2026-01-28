@@ -403,46 +403,27 @@ export function RecipeForm({
           </div>
 
           <Group
-            justify="space-between"
+            justify={isEditMode && onDelete ? 'space-between' : 'flex-end'}
             mt="md"
-            style={{ flexDirection: 'row' }}
-            styles={{
-              root: {
-                '@media (max-width: 768px)': {
-                  flexDirection: 'column',
-                  gap: 'var(--mantine-spacing-sm)',
-                },
-              },
-            }}
+            wrap="nowrap"
+            gap="sm"
           >
             {isEditMode && onDelete && (
               <Button
                 variant="outline"
                 color="red"
                 onClick={onDelete}
-                fullWidth
-                style={{ '@media (min-width: 769px)': { width: 'auto' } }}
+                style={{ flex: '0 0 auto' }}
               >
-                Delete Recipe
+                Delete
               </Button>
             )}
-            <Group
-              ml="auto"
-              style={{ flexDirection: 'row' }}
-              styles={{
-                root: {
-                  '@media (max-width: 768px)': {
-                    marginLeft: 0,
-                    width: '100%',
-                  },
-                },
-              }}
-            >
-              <Button variant="default" onClick={onCancel} style={{ flex: 1 }}>
+            <Group gap="sm" wrap="nowrap" style={{ marginLeft: 'auto' }}>
+              <Button variant="default" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit" style={{ flex: 1 }}>
-                {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+              <Button type="submit">
+                {isEditMode ? 'Update' : 'Create'}
               </Button>
             </Group>
           </Group>
