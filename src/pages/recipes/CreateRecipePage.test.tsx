@@ -39,7 +39,7 @@ describe('CreateRecipePage', () => {
     renderWithProviders(<CreateRecipePage />)
 
     expect(
-      screen.getByRole('button', { name: /create recipe/i })
+      screen.getByRole('button', { name: /^create$/i })
     ).toBeInTheDocument()
   })
 })

@@ -422,9 +422,7 @@ export function RecipeForm({
               <Button variant="default" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {isEditMode ? 'Update' : 'Create'}
-              </Button>
+              <Button type="submit">{isEditMode ? 'Update' : 'Create'}</Button>
             </Group>
           </Group>
         </Stack>
