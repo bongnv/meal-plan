@@ -1,5 +1,5 @@
 import { AppShell, Group, Title, Anchor, Burger, NavLink } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
   IconChefHat,
   IconCarrot,
@@ -34,6 +34,9 @@ function App() {
   const location = useLocation()
   const cloudStorage = useCloudStorage()
   const { needsReconnect, selectedFile, clearReconnectFlag } = useSyncContext()
+  
+  // Detect if we're on mobile (< 768px)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -139,6 +142,7 @@ function App() {
             leftSection={<IconSettings size={20} stroke={1.5} />}
             active={isSettingsActive()}
             defaultOpened={isSettingsActive()}
+            opened={isMobile ? true : undefined}
             onClick={close}
           >
             {settingsItems.map(item => (
