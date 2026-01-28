@@ -74,13 +74,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (savedFile && cloudStorage.isAuthenticated) {
       try {
         const fileInfo = JSON.parse(savedFile) as FileInfo
-        setSelectedFile(fileInfo)
+        // Queue state update to avoid synchronous setState in effect
+        queueMicrotask(() => setSelectedFile(fileInfo))
       } catch (error) {
         console.error('Failed to restore selected file:', error)
         localStorage.removeItem(SELECTED_FILE_KEY)
       }
     }
-    setIsInitializing(false)
+    queueMicrotask(() => setIsInitializing(false))
   }, [cloudStorage.isAuthenticated])
 
   /**
@@ -173,7 +174,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
     // If local changed after last sync, set status to idle
     if (lastModified > lastSyncTime) {
-      setSyncStatus('idle')
+      // Queue state update to avoid synchronous setState in effect
+      queueMicrotask(() => setSyncStatus('idle'))
     }
   }, [
     lastModified,
