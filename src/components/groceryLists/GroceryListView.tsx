@@ -26,6 +26,7 @@ import {
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { groceryListService } from '../../services/groceryListService'
 import { GroceryItem, GroceryList } from '../../types/groceryList'
 import { INGREDIENT_CATEGORIES, UNITS, Unit } from '../../types/ingredient'
 import { MealPlan } from '../../types/mealPlan'
@@ -272,38 +273,24 @@ export const GroceryListView = ({
 
   // Separate checked and unchecked items
   const { uncheckedItems, checkedItems } = useMemo(() => {
-    const unchecked: GroceryItem[] = []
-    const checked: GroceryItem[] = []
-
-    items.forEach(item => {
-      if (item.checked) {
-        checked.push(item)
-      } else {
-        unchecked.push(item)
-      }
-    })
-
+    const { checked, unchecked } =
+      groceryListService.separateCheckedItems(items)
     return { uncheckedItems: unchecked, checkedItems: checked }
   }, [items])
 
   // Group unchecked items by category
   const uncheckedItemsByCategory = useMemo(() => {
-    const groups: Record<string, GroceryItem[]> = {}
-
-    uncheckedItems.forEach(item => {
-      if (!groups[item.category]) {
-        groups[item.category] = []
-      }
-      groups[item.category].push(item)
-    })
-
-    return groups
+    return groceryListService.groupItemsByCategory(uncheckedItems)
   }, [uncheckedItems])
 
   // Get sorted categories (only non-empty ones for unchecked items)
   const sortedCategories = useMemo(() => {
-    return INGREDIENT_CATEGORIES.filter(
-      category => uncheckedItemsByCategory[category]?.length > 0
+    const allCategories = groceryListService.getSortedCategories(
+      uncheckedItemsByCategory
+    )
+    // Filter to only show categories that exist in INGREDIENT_CATEGORIES
+    return INGREDIENT_CATEGORIES.filter(category =>
+      allCategories.includes(category)
     )
   }, [uncheckedItemsByCategory])
 

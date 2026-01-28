@@ -262,6 +262,106 @@ export const createMealPlanService = (db: MealPlanDB) => ({
   async getLastModified(): Promise<number> {
     return await db.getLastModified()
   },
+
+  /**
+   * Generate array of dates between start and end dates (inclusive)
+   * @param startDate Start date
+   * @param endDate End date
+   * @returns Array of Date objects for each day in range
+   */
+  generateDateRange(startDate: Date, endDate: Date): Date[] {
+    const days: Date[] = []
+    const current = new Date(startDate)
+    current.setHours(0, 0, 0, 0)
+
+    const end = new Date(endDate)
+    end.setHours(0, 0, 0, 0)
+
+    while (current <= end) {
+      days.push(new Date(current))
+      current.setDate(current.getDate() + 1)
+    }
+
+    return days
+  },
+
+  /**
+   * Convert Date to local date string (YYYY-MM-DD)
+   * @param date Date object
+   * @returns ISO date string in local timezone
+   */
+  getLocalDateString(date: Date): string {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  },
+
+  /**
+   * Group meal plans by date
+   * @param mealPlans Array of meal plans
+   * @param dates Array of dates to group by
+   * @returns Array of grouped meals with date info
+   */
+  groupMealsByDate(
+    mealPlans: MealPlan[],
+    dates: Date[]
+  ): Array<{ date: string; dateObj: Date; meals: MealPlan[] }> {
+    const grouped: Array<{ date: string; dateObj: Date; meals: MealPlan[] }> =
+      []
+
+    dates.forEach(day => {
+      const dateString = this.getLocalDateString(day)
+      const mealsForDay = mealPlans.filter(mp => mp.date === dateString)
+
+      grouped.push({
+        date: dateString,
+        dateObj: day,
+        meals: this.sortMealsByType(mealsForDay),
+      })
+    })
+
+    return grouped
+  },
+
+  /**
+   * Sort meals by meal type (breakfast, lunch, dinner, snack)
+   * @param meals Array of meal plans
+   * @returns Sorted array of meal plans
+   */
+  sortMealsByType(meals: MealPlan[]): MealPlan[] {
+    const order = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 }
+    return [...meals].sort((a, b) => {
+      const orderA = order[a.mealType] ?? 999
+      const orderB = order[b.mealType] ?? 999
+      return orderA - orderB
+    })
+  },
+
+  /**
+   * Count recipe-based meals in a date range
+   * @param mealPlans Array of all meal plans
+   * @param startDate Start date
+   * @param endDate End date
+   * @returns Number of recipe meals in range
+   */
+  countRecipeMealsInRange(
+    mealPlans: MealPlan[],
+    startDate: Date,
+    endDate: Date
+  ): number {
+    const startDateStr = this.getLocalDateString(startDate)
+    const endDateStr = this.getLocalDateString(endDate)
+
+    return mealPlans.filter(
+      mp =>
+        mp.type === 'recipe' &&
+        'recipeId' in mp &&
+        mp.recipeId &&
+        mp.date >= startDateStr &&
+        mp.date <= endDateStr
+    ).length
+  },
 })
 
 // Singleton instance

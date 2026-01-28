@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react'
 
 import { db } from '../../db/database'
 import { useRecipeFilter } from '../../hooks/useRecipeFilter'
+import { recipeService } from '../../services/recipeService'
 
 import { DraggableRecipeCard } from './DraggableRecipeCard'
 
@@ -33,11 +34,7 @@ export const RecipeSidebar = () => {
 
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
-    const tagSet = new Set<string>()
-    recipes.forEach(recipe => {
-      recipe.tags.forEach(tag => tagSet.add(tag))
-    })
-    return Array.from(tagSet).sort()
+    return recipeService.extractUniqueTags(recipes)
   }, [recipes])
 
   // Filter recipes using the hook

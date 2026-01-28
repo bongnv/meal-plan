@@ -19,10 +19,11 @@ export interface SyncData {
 }
 
 /**
- * MergeResult contains the merged data
+ * MergeResult contains the merged data and whether changes were made
  */
 export interface MergeResult {
   merged: SyncData
+  hasChanges: boolean
 }
 
 /**
@@ -56,6 +57,8 @@ export const createSyncService = (db: MealPlanDB) => ({
    * @returns MergeResult with merged data and conflict information
    */
   async mergeWithLWW(local: SyncData, remote: SyncData): Promise<MergeResult> {
+    let hasChanges = false
+
     // Merge recipes using LWW
     const recipeMap = new Map<string, Recipe>()
     for (const recipe of local.recipes) {
@@ -66,9 +69,11 @@ export const createSyncService = (db: MealPlanDB) => ({
       if (!existing) {
         // New recipe from remote
         recipeMap.set(recipe.id, recipe)
+        hasChanges = true
       } else if (recipe.updatedAt > existing.updatedAt) {
         // Remote is newer - use it
         recipeMap.set(recipe.id, recipe)
+        hasChanges = true
       }
       // If equal or local is newer, keep local
     }
@@ -82,8 +87,10 @@ export const createSyncService = (db: MealPlanDB) => ({
       const existing = ingredientMap.get(ingredient.id)
       if (!existing) {
         ingredientMap.set(ingredient.id, ingredient)
+        hasChanges = true
       } else if (ingredient.updatedAt > existing.updatedAt) {
         ingredientMap.set(ingredient.id, ingredient)
+        hasChanges = true
       }
     }
 
@@ -96,8 +103,10 @@ export const createSyncService = (db: MealPlanDB) => ({
       const existing = mealPlanMap.get(mealPlan.id)
       if (!existing) {
         mealPlanMap.set(mealPlan.id, mealPlan)
+        hasChanges = true
       } else if (mealPlan.updatedAt > existing.updatedAt) {
         mealPlanMap.set(mealPlan.id, mealPlan)
+        hasChanges = true
       }
     }
 
@@ -110,8 +119,10 @@ export const createSyncService = (db: MealPlanDB) => ({
       const existing = groceryListMap.get(list.id)
       if (!existing) {
         groceryListMap.set(list.id, list)
+        hasChanges = true
       } else if (list.updatedAt > existing.updatedAt) {
         groceryListMap.set(list.id, list)
+        hasChanges = true
       }
     }
 
@@ -135,11 +146,11 @@ export const createSyncService = (db: MealPlanDB) => ({
       mealPlans: Array.from(mealPlanMap.values()),
       groceryLists: Array.from(groceryListMap.values()),
       groceryItems: Array.from(groceryItemMap.values()),
-      lastModified: Date.now(),
+      lastModified: Math.max(local.lastModified, remote.lastModified),
       version: 1,
     }
 
-    return { merged }
+    return { merged, hasChanges }
   },
 
   /**

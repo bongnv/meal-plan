@@ -99,6 +99,57 @@ export const createRecipeService = (db: MealPlanDB) => ({
   async getLastModified(): Promise<number> {
     return await db.getLastModified()
   },
+
+  /**
+   * Extract all unique tags from an array of recipes (pure function)
+   * @param recipes Array of recipes
+   * @returns Sorted array of unique tags
+   */
+  extractUniqueTags(recipes: Recipe[]): string[] {
+    const tagSet = new Set<string>()
+    recipes.forEach(recipe => {
+      recipe.tags?.forEach(tag => tagSet.add(tag))
+    })
+    return Array.from(tagSet).sort()
+  },
+
+  /**
+   * Filter recipes by search text and tags (pure function)
+   * @param recipes Array of recipes to filter
+   * @param searchText Text to search in recipe name
+   * @param selectedTags Tags to filter by (empty array = no tag filter)
+   * @returns Filtered array of recipes
+   */
+  filterRecipes(
+    recipes: Recipe[],
+    searchText: string,
+    selectedTags: string[] = []
+  ): Recipe[] {
+    const lowerSearchText = searchText.toLowerCase()
+
+    return recipes.filter(recipe => {
+      // Filter by search text
+      const matchesSearch =
+        !searchText || recipe.name.toLowerCase().includes(lowerSearchText)
+
+      // Filter by tags (if any tags selected)
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.some(tag => recipe.tags?.includes(tag))
+
+      return matchesSearch && matchesTags
+    })
+  },
+
+  /**
+   * Find recipe by ID from array (pure function)
+   * @param recipes Array of recipes
+   * @param recipeId Recipe ID to find
+   * @returns Recipe if found, undefined otherwise
+   */
+  findRecipeById(recipes: Recipe[], recipeId: string): Recipe | undefined {
+    return recipes.find(r => r.id === recipeId)
+  },
 })
 
 // Singleton instance

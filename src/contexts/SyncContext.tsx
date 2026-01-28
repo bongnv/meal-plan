@@ -269,21 +269,26 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // Apply merged data
       await syncService.applyMergedData(mergeResult.merged)
 
-      // Upload merged data to remote (use merged lastModified)
-      const uploadData = mergeResult.merged
-      const updatedFileInfo = await cloudStorage.uploadFile(
-        selectedFile,
-        JSON.stringify(uploadData)
-      )
+      // Only upload if changes were made during merge
+      if (mergeResult.hasChanges) {
+        const uploadData = mergeResult.merged
+        const updatedFileInfo = await cloudStorage.uploadFile(
+          selectedFile,
+          JSON.stringify(uploadData)
+        )
 
-      // Update selectedFile if ID was generated (new file)
-      if (!isExistingFile(selectedFile) && updatedFileInfo.id) {
-        setSelectedFile(updatedFileInfo)
-        localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(updatedFileInfo))
+        // Update selectedFile if ID was generated (new file)
+        if (!isExistingFile(selectedFile) && updatedFileInfo.id) {
+          setSelectedFile(updatedFileInfo)
+          localStorage.setItem(
+            SELECTED_FILE_KEY,
+            JSON.stringify(updatedFileInfo)
+          )
+        }
       }
 
       setSyncStatus('synced')
-      setLastSyncTime(uploadData.lastModified)
+      setLastSyncTime(mergeResult.merged.lastModified)
     } catch (error) {
       console.error('Sync failed:', error)
 

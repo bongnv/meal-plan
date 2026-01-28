@@ -14,6 +14,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 
 import { db } from '../../db/database'
+import { groceryListService } from '../../services/groceryListService'
+import { mealPlanService } from '../../services/mealPlanService'
 
 interface GroceryListGeneratorProps {
   opened: boolean
@@ -40,15 +42,6 @@ export const GroceryListGenerator = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
 
-  // Helper to calculate date ranges
-  const getDateRange = (days: number): [Date, Date] => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const endDate = new Date(today)
-    endDate.setDate(today.getDate() + days - 1)
-    return [today, endDate]
-  }
-
   const quickSelectRanges = [
     { label: 'Next 7 days', days: 7 },
     { label: 'Next 14 days', days: 14 },
@@ -56,23 +49,26 @@ export const GroceryListGenerator = ({
   ]
 
   const handleQuickSelect = (days: number) => {
-    setDateRange(getDateRange(days))
+    setDateRange(groceryListService.getQuickDateRange(days))
   }
 
   const handleGenerate = () => {
     const [startDate, endDate] = dateRange
     if (!startDate || !endDate) return
 
+    // Ensure dates are Date objects
+    const start = startDate instanceof Date ? startDate : new Date(startDate)
+    const end = endDate instanceof Date ? endDate : new Date(endDate)
+
     // Generate default name if not provided
     const listName =
-      name.trim() ||
-      `Week of ${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      name.trim() || groceryListService.generateDefaultListName(start)
 
     try {
       // Call parent callback with date range and name
       onGenerate({
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         name: listName,
       })
 
@@ -101,17 +97,10 @@ export const GroceryListGenerator = ({
   // Calculate meal count from actual meal plans in date range
   const mealCount = useMemo(() => {
     if (!startDate || !endDate) return 0
-
-    const startDateStr = startDate.toISOString().split('T')[0]
-    const endDateStr = endDate.toISOString().split('T')[0]
-
-    return mealPlans.filter(
-      mp =>
-        mp.type === 'recipe' &&
-        mp.recipeId &&
-        mp.date >= startDateStr &&
-        mp.date <= endDateStr
-    ).length
+    // Ensure dates are Date objects (DatePickerInput may return other types)
+    const start = startDate instanceof Date ? startDate : new Date(startDate)
+    const end = endDate instanceof Date ? endDate : new Date(endDate)
+    return mealPlanService.countRecipeMealsInRange(mealPlans, start, end)
   }, [startDate, endDate, mealPlans])
 
   return (
@@ -154,6 +143,21 @@ export const GroceryListGenerator = ({
             clearable
             numberOfColumns={2}
             size="sm"
+            getDayProps={date => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              const checkDate = new Date(date)
+              checkDate.setHours(0, 0, 0, 0)
+              return {
+                style:
+                  checkDate.getTime() === today.getTime()
+                    ? {
+                        backgroundColor: 'var(--mantine-color-blue-light)',
+                        fontWeight: 'bold',
+                      }
+                    : undefined,
+              }
+            }}
           />
           {daysInRange > 0 && (
             <Text size="sm" c="dimmed" mt="xs">

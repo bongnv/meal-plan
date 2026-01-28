@@ -122,6 +122,90 @@ export const createGroceryListService = (db: MealPlanDB) => ({
     })
     await db.updateLastModified()
   },
+
+  /**
+   * Get date range for quick list generation
+   * @param days Number of days from today
+   * @returns Tuple of [startDate, endDate]
+   */
+  getQuickDateRange(days: number): [Date, Date] {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const endDate = new Date(today)
+    endDate.setDate(today.getDate() + days - 1)
+    return [today, endDate]
+  },
+
+  /**
+   * Generate default list name based on start date
+   * @param startDate The start date for the list
+   * @returns Formatted list name
+   */
+  generateDefaultListName(startDate: Date): string {
+    return `Grocery List - ${startDate.toLocaleDateString()}`
+  },
+
+  /**
+   * Get most recent grocery list
+   * @param lists Array of grocery lists
+   * @returns Most recent list or undefined if empty
+   */
+  getMostRecentList(lists: GroceryList[]): GroceryList | undefined {
+    if (lists.length === 0) return undefined
+    return [...lists].sort((a, b) => b.createdAt - a.createdAt)[0]
+  },
+
+  /**
+   * Separate grocery items into checked and unchecked
+   * @param items Array of grocery items
+   * @returns Object with checked and unchecked arrays
+   */
+  separateCheckedItems(items: GroceryItem[]): {
+    checked: GroceryItem[]
+    unchecked: GroceryItem[]
+  } {
+    const checked: GroceryItem[] = []
+    const unchecked: GroceryItem[] = []
+
+    items.forEach(item => {
+      if (item.checked) {
+        checked.push(item)
+      } else {
+        unchecked.push(item)
+      }
+    })
+
+    return { checked, unchecked }
+  },
+
+  /**
+   * Group grocery items by category
+   * @param items Array of grocery items
+   * @returns Object mapping category names to arrays of items
+   */
+  groupItemsByCategory(items: GroceryItem[]): Record<string, GroceryItem[]> {
+    const groups: Record<string, GroceryItem[]> = {}
+
+    items.forEach(item => {
+      if (!groups[item.category]) {
+        groups[item.category] = []
+      }
+      groups[item.category].push(item)
+    })
+
+    return groups
+  },
+
+  /**
+   * Get sorted category names from grouped items
+   * @param itemsByCategory Object mapping categories to items
+   * @returns Sorted array of category names
+   */
+  getSortedCategories(
+    itemsByCategory: Record<string, GroceryItem[]>
+  ): string[] {
+    return Object.keys(itemsByCategory).sort((a, b) => a.localeCompare(b))
+  },
 })
 
 // Singleton instance

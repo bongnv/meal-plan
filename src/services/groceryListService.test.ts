@@ -291,4 +291,155 @@ describe('groceryListService', () => {
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })
+
+  describe('getQuickDateRange', () => {
+    it('should return date range for 7 days', () => {
+      const [start, end] = service.getQuickDateRange(7)
+
+      expect(start.getHours()).toBe(0)
+      expect(start.getMinutes()).toBe(0)
+
+      const daysDiff = Math.floor(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      expect(daysDiff).toBe(6)
+    })
+
+    it('should return date range for 14 days', () => {
+      const [start, end] = service.getQuickDateRange(14)
+
+      const daysDiff = Math.floor(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      expect(daysDiff).toBe(13)
+    })
+
+    it('should return date range for 30 days', () => {
+      const [start, end] = service.getQuickDateRange(30)
+
+      const daysDiff = Math.floor(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      expect(daysDiff).toBe(29)
+    })
+  })
+
+  describe('generateDefaultListName', () => {
+    it('should generate default name with date', () => {
+      const date = new Date('2026-01-28')
+      const name = service.generateDefaultListName(date)
+
+      expect(name).toContain('Grocery List')
+      expect(name).toContain('2026')
+    })
+  })
+
+  describe('getMostRecentList', () => {
+    it('should return most recent list', () => {
+      const lists = [
+        {
+          id: '1',
+          name: 'Old',
+          createdAt: 1000,
+          updatedAt: 1000,
+          dateRange: { start: '2026-01-01', end: '2026-01-07' },
+        },
+        {
+          id: '2',
+          name: 'Recent',
+          createdAt: 3000,
+          updatedAt: 3000,
+          dateRange: { start: '2026-01-01', end: '2026-01-07' },
+        },
+        {
+          id: '3',
+          name: 'Middle',
+          createdAt: 2000,
+          updatedAt: 2000,
+          dateRange: { start: '2026-01-01', end: '2026-01-07' },
+        },
+      ]
+
+      const result = service.getMostRecentList(lists)
+
+      expect(result?.id).toBe('2')
+    })
+
+    it('should return undefined for empty array', () => {
+      const result = service.getMostRecentList([])
+
+      expect(result).toBeUndefined()
+    })
+  })
+
+  describe('separateCheckedItems', () => {
+    it('should separate checked and unchecked items', () => {
+      const items = [
+        createMockItem({ id: '1', checked: false }),
+        createMockItem({ id: '2', checked: true }),
+        createMockItem({ id: '3', checked: false }),
+        createMockItem({ id: '4', checked: true }),
+      ]
+
+      const result = service.separateCheckedItems(items)
+
+      expect(result.unchecked).toHaveLength(2)
+      expect(result.checked).toHaveLength(2)
+      expect(result.unchecked[0].id).toBe('1')
+      expect(result.checked[0].id).toBe('2')
+    })
+
+    it('should handle all unchecked items', () => {
+      const items = [
+        createMockItem({ id: '1', checked: false }),
+        createMockItem({ id: '2', checked: false }),
+      ]
+
+      const result = service.separateCheckedItems(items)
+
+      expect(result.unchecked).toHaveLength(2)
+      expect(result.checked).toHaveLength(0)
+    })
+  })
+
+  describe('groupItemsByCategory', () => {
+    it('should group items by category', () => {
+      const items = [
+        createMockItem({ id: '1', category: 'Vegetables' }),
+        createMockItem({ id: '2', category: 'Meat' }),
+        createMockItem({ id: '3', category: 'Vegetables' }),
+      ]
+
+      const result = service.groupItemsByCategory(items)
+
+      expect(result['Vegetables']).toHaveLength(2)
+      expect(result['Meat']).toHaveLength(1)
+    })
+
+    it('should handle empty array', () => {
+      const result = service.groupItemsByCategory([])
+
+      expect(Object.keys(result)).toHaveLength(0)
+    })
+  })
+
+  describe('getSortedCategories', () => {
+    it('should return sorted category names', () => {
+      const grouped = {
+        Vegetables: [createMockItem()],
+        Meat: [createMockItem()],
+        Dairy: [createMockItem()],
+      }
+
+      const result = service.getSortedCategories(grouped)
+
+      expect(result).toEqual(['Dairy', 'Meat', 'Vegetables'])
+    })
+
+    it('should handle empty object', () => {
+      const result = service.getSortedCategories({})
+
+      expect(result).toHaveLength(0)
+    })
+  })
 })

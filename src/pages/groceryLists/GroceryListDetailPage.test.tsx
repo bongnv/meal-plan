@@ -36,6 +36,23 @@ vi.mock('../../services/groceryListService', () => ({
     addItem: (...args: any[]) => mockAddItem(...args),
     updateItem: (...args: any[]) => mockUpdateItem(...args),
     removeItem: (...args: any[]) => mockRemoveItem(...args),
+    // New utility methods
+    separateCheckedItems: (items: any[]) => {
+      const checked = items.filter(item => item.checked)
+      const unchecked = items.filter(item => !item.checked)
+      return { checked, unchecked }
+    },
+    groupItemsByCategory: (items: any[]) => {
+      const groups: Record<string, any[]> = {}
+      items.forEach(item => {
+        if (!groups[item.category]) groups[item.category] = []
+        groups[item.category].push(item)
+      })
+      return groups
+    },
+    getSortedCategories: (grouped: Record<string, any[]>) => {
+      return Object.keys(grouped).sort()
+    },
   },
 }))
 

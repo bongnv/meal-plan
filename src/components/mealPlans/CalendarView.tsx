@@ -3,6 +3,8 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconCalendar } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 
+import { mealPlanService } from '../../services/mealPlanService'
+
 import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { DroppableDayCard } from './DroppableDayCard'
 
@@ -24,17 +26,9 @@ export function CalendarView({
   onAddMeal,
   onDeleteMeal,
 }: CalendarViewProps) {
-  // Helper to get local date string in YYYY-MM-DD format
-  const getLocalDateString = (date: Date): string => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
   // Memoize today's date string to ensure it's stable across renders
   const todayString = useMemo(() => {
-    return getLocalDateString(new Date())
+    return mealPlanService.getLocalDateString(new Date())
   }, [])
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
@@ -83,35 +77,12 @@ export function CalendarView({
 
   // Generate all days in range (including empty days)
   const daysInRange = useMemo(() => {
-    const days: Date[] = []
-    const current = new Date(dateRange.start)
-    current.setHours(0, 0, 0, 0)
-
-    while (current <= dateRange.end) {
-      days.push(new Date(current))
-      current.setDate(current.getDate() + 1)
-    }
-
-    return days
+    return mealPlanService.generateDateRange(dateRange.start, dateRange.end)
   }, [dateRange.start, dateRange.end])
 
   // Group meals by date (including empty dates)
   const groupedMeals = useMemo(() => {
-    const grouped: Array<{ date: string; dateObj: Date; meals: MealPlan[] }> =
-      []
-
-    daysInRange.forEach(day => {
-      const dateString = getLocalDateString(day)
-      const mealsForDay = mealPlans.filter(mp => mp.date === dateString)
-
-      grouped.push({
-        date: dateString,
-        dateObj: day,
-        meals: mealsForDay.sort(a => (a.mealType === 'lunch' ? -1 : 1)),
-      })
-    })
-
-    return grouped
+    return mealPlanService.groupMealsByDate(mealPlans, daysInRange)
   }, [daysInRange, mealPlans])
 
   const formatDate = (dateString: string) => {
@@ -202,7 +173,9 @@ export function CalendarView({
               </Text>
               <Button
                 onClick={() =>
-                  onAddMeal({ date: getLocalDateString(new Date()) })
+                  onAddMeal({
+                    date: mealPlanService.getLocalDateString(new Date()),
+                  })
                 }
               >
                 Add Your First Meal

@@ -87,6 +87,33 @@ export const createIngredientService = (db: MealPlanDB) => ({
   async getLastModified(): Promise<number> {
     return await db.getLastModified()
   },
+
+  /**
+   * Filter ingredients by search text and category (pure function)
+   * @param ingredients Array of ingredients to filter
+   * @param searchText Text to search in ingredient name
+   * @param category Category to filter by (undefined or 'all' = no category filter)
+   * @returns Filtered array of ingredients
+   */
+  filterIngredients(
+    ingredients: Ingredient[],
+    searchText: string,
+    category?: string
+  ): Ingredient[] {
+    const lowerSearchText = searchText.toLowerCase()
+
+    return ingredients.filter(ingredient => {
+      // Filter by search text
+      const matchesSearch =
+        !searchText || ingredient.name.toLowerCase().includes(lowerSearchText)
+
+      // Filter by category
+      const matchesCategory =
+        !category || category === 'all' || ingredient.category === category
+
+      return matchesSearch && matchesCategory
+    })
+  },
 })
 
 // Singleton instance

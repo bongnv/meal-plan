@@ -11,6 +11,7 @@ import {
 import { IconEdit, IconSearch, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
+import { ingredientService } from '../../services/ingredientService'
 import { INGREDIENT_CATEGORIES } from '../../types/ingredient'
 
 import type { Ingredient } from '../../types/ingredient'
@@ -30,14 +31,11 @@ export function IngredientList({
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
 
   // Filter ingredients based on search and category
-  const filteredIngredients = ingredients.filter(ingredient => {
-    const matchesSearch = ingredient.name
-      .toLowerCase()
-      .includes(search.toLowerCase())
-    const matchesCategory =
-      !categoryFilter || ingredient.category === categoryFilter
-    return matchesSearch && matchesCategory
-  })
+  const filteredIngredients = ingredientService.filterIngredients(
+    ingredients,
+    search,
+    categoryFilter || undefined
+  )
 
   if (ingredients.length === 0) {
     return (
