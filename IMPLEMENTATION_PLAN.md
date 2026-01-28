@@ -3,6 +3,7 @@
 ## I0. Homepage/Dashboard (R0.1-R0.6)
 
 **Design Philosophy:** User-centric, focused on answering two key questions:
+
 1. "What's my next meal?" → Next Meal section with upcoming meals
 2. "What do I need to buy?" → Shopping list preview with quick access
 
@@ -22,7 +23,10 @@
   - **Implement functions** in `src/utils/mealPlanning/upcomingMeals.ts`:
     ```typescript
     export function getNextMeal(mealPlans: MealPlan[]): MealPlan | null
-    export function getUpcomingMeals(mealPlans: MealPlan[], count: number): MealPlan[]
+    export function getUpcomingMeals(
+      mealPlans: MealPlan[],
+      count: number
+    ): MealPlan[]
     export function getMealTime(mealType: 'lunch' | 'dinner'): string
     export function formatMealDate(date: string, mealType: string): string
     ```
@@ -115,7 +119,7 @@
     - ARIA labels on buttons
     - Semantic HTML
     - Keyboard navigation
-  - **Quality checks**: 
+  - **Quality checks**:
     - Run all tests: `npm test` → save to `tmp/i0.8-all-tests.txt` ✅
     - Run linter: `npm run lint` → save to `tmp/i0.8-lint.txt` ✅
     - Build check: `npm run build` → save to `tmp/i0.8-build.txt` ✅
@@ -125,16 +129,19 @@
 ### Implementation Complete! ✅
 
 **Files Created:**
+
 - `/src/pages/HomePage.tsx` (~220 lines)
 - `/src/pages/HomePage.test.tsx` (~415 lines)
 - `/src/utils/mealPlanning/upcomingMeals.ts` (~95 lines)
 - `/src/utils/mealPlanning/upcomingMeals.test.ts` (~360 lines)
 
 **Files Modified:**
+
 - `/src/App.tsx` - Added HomePage import and route
 - `/src/App.test.tsx` - Updated test expectations for new homepage
 
 **Test Results:**
+
 - All 586 tests passing ✅
 - Lint clean ✅
 - Build successful ✅
@@ -277,7 +284,6 @@
   - Show confirmation message before deleting ingredient
   - Handle cancel and confirm actions
   - Apply Mantine styling
-  
 - [x] I1.9. Build Ingredient Library Management (TDD) (R4.1)
   - Write unit tests for IngredientStorage service
   - Create `IngredientStorageService` similar to RecipeStorageService
@@ -329,7 +335,6 @@
     - Wire up button to open modal
     - Test import button visibility and modal open/close
     - Add keyboard shortcut (optional): Ctrl/Cmd + I for import
-  
   - [x] I1.12.2. Build AI Recipe Import modal UI with stepper (TDD)
     - Write component tests in `src/components/recipes/RecipeImportModal.test.tsx`
     - Test cases: render modal, stepper navigation, step content rendering
@@ -342,7 +347,6 @@
     - Add state management for current step and form data
     - Apply Mantine styling with responsive design
     - Test stepper navigation, modal close, step transitions
-  
   - [x] I1.12.3. Implement prompt generator and wire to Step 1 (TDD)
     - Write unit tests in `src/utils/aiPromptGenerator.test.ts`
     - Test cases: generate prompt with ingredient library, JSON schema format, prompt structure
@@ -362,7 +366,6 @@
     - Implement copy to clipboard functionality
     - Add instructions: "Copy this prompt and paste it with a recipe URL or recipe text into your AI tool (ChatGPT, Claude, etc.)"
     - Test prompt generation and clipboard copy
-  
   - [x] I1.12.4. Implement validator and complete import flow (TDD)
     - Write unit tests in `src/utils/recipeImportValidator.test.ts`
     - Test cases: validate JSON structure, validate ingredient references, error messages
@@ -395,7 +398,7 @@
   - Include fields: id, date, mealType ('lunch' | 'dinner'), type (MealPlanType), note (optional)
   - MealPlanType: 'recipe' | 'dining-out' | 'takeout' | 'leftovers' | 'skipping' | 'other'
   - For recipe-based meals: recipeId (recipe name fetched from RecipeContext), servings
-  - For custom meals (dining-out, takeout, leftovers, skipping, other): 
+  - For custom meals (dining-out, takeout, leftovers, skipping, other):
     - customText (optional free-form string for additional details)
     - Icon mapping: dining-out (🍽️), takeout (🥡), leftovers (♻️), skipping (⏭️), other (📝)
 
@@ -641,6 +644,7 @@
 ### Cloud-First Design Philosophy
 
 **File-as-Dataset Model:**
+
 - Each file = separate dataset (like opening different Google Docs)
 - Switching files = switching entire datasets (no merging)
 - Auto-sync keeps current file updated in real-time
@@ -648,6 +652,7 @@
 - Users can maintain multiple datasets (work meals, home meals, backups)
 
 **User Experience:**
+
 - Welcome screen prompts connection to OneDrive on first visit
 - Offline mode available but not encouraged (error-prone)
 - No "Disconnect" button in UI - promotes cloud-first usage
@@ -1098,7 +1103,9 @@
 ## I6. Recipe-Specific Ingredient Names
 
 ### Feature Overview
+
 Allow users to use different display names for the same ingredient in different recipes while maintaining proper ingredient linking for grocery list consolidation. For example:
+
 - Recipe A uses "chicken breast" → links to ingredient "Chicken Breast"
 - Recipe B uses "chicken" → links to same ingredient "Chicken Breast"
 - Both consolidate correctly in grocery lists
@@ -1118,7 +1125,7 @@ Allow users to use different display names for the same ingredient in different 
 
 - [x] I6.2. Update RecipeDetail component to display custom names (TDD)
   - ✅ Write component tests first in `src/components/recipes/RecipeDetail.test.tsx`
-  - ✅ Test cases: 
+  - ✅ Test cases:
     - Display custom displayName when provided
     - Fall back to ingredient library name when displayName not provided
     - Handle missing ingredient gracefully
@@ -1126,7 +1133,8 @@ Allow users to use different display names for the same ingredient in different 
     - Modify ingredient rendering logic:
       ```typescript
       const ingredientData = getIngredientById(ingredient.ingredientId)
-      const displayName = ingredient.displayName || ingredientData?.name || 'Unknown Ingredient'
+      const displayName =
+        ingredient.displayName || ingredientData?.name || 'Unknown Ingredient'
       ```
     - Show displayName in ingredient list instead of always using library name
     - Keep quantity and unit display logic unchanged
@@ -1200,6 +1208,7 @@ Allow users to use different display names for the same ingredient in different 
   - **Results**: All 479 tests pass (16/16 recipeStorage with 4 new displayName tests), no regressions
 
 ### Notes for Future Implementation
+
 - **Grocery List Integration**: When implementing grocery list generation (R3), ensure it:
   - Consolidates ingredients by `ingredientId` (not displayName)
   - Shows all unique displayNames used for context: "Chicken Breast (as: chicken, chicken breast) - 800g"
@@ -1278,6 +1287,7 @@ Allow users to use different display names for the same ingredient in different 
   - ✅ **Results**: All 505 tests pass (24 RecipeList tests), cards always show Image component with SVG fallback ("No image" text) for missing images, consistent 180px thumbnail height, output saved to `tmp/all-tests-i7.4-fixed.txt`
 
 ### Implementation Notes
+
 - **AI Import & Storage**: imageUrl is already fully supported in AI prompt generator, validator, and storage - no additional work needed
 - **URL Storage Only**: This implementation stores image URLs (external links), not file uploads
 - **Future Enhancement**: Consider adding local file upload/storage in future iteration
@@ -1291,11 +1301,13 @@ Allow users to use different display names for the same ingredient in different 
 ## I8. Grocery List Generation (R3)
 
 ### Overview
+
 Generate grocery lists from planned meals for a selected time period. The system consolidates ingredients by `ingredientId` across multiple recipes, scales quantities based on servings, and allows users to manually edit, add items, and check off items while shopping.
 
 **Sync Behavior**: Grocery lists are fully synced across devices through OneDrive. Lists are treated as independent entities (not regenerated), so all manual edits, checked states, and custom items are preserved during sync. Conflicts are handled through the standard conflict resolution modal.
 
 ### Data Structure
+
 ```typescript
 interface GroceryList {
   id: string
@@ -1318,6 +1330,7 @@ interface GroceryItem {
 ```
 
 ### Generation Algorithm
+
 1. User selects date range (e.g., "next 7 days", "Jan 23-30", custom dates)
 2. Find all `RecipeMealPlan` entries in date range (ignore custom meal types like dining-out, takeout)
 3. For each recipe-based meal plan:
@@ -1335,6 +1348,7 @@ interface GroceryItem {
 6. Generate grocery list name (default: "Week of [start date]")
 
 ### Key Features
+
 - **Consolidation by ingredientId**: Multiple recipes using same ingredient → single grocery item
 - **Category grouping**: Items organized by ingredient category (Produce, Dairy, Meat, etc.) for better shopping flow
 - **Recipe displayNames ignored**: Consolidation happens at ingredient library level
@@ -1466,7 +1480,7 @@ interface GroceryItem {
     - Generator: Returns `{list, items}` structure from generateGroceryList utility
   - **Sync Integration**:
     - Added `groceryItems: GroceryItem[]` to SyncData type
-    - Added 'groceryItem' to entity types for conflict resolution  
+    - Added 'groceryItem' to entity types for conflict resolution
     - Updated SyncContext to sync lists and items separately
     - Updated mergeUtil to merge groceryItems with three-way merge
     - Context-level lastModified tracking (not per-list like recipes/mealPlans)
@@ -1516,12 +1530,14 @@ interface GroceryItem {
 **Goal**: Remove `unit` field from base `Ingredient` type and add it to `RecipeIngredient` to allow different recipes to measure the same ingredient in different units. Implement backward-compatible migration for both local storage and cloud data.
 
 **Rationale**:
+
 - Same ingredient can be measured differently across recipes (e.g., "Garlic" as cloves or grams)
 - More flexible and accurate recipe modeling
 - Cleaner ingredient library (focus on name and category)
 - Better alignment with real-world recipe patterns
 
 **Migration Strategy**:
+
 - New schema removes `unit` from `Ingredient`, adds it to `RecipeIngredient`
 - When loading old data: strip `unit` from ingredients, copy unit to each recipe ingredient reference
 - Support both local storage and cloud file imports
@@ -1562,7 +1578,8 @@ interface GroceryItem {
     - Change to prefer recipe ingredient unit with fallback:
       ```typescript
       const ingredientData = getIngredientById(ingredient.ingredientId)
-      const displayName = ingredient.displayName || ingredientData?.name || 'Unknown'
+      const displayName =
+        ingredient.displayName || ingredientData?.name || 'Unknown'
       const unit = ingredient.unit || ingredientData?.unit || 'piece' // Prefer recipe unit, fallback to library
       ```
   - **Verify**: All RecipeDetail tests pass, manual browser check shows units correctly
@@ -1593,23 +1610,30 @@ interface GroceryItem {
     - Test `migrateRecipeIngredients`: adds unit to recipe ingredients from ingredient library
     - Test edge cases: missing ingredient, missing unit, already migrated data
   - **Create migration utilities** in `src/utils/migration/ingredientMigration.ts`:
+
     ```typescript
     // Migrate old ingredient format (with unit) to new format (without unit)
     export function migrateIngredient(oldIngredient: any): Ingredient
-    
+
     // Migrate recipe ingredients: add unit from ingredient library reference
     export function migrateRecipeIngredients(
       recipeIngredients: any[],
       ingredientMap: Map<string, { unit: Unit }>
     ): RecipeIngredient[]
-    
+
     // Check if ingredient data needs migration (has unit field)
     export function needsIngredientMigration(ingredient: any): boolean
-    
+
     // Check if recipe needs migration (ingredients missing unit)
+    ```
+
   - **Verify**: All migration utility tests pass, edge cases handled correctly
     export function needsRecipeMigration(recipe: any): boolean
+
     ```
+
+    ```
+
   - **Quality checks**: Run migration tests, save to `tmp/i9.4-migration.txt`
 
 - [x] I9.5. Integrate migration into storage layer (TDD)
@@ -1646,7 +1670,7 @@ interface GroceryItem {
 - [x] I9.7. Remove unit from Ingredient schema completely (TDD)
   - **Updated ingredient types** in `src/types/ingredient.ts`:
     - Removed `unit` field from `Ingredient` interface
-    - Removed `unit` from `IngredientSchema` 
+    - Removed `unit` from `IngredientSchema`
     - Removed `unit` from `IngredientFormSchema`
     - Kept `UNITS` and `UnitSchema` exports (used by RecipeIngredient)
   - **Updated IngredientForm** in `src/components/ingredients/IngredientForm.tsx`:
@@ -1679,7 +1703,7 @@ interface GroceryItem {
   - **Update ingredient types** in `src/types/ingredient.ts`:
   - **Verify**: All type tests pass, TypeScript compilation succeeds, no type errors
     - Remove `unit` field from `Ingredient` interface
-    - Remove `unit` from `IngredientSchema` 
+    - Remove `unit` from `IngredientSchema`
     - Remove `unit` from `IngredientFormSchema`
     - Keep `UNITS` and `UnitSchema` exports (used by RecipeIngredient)
   - **Quality checks**: Run ingredient type tests and build, save to `tmp/i9.7-types.txt`
@@ -1738,6 +1762,7 @@ interface GroceryItem {
 
   - **Verify**: All tests pass, preview shows unit from recipe ingredient
   - **Manual test**: Import recipe via AI, verify unit shown correctly in preview
+
 - [x] I9.12. Update RecipeImportModal display (TDD)
   - **Completed in I9.7**: RecipeImportModal already updated
   - Modal displays units from recipe ingredients correctly
@@ -1828,19 +1853,21 @@ interface GroceryItem {
 ### Migration Notes
 
 **Data Migration Flow**:
+
 1. **Local Storage**: On first load after deploy, `loadIngredients()` and `loadRecipes()` detect old format and migrate automatically
 2. **Cloud Import**: When downloading cloud file, `SyncContext` applies migration before merging with local data
 3. **No User Action Required**: Migration is transparent, happens automatically on first load
 4. **Backward Compatibility Window**: Old format data can be read indefinitely, but all saves use new format
 
 **Schema Changes Summary**:
+
 ```typescript
 // OLD Ingredient
 interface Ingredient {
   id: string
   name: string
   category: IngredientCategory
-  unit: Unit  // ← REMOVED
+  unit: Unit // ← REMOVED
 }
 
 // NEW Ingredient
@@ -1862,18 +1889,20 @@ interface RecipeIngredient {
 interface RecipeIngredient {
   ingredientId: string
   quantity: number
-  unit: Unit  // ← ADDED
+  unit: Unit // ← ADDED
   displayName?: string
 }
 ```
 
 **Testing Strategy**:
+
 - Unit tests verify migration logic in isolation
 - Integration tests verify storage layer applies migration correctly
 - Component tests verify UI works with new schema
 - Manual testing verifies real-world migration scenarios (local + cloud)
 
 **Rollback Plan**:
+
 - If critical issues found, can revert code changes
 - User data will have new format in storage (unit on recipe ingredient)
 - Would need reverse migration utility if rollback needed
@@ -2002,15 +2031,18 @@ interface RecipeIngredient {
 ## I11. Sub-Recipe Support (R1.7)
 
 ### Feature Overview
+
 Enable recipes to include other recipes as components (sub-recipes), allowing users to build complex dishes from smaller, reusable recipes. For example, a "Bánh Mì Sandwich" recipe can include "Pickled Vegetables", "Pâté", and "Grilled Pork" as sub-recipes, while also having direct ingredients like baguette and cilantro.
 
 **Use Cases:**
+
 - **Meal assembly recipes**: Burrito bowls, ramen, bánh mì that combine multiple prepared components
 - **Batch cooking**: Make large quantities of sauces/bases and reference them in multiple recipes
 - **Recipe modularity**: Break complex recipes into logical sub-components
 - **Filling + Topping patterns**: Separate base components (rice, beans) from toppings
 
 **Design Decisions:**
+
 - **Data Model**: Separate `subRecipes` array alongside `ingredients` array (not unified)
 - **UX Approach**: Visual distinction with bordered cards for sub-recipes, simple rows for ingredients
 - **Display Order**: Single unified list maintains assembly order, sub-recipes visually highlighted
@@ -2046,6 +2078,7 @@ interface Recipe {
 ```
 
 **Zod Schema:**
+
 ```typescript
 const SubRecipeSchema = z.object({
   id: z.string(),
@@ -2179,6 +2212,7 @@ const RecipeSchema = z.object({
     - Test self-reference: A → A
     - Test deep nesting beyond 2 levels
   - **Create utility** in `src/utils/recipes/circularDependency.ts`:
+
     ```typescript
     // Check if adding subRecipeId to recipe would create circular dependency
     export function wouldCreateCircular(
@@ -2186,19 +2220,20 @@ const RecipeSchema = z.object({
       subRecipeId: string,
       allRecipes: Recipe[]
     ): boolean
-    
+
     // Get all recipe IDs that should be excluded (to prevent circular deps)
     export function getExcludedRecipeIds(
       recipeId: string,
       allRecipes: Recipe[]
     ): string[]
-    
+
     // Get nesting depth for a recipe (max depth of sub-recipe chain)
     export function getRecipeDepth(
       recipeId: string,
       allRecipes: Recipe[]
     ): number
     ```
+
   - **Integrate into RecipeForm**:
     - Call `getExcludedRecipeIds` when opening SubRecipeSelector
     - Pass to modal as `excludeRecipeIds` prop
@@ -2355,18 +2390,21 @@ const RecipeSchema = z.object({
 ### Implementation Notes
 
 **Max Depth Rationale (2 levels):**
+
 - Level 0: Main recipe (e.g., "Ramen Bowl")
 - Level 1: Sub-recipes (e.g., "Tonkotsu Broth", "Chashu Pork")
 - Level 2: Sub-sub-recipes (e.g., "Tare Seasoning" used in broth)
 - Beyond 2 levels: Complexity outweighs benefits, risk of confusion
 
 **Serving Multiplier Examples:**
+
 - `quantity: 1` → Use sub-recipe at default servings
 - `quantity: 2` → Double the sub-recipe servings
 - `quantity: 0.5` → Half the sub-recipe servings
 - Scales all ingredient quantities in sub-recipe
 
 **Grocery List Expansion Example:**
+
 ```
 Burrito Bowl (4 servings)
 ├─ Cilantro Rice (sub-recipe, 1×)
@@ -2388,6 +2426,7 @@ Grocery List Output:
 ```
 
 **UI/UX Guidelines:**
+
 - Sub-recipes always visually distinct from ingredients (bordered cards vs simple rows)
 - Maintain order of components (sub-recipes and ingredients interspersed as needed)
 - Expandable sub-recipes show preview of ingredients (read-only in parent recipe)

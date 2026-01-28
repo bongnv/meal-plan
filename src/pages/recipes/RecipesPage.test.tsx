@@ -25,9 +25,9 @@ vi.mock('dexie-react-hooks', () => ({
 vi.mock('../../services/recipeService', () => ({
   recipeService: {
     delete: vi.fn(),
-    filterRecipesAdvanced: vi.fn((recipes, filters) => {
+    filterRecipesAdvanced: vi.fn((recipes: any[], filters: any) => {
       // Implementation for testing - mirrors the actual service logic
-      return recipes.filter(recipe => {
+      return recipes.filter((recipe: any) => {
         // Filter by search text (name)
         if (filters.searchText) {
           const searchLower = filters.searchText.toLowerCase()
@@ -38,7 +38,7 @@ vi.mock('../../services/recipeService', () => ({
 
         // Filter by tags (OR logic)
         if (filters.selectedTags && filters.selectedTags.length > 0) {
-          const hasMatchingTag = filters.selectedTags.some(tag =>
+          const hasMatchingTag = filters.selectedTags.some((tag: string) =>
             recipe.tags.includes(tag)
           )
           if (!hasMatchingTag) {
@@ -47,10 +47,15 @@ vi.mock('../../services/recipeService', () => ({
         }
 
         // Filter by ingredients (OR logic)
-        if (filters.selectedIngredients && filters.selectedIngredients.length > 0) {
+        if (
+          filters.selectedIngredients &&
+          filters.selectedIngredients.length > 0
+        ) {
           const hasMatchingIngredient = filters.selectedIngredients.some(
-            ingredientId =>
-              recipe.ingredients.some(ing => ing.ingredientId === ingredientId)
+            (ingredientId: string) =>
+              recipe.ingredients.some(
+                (ing: any) => ing.ingredientId === ingredientId
+              )
           )
           if (!hasMatchingIngredient) {
             return false

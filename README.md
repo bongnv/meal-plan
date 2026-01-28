@@ -5,12 +5,14 @@ A client-side web application for managing recipes, meal planning, and grocery s
 ## Features
 
 ### 📖 Recipe Management
+
 - Create and organize your favorite recipes
 - Store ingredients, instructions, prep time, and servings
 - Tag and categorize recipes for easy searching
 - Add images to your recipes
 
 ### 📅 Meal Planning
+
 - Plan meals for the week, month, quarter, or even a year ahead
 - Flexible calendar view with drag-and-drop functionality
 - Support for multiple meal types:
@@ -21,6 +23,7 @@ A client-side web application for managing recipes, meal planning, and grocery s
 - Adjust servings and copy meals to other days
 
 ### 🛒 Grocery Planning
+
 - Auto-generate shopping lists from your meal plans
 - Select time period (next week, 2 weeks, or custom range)
 - Smart ingredient combining across multiple recipes

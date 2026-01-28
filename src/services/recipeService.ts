@@ -149,7 +149,10 @@ export const createRecipeService = (db: MealPlanDB) => ({
       }
 
       // Filter by ingredients (OR logic - recipe must have at least one selected ingredient)
-      if (filters.selectedIngredients && filters.selectedIngredients.length > 0) {
+      if (
+        filters.selectedIngredients &&
+        filters.selectedIngredients.length > 0
+      ) {
         const hasMatchingIngredient = filters.selectedIngredients.some(
           ingredientId =>
             recipe.ingredients.some(ing => ing.ingredientId === ingredientId)

@@ -1,11 +1,13 @@
 # Mean Plan - Requirements
 
 ## Overview
+
 A client-side web application for managing recipes, planning meals, and organizing grocery lists. No backend required - all data stored locally in browser LocalStorage or synced via OneDrive.
 
 ## Core Features
 
 ### R0. Dashboard/Home Page
+
 - [x] R0.1. Overview dashboard as the landing page
 - [x] R0.2. Display quick stats:
   - ~~Total number of recipes~~ (Simplified: Focus on next meal)
@@ -26,6 +28,7 @@ A client-side web application for managing recipes, planning meals, and organizi
 - **Implementation:** I0.1-I0.8 (Focused design: Next Meal + Shopping List)
 
 ### R1. Recipe Management
+
 - [x] R1.1. Create, edit, and delete recipes
 - [x] R1.2. Store recipe details:
   - Name and description
@@ -55,7 +58,7 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Grocery lists consolidate by ingredient ID regardless of display name
   - Optional field - defaults to ingredient library name if not specified
   - Status: ✅ **COMPLETE** - Full feature implementation (I6.1-I6.5)
-  - Implementation notes: 
+  - Implementation notes:
     - RecipeForm supports displayName with library name placeholder
     - AI Recipe Import includes displayName in schema and displays "customName (LibraryName)" format
     - Storage is fully backward compatible - old recipes without displayName load correctly
@@ -80,6 +83,7 @@ A client-side web application for managing recipes, planning meals, and organizi
     - All tests passing (899/899), lint clean, type safe
 
 ### R2. Meal Planning
+
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead
 - [ ] R2.2. Calendar view with flexible date range display
 - [ ] R2.3. Drag-and-drop recipes onto specific days/meals
@@ -91,6 +95,7 @@ A client-side web application for managing recipes, planning meals, and organizi
 - [x] R2.8. Copy/duplicate meal plans to other days
 
 ### R3. Grocery Planning
+
 - [ ] R3.1. Auto-generate shopping list from planned meals for a selected time period (next week, next 2 weeks, custom date range)
 - [ ] R3.2. Combine duplicate ingredients across multiple recipes
 - [ ] R3.3. Manually add/remove items from shopping list
@@ -99,6 +104,7 @@ A client-side web application for managing recipes, planning meals, and organizi
 - [ ] R3.6. Save frequently bought items for quick access
 
 ### R4. Settings/Configuration
+
 - [x] R4.1. Ingredient Library Management:
   - View all defined ingredients
   - Add new ingredients with name and category
@@ -123,6 +129,7 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Default servings for new recipes
 
 ### R5. Welcome/Onboarding
+
 - [ ] R5.1. First-time user experience:
   - Show welcome screen on first visit
   - Initial setup options:

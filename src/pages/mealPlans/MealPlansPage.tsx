@@ -1,10 +1,8 @@
 import { DndContext, DragOverlay } from '@dnd-kit/core'
 import {
-  ActionIcon,
   Box,
   Card,
   Container,
-  Drawer,
   Grid,
   Stack,
   Text,
@@ -13,7 +11,7 @@ import {
   Title,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
-import { IconMenu2, IconClock } from '@tabler/icons-react'
+import { IconClock } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -23,7 +21,7 @@ import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
 import { db } from '../../db/database'
 import { mealPlanService } from '../../services/mealPlanService'
 
-import type { MealType, RecipeMealPlan } from '../../types/mealPlan'
+import type { RecipeMealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
@@ -32,7 +30,6 @@ export function MealPlansPage() {
   const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
   const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
-  const [sidebarOpened, setSidebarOpened] = useState(false)
 
   // Detect if we're on desktop (>= 1024px)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
@@ -105,16 +102,6 @@ export function MealPlansPage() {
           style={{ flexShrink: 0 }}
         >
           <Title order={1}>Meal Plans</Title>
-          {!isDesktop && (
-            <ActionIcon
-              variant="default"
-              size="lg"
-              onClick={() => setSidebarOpened(true)}
-              aria-label="Open recipes"
-            >
-              <IconMenu2 size={20} />
-            </ActionIcon>
-          )}
         </Group>
 
         <Grid
@@ -206,19 +193,6 @@ export function MealPlansPage() {
             </Card>
           ) : null}
         </DragOverlay>
-      )}
-
-      {/* Mobile Drawer for recipes */}
-      {!isDesktop && (
-        <Drawer
-          opened={sidebarOpened}
-          onClose={() => setSidebarOpened(false)}
-          title="Recipes"
-          position="right"
-          size="lg"
-        >
-          <RecipeSidebar />
-        </Drawer>
       )}
     </>
   )

@@ -276,7 +276,10 @@ describe('syncService', () => {
 
     it('should return error if file with extension already exists', () => {
       const existingFiles = ['backup.json.gz']
-      const result = service.validateSyncFileName('backup.json.gz', existingFiles)
+      const result = service.validateSyncFileName(
+        'backup.json.gz',
+        existingFiles
+      )
       expect(result).toBe('File already exists in this folder')
     })
 
