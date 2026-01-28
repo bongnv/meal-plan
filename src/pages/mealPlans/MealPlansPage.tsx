@@ -16,25 +16,19 @@ import { useMediaQuery } from '@mantine/hooks'
 import { IconMenu2, IconClock } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { CalendarView } from '../../components/mealPlans/CalendarView'
-import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
 import { db } from '../../db/database'
 import { mealPlanService } from '../../services/mealPlanService'
 
-import type { MealPlan, MealType, RecipeMealPlan } from '../../types/mealPlan'
+import type { MealType, RecipeMealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
-interface FormState {
-  opened: boolean
-  date: string
-  mealType: MealType
-  initialMeal?: MealPlan
-}
-
 export function MealPlansPage() {
+  const navigate = useNavigate()
   const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
   const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
@@ -43,73 +37,28 @@ export function MealPlansPage() {
   // Detect if we're on desktop (>= 1024px)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
 
-  const [formState, setFormState] = useState<FormState>({
-    opened: false,
-    date: '',
-    mealType: 'lunch',
-  })
-
   const handleAddMeal = (params: { date: string }) => {
     // Determine the meal type based on what already exists
     // Default to lunch first, then dinner, then allow any
     const existingMeals = mealPlans.filter(mp => mp.date === params.date)
-    
+
     let mealType: MealType = 'lunch'
-    
+
     if (existingMeals.length > 0) {
       const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
       const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
-      
+
       if (!hasLunch) {
         mealType = 'lunch'
       } else if (!hasDinner) {
         mealType = 'dinner'
       } else {
-        // Both exist, default to lunch (user can change in modal)
+        // Both exist, default to lunch (user can change in page)
         mealType = 'lunch'
       }
     }
 
-    setFormState({
-      opened: true,
-      date: params.date,
-      mealType,
-      initialMeal: undefined,
-    })
-  }
-
-  const handleEditMeal = (mealPlan: MealPlan) => {
-    setFormState({
-      opened: true,
-      date: mealPlan.date,
-      mealType: mealPlan.mealType,
-      initialMeal: mealPlan,
-    })
-  }
-
-  const handleFormSubmit = async (mealPlan: Partial<MealPlan>) => {
-    try {
-      if (mealPlan.id) {
-        // For update, we need the complete MealPlan object
-        await mealPlanService.update(mealPlan as MealPlan)
-      } else {
-        // For add, we need all required fields except 'id'
-        const { id: _, ...mealPlanData } = mealPlan as MealPlan
-        await mealPlanService.add(mealPlanData)
-      }
-      handleFormClose()
-    } catch (err) {
-      console.error('Failed to save meal plan:', err)
-    }
-  }
-
-  const handleFormClose = () => {
-    setFormState({
-      opened: false,
-      date: '',
-      mealType: 'lunch',
-      initialMeal: undefined,
-    })
+    navigate(`/meal-plans/new?date=${params.date}&mealType=${mealType}`)
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -137,13 +86,13 @@ export function MealPlansPage() {
 
       // Determine meal type based on existing meals for that day
       const existingMeals = mealPlans.filter(mp => mp.date === dateString)
-      
+
       let mealType: MealType = 'lunch'
-      
+
       if (existingMeals.length > 0) {
         const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
         const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
-        
+
         if (!hasLunch) {
           mealType = 'lunch'
         } else if (!hasDinner) {
@@ -171,12 +120,17 @@ export function MealPlansPage() {
 
   const content = (
     <>
-      <Container 
-        size="xl" 
-        fluid 
+      <Container
+        size="xl"
+        fluid
         style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
       >
-        <Group justify="space-between" align="center" mb="md" style={{ flexShrink: 0 }}>
+        <Group
+          justify="space-between"
+          align="center"
+          mb="md"
+          style={{ flexShrink: 0 }}
+        >
           <Title order={1}>Meal Plans</Title>
           {!isDesktop && (
             <ActionIcon
@@ -190,23 +144,30 @@ export function MealPlansPage() {
           )}
         </Group>
 
-        <Grid 
-          gutter="md" 
+        <Grid
+          gutter="md"
           style={{ flex: 1, minHeight: 0 }}
           styles={{
             inner: {
               height: '100%',
               maxHeight: '100%',
-            }
+            },
           }}
         >
           {/* Main Content Area - List View */}
-          <Grid.Col span={{ base: 12, lg: 9 }} style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <Grid.Col
+            span={{ base: 12, lg: 9 }}
+            style={{
+              height: '100%',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <CalendarView
               mealPlans={mealPlans}
               getRecipeById={id => recipes.find(r => r.id === id)}
               onAddMeal={handleAddMeal}
-              onEditMeal={handleEditMeal}
               onDeleteMeal={async mealPlan => {
                 try {
                   await mealPlanService.delete(mealPlan.id)
@@ -219,31 +180,21 @@ export function MealPlansPage() {
 
           {/* Recipe Sidebar - desktop only */}
           {isDesktop && (
-            <Grid.Col span={{ base: 12, lg: 3 }} style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Grid.Col
+              span={{ base: 12, lg: 3 }}
+              style={{
+                height: '100%',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
               <Box style={{ height: '100%', overflow: 'hidden' }}>
                 <RecipeSidebar />
               </Box>
             </Grid.Col>
           )}
         </Grid>
-
-        <MealPlanForm
-          recipes={recipes}
-          onSubmit={handleFormSubmit}
-          onClose={handleFormClose}
-          onDelete={async id => {
-            try {
-              await mealPlanService.delete(id)
-              handleFormClose()
-            } catch (err) {
-              console.error('Failed to delete meal plan:', err)
-            }
-          }}
-          opened={formState.opened}
-          date={formState.date}
-          mealType={formState.mealType}
-          initialMeal={formState.initialMeal}
-        />
       </Container>
 
       {/* Drag overlay - desktop only */}

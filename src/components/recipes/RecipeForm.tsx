@@ -193,7 +193,17 @@ export function RecipeForm({
             )}
           </div>
 
-          <Group grow>
+          <Group
+            grow
+            style={{ flexDirection: 'row' }}
+            styles={{
+              root: {
+                '@media (max-width: 768px)': {
+                  flexDirection: 'column',
+                },
+              },
+            }}
+          >
             <NumberInput
               label="Servings"
               placeholder="Number of servings"
@@ -277,60 +287,67 @@ export function RecipeForm({
                 )
 
                 return (
-                  <Group key={index} align="flex-start">
-                    <Select
-                      placeholder="Select ingredient"
-                      label={index === 0 ? 'Ingredient' : undefined}
-                      style={{ flex: 2 }}
-                      data={ingredientSelectData}
-                      value={ingredient.ingredientId}
-                      searchable
-                      onChange={value => {
-                        if (value === '__create_new__') {
-                          openCreateIngredient()
-                        } else {
-                          form.setFieldValue(
-                            `ingredients.${index}.ingredientId`,
-                            value || ''
-                          )
-                        }
-                      }}
-                      error={form.errors[`ingredients.${index}.ingredientId`]}
-                    />
-                    <NumberInput
-                      placeholder="Quantity"
-                      label={index === 0 ? 'Quantity' : undefined}
-                      min={0}
-                      step={0.1}
-                      style={{ flex: 1 }}
-                      {...form.getInputProps(`ingredients.${index}.quantity`)}
-                    />
-                    <Select
-                      placeholder="Unit"
-                      label={index === 0 ? 'Unit' : undefined}
-                      data={UNITS.map(u => ({ value: u, label: u }))}
-                      style={{ flex: 1 }}
-                      searchable
-                      {...form.getInputProps(`ingredients.${index}.unit`)}
-                    />
-                    <TextInput
-                      placeholder={selectedIngredient?.name || 'Custom name'}
-                      label={index === 0 ? 'Custom Name (optional)' : undefined}
-                      style={{ flex: 2 }}
-                      {...form.getInputProps(
-                        `ingredients.${index}.displayName`
-                      )}
-                    />
-                    <ActionIcon
-                      color="red"
-                      variant="subtle"
-                      onClick={() => removeIngredient(index)}
-                      aria-label="Remove ingredient"
-                      style={{ marginTop: index === 0 ? 28 : 0 }}
-                    >
-                      <IconTrash size={18} />
-                    </ActionIcon>
-                  </Group>
+                  <Paper key={index} p="sm" withBorder>
+                    <Stack gap="xs">
+                      <Group align="flex-start" wrap="nowrap">
+                        <Select
+                          placeholder="Select ingredient"
+                          label="Ingredient"
+                          style={{ flex: 1, minWidth: 0 }}
+                          data={ingredientSelectData}
+                          value={ingredient.ingredientId}
+                          searchable
+                          onChange={value => {
+                            if (value === '__create_new__') {
+                              openCreateIngredient()
+                            } else {
+                              form.setFieldValue(
+                                `ingredients.${index}.ingredientId`,
+                                value || ''
+                              )
+                            }
+                          }}
+                          error={
+                            form.errors[`ingredients.${index}.ingredientId`]
+                          }
+                        />
+                        <ActionIcon
+                          color="red"
+                          variant="subtle"
+                          onClick={() => removeIngredient(index)}
+                          aria-label="Remove ingredient"
+                          style={{ marginTop: 28, flexShrink: 0 }}
+                        >
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Group>
+                      <Group grow>
+                        <NumberInput
+                          placeholder="Quantity"
+                          label="Quantity"
+                          min={0}
+                          step={0.1}
+                          {...form.getInputProps(
+                            `ingredients.${index}.quantity`
+                          )}
+                        />
+                        <Select
+                          placeholder="Unit"
+                          label="Unit"
+                          data={UNITS.map(u => ({ value: u, label: u }))}
+                          searchable
+                          {...form.getInputProps(`ingredients.${index}.unit`)}
+                        />
+                      </Group>
+                      <TextInput
+                        placeholder={selectedIngredient?.name || 'Custom name'}
+                        label="Custom Name (optional)"
+                        {...form.getInputProps(
+                          `ingredients.${index}.displayName`
+                        )}
+                      />
+                    </Stack>
+                  </Paper>
                 )
               })}
               {form.errors['ingredients'] && (
@@ -356,24 +373,26 @@ export function RecipeForm({
 
             <Stack gap="xs">
               {form.values.instructions.map((_, index) => (
-                <Group key={index} align="flex-start">
-                  <Textarea
-                    placeholder={`Step ${index + 1}`}
-                    label={`Step ${index + 1}`}
-                    minRows={2}
-                    style={{ flex: 1 }}
-                    {...form.getInputProps(`instructions.${index}`)}
-                  />
-                  <ActionIcon
-                    color="red"
-                    variant="subtle"
-                    onClick={() => removeInstruction(index)}
-                    aria-label="Remove instruction"
-                    style={{ marginTop: 28 }}
-                  >
-                    <IconTrash size={18} />
-                  </ActionIcon>
-                </Group>
+                <Paper key={index} p="sm" withBorder>
+                  <Group align="flex-start" wrap="nowrap" gap="xs">
+                    <Textarea
+                      placeholder={`Step ${index + 1}`}
+                      label={`Step ${index + 1}`}
+                      minRows={2}
+                      style={{ flex: 1, minWidth: 0 }}
+                      {...form.getInputProps(`instructions.${index}`)}
+                    />
+                    <ActionIcon
+                      color="red"
+                      variant="subtle"
+                      onClick={() => removeInstruction(index)}
+                      aria-label="Remove instruction"
+                      style={{ marginTop: 28, flexShrink: 0 }}
+                    >
+                      <IconTrash size={18} />
+                    </ActionIcon>
+                  </Group>
+                </Paper>
               ))}
               {form.errors['instructions'] && (
                 <div style={{ color: 'var(--mantine-color-error)' }}>
@@ -383,17 +402,46 @@ export function RecipeForm({
             </Stack>
           </div>
 
-          <Group justify="space-between" mt="md">
+          <Group
+            justify="space-between"
+            mt="md"
+            style={{ flexDirection: 'row' }}
+            styles={{
+              root: {
+                '@media (max-width: 768px)': {
+                  flexDirection: 'column',
+                  gap: 'var(--mantine-spacing-sm)',
+                },
+              },
+            }}
+          >
             {isEditMode && onDelete && (
-              <Button variant="outline" color="red" onClick={onDelete}>
+              <Button
+                variant="outline"
+                color="red"
+                onClick={onDelete}
+                fullWidth
+                style={{ '@media (min-width: 769px)': { width: 'auto' } }}
+              >
                 Delete Recipe
               </Button>
             )}
-            <Group ml="auto">
-              <Button variant="default" onClick={onCancel}>
+            <Group
+              ml="auto"
+              style={{ flexDirection: 'row' }}
+              styles={{
+                root: {
+                  '@media (max-width: 768px)': {
+                    marginLeft: 0,
+                    width: '100%',
+                  },
+                },
+              }}
+            >
+              <Button variant="default" onClick={onCancel} style={{ flex: 1 }}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" style={{ flex: 1 }}>
                 {isEditMode ? 'Update Recipe' : 'Create Recipe'}
               </Button>
             </Group>

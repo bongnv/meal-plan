@@ -51,7 +51,7 @@ export function EditRecipePage() {
 
   if (loading) {
     return (
-      <Container size="md" py="xl">
+      <Container size="lg" py="xl">
         <Loader />
       </Container>
     )
@@ -59,15 +59,19 @@ export function EditRecipePage() {
 
   if (!recipe) {
     return (
-      <Container size="md" py="xl">
+      <Container size="lg" py="xl">
         <Title order={1}>Recipe not found</Title>
       </Container>
     )
   }
 
   return (
-    <Container size="md" py="xl">
-      <Title order={1} mb="xl">
+    <Container
+      size="lg"
+      px={{ base: 'xs', sm: 'md' }}
+      py={{ base: 'md', sm: 'xl' }}
+    >
+      <Title order={1} mb={{ base: 'md', sm: 'xl' }}>
         Edit Recipe
       </Title>
       <RecipeForm

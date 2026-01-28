@@ -8,7 +8,9 @@ import {
   Group,
   Stack,
   Text,
+  Tooltip,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { IconCopy, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -22,7 +24,6 @@ interface DroppableDayCardProps {
   meals: MealPlan[]
   getRecipeById: (id: string) => Recipe | undefined
   onAddMeal: (params: { date: string }) => void
-  onEditMeal: (mealPlan: MealPlan) => void
   onCopyMeal: (mealPlan: MealPlan) => void
   onDeleteMeal: (mealPlan: MealPlan) => void
 }
@@ -32,11 +33,11 @@ export function DroppableDayCard({
   meals,
   getRecipeById,
   onAddMeal,
-  onEditMeal,
   onCopyMeal,
   onDeleteMeal,
 }: DroppableDayCardProps) {
   const navigate = useNavigate()
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const { isOver, setNodeRef } = useDroppable({
     id: `day-${dateString}`,
@@ -94,89 +95,106 @@ export function DroppableDayCard({
                     borderRadius: '4px',
                     backgroundColor: 'var(--mantine-color-gray-0)',
                     cursor: 'pointer',
+                    transition: 'background-color 0.2s',
                   }}
                   onClick={() => handleMealClick(meal)}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor =
+                      'var(--mantine-color-gray-1)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor =
+                      'var(--mantine-color-gray-0)'
+                  }}
                 >
-                  <Group justify="space-between" wrap="nowrap" align="center">
-                    <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
-                      <Text size="lg" style={{ flexShrink: 0 }}>
-                        {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
-                      </Text>
-                      <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                        <Group gap="xs" wrap="wrap">
-                          <Badge variant="light" size="xs">
-                            {meal.mealType.charAt(0).toUpperCase() +
-                              meal.mealType.slice(1)}
-                          </Badge>
-                        </Group>
-                        <Group gap="xs">
-                          {isRecipe && (
-                            <Text size="xs" style={{ flexShrink: 0 }}>
-                              🍽
-                            </Text>
-                          )}
-                          {!isRecipe && typeInfo && (
-                            <Text size="xs" style={{ flexShrink: 0 }}>
-                              {typeInfo.icon}
-                            </Text>
-                          )}
-                          <Text
-                            size="sm"
-                            fw={500}
-                            lineClamp={1}
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {isRecipe
-                              ? recipe?.name || 'Unknown Recipe'
-                              : (meal as { customText?: string }).customText ||
-                                typeInfo?.label ||
-                                ''}
-                          </Text>
-                        </Group>
-                        {isRecipe && 'servings' in meal && (
-                          <Text size="xs" c="dimmed">
-                            {(meal as { servings: number }).servings} servings
+                  <Group gap="sm" style={{ width: '100%' }} wrap="nowrap">
+                    <Text size="lg" style={{ flexShrink: 0 }}>
+                      {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
+                    </Text>
+                    <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                      <Group gap="xs" wrap="wrap">
+                        <Badge variant="light" size="xs">
+                          {meal.mealType.charAt(0).toUpperCase() +
+                            meal.mealType.slice(1)}
+                        </Badge>
+                      </Group>
+                      <Group gap="xs">
+                        {isRecipe && (
+                          <Text size="xs" style={{ flexShrink: 0 }}>
+                            🍽
                           </Text>
                         )}
-                      </Stack>
-                    </Group>
-                    <Group
-                      gap={4}
-                      wrap="nowrap"
-                      style={{ flexShrink: 0 }}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <ActionIcon
-                        variant="subtle"
-                        color="green"
-                        size="sm"
-                        onClick={() => onCopyMeal(meal)}
-                        aria-label="Copy"
+                        {!isRecipe && typeInfo && (
+                          <Text size="xs" style={{ flexShrink: 0 }}>
+                            {typeInfo.icon}
+                          </Text>
+                        )}
+                        <Text
+                          size="sm"
+                          fw={500}
+                          lineClamp={1}
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {isRecipe
+                            ? recipe?.name || 'Unknown Recipe'
+                            : (meal as { customText?: string }).customText ||
+                              typeInfo?.label ||
+                              ''}
+                        </Text>
+                      </Group>
+                      {isRecipe && 'servings' in meal && (
+                        <Text size="xs" c="dimmed">
+                          {(meal as { servings: number }).servings} servings
+                        </Text>
+                      )}
+                    </Stack>
+                    {isDesktop && (
+                      <Group
+                        gap={4}
+                        wrap="nowrap"
+                        style={{ flexShrink: 0 }}
+                        onClick={e => e.stopPropagation()}
                       >
-                        <IconCopy size={14} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        size="sm"
-                        onClick={() => onEditMeal(meal)}
-                        aria-label="Edit"
-                      >
-                        <IconEdit size={14} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        size="sm"
-                        onClick={() => onDeleteMeal(meal)}
-                        aria-label="Delete"
-                      >
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    </Group>
+                        <Tooltip label="Copy">
+                          <ActionIcon
+                            variant="subtle"
+                            color="green"
+                            size="sm"
+                            onClick={() => onCopyMeal(meal)}
+                            aria-label="Copy"
+                          >
+                            <IconCopy size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Edit">
+                          <ActionIcon
+                            variant="subtle"
+                            color="blue"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/meal-plans/${meal.id}/edit`)
+                            }
+                            aria-label="Edit"
+                          >
+                            <IconEdit size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Delete">
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            size="sm"
+                            onClick={() => onDeleteMeal(meal)}
+                            aria-label="Delete"
+                          >
+                            <IconTrash size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    )}
                   </Group>
                 </Box>
               )

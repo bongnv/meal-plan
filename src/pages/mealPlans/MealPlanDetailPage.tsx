@@ -11,6 +11,7 @@ import {
   Box,
   Tooltip,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconTrash, IconCopy } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -18,7 +19,6 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
-import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
 import { db } from '../../db/database'
 import { mealPlanService } from '../../services/mealPlanService'
@@ -27,8 +27,6 @@ import {
   isCustomMealPlan,
   getMealPlanTypeInfo,
 } from '../../types/mealPlan'
-
-import type { MealPlan } from '../../types/mealPlan'
 
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -39,8 +37,8 @@ export function MealPlanDetailPage() {
     return db.mealPlans.get(id)
   }, [id])
   const loading = mealPlan === undefined
-  const [editModalOpened, setEditModalOpened] = useState(false)
   const [copyModalOpened, setCopyModalOpened] = useState(false)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   if (loading) {
     return (
@@ -84,18 +82,9 @@ export function MealPlanDetailPage() {
   }
 
   const handleEdit = () => {
-    setEditModalOpened(true)
-  }
-
-  const handleFormSubmit = (updatedMealPlan: Partial<MealPlan>) => {
-    if (updatedMealPlan.id) {
-      mealPlanService.update(updatedMealPlan as MealPlan)
+    if (id) {
+      navigate(`/meal-plans/${id}/edit`)
     }
-    setEditModalOpened(false)
-  }
-
-  const handleFormClose = () => {
-    setEditModalOpened(false)
   }
 
   const handleDelete = () => {
@@ -135,20 +124,6 @@ export function MealPlanDetailPage() {
 
   return (
     <Container size="lg">
-      <MealPlanForm
-        recipes={recipes}
-        opened={editModalOpened}
-        onClose={handleFormClose}
-        onSubmit={handleFormSubmit}
-        onDelete={id => {
-          mealPlanService.delete(id)
-          navigate('/meal-plans')
-        }}
-        date={mealPlan.date}
-        mealType={mealPlan.mealType}
-        initialMeal={mealPlan}
-      />
-
       <Stack gap="md">
         {/* Back button */}
         <Group>
@@ -171,39 +146,72 @@ export function MealPlanDetailPage() {
                 </Text>
               </Box>
               <Group gap="xs">
-                <Tooltip label="Copy meal">
-                  <ActionIcon
-                    variant="light"
-                    color="green"
-                    size="lg"
-                    onClick={() => setCopyModalOpened(true)}
-                    aria-label="Copy meal"
-                  >
-                    <IconCopy size={18} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Edit meal">
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    size="lg"
-                    onClick={handleEdit}
-                    aria-label="Edit meal"
-                  >
-                    <IconEdit size={18} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Delete meal">
-                  <ActionIcon
-                    variant="light"
-                    color="red"
-                    size="lg"
-                    onClick={handleDelete}
-                    aria-label="Delete meal"
-                  >
-                    <IconTrash size={18} />
-                  </ActionIcon>
-                </Tooltip>
+                {isDesktop ? (
+                  // Desktop: Show full buttons with labels
+                  <>
+                    <Button
+                      variant="light"
+                      color="green"
+                      leftSection={<IconCopy size={16} />}
+                      onClick={() => setCopyModalOpened(true)}
+                    >
+                      Copy
+                    </Button>
+                    <Button
+                      variant="light"
+                      color="blue"
+                      leftSection={<IconEdit size={16} />}
+                      onClick={handleEdit}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="light"
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                ) : (
+                  // Mobile: Show icon buttons only
+                  <>
+                    <Tooltip label="Copy meal">
+                      <ActionIcon
+                        variant="light"
+                        color="green"
+                        size="lg"
+                        onClick={() => setCopyModalOpened(true)}
+                        aria-label="Copy meal"
+                      >
+                        <IconCopy size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Edit meal">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="lg"
+                        onClick={handleEdit}
+                        aria-label="Edit meal"
+                      >
+                        <IconEdit size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Delete meal">
+                      <ActionIcon
+                        variant="light"
+                        color="red"
+                        size="lg"
+                        onClick={handleDelete}
+                        aria-label="Delete meal"
+                      >
+                        <IconTrash size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
               </Group>
             </Group>
             <RecipeDetail recipe={recipe} initialServings={mealPlan.servings} />

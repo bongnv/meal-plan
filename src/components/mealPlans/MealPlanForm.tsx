@@ -1,22 +1,24 @@
 import {
-  Autocomplete,
   Button,
   Group,
-  Modal,
   NumberInput,
+  Paper,
   SegmentedControl,
   Stack,
   Textarea,
+  TextInput,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, zodResolver } from '@mantine/form'
-import { IconCopy } from '@tabler/icons-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useEffect, useMemo } from 'react'
 import { z } from 'zod'
 
+import { db } from '../../db/database'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
-import { CopyMealPlanModal } from './CopyMealPlanModal'
+import { RecipeSelectorModal } from './RecipeSelectorModal'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -24,12 +26,12 @@ import type { Recipe } from '../../types/recipe'
 interface MealPlanFormProps {
   recipes: Recipe[]
   onSubmit: (mealPlan: Partial<MealPlan>) => void
-  onClose: () => void
+  onCancel: () => void
   onDelete?: (id: string) => void
-  opened: boolean
   date: string
   mealType: MealType
   initialMeal?: MealPlan
+  selectedRecipeId?: string
 }
 
 const mealPlanSchema = z.object({
@@ -45,20 +47,29 @@ type FormValues = z.infer<typeof mealPlanSchema>
 export const MealPlanForm = ({
   recipes,
   onSubmit,
-  onClose,
+  onCancel,
   onDelete,
-  opened,
   date,
   mealType,
   initialMeal,
+  selectedRecipeId,
 }: MealPlanFormProps) => {
   const isEditing = !!initialMeal
-  const [copyModalOpened, setCopyModalOpened] = useState(false)
+  const [
+    recipeSelectorOpened,
+    { open: openRecipeSelector, close: closeRecipeSelector },
+  ] = useDisclosure(false)
+
+  // Detect mobile devices (< 768px)
+  const isMobile = useMediaQuery('(max-width: 768px)')
+
+  // Load ingredients for filtering
+  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
 
   const handleDelete = () => {
     if (initialMeal && onDelete) {
       onDelete(initialMeal.id)
-      onClose()
+      onCancel()
     }
   }
 
@@ -136,7 +147,7 @@ export const MealPlanForm = ({
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMeal, date, mealType, opened])
+  }, [initialMeal, date, mealType])
 
   // Auto-set servings when recipe is selected
   useEffect(() => {
@@ -149,6 +160,17 @@ export const MealPlanForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.values.mealSelection])
+
+  // Update form when selectedRecipeId prop changes (from sidebar)
+  useEffect(() => {
+    if (selectedRecipeId && selectedRecipeId !== form.values.mealSelection) {
+      const formattedValue = selectedRecipeId.includes(':')
+        ? selectedRecipeId
+        : `recipe:${selectedRecipeId}`
+      form.setFieldValue('mealSelection', formattedValue)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRecipeId])
 
   const handleSubmit = (values: FormValues) => {
     const selection = values.mealSelection.trim()
@@ -193,40 +215,53 @@ export const MealPlanForm = ({
       }
       onSubmit(mealPlan)
     }
+  }
 
-    onClose()
+  const handleRecipeSelect = (value: string) => {
+    // Handle different value formats:
+    // - Just recipe ID: convert to recipe:id
+    // - other:text: just use the text part
+    // - recipe:id or custom:type: use as-is
+    if (value.startsWith('other:')) {
+      form.setFieldValue('mealSelection', value.replace('other:', ''))
+    } else if (value.includes(':')) {
+      form.setFieldValue('mealSelection', value)
+    } else {
+      form.setFieldValue('mealSelection', `recipe:${value}`)
+    }
+  }
+
+  const getDisplayLabel = () => {
+    const selection = form.values.mealSelection
+    const matchedOption = mealOptions.find(opt => opt.value === selection)
+    return matchedOption ? matchedOption.label : selection
   }
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={isEditing ? 'Edit Meal' : 'Add Meal'}
-      size="md"
-    >
+    <Paper p="md" shadow="sm">
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          <Autocomplete
-            label="Select or Enter Meal"
-            placeholder="Search recipes, or enter Dining Out, Takeout, etc..."
-            data={mealOptions.map(opt => opt.label)}
-            {...form.getInputProps('mealSelection')}
-            onChange={value => {
-              form.setFieldValue('mealSelection', value)
-              // Find the matching option to set proper value format
-              const matchedOption = mealOptions.find(opt => opt.label === value)
-              if (matchedOption) {
-                form.setFieldValue('mealSelection', matchedOption.value)
-              }
-            }}
-            value={(() => {
-              const selection = form.values.mealSelection
-              const matchedOption = mealOptions.find(
-                opt => opt.value === selection
-              )
-              return matchedOption ? matchedOption.label : selection
-            })()}
-          />
+          {isMobile ? (
+            // Mobile: Show TextInput with Button to open modal
+            <TextInput
+              label="Select or Enter Meal"
+              placeholder="Tap to select..."
+              value={getDisplayLabel()}
+              onClick={openRecipeSelector}
+              readOnly
+              style={{ cursor: 'pointer' }}
+              error={form.errors.mealSelection as string}
+            />
+          ) : (
+            // Desktop: Show read-only field, use sidebar for selection
+            <TextInput
+              label="Selected Meal"
+              placeholder="Select from the sidebar"
+              value={getDisplayLabel()}
+              readOnly
+              error={form.errors.mealSelection as string}
+            />
+          )}
 
           {form.values.mealSelection.startsWith('recipe:') && (
             <NumberInput
@@ -277,17 +312,7 @@ export const MealPlanForm = ({
               )}
             </Group>
             <Group gap="xs">
-              {isEditing && initialMeal && (
-                <Button
-                  variant="subtle"
-                  color="green"
-                  leftSection={<IconCopy size={16} />}
-                  onClick={() => setCopyModalOpened(true)}
-                >
-                  Copy
-                </Button>
-              )}
-              <Button variant="subtle" onClick={onClose}>
+              <Button variant="subtle" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit">Save Meal</Button>
@@ -296,14 +321,15 @@ export const MealPlanForm = ({
         </Stack>
       </form>
 
-      {/* Copy meal plan modal */}
-      {isEditing && initialMeal && (
-        <CopyMealPlanModal
-          opened={copyModalOpened}
-          onClose={() => setCopyModalOpened(false)}
-          mealPlanId={initialMeal.id}
-        />
-      )}
-    </Modal>
+      {/* Recipe selector modal for mobile */}
+      <RecipeSelectorModal
+        opened={recipeSelectorOpened}
+        onClose={closeRecipeSelector}
+        recipes={recipes}
+        ingredients={ingredients}
+        selectedValue={form.values.mealSelection}
+        onSelect={handleRecipeSelect}
+      />
+    </Paper>
   )
 }

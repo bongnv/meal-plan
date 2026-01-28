@@ -13,7 +13,6 @@ interface CalendarViewProps {
   mealPlans: MealPlan[]
   getRecipeById: (id: string) => Recipe | undefined
   onAddMeal: (params: { date: string }) => void
-  onEditMeal: (mealPlan: MealPlan) => void
   onDeleteMeal?: (mealPlan: MealPlan) => void
 }
 
@@ -23,7 +22,6 @@ export function CalendarView({
   mealPlans,
   getRecipeById,
   onAddMeal,
-  onEditMeal,
   onDeleteMeal,
 }: CalendarViewProps) {
   // Helper to get local date string in YYYY-MM-DD format
@@ -235,7 +233,6 @@ export function CalendarView({
                     meals={group.meals}
                     getRecipeById={getRecipeById}
                     onAddMeal={onAddMeal}
-                    onEditMeal={onEditMeal}
                     onCopyMeal={meal => {
                       setSelectedMealForCopy(meal)
                       setCopyModalOpened(true)

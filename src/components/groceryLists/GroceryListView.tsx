@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Collapse,
   Divider,
   Group,
   NumberInput,
@@ -15,7 +16,13 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
+import {
+  IconEdit,
+  IconEye,
+  IconEyeOff,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -260,11 +267,30 @@ export const GroceryListView = ({
   const [manualItemUnit, setManualItemUnit] = useState<string>('piece')
   const [manualItemCategory, setManualItemCategory] = useState<string>('Other')
 
-  // Group items by category
-  const itemsByCategory = useMemo(() => {
-    const groups: Record<string, GroceryItem[]> = {}
+  // Toggle for showing/hiding completed items
+  const [showCompleted, setShowCompleted] = useState(true)
+
+  // Separate checked and unchecked items
+  const { uncheckedItems, checkedItems } = useMemo(() => {
+    const unchecked: GroceryItem[] = []
+    const checked: GroceryItem[] = []
 
     items.forEach(item => {
+      if (item.checked) {
+        checked.push(item)
+      } else {
+        unchecked.push(item)
+      }
+    })
+
+    return { uncheckedItems: unchecked, checkedItems: checked }
+  }, [items])
+
+  // Group unchecked items by category
+  const uncheckedItemsByCategory = useMemo(() => {
+    const groups: Record<string, GroceryItem[]> = {}
+
+    uncheckedItems.forEach(item => {
       if (!groups[item.category]) {
         groups[item.category] = []
       }
@@ -272,19 +298,14 @@ export const GroceryListView = ({
     })
 
     return groups
-  }, [items])
+  }, [uncheckedItems])
 
-  // Get sorted categories (only non-empty ones)
+  // Get sorted categories (only non-empty ones for unchecked items)
   const sortedCategories = useMemo(() => {
     return INGREDIENT_CATEGORIES.filter(
-      category => itemsByCategory[category]?.length > 0
+      category => uncheckedItemsByCategory[category]?.length > 0
     )
-  }, [itemsByCategory])
-
-  // Calculate checked count
-  const checkedCount = useMemo(() => {
-    return items.filter(item => item.checked).length
-  }, [items])
+  }, [uncheckedItemsByCategory])
 
   const handleAddManualItem = () => {
     if (!manualItemName.trim()) return
@@ -333,45 +354,49 @@ export const GroceryListView = ({
         <Card withBorder p="md" radius="md">
           <Stack gap="md">
             <Title order={4}>Add Manual Item</Title>
-            <Group align="end" wrap="nowrap">
+            <Stack gap="sm">
               <TextInput
                 label="Item name"
                 placeholder="Item name"
                 value={manualItemName}
                 onChange={e => setManualItemName(e.target.value)}
-                style={{ flex: 2 }}
               />
-              <NumberInput
-                label="Quantity"
-                placeholder="Quantity"
-                value={manualItemQuantity}
-                onChange={val => setManualItemQuantity(Number(val) || 1)}
-                min={0.1}
-                step={0.5}
-                decimalScale={2}
-                style={{ flex: 1 }}
-              />
-              <Select
-                label="Unit"
-                data={UNITS.map(u => ({ value: u, label: u }))}
-                value={manualItemUnit}
-                onChange={val => setManualItemUnit(val || 'piece')}
-                style={{ flex: 1 }}
-              />
-              <Select
-                label="Category"
-                data={INGREDIENT_CATEGORIES.map(c => ({ value: c, label: c }))}
-                value={manualItemCategory}
-                onChange={val => setManualItemCategory(val || 'Other')}
-                style={{ flex: 1 }}
-              />
+              <Group grow>
+                <NumberInput
+                  label="Quantity"
+                  placeholder="Quantity"
+                  value={manualItemQuantity}
+                  onChange={val => setManualItemQuantity(Number(val) || 1)}
+                  min={0.1}
+                  step={0.5}
+                  decimalScale={2}
+                />
+                <Select
+                  label="Unit"
+                  data={UNITS.map(u => ({ value: u, label: u }))}
+                  value={manualItemUnit}
+                  onChange={val => setManualItemUnit(val || 'piece')}
+                />
+              </Group>
+              <Group grow>
+                <Select
+                  label="Category"
+                  data={INGREDIENT_CATEGORIES.map(c => ({
+                    value: c,
+                    label: c,
+                  }))}
+                  value={manualItemCategory}
+                  onChange={val => setManualItemCategory(val || 'Other')}
+                />
+              </Group>
               <Button
                 leftSection={<IconPlus size={16} />}
                 onClick={handleAddManualItem}
+                fullWidth
               >
                 Add item
               </Button>
-            </Group>
+            </Stack>
           </Stack>
         </Card>
       </Stack>
@@ -386,13 +411,13 @@ export const GroceryListView = ({
           Grocery Items
         </Text>
         <Badge size="lg" variant="light">
-          {checkedCount} / {items.length} checked
+          {checkedItems.length} / {items.length} checked
         </Badge>
       </Group>
 
       {/* Items grouped by category */}
       {sortedCategories.map(category => {
-        const items = itemsByCategory[category] || []
+        const categoryItems = uncheckedItemsByCategory[category] || []
 
         return (
           <div key={category}>
@@ -400,12 +425,12 @@ export const GroceryListView = ({
               <Text size="sm">{CATEGORY_ICONS[category]}</Text>
               <Title order={4}>{category}</Title>
               <Badge variant="light" size="sm">
-                {items.length}
+                {categoryItems.length}
               </Badge>
             </Group>
 
             <Stack gap={4}>
-              {items.map(item => (
+              {categoryItems.map(item => (
                 <ItemRow
                   key={item.id}
                   item={item}
@@ -423,51 +448,100 @@ export const GroceryListView = ({
         )
       })}
 
+      {/* Completed Items Section */}
+      {checkedItems.length > 0 && (
+        <>
+          <Divider />
+          <div>
+            <Group justify="space-between" mb="sm">
+              <Group gap="xs">
+                <Title order={4}>
+                  ✓ Completed Items ({checkedItems.length})
+                </Title>
+              </Group>
+              <Button
+                variant="subtle"
+                size="xs"
+                leftSection={
+                  showCompleted ? (
+                    <IconEyeOff size={14} />
+                  ) : (
+                    <IconEye size={14} />
+                  )
+                }
+                onClick={() => setShowCompleted(!showCompleted)}
+              >
+                {showCompleted ? 'Hide completed' : 'Show completed'}
+              </Button>
+            </Group>
+
+            <Collapse in={showCompleted}>
+              <Stack gap={4}>
+                {checkedItems.map(item => (
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    itemName={item.name}
+                    mealPlans={mealPlans}
+                    getRecipeName={getRecipeName}
+                    onCheckItem={onCheckItem}
+                    onUpdateQuantity={onUpdateQuantity}
+                    onUpdateNotes={onUpdateNotes}
+                    onRemoveItem={onRemoveItem}
+                  />
+                ))}
+              </Stack>
+            </Collapse>
+          </div>
+        </>
+      )}
+
       <Divider />
 
       {/* Add Manual Item Section */}
       <Card withBorder p="md" radius="md">
         <Stack gap="md">
           <Title order={4}>Add Manual Item</Title>
-          <Group align="end" wrap="nowrap">
+          <Stack gap="sm">
             <TextInput
               label="Item name"
               placeholder="Item name"
               value={manualItemName}
               onChange={e => setManualItemName(e.target.value)}
-              style={{ flex: 2 }}
             />
-            <NumberInput
-              label="Quantity"
-              placeholder="Quantity"
-              value={manualItemQuantity}
-              onChange={val => setManualItemQuantity(Number(val) || 1)}
-              min={0.1}
-              step={0.5}
-              decimalScale={2}
-              style={{ flex: 1 }}
-            />
-            <Select
-              label="Unit"
-              data={UNITS.map(u => ({ value: u, label: u }))}
-              value={manualItemUnit}
-              onChange={val => setManualItemUnit(val || 'piece')}
-              style={{ flex: 1 }}
-            />
-            <Select
-              label="Category"
-              data={INGREDIENT_CATEGORIES.map(c => ({ value: c, label: c }))}
-              value={manualItemCategory}
-              onChange={val => setManualItemCategory(val || 'Other')}
-              style={{ flex: 1 }}
-            />
+            <Group grow>
+              <NumberInput
+                label="Quantity"
+                placeholder="Quantity"
+                value={manualItemQuantity}
+                onChange={val => setManualItemQuantity(Number(val) || 1)}
+                min={0.1}
+                step={0.5}
+                decimalScale={2}
+              />
+              <Select
+                label="Unit"
+                data={UNITS.map(u => ({ value: u, label: u }))}
+                value={manualItemUnit}
+                onChange={val => setManualItemUnit(val || 'piece')}
+              />
+            </Group>
+            <Group grow>
+              <Select
+                label="Category"
+                data={INGREDIENT_CATEGORIES.map(c => ({ value: c, label: c }))}
+                value={manualItemCategory}
+                onChange={val => setManualItemCategory(val || 'Other')}
+              />
+            </Group>
             <Button
               leftSection={<IconPlus size={16} />}
               onClick={handleAddManualItem}
+              fullWidth
             >
               Add item
             </Button>
-          </Group>
+          </Stack>
         </Stack>
       </Card>
     </Stack>

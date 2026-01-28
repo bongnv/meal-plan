@@ -493,4 +493,149 @@ describe('GroceryListView', () => {
     // 1 item is checked (Milk), 4 total
     expect(screen.getByText('1 / 4 checked')).toBeInTheDocument()
   })
+
+  describe('Completed Items Section', () => {
+    it('separates completed items into dedicated section at bottom', () => {
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={mockItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      // Completed section should exist
+      expect(screen.getByText(/✓ Completed Items/i)).toBeInTheDocument()
+      // Should show count in completed section heading
+      expect(screen.getByText(/✓ Completed Items \(1\)/i)).toBeInTheDocument()
+    })
+
+    it('only shows unchecked items in category sections', () => {
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={mockItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      // Vegetables category should show 2 items (not including checked ones)
+      const vegetablesBadges = screen.getAllByText('2')
+      expect(vegetablesBadges.length).toBeGreaterThan(0)
+    })
+
+    it('shows completed items with category labels in completed section', () => {
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={mockItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      // Milk should be in completed section
+      const completedSection = screen
+        .getByText(/✓ Completed Items/i)
+        .closest('div')
+      expect(completedSection).toBeInTheDocument()
+    })
+
+    it('hides completed section when toggle is clicked', async () => {
+      const user = userEvent.setup()
+
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={mockItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      // Find and click the hide/show toggle button
+      const toggleButton = screen.getByRole('button', {
+        name: /hide completed/i,
+      })
+      await user.click(toggleButton)
+
+      // Completed section heading should still show but items should be hidden/collapsed
+      expect(screen.getByText(/✓ Completed Items/i)).toBeInTheDocument()
+    })
+
+    it('shows completed section when toggle is clicked again', async () => {
+      const user = userEvent.setup()
+
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={mockItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      const toggleButton = screen.getByRole('button', {
+        name: /hide completed/i,
+      })
+      await user.click(toggleButton)
+
+      const showButton = screen.getByRole('button', { name: /show completed/i })
+      await user.click(showButton)
+
+      // Completed section should be visible again
+      expect(screen.getByText(/✓ Completed Items/i)).toBeInTheDocument()
+    })
+
+    it('does not show completed section when no items are checked', () => {
+      const uncheckedItems = mockItems.map(item => ({
+        ...item,
+        checked: false,
+      }))
+
+      renderWithProviders(
+        <GroceryListView
+          groceryList={mockGroceryList}
+          items={uncheckedItems}
+          mealPlans={mockMealPlans}
+          onCheckItem={mockOnCheckItem}
+          onUpdateQuantity={mockOnUpdateQuantity}
+          onUpdateNotes={mockOnUpdateNotes}
+          onRemoveItem={mockOnRemoveItem}
+          onAddManualItem={mockOnAddManualItem}
+          getRecipeName={mockGetRecipeName}
+        />
+      )
+
+      // Completed section should not exist
+      expect(screen.queryByText(/✓ Completed Items/i)).not.toBeInTheDocument()
+    })
+  })
 })

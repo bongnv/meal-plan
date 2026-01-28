@@ -19,6 +19,8 @@ import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
 import { HomePage } from './pages/HomePage'
+import { AddMealPlanPage } from './pages/mealPlans/AddMealPlanPage'
+import { EditMealPlanPage } from './pages/mealPlans/EditMealPlanPage'
 import { MealPlanDetailPage } from './pages/mealPlans/MealPlanDetailPage'
 import { MealPlansPage } from './pages/mealPlans/MealPlansPage'
 import { CreateRecipePage } from './pages/recipes/CreateRecipePage'
@@ -166,6 +168,8 @@ function App() {
             <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
             <Route path="/meal-plans" element={<MealPlansPage />} />
+            <Route path="/meal-plans/new" element={<AddMealPlanPage />} />
+            <Route path="/meal-plans/:id/edit" element={<EditMealPlanPage />} />
             <Route path="/meal-plans/:id" element={<MealPlanDetailPage />} />
             <Route path="/grocery-lists" element={<GroceryListsPage />} />
             <Route
