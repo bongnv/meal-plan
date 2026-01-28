@@ -146,7 +146,7 @@ export const GroceryListDetailPage = () => {
   }
 
   return (
-    <Container size="xl">
+    <Container size="lg" py="xl">
       <Stack gap="md">
         <Button
           variant="subtle"

@@ -1,8 +1,10 @@
 import { DndContext, DragOverlay } from '@dnd-kit/core'
 import {
+  ActionIcon,
   Box,
   Card,
   Container,
+  Drawer,
   Grid,
   Stack,
   Text,
@@ -10,7 +12,8 @@ import {
   Group,
   Title,
 } from '@mantine/core'
-import { IconClock } from '@tabler/icons-react'
+import { useMediaQuery } from '@mantine/hooks'
+import { IconMenu2, IconClock } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
@@ -35,6 +38,10 @@ export function MealPlansPage() {
   const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
   const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
+  const [sidebarOpened, setSidebarOpened] = useState(false)
+
+  // Detect if we're on desktop (>= 1024px)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   const [formState, setFormState] = useState<FormState>({
     opened: false,
@@ -44,11 +51,24 @@ export function MealPlansPage() {
 
   const handleAddMeal = (params: { date: string }) => {
     // Determine the meal type based on what already exists
-    // Check if lunch exists, if so default to dinner
-    const lunchExists = mealPlans.some(
-      mp => mp.date === params.date && mp.mealType === 'lunch'
-    )
-    const mealType: MealType = lunchExists ? 'dinner' : 'lunch'
+    // Default to lunch first, then dinner, then allow any
+    const existingMeals = mealPlans.filter(mp => mp.date === params.date)
+    
+    let mealType: MealType = 'lunch'
+    
+    if (existingMeals.length > 0) {
+      const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
+      const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
+      
+      if (!hasLunch) {
+        mealType = 'lunch'
+      } else if (!hasDinner) {
+        mealType = 'dinner'
+      } else {
+        // Both exist, default to lunch (user can change in modal)
+        mealType = 'lunch'
+      }
+    }
 
     setFormState({
       opened: true,
@@ -105,37 +125,32 @@ export function MealPlansPage() {
 
     if (!over) return
 
-    // Check if we're dragging a recipe onto a meal slot
+    // Check if we're dragging a recipe onto a day slot
     if (
       active.data.current?.type === 'recipe' &&
-      over.data.current?.type === 'mealSlot'
+      over.data.current?.type === 'daySlot'
     ) {
       const recipe = active.data.current.recipe as Recipe
-      const { dateString, mealType } = over.data.current as {
+      const { dateString } = over.data.current as {
         dateString: string
-        mealType: MealType
       }
 
-      // Check if the target slot already has a meal
-      const existingMeal = mealPlans.find(
-        m => m.date === dateString && m.mealType === mealType
-      )
-
-      // If dropping on an occupied slot, try the other meal type
-      let finalMealType = mealType
-      if (existingMeal) {
-        const alternateMealType: MealType =
-          mealType === 'lunch' ? 'dinner' : 'lunch'
-        const alternateHasMeal = mealPlans.find(
-          m => m.date === dateString && m.mealType === alternateMealType
-        )
-
-        // Only switch if alternate is free
-        if (!alternateHasMeal) {
-          finalMealType = alternateMealType
+      // Determine meal type based on existing meals for that day
+      const existingMeals = mealPlans.filter(mp => mp.date === dateString)
+      
+      let mealType: MealType = 'lunch'
+      
+      if (existingMeals.length > 0) {
+        const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
+        const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
+        
+        if (!hasLunch) {
+          mealType = 'lunch'
+        } else if (!hasDinner) {
+          mealType = 'dinner'
         } else {
-          // Both slots occupied, don't create meal plan
-          return
+          // Both exist, add as lunch (can be edited later)
+          mealType = 'lunch'
         }
       }
 
@@ -143,7 +158,7 @@ export function MealPlansPage() {
       try {
         await mealPlanService.add({
           date: dateString,
-          mealType: finalMealType,
+          mealType,
           type: 'recipe',
           recipeId: recipe.id,
           servings: recipe.servings,
@@ -154,16 +169,39 @@ export function MealPlansPage() {
     }
   }
 
-  return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <Container size="xl" fluid>
-        <Title order={1} mb="md">
-          Meal Plans
-        </Title>
+  const content = (
+    <>
+      <Container 
+        size="xl" 
+        fluid 
+        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      >
+        <Group justify="space-between" align="center" mb="md" style={{ flexShrink: 0 }}>
+          <Title order={1}>Meal Plans</Title>
+          {!isDesktop && (
+            <ActionIcon
+              variant="default"
+              size="lg"
+              onClick={() => setSidebarOpened(true)}
+              aria-label="Open recipes"
+            >
+              <IconMenu2 size={20} />
+            </ActionIcon>
+          )}
+        </Group>
 
-        <Grid gutter="md">
-          {/* Main Content Area - Calendar View with integrated view switcher */}
-          <Grid.Col span={{ base: 12, lg: 9 }}>
+        <Grid 
+          gutter="md" 
+          style={{ flex: 1, minHeight: 0 }}
+          styles={{
+            inner: {
+              height: '100%',
+              maxHeight: '100%',
+            }
+          }}
+        >
+          {/* Main Content Area - List View */}
+          <Grid.Col span={{ base: 12, lg: 9 }} style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <CalendarView
               mealPlans={mealPlans}
               getRecipeById={id => recipes.find(r => r.id === id)}
@@ -179,12 +217,14 @@ export function MealPlansPage() {
             />
           </Grid.Col>
 
-          {/* Recipe Sidebar - always visible */}
-          <Grid.Col span={{ base: 12, lg: 3 }}>
-            <Box style={{ position: 'sticky', top: 16 }}>
-              <RecipeSidebar />
-            </Box>
-          </Grid.Col>
+          {/* Recipe Sidebar - desktop only */}
+          {isDesktop && (
+            <Grid.Col span={{ base: 12, lg: 3 }} style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <Box style={{ height: '100%', overflow: 'hidden' }}>
+                <RecipeSidebar />
+              </Box>
+            </Grid.Col>
+          )}
         </Grid>
 
         <MealPlanForm
@@ -206,40 +246,65 @@ export function MealPlansPage() {
         />
       </Container>
 
-      <DragOverlay>
-        {activeRecipe ? (
-          <Card
-            padding="sm"
-            withBorder
-            shadow="xl"
-            style={{
-              cursor: 'grabbing',
-              opacity: 0.9,
-            }}
-          >
-            <Stack gap="xs">
-              <Text fw={500} size="sm">
-                {activeRecipe.name}
-              </Text>
-              {activeRecipe.tags.length > 0 && (
-                <Group gap={4}>
-                  {activeRecipe.tags.map(tag => (
-                    <Badge key={tag} size="xs" variant="light">
-                      {tag}
-                    </Badge>
-                  ))}
-                </Group>
-              )}
-              <Group gap={4}>
-                <IconClock size={14} />
-                <Text size="xs" c="dimmed">
-                  {activeRecipe.prepTime + activeRecipe.cookTime} min
+      {/* Drag overlay - desktop only */}
+      {isDesktop && (
+        <DragOverlay>
+          {activeRecipe ? (
+            <Card
+              padding="sm"
+              withBorder
+              shadow="xl"
+              style={{
+                cursor: 'grabbing',
+                opacity: 0.9,
+              }}
+            >
+              <Stack gap="xs">
+                <Text fw={500} size="sm">
+                  {activeRecipe.name}
                 </Text>
-              </Group>
-            </Stack>
-          </Card>
-        ) : null}
-      </DragOverlay>
+                {activeRecipe.tags.length > 0 && (
+                  <Group gap={4}>
+                    {activeRecipe.tags.map(tag => (
+                      <Badge key={tag} size="xs" variant="light">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
+                <Group gap={4}>
+                  <IconClock size={14} />
+                  <Text size="xs" c="dimmed">
+                    {activeRecipe.prepTime + activeRecipe.cookTime} min
+                  </Text>
+                </Group>
+              </Stack>
+            </Card>
+          ) : null}
+        </DragOverlay>
+      )}
+
+      {/* Mobile Drawer for recipes */}
+      {!isDesktop && (
+        <Drawer
+          opened={sidebarOpened}
+          onClose={() => setSidebarOpened(false)}
+          title="Recipes"
+          position="right"
+          size="lg"
+        >
+          <RecipeSidebar />
+        </Drawer>
+      )}
+    </>
+  )
+
+  // Wrap with DndContext only on desktop
+  return isDesktop ? (
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      {content}
     </DndContext>
+  ) : (
+    content
   )
 }

@@ -44,7 +44,7 @@ export function MealPlanDetailPage() {
 
   if (loading) {
     return (
-      <Container>
+      <Container size="lg">
         <Stack align="center" mt="xl">
           <Loader size="lg" />
           <Text>Loading meal plan...</Text>
@@ -55,7 +55,7 @@ export function MealPlanDetailPage() {
 
   if (!id) {
     return (
-      <Container>
+      <Container size="lg">
         <Stack align="center" mt="xl">
           <Text size="lg" c="red">
             Invalid meal plan ID
@@ -70,7 +70,7 @@ export function MealPlanDetailPage() {
 
   if (!mealPlan) {
     return (
-      <Container>
+      <Container size="lg">
         <Stack align="center" mt="xl">
           <Text size="lg" c="red">
             Meal plan not found

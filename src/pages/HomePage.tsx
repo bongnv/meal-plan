@@ -51,7 +51,7 @@ export function HomePage() {
   }
 
   return (
-    <Container size="lg" py="xl">
+    <Container size="xl" py="xl">
       <Stack gap="xl">
         {/* Next Meal Section */}
         <div>

@@ -64,8 +64,8 @@ export const RecipeSidebar = () => {
   }
 
   return (
-    <Paper p="md" h="100%" withBorder style={{ overflow: 'auto' }}>
-      <Stack gap="md">
+    <Paper p="md" withBorder style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Stack gap="md" style={{ flexShrink: 0 }}>
         <Title order={3}>Recipes</Title>
 
         {/* Search input */}
@@ -137,8 +137,18 @@ export const RecipeSidebar = () => {
             </Button>
           </Group>
         )}
+      </Stack>
 
-        {/* Recipe list */}
+      {/* Scrollable recipe list */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          marginTop: '1rem',
+          minHeight: 0,
+        }}
+      >
         {filteredRecipes.length === 0 ? (
           <Stack align="center" justify="center" py="xl">
             <Text c="dimmed">No recipes found</Text>
@@ -149,13 +159,13 @@ export const RecipeSidebar = () => {
             )}
           </Stack>
         ) : (
-          <Stack gap="sm">
+          <Stack gap="sm" pb="md">
             {filteredRecipes.map(recipe => (
               <DraggableRecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </Stack>
         )}
-      </Stack>
+      </div>
     </Paper>
   )
 }

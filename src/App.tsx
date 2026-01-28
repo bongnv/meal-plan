@@ -153,7 +153,12 @@ function App() {
           </NavLink>
         </AppShell.Navbar>
 
-        <AppShell.Main>
+        <AppShell.Main
+          style={{
+            height: '100vh',
+            overflow: 'auto',
+          }}
+        >
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/recipes" element={<RecipesPage />} />

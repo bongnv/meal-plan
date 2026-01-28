@@ -90,14 +90,14 @@ export function IngredientsPage() {
 
   if (loading) {
     return (
-      <Container size="lg" py="xl">
+      <Container size="xl" py="xl">
         <Title order={1}>Loading...</Title>
       </Container>
     )
   }
 
   return (
-    <Container size="lg" py="xl">
+    <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <Title order={1}>Ingredient Library</Title>
         <Button
