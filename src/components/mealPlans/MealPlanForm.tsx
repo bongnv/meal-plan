@@ -290,8 +290,10 @@ export const MealPlanForm = ({
           <SegmentedControl
             {...form.getInputProps('mealType')}
             data={[
+              { label: 'Breakfast', value: 'breakfast' },
               { label: 'Lunch', value: 'lunch' },
               { label: 'Dinner', value: 'dinner' },
+              { label: 'Snack', value: 'snack' },
             ]}
             fullWidth
           />
