@@ -15,11 +15,10 @@ import {
 import { IconClock, IconSearch } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 
-import { useRecipeFilter } from '../../hooks/useRecipeFilter'
 import { recipeService } from '../../services/recipeService'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
-import type { TimeRange } from '../../hooks/useRecipeFilter'
+import type { TimeRange } from '../../services/recipeService'
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
@@ -47,13 +46,17 @@ export const RecipeSelector = ({
     return recipeService.extractUniqueTags(recipes)
   }, [recipes])
 
-  // Filter recipes using the hook
-  const filteredRecipes = useRecipeFilter(recipes, {
-    searchText,
-    selectedTags,
-    selectedIngredients,
-    timeRange,
-  })
+  // Filter recipes using the service
+  const filteredRecipes = useMemo(
+    () =>
+      recipeService.filterRecipesAdvanced(recipes, {
+        searchText,
+        selectedTags,
+        selectedIngredients,
+        timeRange,
+      }),
+    [recipes, searchText, selectedTags, selectedIngredients, timeRange]
+  )
 
   // Filter custom meal types based on search text
   const filteredCustomOptions = useMemo(() => {

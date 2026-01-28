@@ -4,6 +4,15 @@ import { generateId } from '../utils/idGenerator'
 import type { MealPlanDB } from '../db/database'
 import type { Recipe } from '../types/recipe'
 
+export type TimeRange = 'under-30' | '30-60' | 'over-60' | null
+
+export interface RecipeFilters {
+  searchText?: string
+  selectedTags?: string[]
+  selectedIngredients?: string[]
+  timeRange?: TimeRange
+}
+
 /**
  * Recipe Service
  * Stateless business logic for recipe operations
@@ -114,30 +123,59 @@ export const createRecipeService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Filter recipes by search text and tags (pure function)
+   * Advanced recipe filtering with multiple criteria (pure function)
    * @param recipes Array of recipes to filter
-   * @param searchText Text to search in recipe name
-   * @param selectedTags Tags to filter by (empty array = no tag filter)
+   * @param filters Filter criteria object
    * @returns Filtered array of recipes
    */
-  filterRecipes(
-    recipes: Recipe[],
-    searchText: string,
-    selectedTags: string[] = []
-  ): Recipe[] {
-    const lowerSearchText = searchText.toLowerCase()
-
+  filterRecipesAdvanced(recipes: Recipe[], filters: RecipeFilters): Recipe[] {
     return recipes.filter(recipe => {
-      // Filter by search text
-      const matchesSearch =
-        !searchText || recipe.name.toLowerCase().includes(lowerSearchText)
+      // Filter by search text (name)
+      if (filters.searchText) {
+        const searchLower = filters.searchText.toLowerCase()
+        if (!recipe.name.toLowerCase().includes(searchLower)) {
+          return false
+        }
+      }
 
-      // Filter by tags (if any tags selected)
-      const matchesTags =
-        selectedTags.length === 0 ||
-        selectedTags.some(tag => recipe.tags?.includes(tag))
+      // Filter by tags (OR logic - recipe must have at least one selected tag)
+      if (filters.selectedTags && filters.selectedTags.length > 0) {
+        const hasMatchingTag = filters.selectedTags.some(tag =>
+          recipe.tags.includes(tag)
+        )
+        if (!hasMatchingTag) {
+          return false
+        }
+      }
 
-      return matchesSearch && matchesTags
+      // Filter by ingredients (OR logic - recipe must have at least one selected ingredient)
+      if (filters.selectedIngredients && filters.selectedIngredients.length > 0) {
+        const hasMatchingIngredient = filters.selectedIngredients.some(
+          ingredientId =>
+            recipe.ingredients.some(ing => ing.ingredientId === ingredientId)
+        )
+        if (!hasMatchingIngredient) {
+          return false
+        }
+      }
+
+      // Filter by time range
+      if (filters.timeRange) {
+        const totalTime = recipe.prepTime + recipe.cookTime
+        switch (filters.timeRange) {
+          case 'under-30':
+            if (totalTime >= 30) return false
+            break
+          case '30-60':
+            if (totalTime < 30 || totalTime > 60) return false
+            break
+          case 'over-60':
+            if (totalTime <= 60) return false
+            break
+        }
+      }
+
+      return true
     })
   },
 

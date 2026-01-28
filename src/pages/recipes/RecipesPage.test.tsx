@@ -25,6 +25,57 @@ vi.mock('dexie-react-hooks', () => ({
 vi.mock('../../services/recipeService', () => ({
   recipeService: {
     delete: vi.fn(),
+    filterRecipesAdvanced: vi.fn((recipes, filters) => {
+      // Implementation for testing - mirrors the actual service logic
+      return recipes.filter(recipe => {
+        // Filter by search text (name)
+        if (filters.searchText) {
+          const searchLower = filters.searchText.toLowerCase()
+          if (!recipe.name.toLowerCase().includes(searchLower)) {
+            return false
+          }
+        }
+
+        // Filter by tags (OR logic)
+        if (filters.selectedTags && filters.selectedTags.length > 0) {
+          const hasMatchingTag = filters.selectedTags.some(tag =>
+            recipe.tags.includes(tag)
+          )
+          if (!hasMatchingTag) {
+            return false
+          }
+        }
+
+        // Filter by ingredients (OR logic)
+        if (filters.selectedIngredients && filters.selectedIngredients.length > 0) {
+          const hasMatchingIngredient = filters.selectedIngredients.some(
+            ingredientId =>
+              recipe.ingredients.some(ing => ing.ingredientId === ingredientId)
+          )
+          if (!hasMatchingIngredient) {
+            return false
+          }
+        }
+
+        // Filter by time range
+        if (filters.timeRange) {
+          const totalTime = recipe.prepTime + recipe.cookTime
+          switch (filters.timeRange) {
+            case 'under-30':
+              if (totalTime >= 30) return false
+              break
+            case '30-60':
+              if (totalTime < 30 || totalTime > 60) return false
+              break
+            case 'over-60':
+              if (totalTime <= 60) return false
+              break
+          }
+        }
+
+        return true
+      })
+    }),
   },
 }))
 

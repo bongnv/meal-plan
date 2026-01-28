@@ -21,10 +21,9 @@ import { useNavigate } from 'react-router-dom'
 import { RecipeImportModal } from '../../components/recipes/RecipeImportModal'
 import { RecipeList } from '../../components/recipes/RecipeList'
 import { db } from '../../db/database'
-import { useRecipeFilter } from '../../hooks/useRecipeFilter'
 import { recipeService } from '../../services/recipeService'
 
-import type { TimeRange } from '../../hooks/useRecipeFilter'
+import type { TimeRange } from '../../services/recipeService'
 
 export const RecipesPage = () => {
   const navigate = useNavigate()
@@ -50,13 +49,17 @@ export const RecipesPage = () => {
     return Array.from(tagSet).sort()
   }, [recipes])
 
-  // Filter recipes using the hook
-  const filteredRecipes = useRecipeFilter(recipes, {
-    searchText,
-    selectedTags,
-    selectedIngredients,
-    timeRange,
-  })
+  // Filter recipes using the service
+  const filteredRecipes = useMemo(
+    () =>
+      recipeService.filterRecipesAdvanced(recipes, {
+        searchText,
+        selectedTags,
+        selectedIngredients,
+        timeRange,
+      }),
+    [recipes, searchText, selectedTags, selectedIngredients, timeRange]
+  )
 
   // Check if any filters are active
   const hasActiveFilters =
