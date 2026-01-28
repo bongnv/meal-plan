@@ -34,7 +34,7 @@ function App() {
   const location = useLocation()
   const cloudStorage = useCloudStorage()
   const { needsReconnect, selectedFile, clearReconnectFlag } = useSyncContext()
-  
+
   // Detect if we're on mobile (< 768px)
   const isMobile = useMediaQuery('(max-width: 768px)')
 
