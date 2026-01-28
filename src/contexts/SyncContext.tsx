@@ -6,32 +6,19 @@ import {
   useContext,
   useState,
   useEffect,
+  useMemo,
   type ReactNode,
 } from 'react'
-import { z } from 'zod'
 
 import { db } from '../db/database'
-import { syncService } from '../services/syncService'
-import { TokenExpiredError } from '../utils/errors/TokenExpiredError'
+import { SyncService } from '../services/syncService'
+import { isTokenExpiredError } from '../utils/errors/isTokenExpiredError'
 import {
   isExistingFile,
   type FileInfo,
 } from '../utils/storage/ICloudStorageProvider'
 
 import { useCloudStorage } from './CloudStorageContext'
-
-import type { SyncData } from '../services/syncService'
-
-// Zod schema for validating remote sync data
-const SyncDataSchema = z.object({
-  recipes: z.array(z.any()), // Could be more specific with Recipe schema
-  mealPlans: z.array(z.any()),
-  ingredients: z.array(z.any()),
-  groceryLists: z.array(z.any()).optional().default([]),
-  groceryItems: z.array(z.any()).optional().default([]),
-  lastModified: z.number(),
-  version: z.number(),
-})
 
 /**
  * LocalStorage keys
@@ -71,6 +58,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true)
   const [needsReconnect, setNeedsReconnect] = useState(false)
 
+  // Create SyncService instance with injected dependencies
+  // Re-create when provider changes
+  const syncService = useMemo(() => {
+    if (!cloudStorage.providerInstance) {
+      return null
+    }
+    return new SyncService(cloudStorage.providerInstance, db)
+  }, [cloudStorage.providerInstance])
+
   // Restore selected file from localStorage on mount
   useEffect(() => {
     const savedFile = localStorage.getItem(SELECTED_FILE_KEY)
@@ -87,6 +83,46 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setIsInitializing(false)
   }, [cloudStorage.isAuthenticated])
 
+  /**
+   * Trigger manual sync with Last Write Wins (LWW) merge
+   * Automatically resolves conflicts based on updatedAt timestamps
+   */
+  const syncNow = async (): Promise<void> => {
+    if (!syncService || !selectedFile) {
+      throw new Error('Not connected')
+    }
+
+    try {
+      setSyncStatus('syncing')
+
+      // Perform sync via service
+      const result = await syncService.performSync(selectedFile)
+
+      // Update selectedFile if ID was generated (new file)
+      if (result.updatedFileInfo && !isExistingFile(selectedFile)) {
+        setSelectedFile(result.updatedFileInfo)
+        localStorage.setItem(
+          SELECTED_FILE_KEY,
+          JSON.stringify(result.updatedFileInfo)
+        )
+      }
+
+      setSyncStatus('synced')
+      setLastSyncTime(result.merged.lastModified)
+    } catch (error) {
+      console.error('Sync failed:', error)
+
+      if (isTokenExpiredError(error)) {
+        setNeedsReconnect(true)
+        setSyncStatus('idle')
+        throw error
+      }
+
+      setSyncStatus('error')
+      throw error
+    }
+  }
+
   // Throttled auto-sync function (max once per minute)
   const throttledSync = useThrottledCallback(async () => {
     console.log('Auto-syncing...')
@@ -96,12 +132,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       console.error('Auto-sync failed:', error)
 
       // Check if token expired - if so, set reconnect flag instead of showing error
-      // Check both instance type and message content (Graph API may wrap our error)
-      const isTokenExpired =
-        error instanceof TokenExpiredError ||
-        (error instanceof Error && error.message.includes('Session expired'))
-
-      if (isTokenExpired) {
+      if (isTokenExpiredError(error)) {
         setNeedsReconnect(true)
         setSyncStatus('idle')
         return
@@ -214,97 +245,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     // Reset sync state
     setSyncStatus('idle')
     setLastSyncTime(null)
-  }
-
-  /**
-   * Trigger manual sync with Last Write Wins (LWW) merge
-   * Automatically resolves conflicts based on updatedAt timestamps
-   */
-  const syncNow = async (): Promise<void> => {
-    if (!cloudStorage.currentProvider || !selectedFile) {
-      throw new Error('Not connected')
-    }
-
-    try {
-      setSyncStatus('syncing')
-
-      // Get local snapshot
-      const local = await syncService.getLocalSnapshot()
-
-      // Download remote data (or use empty for new files)
-      let remote: SyncData
-      const isNewFile = !isExistingFile(selectedFile)
-
-      if (isNewFile) {
-        // New file doesn't exist yet, treat as empty remote
-        remote = {
-          recipes: [],
-          mealPlans: [],
-          ingredients: [],
-          groceryLists: [],
-          groceryItems: [],
-          lastModified: 0,
-          version: 1,
-        }
-      } else {
-        // Download and validate remote data
-        const remoteJson = await cloudStorage.downloadFile(selectedFile)
-        const parsedRemote = JSON.parse(remoteJson)
-
-        const validationResult = SyncDataSchema.safeParse(parsedRemote)
-        if (!validationResult.success) {
-          console.error(
-            'Remote data validation failed:',
-            validationResult.error
-          )
-          throw new Error('Invalid remote data format')
-        }
-
-        remote = validationResult.data as SyncData
-      }
-
-      // Merge using LWW strategy (handled by service)
-      const mergeResult = await syncService.mergeWithLWW(local, remote)
-
-      // Apply merged data
-      await syncService.applyMergedData(mergeResult.merged)
-
-      // Only upload if changes were made during merge
-      if (mergeResult.hasChanges) {
-        const uploadData = mergeResult.merged
-        const updatedFileInfo = await cloudStorage.uploadFile(
-          selectedFile,
-          JSON.stringify(uploadData)
-        )
-
-        // Update selectedFile if ID was generated (new file)
-        if (!isExistingFile(selectedFile) && updatedFileInfo.id) {
-          setSelectedFile(updatedFileInfo)
-          localStorage.setItem(
-            SELECTED_FILE_KEY,
-            JSON.stringify(updatedFileInfo)
-          )
-        }
-      }
-
-      setSyncStatus('synced')
-      setLastSyncTime(mergeResult.merged.lastModified)
-    } catch (error) {
-      console.error('Sync failed:', error)
-
-      const isTokenExpired =
-        error instanceof TokenExpiredError ||
-        (error instanceof Error && error.message.includes('Session expired'))
-
-      if (isTokenExpired) {
-        setNeedsReconnect(true)
-        setSyncStatus('idle')
-        throw error
-      }
-
-      setSyncStatus('error')
-      throw error
-    }
   }
 
   /**

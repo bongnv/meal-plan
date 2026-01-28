@@ -42,6 +42,7 @@ const createMockCloudStorage = () => ({
   isConnecting: false,
   accountInfo: { name: 'Test User', email: 'test@example.com' },
   error: null,
+  providerInstance: null,
   setProvider: vi.fn(),
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn().mockResolvedValue(undefined),

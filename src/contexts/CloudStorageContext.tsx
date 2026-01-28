@@ -34,6 +34,9 @@ interface CloudStorageContextType {
   currentProvider: CloudProvider | null
   isAuthenticated: boolean
 
+  // Provider instance (for dependency injection)
+  providerInstance: ICloudStorageProvider | null
+
   // Auth methods (managed by context)
   connect: (provider: CloudProvider) => Promise<void>
   disconnect: () => Promise<void>
@@ -220,6 +223,9 @@ export function CloudStorageProvider({ children }: { children: ReactNode }) {
       value={{
         currentProvider,
         isAuthenticated,
+        providerInstance: currentProvider
+          ? (providers.get(currentProvider) ?? null)
+          : null,
         connect,
         disconnect,
         getAccountInfo,

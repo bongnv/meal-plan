@@ -1,9 +1,27 @@
+import { z } from 'zod'
+
 import { db, type MealPlanDB } from '../db/database'
+import {
+  isExistingFile,
+  type FileInfo,
+  type ICloudStorageProvider,
+} from '../utils/storage/ICloudStorageProvider'
 
 import type { GroceryList, GroceryItem } from '../types/groceryList'
 import type { Ingredient } from '../types/ingredient'
 import type { MealPlan } from '../types/mealPlan'
 import type { Recipe } from '../types/recipe'
+
+// Zod schema for validating remote sync data
+const SyncDataSchema = z.object({
+  recipes: z.array(z.any()), // Could be more specific with Recipe schema
+  mealPlans: z.array(z.any()),
+  ingredients: z.array(z.any()),
+  groceryLists: z.array(z.any()).optional().default([]),
+  groceryItems: z.array(z.any()).optional().default([]),
+  lastModified: z.number(),
+  version: z.number(),
+})
 
 /**
  * SyncData represents the complete application state for syncing
@@ -27,26 +45,116 @@ export interface MergeResult {
 }
 
 /**
+ * SyncResult returned from performSync operation
+ */
+export interface SyncResult {
+  merged: SyncData
+  hasChanges: boolean
+  updatedFileInfo?: FileInfo
+}
+
+/**
  * SyncService
  * Stateless business logic for syncing data with Last Write Wins (LWW) strategy
- * Database instance injected via constructor
+ * Dependencies injected via constructor for testability
  */
-export const createSyncService = (db: MealPlanDB) => ({
+export class SyncService {
+  constructor(
+    private readonly storage: ICloudStorageProvider,
+    private readonly db: MealPlanDB
+  ) {}
+
+  /**
+   * Perform complete sync operation with cloud storage
+   * Downloads remote data, merges with local, applies changes, and uploads if needed
+   *
+   * @param fileInfo - File to sync with
+   * @returns SyncResult with merged data and optional updated file info
+   */
+  async performSync(fileInfo: FileInfo): Promise<SyncResult> {
+    // Get local snapshot
+    const local = await this.getLocalSnapshot()
+
+    // Download and validate remote data (or use empty for new files)
+    const remote = await this.downloadAndValidateRemote(fileInfo)
+
+    // Merge using LWW strategy
+    const mergeResult = await this.mergeWithLWW(local, remote)
+
+    // Apply merged data
+    await this.applyMergedData(mergeResult.merged)
+
+    // Upload if changes were made during merge
+    if (mergeResult.hasChanges) {
+      const updatedFileInfo = await this.storage.uploadFile(
+        fileInfo,
+        JSON.stringify(mergeResult.merged)
+      )
+
+      return {
+        ...mergeResult,
+        updatedFileInfo,
+      }
+    }
+
+    return mergeResult
+  }
+
+  /**
+   * Download and validate remote sync data
+   * For new files, returns empty sync data structure
+   *
+   * @param fileInfo - File to download
+   * @returns Validated SyncData
+   * @private
+   */
+  private async downloadAndValidateRemote(
+    fileInfo: FileInfo
+  ): Promise<SyncData> {
+    const isNewFile = !isExistingFile(fileInfo)
+
+    if (isNewFile) {
+      // New file doesn't exist yet, treat as empty remote
+      return {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 0,
+        version: 1,
+      }
+    }
+
+    // Download and validate remote data
+    const remoteJson = await this.storage.downloadFile(fileInfo)
+    const parsedRemote = JSON.parse(remoteJson)
+
+    const validationResult = SyncDataSchema.safeParse(parsedRemote)
+    if (!validationResult.success) {
+      console.error('Remote data validation failed:', validationResult)
+      throw new Error('Invalid remote data format')
+    }
+
+    return validationResult.data as SyncData
+  }
+
   /**
    * Get current local state snapshot
+   * @private
    */
-  async getLocalSnapshot(): Promise<SyncData> {
-    const lastModified = await db.getLastModified()
+  private async getLocalSnapshot(): Promise<SyncData> {
+    const lastModified = await this.db.getLastModified()
     return {
-      recipes: await db.recipes.toArray(),
-      mealPlans: await db.mealPlans.toArray(),
-      ingredients: await db.ingredients.toArray(),
-      groceryLists: await db.groceryLists.toArray(),
-      groceryItems: await db.groceryItems.toArray(),
+      recipes: await this.db.recipes.toArray(),
+      mealPlans: await this.db.mealPlans.toArray(),
+      ingredients: await this.db.ingredients.toArray(),
+      groceryLists: await this.db.groceryLists.toArray(),
+      groceryItems: await this.db.groceryItems.toArray(),
       lastModified,
       version: 1,
     }
-  },
+  }
 
   /**
    * Merge local and remote data using Last Write Wins (LWW) strategy
@@ -55,9 +163,33 @@ export const createSyncService = (db: MealPlanDB) => ({
    * @param local - Local data snapshot
    * @param remote - Remote data snapshot
    * @returns MergeResult with merged data and conflict information
+   * @private
    */
-  async mergeWithLWW(local: SyncData, remote: SyncData): Promise<MergeResult> {
+  private async mergeWithLWW(
+    local: SyncData,
+    remote: SyncData
+  ): Promise<MergeResult> {
     let hasChanges = false
+
+    // Check if remote is empty (new file sync)
+    const isRemoteEmpty =
+      remote.recipes.length === 0 &&
+      remote.mealPlans.length === 0 &&
+      remote.ingredients.length === 0 &&
+      remote.groceryLists.length === 0 &&
+      remote.groceryItems.length === 0
+
+    // If remote is empty but local has data, we need to upload
+    const hasLocalData =
+      local.recipes.length > 0 ||
+      local.mealPlans.length > 0 ||
+      local.ingredients.length > 0 ||
+      local.groceryLists.length > 0 ||
+      local.groceryItems.length > 0
+
+    if (isRemoteEmpty && hasLocalData) {
+      hasChanges = true
+    }
 
     // Merge recipes using LWW
     const recipeMap = new Map<string, Recipe>()
@@ -135,8 +267,10 @@ export const createSyncService = (db: MealPlanDB) => ({
       const existing = groceryItemMap.get(item.id)
       if (!existing) {
         groceryItemMap.set(item.id, item)
+        hasChanges = true
       } else if (item.updatedAt > existing.updatedAt) {
         groceryItemMap.set(item.id, item)
+        hasChanges = true
       }
     }
 
@@ -151,53 +285,54 @@ export const createSyncService = (db: MealPlanDB) => ({
     }
 
     return { merged, hasChanges }
-  },
+  }
 
   /**
    * Apply merged data to database
+   * @private
    */
-  async applyMergedData(merged: SyncData): Promise<void> {
-    await db.transaction(
+  private async applyMergedData(merged: SyncData): Promise<void> {
+    await this.db.transaction(
       'rw',
       [
-        db.recipes,
-        db.mealPlans,
-        db.ingredients,
-        db.groceryLists,
-        db.groceryItems,
-        db.metadata,
+        this.db.recipes,
+        this.db.mealPlans,
+        this.db.ingredients,
+        this.db.groceryLists,
+        this.db.groceryItems,
+        this.db.metadata,
       ],
       async () => {
-        await db.recipes.clear()
-        await db.recipes.bulkAdd(merged.recipes)
+        await this.db.recipes.clear()
+        await this.db.recipes.bulkAdd(merged.recipes)
 
-        await db.mealPlans.clear()
-        await db.mealPlans.bulkAdd(merged.mealPlans)
+        await this.db.mealPlans.clear()
+        await this.db.mealPlans.bulkAdd(merged.mealPlans)
 
-        await db.ingredients.clear()
-        await db.ingredients.bulkAdd(merged.ingredients)
+        await this.db.ingredients.clear()
+        await this.db.ingredients.bulkAdd(merged.ingredients)
 
-        await db.groceryLists.clear()
-        await db.groceryLists.bulkAdd(merged.groceryLists)
+        await this.db.groceryLists.clear()
+        await this.db.groceryLists.bulkAdd(merged.groceryLists)
 
-        await db.groceryItems.clear()
-        await db.groceryItems.bulkAdd(merged.groceryItems)
+        await this.db.groceryItems.clear()
+        await this.db.groceryItems.bulkAdd(merged.groceryItems)
 
         // Update lastModified to MAX of current and merged
         // This handles race condition: if user made changes during sync,
         // we preserve the newer timestamp
-        const currentLastModified = await db.getLastModified()
+        const currentLastModified = await this.db.getLastModified()
         const newLastModified = Math.max(
           currentLastModified,
           merged.lastModified
         )
-        await db.metadata.put({
+        await this.db.metadata.put({
           key: 'lastModified',
           value: newLastModified,
         })
       }
     )
-  },
+  }
 
   /**
    * Validate sync file name (pure function)
@@ -228,7 +363,7 @@ export const createSyncService = (db: MealPlanDB) => ({
     }
 
     return null
-  },
+  }
 
   /**
    * Normalize file name by ensuring .json.gz extension (pure function)
@@ -237,8 +372,12 @@ export const createSyncService = (db: MealPlanDB) => ({
    */
   normalizeSyncFileName(name: string): string {
     return name.endsWith('.json.gz') ? name : `${name}.json.gz`
-  },
-})
+  }
+}
 
-// Singleton instance
-export const syncService = createSyncService(db)
+// Singleton instance for backward compatibility
+// Note: New code should inject dependencies instead of using singleton
+export const syncService = new SyncService(
+  {} as ICloudStorageProvider, // Will be replaced by dependency injection
+  db
+)

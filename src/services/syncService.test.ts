@@ -1,13 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { createSyncService } from './syncService'
+import { SyncService } from './syncService'
 
 import type { SyncData } from './syncService'
 import type { MealPlanDB } from '../db/database'
+import type { GroceryItem } from '../types/groceryList'
+import type { Recipe } from '../types/recipe'
+import type { ICloudStorageProvider } from '../utils/storage/ICloudStorageProvider'
 
 describe('syncService', () => {
   let mockDb: MealPlanDB
-  let service: ReturnType<typeof createSyncService>
+  let mockStorage: ICloudStorageProvider
+  let service: SyncService
 
   beforeEach(() => {
     mockDb = {
@@ -21,7 +25,15 @@ describe('syncService', () => {
       transaction: vi.fn(async (_mode, _tables, callback) => await callback()),
     } as any
 
-    service = createSyncService(mockDb)
+    mockStorage = {
+      uploadFile: vi.fn(),
+      downloadFile: vi.fn(),
+      listFoldersAndFiles: vi.fn(),
+      isAuthenticated: vi.fn(),
+      getAccountInfo: vi.fn(),
+    } as any
+
+    service = new SyncService(mockStorage, mockDb)
   })
 
   const createEmptySyncData = (): SyncData => ({
@@ -34,7 +46,180 @@ describe('syncService', () => {
     version: 1,
   })
 
-  describe('getLocalSnapshot', () => {
+  describe('performSync', () => {
+    it('should sync new file - upload local data', async () => {
+      const newFile = {
+        id: '',
+        name: 'new.json.gz',
+        path: '/folder/new.json.gz',
+        isSharedWithMe: false,
+      }
+      const mockRecipes = [
+        { id: '1', name: 'Recipe 1', updatedAt: 1000 },
+      ] as any
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(1000)
+      mockStorage.uploadFile = vi
+        .fn()
+        .mockResolvedValue({ ...newFile, id: '123' })
+
+      const result = await service.performSync(newFile)
+
+      expect(result.hasChanges).toBe(true)
+      expect(result.updatedFileInfo).toEqual({ ...newFile, id: '123' })
+      expect(mockStorage.uploadFile).toHaveBeenCalled()
+    })
+
+    it('should sync existing file - download, merge, upload if changes', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+      const remoteData = {
+        recipes: [{ id: '2', name: 'Remote Recipe', updatedAt: 2000 }],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 2000,
+        version: 1,
+      }
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(1000)
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockStorage.uploadFile = vi.fn().mockResolvedValue(existingFile)
+
+      const result = await service.performSync(existingFile)
+
+      expect(result.hasChanges).toBe(true)
+    })
+
+    it('should detect changes when local has new records not in remote', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+      }
+      const remoteData = {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [
+          {
+            id: 'ing-1',
+            name: 'Remote Ingredient',
+            updatedAt: 1000,
+          },
+        ],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+      const localRecipe = {
+        id: 'local-1',
+        name: 'Local Recipe',
+        updatedAt: 2000,
+      } as any
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([localRecipe])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(2000)
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockStorage.uploadFile = vi.fn().mockResolvedValue(existingFile)
+
+      const result = await service.performSync(existingFile)
+
+      expect(result.hasChanges).toBe(true)
+      expect(result.merged.recipes).toHaveLength(1)
+      expect(result.merged.recipes[0].id).toBe('local-1')
+      expect(mockStorage.uploadFile).toHaveBeenCalled()
+      expect(mockStorage.downloadFile).toHaveBeenCalledWith(existingFile)
+      expect(mockStorage.uploadFile).toHaveBeenCalled()
+    })
+
+    it('should not upload if no changes after merge', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+      const sameData = {
+        recipes: [{ id: '1', name: 'Recipe 1', updatedAt: 1000 }],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue(sameData.recipes)
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(1000)
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(sameData))
+
+      const result = await service.performSync(existingFile)
+
+      expect(result.hasChanges).toBe(false)
+      expect(mockStorage.uploadFile).not.toHaveBeenCalled()
+    })
+
+    it('should throw error for invalid remote data', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+      const invalidData = { invalid: 'structure' }
+
+      // Mock local snapshot
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(1000)
+
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(invalidData))
+
+      await expect(service.performSync(existingFile)).rejects.toThrow(
+        'Invalid remote data format'
+      )
+    })
+  })
+
+  // Note: The following tests access private methods for comprehensive testing
+  // In production, these are called internally by performSync()
+
+  describe('getLocalSnapshot (private)', () => {
     it('should get current local state', async () => {
       const mockRecipes = [{ id: '1', name: 'Recipe 1' }] as any
       const mockMealPlans = [{ id: 'mp1', type: 'recipe' }] as any
@@ -49,6 +234,7 @@ describe('syncService', () => {
       mockDb.groceryItems.toArray = vi.fn().mockResolvedValue(mockItems)
       mockDb.getLastModified = vi.fn().mockResolvedValue(12345)
 
+      // @ts-expect-error - Accessing private method for testing
       const result = await service.getLocalSnapshot()
 
       expect(result).toEqual({
@@ -87,6 +273,7 @@ describe('syncService', () => {
         ],
       }
 
+      // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
       expect(result.merged.recipes).toHaveLength(1)
@@ -117,6 +304,7 @@ describe('syncService', () => {
         ],
       }
 
+      // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
       expect(result.merged.ingredients).toHaveLength(1)
@@ -134,6 +322,7 @@ describe('syncService', () => {
         recipes: [{ id: '2', name: 'Recipe 2', updatedAt: 1000 } as any],
       }
 
+      // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
       expect(result.merged.recipes).toHaveLength(2)
@@ -162,6 +351,7 @@ describe('syncService', () => {
         version: 1,
       }
 
+      // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
       expect(result.merged.recipes).toHaveLength(2)
@@ -200,6 +390,7 @@ describe('syncService', () => {
       mockDb.getLastModified = vi.fn().mockResolvedValue(3000)
       mockDb.metadata.put = vi.fn().mockResolvedValue(undefined)
 
+      // @ts-expect-error - Accessing private method for testing
       await service.applyMergedData(merged)
 
       expect(mockDb.transaction).toHaveBeenCalled()
@@ -240,12 +431,185 @@ describe('syncService', () => {
       mockDb.getLastModified = vi.fn().mockResolvedValue(5000) // Current is newer
       mockDb.metadata.put = vi.fn().mockResolvedValue(undefined)
 
+      // @ts-expect-error - Accessing private method for testing
       await service.applyMergedData(merged)
 
       expect(mockDb.metadata.put).toHaveBeenCalledWith({
         key: 'lastModified',
         value: 5000, // Uses current timestamp since it's newer
       })
+    })
+  })
+
+  describe('hasChanges calculation', () => {
+    it('should set hasChanges=true when local has new records', async () => {
+      const local: SyncData = {
+        recipes: [{ id: '1', name: 'Test', updatedAt: 1000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 0,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      expect(result.hasChanges).toBe(true)
+      expect(result.merged.recipes).toHaveLength(1)
+    })
+
+    it('should set hasChanges=false when local and remote are identical', async () => {
+      const recipe = { id: '1', name: 'Test', updatedAt: 1000 } as Recipe
+
+      const local: SyncData = {
+        recipes: [recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      expect(result.hasChanges).toBe(false)
+    })
+
+    it('should set hasChanges=true when remote has new records', async () => {
+      const local: SyncData = {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 0,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [{ id: '1', name: 'Test', updatedAt: 1000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      expect(result.hasChanges).toBe(true)
+    })
+
+    it('should set hasChanges=true when remote has newer version', async () => {
+      const local: SyncData = {
+        recipes: [{ id: '1', name: 'Old', updatedAt: 1000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [{ id: '1', name: 'New', updatedAt: 2000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 2000,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      expect(result.hasChanges).toBe(true)
+      expect(result.merged.recipes[0].name).toBe('New')
+    })
+
+    it('should set hasChanges=true for grocery items changes', async () => {
+      const local: SyncData = {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 0,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [
+          { id: '1', name: 'Item', updatedAt: 1000 } as GroceryItem,
+        ],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      expect(result.hasChanges).toBe(true)
+    })
+
+    it('should set hasChanges=false when local is newer (no upload needed)', async () => {
+      const local: SyncData = {
+        recipes: [{ id: '1', name: 'Newer', updatedAt: 2000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 2000,
+        version: 1,
+      }
+
+      const remote: SyncData = {
+        recipes: [{ id: '1', name: 'Older', updatedAt: 1000 } as Recipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.mergeWithLWW(local, remote)
+
+      // Local is newer, so merged = local, no changes needed
+      expect(result.hasChanges).toBe(false)
+      expect(result.merged.recipes[0].name).toBe('Newer')
     })
   })
 
