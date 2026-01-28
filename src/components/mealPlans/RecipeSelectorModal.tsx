@@ -1,27 +1,23 @@
 import {
-  ActionIcon,
   Badge,
   Box,
-  Button,
   Card,
   Drawer,
   Group,
-  MultiSelect,
   Paper,
   ScrollArea,
-  SegmentedControl,
   Stack,
   Text,
-  TextInput,
   Title,
 } from '@mantine/core'
-import { IconCheck, IconSearch, IconX } from '@tabler/icons-react'
-import { useMemo, useState } from 'react'
+import { IconCheck } from '@tabler/icons-react'
+import { useMemo } from 'react'
 
+import { useRecipeFilters } from '../../hooks/useRecipeFilters'
 import { recipeService } from '../../services/recipeService'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
+import { RecipeFilterPanel } from '../recipes/RecipeFilterPanel'
 
-import type { TimeRange } from '../../services/recipeService'
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
@@ -42,11 +38,8 @@ export function RecipeSelectorModal({
   selectedValue,
   onSelect,
 }: RecipeSelectorModalProps) {
-  // Filter state
-  const [searchText, setSearchText] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([])
-  const [timeRange, setTimeRange] = useState<TimeRange>(null)
+  // Filter state and actions from custom hook
+  const { filters, actions } = useRecipeFilters()
 
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
@@ -55,46 +48,25 @@ export function RecipeSelectorModal({
 
   // Filter recipes using the service
   const filteredRecipes = useMemo(
-    () =>
-      recipeService.filterRecipesAdvanced(recipes, {
-        searchText,
-        selectedTags,
-        selectedIngredients,
-        timeRange,
-      }),
-    [recipes, searchText, selectedTags, selectedIngredients, timeRange]
+    () => recipeService.filterRecipesAdvanced(recipes, filters),
+    [recipes, filters]
   )
 
   // Filter custom meal types based on search text
   const filteredCustomOptions = useMemo(() => {
-    if (!searchText) return CUSTOM_MEAL_TYPES
+    if (!filters.searchText) return CUSTOM_MEAL_TYPES
     return CUSTOM_MEAL_TYPES.filter(option =>
-      option.label.toLowerCase().includes(searchText.toLowerCase())
+      option.label.toLowerCase().includes(filters.searchText.toLowerCase())
     )
-  }, [searchText])
+  }, [filters.searchText])
 
   // Show custom text option if search doesn't match any recipe or predefined option
   const showCustomTextOption = useMemo(() => {
-    if (!searchText.trim()) return false
+    if (!filters.searchText.trim()) return false
     const hasRecipeMatch = filteredRecipes.length > 0
     const hasCustomMatch = filteredCustomOptions.length > 0
     return !hasRecipeMatch && !hasCustomMatch
-  }, [searchText, filteredRecipes, filteredCustomOptions])
-
-  // Check if any filters are active
-  const hasActiveFilters =
-    searchText !== '' ||
-    selectedTags.length > 0 ||
-    selectedIngredients.length > 0 ||
-    timeRange !== null
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setSearchText('')
-    setSelectedTags([])
-    setSelectedIngredients([])
-    setTimeRange(null)
-  }
+  }, [filters.searchText, filteredRecipes, filteredCustomOptions])
 
   const handleSelectRecipe = (recipeId: string) => {
     onSelect(`recipe:${recipeId}`)
@@ -107,7 +79,7 @@ export function RecipeSelectorModal({
   }
 
   const handleSelectCustomText = () => {
-    onSelect(searchText.trim())
+    onSelect(filters.searchText.trim())
     onClose()
   }
 
@@ -125,91 +97,17 @@ export function RecipeSelectorModal({
     >
       <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Filters Section */}
-        <Paper
+        <Box
           p="md"
           style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
         >
-          <Stack gap="sm">
-            {/* Search input */}
-            <TextInput
-              placeholder="Search recipes..."
-              leftSection={<IconSearch size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.currentTarget.value)}
-              rightSection={
-                searchText && (
-                  <ActionIcon
-                    variant="transparent"
-                    onClick={() => setSearchText('')}
-                    size="sm"
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                )
-              }
-            />
-
-            {/* Tag filter */}
-            {allTags.length > 0 && (
-              <MultiSelect
-                placeholder="Filter by tags..."
-                data={allTags}
-                value={selectedTags}
-                onChange={setSelectedTags}
-                searchable
-                clearable
-                size="sm"
-              />
-            )}
-
-            {/* Ingredient filter */}
-            {ingredients.length > 0 && (
-              <MultiSelect
-                placeholder="Filter by ingredients..."
-                data={ingredients.map(ing => ({
-                  value: ing.id,
-                  label: ing.name,
-                }))}
-                value={selectedIngredients}
-                onChange={setSelectedIngredients}
-                searchable
-                clearable
-                size="sm"
-              />
-            )}
-
-            {/* Time range filter */}
-            <Box>
-              <Text size="sm" fw={500} mb={4}>
-                Prep + Cook Time
-              </Text>
-              <SegmentedControl
-                value={timeRange || ''}
-                onChange={value => setTimeRange(value as TimeRange)}
-                data={[
-                  { label: 'All', value: '' },
-                  { label: '< 30m', value: '<30' },
-                  { label: '30-60m', value: '30-60' },
-                  { label: '> 60m', value: '>60' },
-                ]}
-                fullWidth
-                size="xs"
-              />
-            </Box>
-
-            {/* Clear filters button */}
-            {hasActiveFilters && (
-              <Button
-                variant="subtle"
-                size="xs"
-                onClick={handleClearFilters}
-                fullWidth
-              >
-                Clear all filters
-              </Button>
-            )}
-          </Stack>
-        </Paper>
+          <RecipeFilterPanel
+            filters={filters}
+            actions={actions}
+            allTags={allTags}
+            allIngredients={ingredients}
+          />
+        </Box>
 
         {/* Results Section */}
         <ScrollArea style={{ flex: 1 }}>
@@ -236,7 +134,7 @@ export function RecipeSelectorModal({
                       <Text fw={500} size="sm" c="green">
                         Use custom text:
                       </Text>
-                      <Text size="sm">"{searchText.trim()}"</Text>
+                      <Text size="sm">"{filters.searchText.trim()}"</Text>
                     </Stack>
                   </Group>
                 </Card>
@@ -293,7 +191,7 @@ export function RecipeSelectorModal({
               !showCustomTextOption && (
                 <Paper p="xl" withBorder>
                   <Text c="dimmed" ta="center">
-                    {hasActiveFilters
+                    {actions.hasActiveFilters
                       ? 'No options match your search'
                       : 'No options available'}
                   </Text>
@@ -305,7 +203,7 @@ export function RecipeSelectorModal({
               <Box>
                 <Group justify="space-between" mb="xs">
                   <Title order={5}>Recipes ({filteredRecipes.length})</Title>
-                  {hasActiveFilters && (
+                  {actions.hasActiveFilters && (
                     <Badge size="sm" variant="light">
                       Filtered
                     </Badge>
@@ -315,7 +213,7 @@ export function RecipeSelectorModal({
                 {filteredRecipes.length === 0 ? (
                   <Paper p="xl" withBorder>
                     <Text c="dimmed" ta="center">
-                      {hasActiveFilters
+                      {actions.hasActiveFilters
                         ? 'No recipes match your filters'
                         : 'No recipes available'}
                     </Text>

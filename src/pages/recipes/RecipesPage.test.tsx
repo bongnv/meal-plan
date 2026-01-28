@@ -25,6 +25,13 @@ vi.mock('dexie-react-hooks', () => ({
 vi.mock('../../services/recipeService', () => ({
   recipeService: {
     delete: vi.fn(),
+    extractUniqueTags: vi.fn((recipes: any[]) => {
+      const tagSet = new Set<string>()
+      recipes.forEach((recipe: any) => {
+        recipe.tags.forEach((tag: string) => tagSet.add(tag))
+      })
+      return Array.from(tagSet).sort()
+    }),
     filterRecipesAdvanced: vi.fn((recipes: any[], filters: any) => {
       // Implementation for testing - mirrors the actual service logic
       return recipes.filter((recipe: any) => {
@@ -196,26 +203,22 @@ describe('RecipesPage', () => {
     })
   })
 
-  it('should render with filter controls', () => {
+  it('should render with filter controls', async () => {
     renderWithProviders(<RecipesPage />)
 
     // Check page title and create button
     expect(screen.getByText('My Recipes')).toBeInTheDocument()
     expect(screen.getByText('Create Recipe')).toBeInTheDocument()
 
-    // Check filter controls exist
+    // Check search box is always visible
     expect(screen.getByPlaceholderText('Search recipes...')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Filter by tags...')).toBeInTheDocument()
-    expect(
-      screen.getByPlaceholderText('Filter by ingredients...')
-    ).toBeInTheDocument()
-    expect(screen.getByText('Time:')).toBeInTheDocument()
 
-    // Check time filter options
-    expect(screen.getByText('All')).toBeInTheDocument()
-    expect(screen.getByText('< 30 min')).toBeInTheDocument()
-    expect(screen.getByText('30-60 min')).toBeInTheDocument()
-    expect(screen.getByText('> 60 min')).toBeInTheDocument()
+    // Check filter controls are visible (no longer behind a toggle)
+    await waitFor(() => {
+      expect(screen.getByText('Tags')).toBeInTheDocument()
+      expect(screen.getByText('Ingredients')).toBeInTheDocument()
+      expect(screen.getByText('Total Time')).toBeInTheDocument()
+    })
   })
 
   it('should filter recipes by search text', async () => {
@@ -252,8 +255,15 @@ describe('RecipesPage', () => {
       expect(screen.getByText('1 recipe found')).toBeInTheDocument()
     })
 
+    // Clear button should be visible when filters are active
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /clear filters/i })
+      ).toBeInTheDocument()
+    })
+
     // Click clear filters button
-    const clearButton = screen.getByText('Clear filters')
+    const clearButton = screen.getByRole('button', { name: /clear filters/i })
     fireEvent.click(clearButton)
 
     // All recipes should be visible again
@@ -342,20 +352,29 @@ describe('RecipesPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/recipes/1/edit')
   })
 
-  it('should show time filter options', () => {
+  it('should show time filter options', async () => {
     renderWithProviders(<RecipesPage />)
 
-    expect(screen.getByText('All')).toBeInTheDocument()
-    expect(screen.getByText('< 30 min')).toBeInTheDocument()
-    expect(screen.getByText('30-60 min')).toBeInTheDocument()
-    expect(screen.getByText('> 60 min')).toBeInTheDocument()
+    // Filters are always visible, check time filter options
+    await waitFor(() => {
+      expect(screen.getByText('Total Time')).toBeInTheDocument()
+      expect(screen.getByText('All')).toBeInTheDocument()
+      expect(screen.getByText('Under 30 min')).toBeInTheDocument()
+      expect(screen.getByText('30-60 min')).toBeInTheDocument()
+      expect(screen.getByText('Over 60 min')).toBeInTheDocument()
+    })
   })
 
   it('should filter by time range when selected', async () => {
     renderWithProviders(<RecipesPage />)
 
-    // Click the "< 30 min" option
-    const quickOption = screen.getByText('< 30 min')
+    // Wait for filters to be visible
+    await waitFor(() => {
+      expect(screen.getByText('Total Time')).toBeInTheDocument()
+    })
+
+    // Click the "Under 30 min" option
+    const quickOption = screen.getByText('Under 30 min')
     fireEvent.click(quickOption)
 
     await waitFor(() => {
@@ -370,8 +389,13 @@ describe('RecipesPage', () => {
   it('should show all recipes when "All" time filter is selected', async () => {
     renderWithProviders(<RecipesPage />)
 
+    // Wait for filters to be visible
+    await waitFor(() => {
+      expect(screen.getByText('Total Time')).toBeInTheDocument()
+    })
+
     // First select a filter
-    fireEvent.click(screen.getByText('< 30 min'))
+    fireEvent.click(screen.getByText('Under 30 min'))
 
     // Then select "All"
     fireEvent.click(screen.getByText('All'))

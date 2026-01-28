@@ -116,7 +116,7 @@ export function MealPlansPage() {
         >
           {/* Main Content Area - List View */}
           <Grid.Col
-            span={{ base: 12, lg: 9 }}
+            span={{ base: 12, lg: 7 }}
             style={{
               height: '100%',
               overflow: 'hidden',
@@ -141,7 +141,7 @@ export function MealPlansPage() {
           {/* Recipe Sidebar - desktop only */}
           {isDesktop && (
             <Grid.Col
-              span={{ base: 12, lg: 3 }}
+              span={{ base: 12, lg: 5 }}
               style={{
                 height: '100%',
                 overflow: 'hidden',

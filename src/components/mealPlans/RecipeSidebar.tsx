@@ -11,25 +11,21 @@ import {
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { db } from '../../db/database'
+import { useRecipeFilters } from '../../hooks/useRecipeFilters'
 import { recipeService } from '../../services/recipeService'
 
 import { DraggableRecipeCard } from './DraggableRecipeCard'
-
-import type { TimeRange } from '../../services/recipeService'
 
 export const RecipeSidebar = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
 
-  // Filter state
-  const [searchText, setSearchText] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([])
-  const [timeRange, setTimeRange] = useState<TimeRange>(null)
+  // Filter state and actions from custom hook
+  const { filters, actions } = useRecipeFilters()
 
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
@@ -38,30 +34,9 @@ export const RecipeSidebar = () => {
 
   // Filter recipes using the service
   const filteredRecipes = useMemo(
-    () =>
-      recipeService.filterRecipesAdvanced(recipes, {
-        searchText,
-        selectedTags,
-        selectedIngredients,
-        timeRange,
-      }),
-    [recipes, searchText, selectedTags, selectedIngredients, timeRange]
+    () => recipeService.filterRecipesAdvanced(recipes, filters),
+    [recipes, filters]
   )
-
-  // Check if any filters are active
-  const hasActiveFilters =
-    searchText !== '' ||
-    selectedTags.length > 0 ||
-    selectedIngredients.length > 0 ||
-    timeRange !== null
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setSearchText('')
-    setSelectedTags([])
-    setSelectedIngredients([])
-    setTimeRange(null)
-  }
 
   return (
     <Paper
@@ -76,8 +51,8 @@ export const RecipeSidebar = () => {
         <TextInput
           placeholder="Search recipes..."
           leftSection={<IconSearch size={16} />}
-          value={searchText}
-          onChange={e => setSearchText(e.currentTarget.value)}
+          value={filters.searchText}
+          onChange={e => actions.setSearchText(e.currentTarget.value)}
         />
 
         {/* Tag filter */}
@@ -85,8 +60,8 @@ export const RecipeSidebar = () => {
           <MultiSelect
             placeholder="Filter by tags..."
             data={allTags}
-            value={selectedTags}
-            onChange={setSelectedTags}
+            value={filters.selectedTags}
+            onChange={actions.setSelectedTags}
             searchable
             clearable
             size="sm"
@@ -101,8 +76,8 @@ export const RecipeSidebar = () => {
               value: ing.id,
               label: ing.name,
             }))}
-            value={selectedIngredients}
-            onChange={setSelectedIngredients}
+            value={filters.selectedIngredients}
+            onChange={actions.setSelectedIngredients}
             searchable
             clearable
             size="sm"
@@ -111,10 +86,8 @@ export const RecipeSidebar = () => {
 
         {/* Time range filter */}
         <SegmentedControl
-          value={timeRange || ''}
-          onChange={value =>
-            setTimeRange(value === '' ? null : (value as TimeRange))
-          }
+          value={filters.timeRange || ''}
+          onChange={value => actions.setTimeRange((value || null) as any)}
           data={[
             { label: 'All', value: '' },
             { label: '< 30 min', value: 'under-30' },
@@ -126,7 +99,7 @@ export const RecipeSidebar = () => {
         />
 
         {/* Results count and clear button */}
-        {hasActiveFilters && (
+        {actions.hasActiveFilters && (
           <Group justify="space-between">
             <Text size="sm" c="dimmed">
               {filteredRecipes.length}{' '}
@@ -135,7 +108,7 @@ export const RecipeSidebar = () => {
             <Button
               variant="subtle"
               size="compact-sm"
-              onClick={handleClearFilters}
+              onClick={actions.clearFilters}
             >
               Clear
             </Button>
@@ -156,8 +129,8 @@ export const RecipeSidebar = () => {
         {filteredRecipes.length === 0 ? (
           <Stack align="center" justify="center" py="xl">
             <Text c="dimmed">No recipes found</Text>
-            {hasActiveFilters && (
-              <Button size="sm" variant="light" onClick={handleClearFilters}>
+            {actions.hasActiveFilters && (
+              <Button size="sm" variant="light" onClick={actions.clearFilters}>
                 Clear filters
               </Button>
             )}

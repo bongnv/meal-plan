@@ -13,12 +13,12 @@ import {
   Title,
 } from '@mantine/core'
 import { IconClock, IconSearch } from '@tabler/icons-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
+import { useRecipeFilters } from '../../hooks/useRecipeFilters'
 import { recipeService } from '../../services/recipeService'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
-import type { TimeRange } from '../../services/recipeService'
 import type { Ingredient } from '../../types/ingredient'
 import type { Recipe } from '../../types/recipe'
 
@@ -35,11 +35,8 @@ export const RecipeSelector = ({
   selectedRecipeId,
   onSelect,
 }: RecipeSelectorProps) => {
-  // Filter state
-  const [searchText, setSearchText] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([])
-  const [timeRange, setTimeRange] = useState<TimeRange>(null)
+  // Filter state and actions from custom hook
+  const { filters, actions } = useRecipeFilters()
 
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
@@ -48,46 +45,25 @@ export const RecipeSelector = ({
 
   // Filter recipes using the service
   const filteredRecipes = useMemo(
-    () =>
-      recipeService.filterRecipesAdvanced(recipes, {
-        searchText,
-        selectedTags,
-        selectedIngredients,
-        timeRange,
-      }),
-    [recipes, searchText, selectedTags, selectedIngredients, timeRange]
+    () => recipeService.filterRecipesAdvanced(recipes, filters),
+    [recipes, filters]
   )
 
   // Filter custom meal types based on search text
   const filteredCustomOptions = useMemo(() => {
-    if (!searchText) return CUSTOM_MEAL_TYPES
+    if (!filters.searchText) return CUSTOM_MEAL_TYPES
     return CUSTOM_MEAL_TYPES.filter(option =>
-      option.label.toLowerCase().includes(searchText.toLowerCase())
+      option.label.toLowerCase().includes(filters.searchText.toLowerCase())
     )
-  }, [searchText])
+  }, [filters.searchText])
 
   // Show custom text option if search doesn't match any recipe or predefined option
   const showCustomTextOption = useMemo(() => {
-    if (!searchText.trim()) return false
+    if (!filters.searchText.trim()) return false
     const hasRecipeMatch = filteredRecipes.length > 0
     const hasCustomMatch = filteredCustomOptions.length > 0
     return !hasRecipeMatch && !hasCustomMatch
-  }, [searchText, filteredRecipes, filteredCustomOptions])
-
-  // Check if any filters are active
-  const hasActiveFilters =
-    searchText !== '' ||
-    selectedTags.length > 0 ||
-    selectedIngredients.length > 0 ||
-    timeRange !== null
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setSearchText('')
-    setSelectedTags([])
-    setSelectedIngredients([])
-    setTimeRange(null)
-  }
+  }, [filters.searchText, filteredRecipes, filteredCustomOptions])
 
   return (
     <Paper
@@ -102,8 +78,8 @@ export const RecipeSelector = ({
         <TextInput
           placeholder="Search recipes..."
           leftSection={<IconSearch size={16} />}
-          value={searchText}
-          onChange={e => setSearchText(e.currentTarget.value)}
+          value={filters.searchText}
+          onChange={e => actions.setSearchText(e.currentTarget.value)}
         />
 
         {/* Tag filter */}
@@ -111,8 +87,8 @@ export const RecipeSelector = ({
           <MultiSelect
             placeholder="Filter by tags..."
             data={allTags}
-            value={selectedTags}
-            onChange={setSelectedTags}
+            value={filters.selectedTags}
+            onChange={actions.setSelectedTags}
             searchable
             clearable
             size="sm"
@@ -127,8 +103,8 @@ export const RecipeSelector = ({
               value: ing.id,
               label: ing.name,
             }))}
-            value={selectedIngredients}
-            onChange={setSelectedIngredients}
+            value={filters.selectedIngredients}
+            onChange={actions.setSelectedIngredients}
             searchable
             clearable
             size="sm"
@@ -137,10 +113,8 @@ export const RecipeSelector = ({
 
         {/* Time range filter */}
         <SegmentedControl
-          value={timeRange || ''}
-          onChange={value =>
-            setTimeRange(value === '' ? null : (value as TimeRange))
-          }
+          value={filters.timeRange || ''}
+          onChange={value => actions.setTimeRange((value || null) as any)}
           data={[
             { label: 'All', value: '' },
             { label: '< 30 min', value: 'under-30' },
@@ -152,7 +126,7 @@ export const RecipeSelector = ({
         />
 
         {/* Results count and clear button */}
-        {hasActiveFilters && (
+        {actions.hasActiveFilters && (
           <Group justify="space-between">
             <Text size="sm" c="dimmed">
               {filteredRecipes.length}{' '}
@@ -161,7 +135,7 @@ export const RecipeSelector = ({
             <Button
               variant="subtle"
               size="compact-sm"
-              onClick={handleClearFilters}
+              onClick={actions.clearFilters}
             >
               Clear
             </Button>
@@ -184,8 +158,8 @@ export const RecipeSelector = ({
         !showCustomTextOption ? (
           <Stack align="center" justify="center" py="xl">
             <Text c="dimmed">No recipes found</Text>
-            {hasActiveFilters && (
-              <Button size="sm" variant="light" onClick={handleClearFilters}>
+            {actions.hasActiveFilters && (
+              <Button size="sm" variant="light" onClick={actions.clearFilters}>
                 Clear filters
               </Button>
             )}
@@ -202,11 +176,11 @@ export const RecipeSelector = ({
                   borderColor: 'var(--mantine-color-green-6)',
                   borderWidth: 2,
                 }}
-                onClick={() => onSelect(`other:${searchText.trim()}`)}
+                onClick={() => onSelect(`other:${filters.searchText.trim()}`)}
               >
                 <Stack gap="xs">
                   <Text fw={500} size="sm" c="green">
-                    ✏️ Use custom text: "{searchText.trim()}"
+                    ✏️ Use custom text: "{filters.searchText.trim()}"
                   </Text>
                 </Stack>
               </Card>
