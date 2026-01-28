@@ -57,9 +57,7 @@ export function DroppableDayCard({
       padding="md"
       withBorder
       style={{
-        backgroundColor: isOver
-          ? 'var(--mantine-color-blue-0)'
-          : undefined,
+        backgroundColor: isOver ? 'var(--mantine-color-blue-0)' : undefined,
         minHeight: '100px',
         transition: 'background-color 0.2s ease',
       }}
@@ -86,9 +84,7 @@ export function DroppableDayCard({
               const recipe = isRecipe
                 ? getRecipeById((meal as { recipeId: string }).recipeId)
                 : null
-              const typeInfo = !isRecipe
-                ? getMealPlanTypeInfo(meal.type)
-                : null
+              const typeInfo = !isRecipe ? getMealPlanTypeInfo(meal.type) : null
 
               return (
                 <Box

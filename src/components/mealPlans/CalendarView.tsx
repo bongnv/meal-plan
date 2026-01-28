@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core'
+import { Box, Button, Group, Modal, Stack, Text, Title } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconCalendar } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
@@ -46,7 +38,7 @@ export function CalendarView({
   const todayString = useMemo(() => {
     return getLocalDateString(new Date())
   }, [])
-  
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     const date = new Date()
     date.setHours(0, 0, 0, 0)
@@ -158,7 +150,12 @@ export function CalendarView({
   }
 
   return (
-    <Stack gap="md" role="region" aria-label="Meal Plans List" style={{ height: '100%', overflow: 'hidden' }}>
+    <Stack
+      gap="md"
+      role="region"
+      aria-label="Meal Plans List"
+      style={{ height: '100%', overflow: 'hidden' }}
+    >
       {/* Header with date picker and quick filters */}
       <Stack gap="md" style={{ flexShrink: 0 }}>
         <Group justify="space-between" align="flex-start" wrap="wrap">

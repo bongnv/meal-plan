@@ -64,7 +64,11 @@ export const RecipeSidebar = () => {
   }
 
   return (
-    <Paper p="md" withBorder style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Paper
+      p="md"
+      withBorder
+      style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+    >
       <Stack gap="md" style={{ flexShrink: 0 }}>
         <Title order={3}>Recipes</Title>
 
