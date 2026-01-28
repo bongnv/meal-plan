@@ -248,4 +248,73 @@ describe('syncService', () => {
       })
     })
   })
+
+  describe('validateSyncFileName', () => {
+    it('should return error for empty file name', () => {
+      const result = service.validateSyncFileName('', [])
+      expect(result).toBe('File name is required')
+    })
+
+    it('should return error for whitespace-only file name', () => {
+      const result = service.validateSyncFileName('   ', [])
+      expect(result).toBe('File name is required')
+    })
+
+    it('should return error for invalid characters', () => {
+      const invalidChars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+      invalidChars.forEach(char => {
+        const result = service.validateSyncFileName(`file${char}name`, [])
+        expect(result).toBe('Invalid characters in file name')
+      })
+    })
+
+    it('should return error if file already exists', () => {
+      const existingFiles = ['backup.json.gz', 'data.json.gz']
+      const result = service.validateSyncFileName('backup', existingFiles)
+      expect(result).toBe('File already exists in this folder')
+    })
+
+    it('should return error if file with extension already exists', () => {
+      const existingFiles = ['backup.json.gz']
+      const result = service.validateSyncFileName('backup.json.gz', existingFiles)
+      expect(result).toBe('File already exists in this folder')
+    })
+
+    it('should return null for valid file name', () => {
+      const result = service.validateSyncFileName('my-backup', [])
+      expect(result).toBeNull()
+    })
+
+    it('should return null for valid file name with extension', () => {
+      const result = service.validateSyncFileName('my-backup.json.gz', [])
+      expect(result).toBeNull()
+    })
+
+    it('should handle file names with special valid characters', () => {
+      const result = service.validateSyncFileName('my-backup_2024.01.15', [])
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('normalizeSyncFileName', () => {
+    it('should add .json.gz extension if missing', () => {
+      const result = service.normalizeSyncFileName('backup')
+      expect(result).toBe('backup.json.gz')
+    })
+
+    it('should not add extension if already present', () => {
+      const result = service.normalizeSyncFileName('backup.json.gz')
+      expect(result).toBe('backup.json.gz')
+    })
+
+    it('should handle empty string', () => {
+      const result = service.normalizeSyncFileName('')
+      expect(result).toBe('.json.gz')
+    })
+
+    it('should handle names with dots', () => {
+      const result = service.normalizeSyncFileName('my.backup.file')
+      expect(result).toBe('my.backup.file.json.gz')
+    })
+  })
 })

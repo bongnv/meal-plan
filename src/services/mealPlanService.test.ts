@@ -470,4 +470,54 @@ describe('mealPlanService', () => {
       expect(mockDb.getLastModified).toHaveBeenCalled()
     })
   })
+
+  describe('determineDefaultMealType', () => {
+    it('should return lunch when no meals exist for the date', () => {
+      const mealPlans: any[] = []
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('lunch')
+    })
+
+    it('should return lunch when only dinner exists', () => {
+      const mealPlans: any[] = [
+        { id: '1', date: '2024-01-15', mealType: 'dinner' },
+      ]
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('lunch')
+    })
+
+    it('should return dinner when only lunch exists', () => {
+      const mealPlans: any[] = [
+        { id: '1', date: '2024-01-15', mealType: 'lunch' },
+      ]
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('dinner')
+    })
+
+    it('should return lunch when both lunch and dinner exist', () => {
+      const mealPlans: any[] = [
+        { id: '1', date: '2024-01-15', mealType: 'lunch' },
+        { id: '2', date: '2024-01-15', mealType: 'dinner' },
+      ]
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('lunch')
+    })
+
+    it('should only consider meals for the specified date', () => {
+      const mealPlans: any[] = [
+        { id: '1', date: '2024-01-14', mealType: 'lunch' },
+        { id: '2', date: '2024-01-16', mealType: 'dinner' },
+      ]
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('lunch')
+    })
+
+    it('should handle breakfast meal type', () => {
+      const mealPlans: any[] = [
+        { id: '1', date: '2024-01-15', mealType: 'breakfast' },
+      ]
+      const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
+      expect(result).toBe('lunch')
+    })
+  })
 })

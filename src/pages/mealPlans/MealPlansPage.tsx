@@ -38,25 +38,11 @@ export function MealPlansPage() {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   const handleAddMeal = (params: { date: string }) => {
-    // Determine the meal type based on what already exists
-    // Default to lunch first, then dinner, then allow any
-    const existingMeals = mealPlans.filter(mp => mp.date === params.date)
-
-    let mealType: MealType = 'lunch'
-
-    if (existingMeals.length > 0) {
-      const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
-      const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
-
-      if (!hasLunch) {
-        mealType = 'lunch'
-      } else if (!hasDinner) {
-        mealType = 'dinner'
-      } else {
-        // Both exist, default to lunch (user can change in page)
-        mealType = 'lunch'
-      }
-    }
+    // Determine the meal type based on what already exists using service
+    const mealType = mealPlanService.determineDefaultMealType(
+      mealPlans,
+      params.date
+    )
 
     navigate(`/meal-plans/new?date=${params.date}&mealType=${mealType}`)
   }
@@ -84,24 +70,11 @@ export function MealPlansPage() {
         dateString: string
       }
 
-      // Determine meal type based on existing meals for that day
-      const existingMeals = mealPlans.filter(mp => mp.date === dateString)
-
-      let mealType: MealType = 'lunch'
-
-      if (existingMeals.length > 0) {
-        const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
-        const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
-
-        if (!hasLunch) {
-          mealType = 'lunch'
-        } else if (!hasDinner) {
-          mealType = 'dinner'
-        } else {
-          // Both exist, add as lunch (can be edited later)
-          mealType = 'lunch'
-        }
-      }
+      // Determine meal type based on existing meals for that day using service
+      const mealType = mealPlanService.determineDefaultMealType(
+        mealPlans,
+        dateString
+      )
 
       // Add the recipe as a meal plan
       try {

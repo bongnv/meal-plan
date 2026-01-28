@@ -4,6 +4,7 @@ import { generateId } from '../utils/idGenerator'
 import type { MealPlanDB } from '../db/database'
 import type {
   MealPlan,
+  MealType,
   CopyOptions,
   CopyResult,
   CopyPreviewItem,
@@ -361,6 +362,35 @@ export const createMealPlanService = (db: MealPlanDB) => ({
         mp.date >= startDateStr &&
         mp.date <= endDateStr
     ).length
+  },
+
+  /**
+   * Determine default meal type for a date based on existing meals (pure function)
+   * Returns 'lunch' if no meals exist or if lunch is missing
+   * Returns 'dinner' if lunch exists but dinner is missing
+   * Returns 'lunch' if both exist (can be changed by user)
+   * @param mealPlans Array of all meal plans
+   * @param date Date string (YYYY-MM-DD)
+   * @returns Default meal type
+   */
+  determineDefaultMealType(mealPlans: MealPlan[], date: string): MealType {
+    const existingMeals = mealPlans.filter(mp => mp.date === date)
+
+    if (existingMeals.length === 0) {
+      return 'lunch'
+    }
+
+    const hasLunch = existingMeals.some(mp => mp.mealType === 'lunch')
+    const hasDinner = existingMeals.some(mp => mp.mealType === 'dinner')
+
+    if (!hasLunch) {
+      return 'lunch'
+    } else if (!hasDinner) {
+      return 'dinner'
+    } else {
+      // Both exist, default to lunch (user can change)
+      return 'lunch'
+    }
   },
 })
 

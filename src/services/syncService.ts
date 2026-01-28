@@ -198,6 +198,46 @@ export const createSyncService = (db: MealPlanDB) => ({
       }
     )
   },
+
+  /**
+   * Validate sync file name (pure function)
+   * Checks for empty names, invalid characters, and ensures .json.gz extension
+   * @param name File name to validate
+   * @param existingFileNames Array of existing file names in the same folder
+   * @returns Error message if invalid, null if valid
+   */
+  validateSyncFileName(
+    name: string,
+    existingFileNames: string[]
+  ): string | null {
+    if (!name.trim()) {
+      return 'File name is required'
+    }
+
+    // Check for invalid characters
+    if (/[/\\:*?"<>|]/.test(name)) {
+      return 'Invalid characters in file name'
+    }
+
+    // Ensure .json.gz extension
+    const finalName = name.endsWith('.json.gz') ? name : `${name}.json.gz`
+
+    // Check if file already exists
+    if (existingFileNames.includes(finalName)) {
+      return 'File already exists in this folder'
+    }
+
+    return null
+  },
+
+  /**
+   * Normalize file name by ensuring .json.gz extension (pure function)
+   * @param name File name to normalize
+   * @returns Normalized file name with .json.gz extension
+   */
+  normalizeSyncFileName(name: string): string {
+    return name.endsWith('.json.gz') ? name : `${name}.json.gz`
+  },
 })
 
 // Singleton instance

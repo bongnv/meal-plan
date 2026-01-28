@@ -24,6 +24,7 @@ import {
 import { useState, useEffect, useCallback } from 'react'
 
 import { useCloudStorage } from '../../contexts/CloudStorageContext'
+import { syncService } from '../../services/syncService'
 
 import type {
   FileInfo,
@@ -133,24 +134,8 @@ export function FileSelectionModal({
   }
 
   const validateFileName = (name: string): string | null => {
-    if (!name.trim()) {
-      return 'File name is required'
-    }
-
-    // Check for invalid characters
-    if (/[/\\:*?"<>|]/.test(name)) {
-      return 'Invalid characters in file name'
-    }
-
-    // Ensure .json.gz extension
-    const finalName = name.endsWith('.json.gz') ? name : `${name}.json.gz`
-
-    // Check if file already exists
-    if (files.some(f => f.name === finalName)) {
-      return 'File already exists in this folder'
-    }
-
-    return null
+    const fileNames = files.map(f => f.name)
+    return syncService.validateSyncFileName(name, fileNames)
   }
 
   const handleFileNameChange = (value: string) => {
@@ -166,9 +151,7 @@ export function FileSelectionModal({
       return
     }
 
-    const finalName = newFileName.endsWith('.json.gz')
-      ? newFileName
-      : `${newFileName}.json.gz`
+    const finalName = syncService.normalizeSyncFileName(newFileName)
     const finalPath = currentFolder
       ? `${currentFolder.path}/${finalName}`
       : `/${finalName}`
