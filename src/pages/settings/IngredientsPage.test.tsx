@@ -3,20 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { db } from '../../db/database'
-import { ingredientService } from '../../services/ingredientService'
 import { render, screen, waitFor } from '../../test/test-utils'
 
 import { IngredientsPage } from './IngredientsPage'
 
 import type { Ingredient } from '../../types/ingredient'
 
-vi.mock('../../services/ingredientService', () => ({
-  ingredientService: {
-    add: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-}))
+vi.mock('../../services/ingredientService')
 
 vi.mock('@mantine/modals', () => ({
   modals: {
