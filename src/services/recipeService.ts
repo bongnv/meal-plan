@@ -155,7 +155,9 @@ export const createRecipeService = (db: MealPlanDB) => ({
       ) {
         const hasMatchingIngredient = filters.selectedIngredients.some(
           ingredientId =>
-            recipe.ingredients.some(ing => ing.ingredientId === ingredientId)
+            recipe.sections.some(section =>
+              section.ingredients.some(ing => ing.ingredientId === ingredientId)
+            )
         )
         if (!hasMatchingIngredient) {
           return false

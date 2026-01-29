@@ -690,4 +690,225 @@ describe('syncService', () => {
       expect(result).toBe('my.backup.file.json.gz')
     })
   })
+
+  describe('recipe migration from cloud', () => {
+    it('should migrate old format recipe (flat structure) to sections', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+
+      // Old format recipe from cloud
+      const oldFormatRecipe = {
+        id: '1',
+        name: 'Old Recipe',
+        ingredients: [
+          { name: 'flour', amount: 2, unit: 'cups' },
+          { name: 'eggs', amount: 3, unit: 'whole' },
+        ],
+        instructions: ['Mix flour', 'Add eggs', 'Bake'],
+        subRecipes: [],
+        updatedAt: 1000,
+      }
+
+      const remoteData = {
+        recipes: [oldFormatRecipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(0)
+
+      const result = await service.performSync(existingFile)
+
+      // Verify recipe was migrated to sections format
+      expect(result.merged.recipes).toHaveLength(1)
+      const migratedRecipe = result.merged.recipes[0]
+
+      expect(migratedRecipe.sections).toBeDefined()
+      expect(migratedRecipe.sections).toHaveLength(1)
+      expect(migratedRecipe.sections[0]).toEqual({
+        name: undefined,
+        ingredients: oldFormatRecipe.ingredients,
+        instructions: oldFormatRecipe.instructions,
+      })
+
+      // Old fields should be removed
+      expect((migratedRecipe as any).ingredients).toBeUndefined()
+      expect((migratedRecipe as any).instructions).toBeUndefined()
+      expect((migratedRecipe as any).subRecipes).toBeUndefined()
+    })
+
+    it('should not modify recipe that already has sections', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+
+      // New format recipe (already has sections)
+      const newFormatRecipe = {
+        id: '1',
+        name: 'New Recipe',
+        sections: [
+          {
+            name: 'Main',
+            ingredients: [{ name: 'flour', amount: 2, unit: 'cups' }],
+            instructions: ['Mix', 'Bake'],
+          },
+          {
+            name: 'Sauce',
+            ingredients: [{ name: 'tomato', amount: 1, unit: 'can' }],
+            instructions: ['Heat', 'Simmer'],
+          },
+        ],
+        updatedAt: 1000,
+      }
+
+      const remoteData = {
+        recipes: [newFormatRecipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(0)
+
+      const result = await service.performSync(existingFile)
+
+      // Recipe should remain unchanged
+      expect(result.merged.recipes).toHaveLength(1)
+      expect(result.merged.recipes[0]).toEqual(newFormatRecipe)
+    })
+
+    it('should handle recipe with missing ingredients/instructions arrays', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+
+      // Old format recipe with missing arrays
+      const oldFormatRecipe = {
+        id: '1',
+        name: 'Minimal Recipe',
+        updatedAt: 1000,
+      }
+
+      const remoteData = {
+        recipes: [oldFormatRecipe],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(0)
+
+      const result = await service.performSync(existingFile)
+
+      // Should create section with empty arrays
+      expect(result.merged.recipes).toHaveLength(1)
+      const migratedRecipe = result.merged.recipes[0]
+
+      expect(migratedRecipe.sections).toHaveLength(1)
+      expect(migratedRecipe.sections[0]).toEqual({
+        name: undefined,
+        ingredients: [],
+        instructions: [],
+      })
+    })
+
+    it('should migrate multiple old format recipes', async () => {
+      const existingFile = {
+        id: '123',
+        name: 'backup.json.gz',
+        path: '/folder/backup.json.gz',
+        isSharedWithMe: false,
+      }
+
+      const remoteData = {
+        recipes: [
+          {
+            id: '1',
+            name: 'Recipe 1',
+            ingredients: [{ name: 'flour' }],
+            instructions: ['Mix'],
+            updatedAt: 1000,
+          },
+          {
+            id: '2',
+            name: 'Recipe 2',
+            ingredients: [{ name: 'sugar' }],
+            instructions: ['Stir'],
+            updatedAt: 1000,
+          },
+        ],
+        mealPlans: [],
+        ingredients: [],
+        groceryLists: [],
+        groceryItems: [],
+        lastModified: 1000,
+        version: 1,
+      }
+
+      mockStorage.downloadFile = vi
+        .fn()
+        .mockResolvedValue(JSON.stringify(remoteData))
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue([])
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(0)
+
+      const result = await service.performSync(existingFile)
+
+      // All recipes should be migrated
+      expect(result.merged.recipes).toHaveLength(2)
+      result.merged.recipes.forEach(recipe => {
+        expect(recipe.sections).toBeDefined()
+        expect(recipe.sections).toHaveLength(1)
+        expect((recipe as any).ingredients).toBeUndefined()
+        expect((recipe as any).instructions).toBeUndefined()
+      })
+    })
+  })
 })

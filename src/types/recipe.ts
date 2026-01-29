@@ -3,22 +3,23 @@ import { z } from 'zod'
 import { Unit, UnitSchema } from './ingredient'
 
 /**
- * SubRecipe interface
- * Represents a reference to another recipe used as a component in this recipe
+ * RecipeSection interface
+ * Represents a section of a recipe with its own ingredients and instructions
+ * Used to organize complex recipes into logical phases (e.g., BROTH, ASSEMBLY, GARNISHES)
  */
-export interface SubRecipe {
-  recipeId: string // references another Recipe.id
-  servings: number // number of servings of the sub-recipe to include
-  displayName?: string // optional custom name (e.g., "Cilantro Rice (Filling)")
+export interface RecipeSection {
+  name?: string // Optional - undefined for simple recipes, named for complex recipes
+  ingredients: RecipeIngredient[]
+  instructions: string[]
 }
 
 /**
- * Zod schema for SubRecipe validation
+ * Zod schema for RecipeSection validation
  */
-export const SubRecipeSchema = z.object({
-  recipeId: z.string(),
-  servings: z.number().positive('Servings must be positive'),
-  displayName: z.string().optional(),
+export const RecipeSectionSchema = z.object({
+  name: z.string().optional(),
+  ingredients: z.array(z.lazy(() => RecipeIngredientSchema)),
+  instructions: z.array(z.string()),
 })
 
 /**
@@ -45,14 +46,13 @@ export const RecipeIngredientSchema = z.object({
 /**
  * Recipe interface
  * Represents a complete recipe with all its details
+ * All recipes use sections array - simple recipes have 1 unnamed section
  */
 export interface Recipe {
   id: string
   name: string
   description: string
-  ingredients: RecipeIngredient[]
-  subRecipes: SubRecipe[] // schema defaults to empty array
-  instructions: string[]
+  sections: RecipeSection[] // ALWAYS an array, min 1 section
   servings: number
   prepTime: number // preparation time in minutes
   cookTime: number // cooking time in minutes
@@ -69,9 +69,9 @@ export const RecipeSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  ingredients: z.array(RecipeIngredientSchema),
-  subRecipes: z.array(SubRecipeSchema).default([]),
-  instructions: z.array(z.string()),
+  sections: z
+    .array(RecipeSectionSchema)
+    .min(1, 'At least one section is required'),
   servings: z.number(),
   prepTime: z.number().positive('Prep time must be positive'),
   cookTime: z.number().positive('Cook time must be positive'),
@@ -110,13 +110,9 @@ export const RecipeSchema = z.object({
 export const RecipeFormSchema = z.object({
   name: z.string().min(1, 'Recipe name is required'),
   description: z.string().min(1, 'Description is required'),
-  ingredients: z
-    .array(RecipeIngredientSchema)
-    .min(1, 'At least one ingredient is required'),
-  subRecipes: z.array(SubRecipeSchema).default([]),
-  instructions: z
-    .array(z.string().min(1))
-    .min(1, 'At least one instruction is required'),
+  sections: z
+    .array(RecipeSectionSchema)
+    .min(1, 'At least one section is required'),
   servings: z.number().min(1, 'Servings must be at least 1'),
   prepTime: z.number().min(1, 'Prep time must be at least 1 minute'),
   cookTime: z.number().min(1, 'Cook time must be at least 1 minute'),

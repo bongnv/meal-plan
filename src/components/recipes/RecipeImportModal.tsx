@@ -1,11 +1,8 @@
 import {
-  ActionIcon,
   Alert,
   Badge,
   Box,
   Button,
-  Card,
-  Collapse,
   Divider,
   Group,
   List,
@@ -16,13 +13,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
-import {
-  IconAlertCircle,
-  IconCheck,
-  IconChevronDown,
-  IconChevronUp,
-  IconCopy,
-} from '@tabler/icons-react'
+import { IconAlertCircle, IconCheck, IconCopy } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -51,9 +42,6 @@ export const RecipeImportModal = ({
   const [validationResult, setValidationResult] =
     useState<ValidationResult | null>(null)
   const [importing, setImporting] = useState(false)
-  const [expandedSubRecipes, setExpandedSubRecipes] = useState<Set<number>>(
-    new Set()
-  )
 
   const navigate = useNavigate()
 
@@ -62,21 +50,6 @@ export const RecipeImportModal = ({
 
   // Generate the AI prompt with current ingredient library
   const prompt = generateRecipeImportPrompt(ingredients)
-
-  // Helper to get ingredient name for display
-  const getIngredientName = (ingredientId: string): string => {
-    // Check existing ingredients
-    const existing = ingredients.find(ing => ing.id === ingredientId)
-    if (existing) return existing.name
-
-    // Check new ingredients from validation
-    const newIng = validationResult?.newIngredients.find(
-      ing => ing.id === ingredientId
-    )
-    if (newIng) return newIng.name
-
-    return ingredientId // Fallback to ID
-  }
 
   const handleCopyPrompt = async () => {
     try {
@@ -119,52 +92,24 @@ export const RecipeImportModal = ({
         idMapping[ing.id] = ing.id
       })
 
-      // Step 3: Import all sub-recipes first and build recipeId mapping
-      // Process in reverse order to handle nested sub-recipes (deepest first)
-      const subRecipeIdMapping: Record<string, string> = {}
-      const reversedSubRecipes = [
-        ...(validationResult.subRecipes || []),
-      ].reverse()
-
-      for (const subRecipe of reversedSubRecipes) {
-        // Remap ingredient IDs in sub-recipe
-        const { id: subId, ...subRecipeWithoutId } = subRecipe
-        const subRecipeWithMappedIds = {
-          ...subRecipeWithoutId,
-          ingredients: subRecipeWithoutId.ingredients.map(ing => ({
-            ...ing,
-            ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
-          })),
-          // Recursively update sub-recipe references if any
-          subRecipes: subRecipeWithoutId.subRecipes?.map(sr => ({
-            ...sr,
-            recipeId: subRecipeIdMapping[sr.recipeId] || sr.recipeId,
-          })),
-        }
-        const newSubRecipeId = await recipeService.add(subRecipeWithMappedIds)
-        subRecipeIdMapping[subId] = newSubRecipeId
-      }
-
-      // Step 4: Update ingredient IDs and sub-recipe IDs in main recipe
+      // Step 3: Update ingredient IDs in main recipe sections
       const { id: _id, ...recipeWithoutId } = validationResult.recipe
 
       const recipeWithMappedIds = {
         ...recipeWithoutId,
-        ingredients: recipeWithoutId.ingredients.map(ing => ({
-          ...ing,
-          ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
-        })),
-        // Update sub-recipe references to use generated IDs
-        subRecipes: recipeWithoutId.subRecipes?.map(sr => ({
-          ...sr,
-          recipeId: subRecipeIdMapping[sr.recipeId] || sr.recipeId,
+        sections: recipeWithoutId.sections.map(section => ({
+          ...section,
+          ingredients: section.ingredients.map(ing => ({
+            ...ing,
+            ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
+          })),
         })),
       }
 
-      // Step 5: Add main recipe (service will generate and return recipe ID)
+      // Step 4: Add main recipe (service will generate and return recipe ID)
       const newRecipeId = await recipeService.add(recipeWithMappedIds)
 
-      // Step 6: Navigate to recipe detail page with the generated ID
+      // Step 5: Navigate to recipe detail page with the generated ID
       navigate(`/recipes/${newRecipeId}`)
 
       // Close modal
@@ -191,7 +136,6 @@ export const RecipeImportModal = ({
     setJsonInput('')
     setValidationResult(null)
     setImporting(false)
-    setExpandedSubRecipes(new Set())
     onClose()
   }
 
@@ -287,125 +231,6 @@ export const RecipeImportModal = ({
                     </Text>
                   </Group>
 
-                  {validationResult.subRecipes &&
-                    validationResult.subRecipes.length > 0 && (
-                      <Alert color="blue" title="Sub-Recipes Included">
-                        <Text size="sm" mb="md">
-                          This recipe includes{' '}
-                          {validationResult.subRecipes.length} sub-recipe(s):
-                        </Text>
-                        <Stack gap="sm">
-                          {validationResult.subRecipes.map((subRecipe, idx) => {
-                            const isExpanded = expandedSubRecipes.has(idx)
-                            return (
-                              <Card
-                                key={idx}
-                                withBorder
-                                padding="sm"
-                                style={{
-                                  borderColor: 'var(--mantine-color-blue-4)',
-                                }}
-                              >
-                                <Group justify="space-between" mb="xs">
-                                  <Text size="sm" fw={500}>
-                                    {subRecipe.name}
-                                  </Text>
-                                  <Group gap="xs">
-                                    <Badge size="xs" variant="light">
-                                      {subRecipe.servings} servings
-                                    </Badge>
-                                    <ActionIcon
-                                      variant="subtle"
-                                      size="sm"
-                                      onClick={() => {
-                                        setExpandedSubRecipes(prev => {
-                                          const next = new Set(prev)
-                                          if (isExpanded) {
-                                            next.delete(idx)
-                                          } else {
-                                            next.add(idx)
-                                          }
-                                          return next
-                                        })
-                                      }}
-                                      aria-label={
-                                        isExpanded
-                                          ? 'Collapse details'
-                                          : 'Expand details'
-                                      }
-                                    >
-                                      {isExpanded ? (
-                                        <IconChevronUp size={16} />
-                                      ) : (
-                                        <IconChevronDown size={16} />
-                                      )}
-                                    </ActionIcon>
-                                  </Group>
-                                </Group>
-
-                                <Collapse in={isExpanded}>
-                                  <Box>
-                                    {subRecipe.ingredients.length > 0 && (
-                                      <Stack gap={4} mb="xs">
-                                        <Text size="xs" fw={500} c="dimmed">
-                                          Ingredients:
-                                        </Text>
-                                        <Stack gap={2}>
-                                          {subRecipe.ingredients.map(
-                                            (ing, ingIdx) => {
-                                              const ingredientName =
-                                                ing.displayName ||
-                                                getIngredientName(
-                                                  ing.ingredientId
-                                                )
-                                              return (
-                                                <Text
-                                                  key={ingIdx}
-                                                  size="xs"
-                                                  c="dimmed"
-                                                >
-                                                  • {ing.quantity} {ing.unit}{' '}
-                                                  {ingredientName}
-                                                </Text>
-                                              )
-                                            }
-                                          )}
-                                        </Stack>
-                                      </Stack>
-                                    )}
-                                    {subRecipe.instructions.length > 0 && (
-                                      <Stack gap={4}>
-                                        <Text size="xs" fw={500} c="dimmed">
-                                          Instructions:
-                                        </Text>
-                                        <Stack gap={2}>
-                                          {subRecipe.instructions.map(
-                                            (step, stepIdx) => (
-                                              <Text
-                                                key={stepIdx}
-                                                size="xs"
-                                                c="dimmed"
-                                              >
-                                                {stepIdx + 1}. {step}
-                                              </Text>
-                                            )
-                                          )}
-                                        </Stack>
-                                      </Stack>
-                                    )}
-                                  </Box>
-                                </Collapse>
-                              </Card>
-                            )
-                          })}
-                        </Stack>
-                        <Text size="sm" mt="md" c="dimmed">
-                          All sub-recipes will be imported along with the main
-                          recipe.
-                        </Text>
-                      </Alert>
-                    )}
-
                   {validationResult.recipe.tags.length > 0 && (
                     <Group gap="xs">
                       {validationResult.recipe.tags.map((tag, index) => (
@@ -418,60 +243,93 @@ export const RecipeImportModal = ({
 
                   <Divider />
 
-                  <div>
-                    <Text size="sm" fw={700} mb="xs">
-                      Ingredients ({validationResult.recipe.ingredients.length})
-                    </Text>
-                    <List size="sm">
-                      {validationResult.recipe.ingredients.map((ing, index) => {
-                        // First check existing ingredients
-                        let ingredient = ingredients.find(
-                          i => i.id === ing.ingredientId
+                  {validationResult.recipe.sections.map(
+                    (section, sectionIdx) => {
+                      const isSimpleRecipe =
+                        validationResult.recipe!.sections.length === 1 &&
+                        !section.name
+                      const totalIngredients =
+                        validationResult.recipe!.sections.reduce(
+                          (sum, s) => sum + s.ingredients.length,
+                          0
                         )
-                        let isNew = false
 
-                        // If not found in existing, check new ingredients
-                        if (!ingredient) {
-                          ingredient = validationResult.newIngredients.find(
-                            newIng => newIng.id === ing.ingredientId
-                          )
-                          isNew = !!ingredient
-                        }
+                      return (
+                        <Box key={sectionIdx}>
+                          {section.name && sectionIdx > 0 && (
+                            <Divider mb="md" />
+                          )}
 
-                        // Format ingredient display with displayName if present
-                        const ingredientName = ingredient?.name || 'Unknown'
-                        const displayText = ing.displayName
-                          ? `${ing.displayName} (${ingredientName})`
-                          : ingredientName
+                          {section.name && (
+                            <Title order={4} mb="md">
+                              {section.name}
+                            </Title>
+                          )}
 
-                        return (
-                          <List.Item key={index}>
-                            {ing.quantity} {ing.unit} {displayText}
-                            {isNew && (
-                              <Badge size="xs" color="blue" ml="xs">
-                                New
-                              </Badge>
-                            )}
-                          </List.Item>
-                        )
-                      })}
-                    </List>
-                  </div>
+                          <div>
+                            <Text size="sm" fw={700} mb="xs">
+                              {isSimpleRecipe
+                                ? `Ingredients (${totalIngredients})`
+                                : 'Ingredients'}
+                            </Text>
+                            <List size="sm">
+                              {section.ingredients.map((ing, index) => {
+                                // First check existing ingredients
+                                let ingredient = ingredients.find(
+                                  i => i.id === ing.ingredientId
+                                )
+                                let isNew = false
 
-                  <Divider />
+                                // If not found in existing, check new ingredients
+                                if (!ingredient) {
+                                  ingredient =
+                                    validationResult.newIngredients.find(
+                                      newIng => newIng.id === ing.ingredientId
+                                    )
+                                  isNew = !!ingredient
+                                }
 
-                  <div>
-                    <Text size="sm" fw={700} mb="xs">
-                      Instructions
-                    </Text>
-                    <List size="sm" type="ordered">
-                      {validationResult.recipe.instructions.map(
-                        (instruction, index) => (
-                          <List.Item key={index}>{instruction}</List.Item>
-                        )
-                      )}
-                    </List>
-                  </div>
+                                // Format ingredient display with displayName if present
+                                const ingredientName =
+                                  ingredient?.name || 'Unknown'
+                                const displayText = ing.displayName
+                                  ? `${ing.displayName} (${ingredientName})`
+                                  : ingredientName
+
+                                return (
+                                  <List.Item key={index}>
+                                    {ing.quantity} {ing.unit} {displayText}
+                                    {isNew && (
+                                      <Badge size="xs" color="blue" ml="xs">
+                                        New
+                                      </Badge>
+                                    )}
+                                  </List.Item>
+                                )
+                              })}
+                            </List>
+                          </div>
+
+                          <Divider my="md" />
+
+                          <div>
+                            <Text size="sm" fw={700} mb="xs">
+                              Instructions
+                            </Text>
+                            <List size="sm" type="ordered">
+                              {section.instructions.map(
+                                (instruction, index) => (
+                                  <List.Item key={index}>
+                                    {instruction}
+                                  </List.Item>
+                                )
+                              )}
+                            </List>
+                          </div>
+                        </Box>
+                      )
+                    }
+                  )}
                 </>
               ) : (
                 <Text size="sm" c="dimmed">

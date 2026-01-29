@@ -119,14 +119,6 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
               </Group>
             </Group>
 
-            {/* Sub-recipes indicator */}
-            {recipe.subRecipes && recipe.subRecipes.length > 0 && (
-              <Badge variant="light" color="grape" size="sm">
-                {recipe.subRecipes.length} sub-recipe
-                {recipe.subRecipes.length > 1 ? 's' : ''}
-              </Badge>
-            )}
-
             <Group gap="xs" mt="auto">
               <ActionIcon
                 variant="light"

@@ -14,9 +14,13 @@ describe('mergeUtil', () => {
     id: '1',
     name: 'Pasta',
     description: 'Italian pasta',
-    ingredients: [],
-    instructions: [],
-    subRecipes: [],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [],
+        instructions: [],
+      },
+    ],
     servings: 4,
     prepTime: 15,
     cookTime: 15,
@@ -29,9 +33,13 @@ describe('mergeUtil', () => {
     id: '2',
     name: 'Pizza',
     description: 'Italian pizza',
-    ingredients: [],
-    instructions: [],
-    subRecipes: [],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [],
+        instructions: [],
+      },
+    ],
     servings: 2,
     prepTime: 20,
     cookTime: 20,

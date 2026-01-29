@@ -112,12 +112,16 @@ describe('RecipesPage', () => {
       id: '1',
       name: 'Spaghetti Carbonara',
       description: 'Classic Italian pasta',
-      ingredients: [
-        { ingredientId: 'ing1', quantity: 400 },
-        { ingredientId: 'ing2', quantity: 200 },
+      sections: [
+        {
+          name: undefined,
+          ingredients: [
+            { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
+            { ingredientId: 'ing2', quantity: 200, unit: 'gram' },
+          ],
+          instructions: ['Boil pasta', 'Mix eggs', 'Combine'],
+        },
       ],
-      instructions: ['Boil pasta', 'Mix eggs', 'Combine'],
-      subRecipes: [],
       servings: 4,
       prepTime: 13,
       cookTime: 12,
@@ -129,12 +133,16 @@ describe('RecipesPage', () => {
       id: '2',
       name: 'Chicken Curry',
       description: 'Spicy Indian curry',
-      ingredients: [
-        { ingredientId: 'ing3', quantity: 500 },
-        { ingredientId: 'ing4', quantity: 200 },
+      sections: [
+        {
+          name: undefined,
+          ingredients: [
+            { ingredientId: 'ing3', quantity: 500, unit: 'gram' },
+            { ingredientId: 'ing4', quantity: 200, unit: 'gram' },
+          ],
+          instructions: ['Cook chicken', 'Add spices', 'Simmer'],
+        },
       ],
-      instructions: ['Cook chicken', 'Add spices', 'Simmer'],
-      subRecipes: [],
       servings: 6,
       prepTime: 23,
       cookTime: 22,
@@ -146,9 +154,13 @@ describe('RecipesPage', () => {
       id: '3',
       name: 'Quick Salad',
       description: 'Fresh vegetable salad',
-      ingredients: [{ ingredientId: 'ing5', quantity: 300 }],
-      instructions: ['Chop vegetables', 'Mix', 'Serve'],
-      subRecipes: [],
+      sections: [
+        {
+          name: undefined,
+          ingredients: [{ ingredientId: 'ing5', quantity: 300, unit: 'gram' }],
+          instructions: ['Chop vegetables', 'Mix', 'Serve'],
+        },
+      ],
       servings: 2,
       prepTime: 5,
       cookTime: 5,

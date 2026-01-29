@@ -53,9 +53,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
-        instructions: ['Mix', 'Cook'],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix', 'Cook'],
+          },
+        ],
         tags: ['test', 'quick'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -75,9 +79,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: ['dessert', 'quick'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -90,9 +98,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: ['dinner'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -444,9 +456,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -499,6 +515,318 @@ describe('MealPlanDB', () => {
       expect(await db.groceryLists.count()).toBe(0)
       expect(await db.groceryItems.count()).toBe(0)
       expect(await db.metadata.count()).toBe(0)
+    })
+  })
+
+  describe('database migration to version 2', () => {
+    it('should migrate recipes from flat structure to sections', async () => {
+      // Use a unique DB name for migration test
+      const testDbName = 'MealPlanDB_MigrationTest_' + Date.now()
+
+      // Create a version 1 database with old schema
+      const oldDb = new Dexie(testDbName)
+      oldDb.version(1).stores({
+        recipes: 'id, name, *tags',
+        ingredients: 'id, name, category',
+        mealPlans: 'id, date, mealType, type',
+        groceryLists: 'id, dateRange.start, dateRange.end',
+        groceryItems: 'id, listId, category, checked',
+        metadata: 'key',
+      })
+      await oldDb.open()
+
+      // Insert recipe with old flat structure
+      const oldRecipe = {
+        id: 'recipe1',
+        name: 'Old Recipe',
+        description: 'Test migration',
+        servings: 4,
+        prepTime: 10,
+        cookTime: 20,
+        ingredients: [
+          { ingredientId: 'ing1', quantity: 2, unit: 'cup' },
+          { ingredientId: 'ing2', quantity: 1, unit: 'tablespoon' },
+        ],
+        instructions: ['Step 1', 'Step 2', 'Step 3'],
+        tags: ['test'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      await oldDb.table('recipes').add(oldRecipe)
+      await oldDb.close()
+
+      // Create a new DB class with version 2 that will migrate
+      class TestMealPlanDB extends Dexie {
+        recipes!: any
+
+        constructor(name: string) {
+          super(name)
+
+          this.version(1).stores({
+            recipes: 'id, name, *tags',
+            ingredients: 'id, name, category',
+            mealPlans: 'id, date, mealType, type',
+            groceryLists: 'id, dateRange.start, dateRange.end',
+            groceryItems: 'id, listId, category, checked',
+            metadata: 'key',
+          })
+
+          this.version(2)
+            .stores({
+              recipes: 'id, name, *tags',
+              ingredients: 'id, name, category',
+              mealPlans: 'id, date, mealType, type',
+              groceryLists: 'id, dateRange.start, dateRange.end',
+              groceryItems: 'id, listId, category, checked',
+              metadata: 'key',
+            })
+            .upgrade(async tx => {
+              const recipes = await tx.table('recipes').toArray()
+
+              for (const recipe of recipes) {
+                if (recipe.sections) {
+                  continue
+                }
+
+                const migratedRecipe = {
+                  ...recipe,
+                  sections: [
+                    {
+                      name: undefined,
+                      ingredients: recipe.ingredients || [],
+                      instructions: recipe.instructions || [],
+                    },
+                  ],
+                }
+
+                delete migratedRecipe.ingredients
+                delete migratedRecipe.instructions
+                delete migratedRecipe.subRecipes
+
+                await tx.table('recipes').put(migratedRecipe)
+              }
+
+              await tx.table('metadata').put({
+                key: 'schemaVersion',
+                value: 2,
+              })
+            })
+        }
+      }
+
+      // Reopen with version 2 (should trigger migration)
+      const newDb = new TestMealPlanDB(testDbName)
+      await newDb.open()
+
+      // Retrieve migrated recipe
+      const migratedRecipe = await newDb.recipes.get('recipe1')
+
+      // Verify migration
+      expect(migratedRecipe).toBeDefined()
+      expect(migratedRecipe!.sections).toBeDefined()
+      expect(migratedRecipe!.sections).toHaveLength(1)
+      expect(migratedRecipe!.sections[0].name).toBeUndefined()
+      expect(migratedRecipe!.sections[0].ingredients).toEqual(
+        oldRecipe.ingredients
+      )
+      expect(migratedRecipe!.sections[0].instructions).toEqual(
+        oldRecipe.instructions
+      )
+
+      // Cleanup
+      await newDb.delete()
+      await newDb.close()
+    })
+
+    it('should not double-migrate recipes that already have sections', async () => {
+      // Recipe already in new format
+      const newRecipe: Recipe = {
+        id: 'recipe2',
+        name: 'New Recipe',
+        description: 'Already migrated',
+        servings: 4,
+        prepTime: 15,
+        cookTime: 25,
+        sections: [
+          {
+            name: 'BROTH',
+            ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'liter' }],
+            instructions: ['Boil water'],
+          },
+          {
+            name: 'ASSEMBLY',
+            ingredients: [
+              { ingredientId: 'ing2', quantity: 200, unit: 'gram' },
+            ],
+            instructions: ['Add noodles'],
+          },
+        ],
+        tags: ['soup'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      await db.recipes.add(newRecipe)
+      const retrieved = await db.recipes.get('recipe2')
+
+      // Should remain unchanged
+      expect(retrieved).toEqual(newRecipe)
+      expect(retrieved!.sections).toHaveLength(2)
+    })
+
+    it('should set schemaVersion in metadata after migration', async () => {
+      const testDbName = 'MealPlanDB_SchemaTest_' + Date.now()
+
+      // Create version 1 database
+      const oldDb = new Dexie(testDbName)
+      oldDb.version(1).stores({
+        recipes: 'id, name, *tags',
+        ingredients: 'id, name, category',
+        mealPlans: 'id, date, mealType, type',
+        groceryLists: 'id, dateRange.start, dateRange.end',
+        groceryItems: 'id, listId, category, checked',
+        metadata: 'key',
+      })
+      await oldDb.open()
+      await oldDb.close()
+
+      // Reopen with version 2
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
+      await newDb.open()
+
+      const schemaVersion = await newDb.metadata.get('schemaVersion')
+      expect(schemaVersion).toBeDefined()
+      expect(schemaVersion!.value).toBe(2)
+
+      await newDb.delete()
+      await newDb.close()
+    })
+
+    it('should handle recipes with empty arrays during migration', async () => {
+      const testDbName = 'MealPlanDB_EmptyTest_' + Date.now()
+
+      const oldDb = new Dexie(testDbName)
+      oldDb.version(1).stores({
+        recipes: 'id, name, *tags',
+        ingredients: 'id, name, category',
+        mealPlans: 'id, date, mealType, type',
+        groceryLists: 'id, dateRange.start, dateRange.end',
+        groceryItems: 'id, listId, category, checked',
+        metadata: 'key',
+      })
+      await oldDb.open()
+
+      const oldRecipe = {
+        id: 'recipe3',
+        name: 'Empty Recipe',
+        description: 'Test',
+        servings: 1,
+        prepTime: 5,
+        cookTime: 10,
+        ingredients: [],
+        instructions: [],
+        tags: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      await oldDb.table('recipes').add(oldRecipe)
+      await oldDb.close()
+
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
+      await newDb.open()
+
+      const migrated = await newDb.recipes.get('recipe3')
+      expect(migrated).toBeDefined()
+      expect(migrated!.sections).toHaveLength(1)
+      expect(migrated!.sections[0].ingredients).toEqual([])
+      expect(migrated!.sections[0].instructions).toEqual([])
+
+      await newDb.delete()
+      await newDb.close()
+    })
+
+    it('should be transactional - all or nothing', async () => {
+      const testDbName = 'MealPlanDB_TxTest_' + Date.now()
+
+      const oldDb = new Dexie(testDbName)
+      oldDb.version(1).stores({
+        recipes: 'id, name, *tags',
+        ingredients: 'id, name, category',
+        mealPlans: 'id, date, mealType, type',
+        groceryLists: 'id, dateRange.start, dateRange.end',
+        groceryItems: 'id, listId, category, checked',
+        metadata: 'key',
+      })
+      await oldDb.open()
+
+      // Add multiple recipes
+      await oldDb.table('recipes').bulkAdd([
+        {
+          id: 'r1',
+          name: 'Recipe 1',
+          description: 'Test',
+          servings: 2,
+          prepTime: 5,
+          cookTime: 10,
+          ingredients: [{ ingredientId: 'i1', quantity: 1 }],
+          instructions: ['Step 1'],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+        {
+          id: 'r2',
+          name: 'Recipe 2',
+          description: 'Test',
+          servings: 4,
+          prepTime: 10,
+          cookTime: 20,
+          ingredients: [{ ingredientId: 'i2', quantity: 2 }],
+          instructions: ['Step 1', 'Step 2'],
+          tags: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ])
+      await oldDb.close()
+
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
+      await newDb.open()
+
+      // All recipes should be migrated
+      const count = await newDb.recipes.count()
+      expect(count).toBe(2)
+
+      const r1 = await newDb.recipes.get('r1')
+      const r2 = await newDb.recipes.get('r2')
+
+      expect(r1).toBeDefined()
+      expect(r2).toBeDefined()
+      expect(r1!.sections).toBeDefined()
+      expect(r2!.sections).toBeDefined()
+
+      await newDb.delete()
+      await newDb.close()
     })
   })
 })

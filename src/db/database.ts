@@ -48,6 +48,55 @@ export class MealPlanDB extends Dexie {
       // Metadata: key-value store for lastModified timestamps
       metadata: 'key',
     })
+
+    // Version 2: Add sections to recipes (breaking change)
+    // Migration: Convert flat ingredients/instructions to single unnamed section
+    this.version(2)
+      .stores({
+        // Same schema, no index changes
+        recipes: 'id, name, *tags',
+        ingredients: 'id, name, category',
+        mealPlans: 'id, date, mealType, type',
+        groceryLists: 'id, dateRange.start, dateRange.end',
+        groceryItems: 'id, listId, category, checked',
+        metadata: 'key',
+      })
+      .upgrade(async tx => {
+        // Migrate all recipes from flat structure to sections
+        const recipes = await tx.table('recipes').toArray()
+
+        for (const recipe of recipes) {
+          // Skip if already migrated (has sections field)
+          if (recipe.sections) {
+            continue
+          }
+
+          // Migrate: flat structure → single unnamed section
+          const migratedRecipe = {
+            ...recipe,
+            sections: [
+              {
+                name: undefined,
+                ingredients: recipe.ingredients || [],
+                instructions: recipe.instructions || [],
+              },
+            ],
+          }
+
+          // Remove old flat fields (Dexie will ignore, but cleaner)
+          delete migratedRecipe.ingredients
+          delete migratedRecipe.instructions
+          delete migratedRecipe.subRecipes // Also remove subRecipes
+
+          await tx.table('recipes').put(migratedRecipe)
+        }
+
+        // Store schema version in metadata
+        await tx.table('metadata').put({
+          key: 'schemaVersion',
+          value: 2,
+        })
+      })
   }
 
   // Helper methods for lastModified tracking

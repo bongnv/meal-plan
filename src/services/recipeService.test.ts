@@ -37,9 +37,13 @@ describe('recipeService', () => {
     servings: 4,
     prepTime: 10,
     cookTime: 20,
-    ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
-    instructions: ['Mix ingredients', 'Cook'],
-    subRecipes: [],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
+        instructions: ['Mix ingredients', 'Cook'],
+      },
+    ],
     tags: ['test'],
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -86,9 +90,13 @@ describe('recipeService', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: ['Cook'],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: ['Cook'],
+          },
+        ],
         tags: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),

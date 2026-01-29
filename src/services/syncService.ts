@@ -127,7 +127,48 @@ export class SyncService {
       throw new Error('Invalid remote data format')
     }
 
-    return validationResult.data as SyncData
+    const remote = validationResult.data as SyncData
+
+    // Migrate recipes from old format if needed
+    remote.recipes = remote.recipes.map(recipe =>
+      this.migrateRecipeToSections(recipe)
+    )
+
+    return remote
+  }
+
+  /**
+   * Migrate a recipe from old flat structure to new sections structure
+   * Handles recipes that already have sections (no-op) and old format recipes
+   *
+   * @param recipe - Recipe to migrate (any format)
+   * @returns Recipe with sections structure
+   * @private
+   */
+  private migrateRecipeToSections(recipe: any): Recipe {
+    // Already migrated - return as-is
+    if (recipe.sections) {
+      return recipe as Recipe
+    }
+
+    // Old format - migrate to sections
+    const migratedRecipe: Recipe = {
+      ...recipe,
+      sections: [
+        {
+          name: undefined,
+          ingredients: recipe.ingredients || [],
+          instructions: recipe.instructions || [],
+        },
+      ],
+    }
+
+    // Clean up old fields (TypeScript will warn if we try to access them)
+    delete (migratedRecipe as any).ingredients
+    delete (migratedRecipe as any).instructions
+    delete (migratedRecipe as any).subRecipes
+
+    return migratedRecipe
   }
 
   /**

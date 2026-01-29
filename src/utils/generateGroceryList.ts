@@ -48,7 +48,7 @@ function expandRecipeIngredients(
   recipe: Recipe,
   servingMultiplier: number,
   mealPlanId: string,
-  recipeMap: Map<string, Recipe>,
+  _recipeMap: Map<string, Recipe>,
   depth: number = 0,
   visited: Set<string> = new Set()
 ): ExpandedIngredient[] {
@@ -71,43 +71,17 @@ function expandRecipeIngredients(
   const newVisited = new Set(visited)
   newVisited.add(recipe.id)
 
+  // Flatten sections to get all ingredients
+  const allIngredients = recipe.sections.flatMap(section => section.ingredients)
+
   // Add direct ingredients
-  for (const recipeIngredient of recipe.ingredients) {
+  for (const recipeIngredient of allIngredients) {
     result.push({
       ingredientId: recipeIngredient.ingredientId,
       quantity: recipeIngredient.quantity * servingMultiplier,
       unit: recipeIngredient.unit || 'piece',
       mealPlanId,
     })
-  }
-
-  // Recursively expand sub-recipes
-  for (const subRecipe of recipe.subRecipes || []) {
-    const subRecipeData = recipeMap.get(subRecipe.recipeId)
-    if (!subRecipeData) {
-      console.warn(
-        `Sub-recipe not found: ${subRecipe.recipeId} (referenced in ${recipe.name})`
-      )
-      continue
-    }
-
-    // Calculate nested multiplier
-    // servingMultiplier scales the parent recipe
-    // subRecipe.servings / subRecipeData.servings scales the sub-recipe
-    const nestedMultiplier =
-      servingMultiplier * (subRecipe.servings / subRecipeData.servings)
-
-    // Recursively expand
-    const subIngredients = expandRecipeIngredients(
-      subRecipeData,
-      nestedMultiplier,
-      mealPlanId,
-      recipeMap,
-      depth + 1,
-      newVisited
-    )
-
-    result.push(...subIngredients)
   }
 
   return result
