@@ -288,65 +288,77 @@ export function RecipeForm({
 
                 return (
                   <Paper key={index} p="sm" withBorder>
-                    <Stack gap="xs">
-                      <Group align="flex-start" wrap="nowrap">
-                        <Select
-                          placeholder="Select ingredient"
-                          label="Ingredient"
-                          style={{ flex: 1, minWidth: 0 }}
-                          data={ingredientSelectData}
-                          value={ingredient.ingredientId}
-                          searchable
-                          onChange={value => {
-                            if (value === '__create_new__') {
-                              openCreateIngredient()
-                            } else {
-                              form.setFieldValue(
-                                `ingredients.${index}.ingredientId`,
-                                value || ''
-                              )
-                            }
-                          }}
-                          error={
-                            form.errors[`ingredients.${index}.ingredientId`]
+                    <Group
+                      align="flex-start"
+                      wrap="nowrap"
+                      gap="xs"
+                      style={{
+                        flexDirection: 'row',
+                        '@media (max-width: 768px)': {
+                          flexDirection: 'column',
+                        },
+                      }}
+                      styles={{
+                        root: {
+                          '@media (max-width: 768px)': {
+                            flexDirection: 'column',
+                          },
+                        },
+                      }}
+                    >
+                      <Select
+                        placeholder="Select ingredient"
+                        label="Ingredient"
+                        style={{ flex: 2, minWidth: 150 }}
+                        data={ingredientSelectData}
+                        value={ingredient.ingredientId}
+                        searchable
+                        onChange={value => {
+                          if (value === '__create_new__') {
+                            openCreateIngredient()
+                          } else {
+                            form.setFieldValue(
+                              `ingredients.${index}.ingredientId`,
+                              value || ''
+                            )
                           }
-                        />
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={() => removeIngredient(index)}
-                          aria-label="Remove ingredient"
-                          style={{ marginTop: 28, flexShrink: 0 }}
-                        >
-                          <IconTrash size={18} />
-                        </ActionIcon>
-                      </Group>
-                      <Group grow>
-                        <NumberInput
-                          placeholder="Quantity"
-                          label="Quantity"
-                          min={0}
-                          step={0.1}
-                          {...form.getInputProps(
-                            `ingredients.${index}.quantity`
-                          )}
-                        />
-                        <Select
-                          placeholder="Unit"
-                          label="Unit"
-                          data={UNITS.map(u => ({ value: u, label: u }))}
-                          searchable
-                          {...form.getInputProps(`ingredients.${index}.unit`)}
-                        />
-                      </Group>
+                        }}
+                        error={form.errors[`ingredients.${index}.ingredientId`]}
+                      />
+                      <NumberInput
+                        placeholder="Quantity"
+                        label="Quantity"
+                        style={{ flex: 1, minWidth: 100 }}
+                        min={0}
+                        step={0.1}
+                        {...form.getInputProps(`ingredients.${index}.quantity`)}
+                      />
+                      <Select
+                        placeholder="Unit"
+                        label="Unit"
+                        style={{ flex: 1, minWidth: 120 }}
+                        data={UNITS.map(u => ({ value: u, label: u }))}
+                        searchable
+                        {...form.getInputProps(`ingredients.${index}.unit`)}
+                      />
                       <TextInput
                         placeholder={selectedIngredient?.name || 'Custom name'}
                         label="Custom Name (optional)"
+                        style={{ flex: 2, minWidth: 150 }}
                         {...form.getInputProps(
                           `ingredients.${index}.displayName`
                         )}
                       />
-                    </Stack>
+                      <ActionIcon
+                        color="red"
+                        variant="subtle"
+                        onClick={() => removeIngredient(index)}
+                        aria-label="Remove ingredient"
+                        style={{ marginTop: 28, flexShrink: 0 }}
+                      >
+                        <IconTrash size={18} />
+                      </ActionIcon>
+                    </Group>
                   </Paper>
                 )
               })}

@@ -82,6 +82,20 @@ A client-side web application for managing recipes, planning meals, and organizi
     - Backward compatible: old recipes without subRecipes field auto-migrated
     - All tests passing (899/899), lint clean, type safe
 
+- [x] R1.8. Recipe Sections (Grouped Ingredients & Instructions):
+  - Support optional sectioned organization for complex recipes
+  - Each section has a name, ingredients list, and instructions
+  - Examples: "BROTH" section, "ASSEMBLY" section, "GARNISHES" section
+  - Backward compatible: simple recipes use flat ingredients/instructions arrays
+  - Sectioned recipes use `sections` array instead
+  - Display sections with clear headers in recipe detail view
+  - RecipeForm supports toggling between simple and sectioned modes
+  - AI Import detects and preserves section structure from cookbook recipes
+  - Grocery list generation: flatten all sections into consolidated list
+  - Meal plan detail: display sections with collapsible headers
+  - Status: 📋 **PLANNED** - Implementation plan ready (I12.1-I12.9)
+  - Rationale: Sub-recipes confused users when used for recipe organization (e.g., Chicken Pho "BROTH" section). Sections keep recipe as single entity while preserving natural flow.
+
 ### R2. Meal Planning
 
 - [ ] R2.1. Plan meals for extended periods: week, month, quarter, or year ahead
