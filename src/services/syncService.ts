@@ -77,9 +77,20 @@ export class SyncService {
 
     // Upload if local has newer changes than remote
     if (local.lastModified !== remote.lastModified) {
+      // Filter out soft-deleted records before uploading to cloud
+      const dataForUpload: SyncData = {
+        recipes: merged.recipes.filter(r => r.isDeleted !== true),
+        mealPlans: merged.mealPlans.filter(m => m.isDeleted !== true),
+        ingredients: merged.ingredients.filter(i => i.isDeleted !== true),
+        groceryLists: merged.groceryLists.filter(l => l.isDeleted !== true),
+        groceryItems: merged.groceryItems.filter(i => i.isDeleted !== true),
+        lastModified: merged.lastModified,
+        version: merged.version,
+      }
+      
       const updatedFileInfo = await this.storage.uploadFile(
         fileInfo,
-        JSON.stringify(merged)
+        JSON.stringify(dataForUpload)
       )
 
       return {
@@ -173,6 +184,7 @@ export class SyncService {
 
   /**
    * Get current local state snapshot
+   * Includes all records (even soft-deleted) for proper LWW merge
    * @private
    */
   private async getLocalSnapshot(): Promise<SyncData> {

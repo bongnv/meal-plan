@@ -192,6 +192,52 @@ describe('syncService', () => {
       expect(result.merged.recipes).toEqual(sameData.recipes)
     })
 
+    it('should not upload soft-deleted records to cloud', async () => {
+      const newFile = {
+        id: '',
+        name: 'new.json.gz',
+        path: '/folder/new.json.gz',
+        isSharedWithMe: false,
+      }
+      
+      // Local has mix of deleted and non-deleted records
+      const mockRecipes = [
+        { id: '1', name: 'Recipe 1', isDeleted: false, updatedAt: 1000 },
+        { id: '2', name: 'Recipe 2', isDeleted: true, updatedAt: 2000 },
+      ] as any
+      
+      const mockMealPlans = [
+        { id: 'mp1', type: 'recipe', isDeleted: true, updatedAt: 1000 },
+      ] as any
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue(mockMealPlans)
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue([])
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue([])
+      mockDb.getLastModified = vi.fn().mockResolvedValue(2000)
+      mockStorage.uploadFile = vi
+        .fn()
+        .mockResolvedValue({ ...newFile, id: '123' })
+
+      const result = await service.performSync(newFile)
+
+      // Verify uploadFile was called with filtered data
+      expect(mockStorage.uploadFile).toHaveBeenCalled()
+      const uploadedData = JSON.parse(vi.mocked(mockStorage.uploadFile).mock.calls[0][1])
+      
+      // Uploaded data should only contain non-deleted records
+      expect(uploadedData.recipes).toHaveLength(1)
+      expect(uploadedData.recipes[0].id).toBe('1')
+      expect(uploadedData.mealPlans).toHaveLength(0)
+      
+      // Merged result includes ALL records (even deleted) for local database
+      expect(result.merged.recipes).toHaveLength(2)
+      expect(result.merged.recipes.find(r => r.id === '1')).toBeDefined()
+      expect(result.merged.recipes.find(r => r.id === '2')).toBeDefined()
+      expect(result.merged.mealPlans).toHaveLength(1)
+    })
+
     it('should throw error for invalid remote data', async () => {
       const existingFile = {
         id: '123',
@@ -249,6 +295,60 @@ describe('syncService', () => {
         lastModified: 12345,
         version: 1,
       })
+    })
+
+    it('should include soft-deleted records in local snapshot for merge', async () => {
+      const mockRecipes = [
+        { id: '1', name: 'Recipe 1', isDeleted: false, updatedAt: 1000 },
+        { id: '2', name: 'Recipe 2', isDeleted: true, updatedAt: 2000 },
+        { id: '3', name: 'Recipe 3', updatedAt: 3000 }, // no isDeleted field
+      ] as any
+      
+      const mockMealPlans = [
+        { id: 'mp1', type: 'recipe', isDeleted: false, updatedAt: 1000 },
+        { id: 'mp2', type: 'recipe', isDeleted: true, updatedAt: 2000 },
+      ] as any
+      
+      const mockIngredients = [
+        { id: 'ing1', name: 'Flour', updatedAt: 1000 },
+        { id: 'ing2', name: 'Sugar', isDeleted: true, updatedAt: 2000 },
+      ] as any
+      
+      const mockLists = [
+        { id: 'gl1', name: 'List 1', updatedAt: 1000 },
+        { id: 'gl2', name: 'List 2', isDeleted: true, updatedAt: 2000 },
+      ] as any
+      
+      const mockItems = [
+        { id: 'gi1', listId: 'gl1', updatedAt: 1000 },
+        { id: 'gi2', listId: 'gl1', isDeleted: true, updatedAt: 2000 },
+      ] as any
+
+      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue(mockMealPlans)
+      mockDb.ingredients.toArray = vi.fn().mockResolvedValue(mockIngredients)
+      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue(mockLists)
+      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue(mockItems)
+      mockDb.getLastModified = vi.fn().mockResolvedValue(12345)
+
+      // @ts-expect-error - Accessing private method for testing
+      const result = await service.getLocalSnapshot()
+
+      // Should include ALL items (even deleted ones) for proper merge
+      expect(result.recipes).toHaveLength(3)
+      expect(result.recipes.map(r => r.id)).toEqual(['1', '2', '3'])
+      
+      expect(result.mealPlans).toHaveLength(2)
+      expect(result.mealPlans.map(m => m.id)).toEqual(['mp1', 'mp2'])
+      
+      expect(result.ingredients).toHaveLength(2)
+      expect(result.ingredients.map(i => i.id)).toEqual(['ing1', 'ing2'])
+      
+      expect(result.groceryLists).toHaveLength(2)
+      expect(result.groceryLists.map(l => l.id)).toEqual(['gl1', 'gl2'])
+      
+      expect(result.groceryItems).toHaveLength(2)
+      expect(result.groceryItems.map(i => i.id)).toEqual(['gi1', 'gi2'])
     })
   })
 
