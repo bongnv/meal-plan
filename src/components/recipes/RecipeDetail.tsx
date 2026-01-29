@@ -24,10 +24,7 @@ interface RecipeDetailProps {
   initialServings?: number // Override default servings (e.g., from meal plan)
 }
 
-export function RecipeDetail({
-  recipe,
-  initialServings,
-}: RecipeDetailProps) {
+export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
   const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
@@ -150,7 +147,12 @@ export function RecipeDetail({
                 {section.name && (
                   <>
                     {sectionIndex > 0 && <Divider mb="xl" />}
-                    <Title order={2} size="h3" mb="lg" mt={sectionIndex > 0 ? "xl" : undefined}>
+                    <Title
+                      order={2}
+                      size="h3"
+                      mb="lg"
+                      mt={sectionIndex > 0 ? 'xl' : undefined}
+                    >
                       {section.name}
                     </Title>
                   </>
@@ -179,9 +181,11 @@ export function RecipeDetail({
                       )
 
                       // Generate unique index for checkbox state across all sections
-                      const globalIndex = recipe.sections
-                        .slice(0, sectionIndex)
-                        .reduce((acc, s) => acc + s.ingredients.length, 0) + ingredientIndex
+                      const globalIndex =
+                        recipe.sections
+                          .slice(0, sectionIndex)
+                          .reduce((acc, s) => acc + s.ingredients.length, 0) +
+                        ingredientIndex
 
                       return (
                         <Checkbox
@@ -208,19 +212,25 @@ export function RecipeDetail({
                     {isSimpleRecipe ? 'Instructions' : 'Instructions'}
                   </Title>
                   <Stack gap="md">
-                    {section.instructions.map((instruction, instructionIndex) => (
-                      <Group key={instructionIndex} align="flex-start" gap="sm">
-                        <Badge
-                          size="lg"
-                          variant="light"
-                          color="blue"
-                          style={{ minWidth: 32, flexShrink: 0 }}
+                    {section.instructions.map(
+                      (instruction, instructionIndex) => (
+                        <Group
+                          key={instructionIndex}
+                          align="flex-start"
+                          gap="sm"
                         >
-                          {instructionOffset + instructionIndex + 1}
-                        </Badge>
-                        <Text style={{ flex: 1 }}>{instruction}</Text>
-                      </Group>
-                    ))}
+                          <Badge
+                            size="lg"
+                            variant="light"
+                            color="blue"
+                            style={{ minWidth: 32, flexShrink: 0 }}
+                          >
+                            {instructionOffset + instructionIndex + 1}
+                          </Badge>
+                          <Text style={{ flex: 1 }}>{instruction}</Text>
+                        </Group>
+                      )
+                    )}
                   </Stack>
                 </Box>
               </Box>

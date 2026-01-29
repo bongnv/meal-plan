@@ -38,12 +38,12 @@ describe('recipeService', () => {
     prepTime: 10,
     cookTime: 20,
     sections: [
-          {
-            name: undefined,
-            ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
-            instructions: ['Mix ingredients', 'Cook'],
-          },
-        ],
+      {
+        name: undefined,
+        ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
+        instructions: ['Mix ingredients', 'Cook'],
+      },
+    ],
     tags: ['test'],
     createdAt: Date.now(),
     updatedAt: Date.now(),

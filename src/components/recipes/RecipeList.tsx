@@ -119,7 +119,6 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
               </Group>
             </Group>
 
-
             <Group gap="xs" mt="auto">
               <ActionIcon
                 variant="light"

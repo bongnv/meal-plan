@@ -238,5 +238,5 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt).toContain('Chocolate Chip Cookies')
     expect(prompt).toContain('"ingredients":')
     expect(prompt).toContain('"instructions":')
-})
+  })
 })

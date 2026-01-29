@@ -13,11 +13,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
-import {
-  IconAlertCircle,
-  IconCheck,
-  IconCopy,
-} from '@tabler/icons-react'
+import { IconAlertCircle, IconCheck, IconCopy } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -247,82 +243,93 @@ export const RecipeImportModal = ({
 
                   <Divider />
 
-                  {validationResult.recipe.sections.map((section, sectionIdx) => {
-                    const isSimpleRecipe = validationResult.recipe!.sections.length === 1 && !section.name
-                    const totalIngredients = validationResult.recipe!.sections.reduce(
-                      (sum, s) => sum + s.ingredients.length,
-                      0
-                    )
+                  {validationResult.recipe.sections.map(
+                    (section, sectionIdx) => {
+                      const isSimpleRecipe =
+                        validationResult.recipe!.sections.length === 1 &&
+                        !section.name
+                      const totalIngredients =
+                        validationResult.recipe!.sections.reduce(
+                          (sum, s) => sum + s.ingredients.length,
+                          0
+                        )
 
-                    return (
-                      <Box key={sectionIdx}>
-                        {section.name && sectionIdx > 0 && <Divider mb="md" />}
-                        
-                        {section.name && (
-                          <Title order={4} mb="md">
-                            {section.name}
-                          </Title>
-                        )}
+                      return (
+                        <Box key={sectionIdx}>
+                          {section.name && sectionIdx > 0 && (
+                            <Divider mb="md" />
+                          )}
 
-                        <div>
-                          <Text size="sm" fw={700} mb="xs">
-                            {isSimpleRecipe
-                              ? `Ingredients (${totalIngredients})`
-                              : 'Ingredients'}
-                          </Text>
-                          <List size="sm">
-                            {section.ingredients.map((ing, index) => {
-                              // First check existing ingredients
-                              let ingredient = ingredients.find(
-                                i => i.id === ing.ingredientId
-                              )
-                              let isNew = false
+                          {section.name && (
+                            <Title order={4} mb="md">
+                              {section.name}
+                            </Title>
+                          )}
 
-                              // If not found in existing, check new ingredients
-                              if (!ingredient) {
-                                ingredient = validationResult.newIngredients.find(
-                                  newIng => newIng.id === ing.ingredientId
+                          <div>
+                            <Text size="sm" fw={700} mb="xs">
+                              {isSimpleRecipe
+                                ? `Ingredients (${totalIngredients})`
+                                : 'Ingredients'}
+                            </Text>
+                            <List size="sm">
+                              {section.ingredients.map((ing, index) => {
+                                // First check existing ingredients
+                                let ingredient = ingredients.find(
+                                  i => i.id === ing.ingredientId
                                 )
-                                isNew = !!ingredient
-                              }
+                                let isNew = false
 
-                              // Format ingredient display with displayName if present
-                              const ingredientName = ingredient?.name || 'Unknown'
-                              const displayText = ing.displayName
-                                ? `${ing.displayName} (${ingredientName})`
-                                : ingredientName
+                                // If not found in existing, check new ingredients
+                                if (!ingredient) {
+                                  ingredient =
+                                    validationResult.newIngredients.find(
+                                      newIng => newIng.id === ing.ingredientId
+                                    )
+                                  isNew = !!ingredient
+                                }
 
-                              return (
-                                <List.Item key={index}>
-                                  {ing.quantity} {ing.unit} {displayText}
-                                  {isNew && (
-                                    <Badge size="xs" color="blue" ml="xs">
-                                      New
-                                    </Badge>
-                                  )}
-                                </List.Item>
-                              )
-                            })}
-                          </List>
-                        </div>
+                                // Format ingredient display with displayName if present
+                                const ingredientName =
+                                  ingredient?.name || 'Unknown'
+                                const displayText = ing.displayName
+                                  ? `${ing.displayName} (${ingredientName})`
+                                  : ingredientName
 
-                        <Divider my="md" />
+                                return (
+                                  <List.Item key={index}>
+                                    {ing.quantity} {ing.unit} {displayText}
+                                    {isNew && (
+                                      <Badge size="xs" color="blue" ml="xs">
+                                        New
+                                      </Badge>
+                                    )}
+                                  </List.Item>
+                                )
+                              })}
+                            </List>
+                          </div>
 
-                        <div>
-                          <Text size="sm" fw={700} mb="xs">
-                            Instructions
-                          </Text>
-                          <List size="sm" type="ordered">
-                            {section.instructions.map(
-                              (instruction, index) => (
-                                <List.Item key={index}>{instruction}</List.Item>
-                              )
-                            )}
-                          </List>
-                        </div>
-                      </Box>
-                    )
-                  })}
+                          <Divider my="md" />
+
+                          <div>
+                            <Text size="sm" fw={700} mb="xs">
+                              Instructions
+                            </Text>
+                            <List size="sm" type="ordered">
+                              {section.instructions.map(
+                                (instruction, index) => (
+                                  <List.Item key={index}>
+                                    {instruction}
+                                  </List.Item>
+                                )
+                              )}
+                            </List>
+                          </div>
+                        </Box>
+                      )
+                    }
+                  )}
                 </>
               ) : (
                 <Text size="sm" c="dimmed">

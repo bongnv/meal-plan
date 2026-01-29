@@ -104,12 +104,12 @@ describe('HomePage', () => {
           name: 'Chicken Curry',
           description: 'Delicious curry',
           sections: [
-          {
-            name: undefined,
-            ingredients: [],
-            instructions: [],
-          },
-        ],
+            {
+              name: undefined,
+              ingredients: [],
+              instructions: [],
+            },
+          ],
           servings: 4,
           prepTime: 15,
           cookTime: 30,
@@ -197,12 +197,12 @@ describe('HomePage', () => {
           name: 'Chicken Curry',
           description: 'Delicious curry',
           sections: [
-          {
-            name: undefined,
-            ingredients: [],
-            instructions: [],
-          },
-        ],
+            {
+              name: undefined,
+              ingredients: [],
+              instructions: [],
+            },
+          ],
           servings: 4,
           prepTime: 15,
           cookTime: 30,
@@ -286,12 +286,12 @@ describe('HomePage', () => {
           name: 'Pasta',
           description: '',
           sections: [
-          {
-            name: undefined,
-            ingredients: [],
-            instructions: [],
-          },
-        ],
+            {
+              name: undefined,
+              ingredients: [],
+              instructions: [],
+            },
+          ],
           servings: 4,
           prepTime: 10,
           cookTime: 15,
@@ -304,12 +304,12 @@ describe('HomePage', () => {
           name: 'Salad',
           description: '',
           sections: [
-          {
-            name: undefined,
-            ingredients: [],
-            instructions: [],
-          },
-        ],
+            {
+              name: undefined,
+              ingredients: [],
+              instructions: [],
+            },
+          ],
           servings: 2,
           prepTime: 5,
           cookTime: 0,
@@ -322,12 +322,12 @@ describe('HomePage', () => {
           name: 'Tacos',
           description: '',
           sections: [
-          {
-            name: undefined,
-            ingredients: [],
-            instructions: [],
-          },
-        ],
+            {
+              name: undefined,
+              ingredients: [],
+              instructions: [],
+            },
+          ],
           servings: 3,
           prepTime: 15,
           cookTime: 20,

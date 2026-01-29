@@ -493,12 +493,16 @@ describe('Recipe Types', () => {
         sections: [
           {
             name: 'BROTH',
-            ingredients: [{ ingredientId: 'ing-1', quantity: 2, unit: 'liter' }],
+            ingredients: [
+              { ingredientId: 'ing-1', quantity: 2, unit: 'liter' },
+            ],
             instructions: ['Boil water', 'Add spices'],
           },
           {
             name: 'ASSEMBLY',
-            ingredients: [{ ingredientId: 'ing-2', quantity: 200, unit: 'gram' }],
+            ingredients: [
+              { ingredientId: 'ing-2', quantity: 200, unit: 'gram' },
+            ],
             instructions: ['Add noodles', 'Pour broth'],
           },
         ],
@@ -528,7 +532,9 @@ describe('Recipe Types', () => {
         sections: [
           {
             name: undefined,
-            ingredients: [{ ingredientId: 'ing-1', quantity: 200, unit: 'gram' }],
+            ingredients: [
+              { ingredientId: 'ing-1', quantity: 200, unit: 'gram' },
+            ],
             instructions: ['Boil pasta', 'Add sauce'],
           },
         ],

@@ -522,7 +522,7 @@ describe('MealPlanDB', () => {
     it('should migrate recipes from flat structure to sections', async () => {
       // Use a unique DB name for migration test
       const testDbName = 'MealPlanDB_MigrationTest_' + Date.now()
-      
+
       // Create a version 1 database with old schema
       const oldDb = new Dexie(testDbName)
       oldDb.version(1).stores({
@@ -627,7 +627,9 @@ describe('MealPlanDB', () => {
       expect(migratedRecipe!.sections).toBeDefined()
       expect(migratedRecipe!.sections).toHaveLength(1)
       expect(migratedRecipe!.sections[0].name).toBeUndefined()
-      expect(migratedRecipe!.sections[0].ingredients).toEqual(oldRecipe.ingredients)
+      expect(migratedRecipe!.sections[0].ingredients).toEqual(
+        oldRecipe.ingredients
+      )
       expect(migratedRecipe!.sections[0].instructions).toEqual(
         oldRecipe.instructions
       )
@@ -654,7 +656,9 @@ describe('MealPlanDB', () => {
           },
           {
             name: 'ASSEMBLY',
-            ingredients: [{ ingredientId: 'ing2', quantity: 200, unit: 'gram' }],
+            ingredients: [
+              { ingredientId: 'ing2', quantity: 200, unit: 'gram' },
+            ],
             instructions: ['Add noodles'],
           },
         ],
@@ -691,7 +695,10 @@ describe('MealPlanDB', () => {
       const newDb = new MealPlanDB()
       // @ts-expect-error - Setting name for test purposes
       newDb._dbName = testDbName
-      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
       await newDb.open()
 
       const schemaVersion = await newDb.metadata.get('schemaVersion')
@@ -736,7 +743,10 @@ describe('MealPlanDB', () => {
       const newDb = new MealPlanDB()
       // @ts-expect-error - Setting name for test purposes
       newDb._dbName = testDbName
-      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
       await newDb.open()
 
       const migrated = await newDb.recipes.get('recipe3')
@@ -797,7 +807,10 @@ describe('MealPlanDB', () => {
       const newDb = new MealPlanDB()
       // @ts-expect-error - Setting name for test purposes
       newDb._dbName = testDbName
-      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
+      Object.defineProperty(newDb, 'name', {
+        value: testDbName,
+        writable: false,
+      })
       await newDb.open()
 
       // All recipes should be migrated

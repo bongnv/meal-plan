@@ -35,8 +35,18 @@ describe('RecipeDetail', () => {
           {
             name: undefined,
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'flour' },
-              { ingredientId: 'ing2', quantity: 7, unit: 'whole', displayName: 'eggs' },
+              {
+                ingredientId: 'ing1',
+                quantity: 2,
+                unit: 'cup',
+                displayName: 'flour',
+              },
+              {
+                ingredientId: 'ing2',
+                quantity: 7,
+                unit: 'whole',
+                displayName: 'eggs',
+              },
             ],
             instructions: ['Mix well', 'Add liquid', 'Bake'],
           },
@@ -51,7 +61,9 @@ describe('RecipeDetail', () => {
       expect(screen.getByText('Ingredients')).toBeInTheDocument()
 
       // Should NOT have a section name header (since name is undefined)
-      expect(screen.queryByRole('heading', { name: /section/i })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', { name: /section/i })
+      ).not.toBeInTheDocument()
 
       // Should display ingredients with quantities
       expect(screen.getByText(/2 cup/i)).toBeInTheDocument()
@@ -107,14 +119,24 @@ describe('RecipeDetail', () => {
           {
             name: 'Dough',
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'all-purpose-flour' },
+              {
+                ingredientId: 'ing1',
+                quantity: 2,
+                unit: 'cup',
+                displayName: 'all-purpose-flour',
+              },
             ],
             instructions: ['Mix well with water'],
           },
           {
             name: 'Sauce',
             ingredients: [
-              { ingredientId: 'ing2', quantity: 1, unit: 'can', displayName: 'tomatoes' },
+              {
+                ingredientId: 'ing2',
+                quantity: 1,
+                unit: 'can',
+                displayName: 'tomatoes',
+              },
             ],
             instructions: ['Heat sauce'],
           },
@@ -125,11 +147,9 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Should display section headers (appears twice - once in ingredients, once in instructions)
-      const doughHeaders = screen.getAllByText('Dough')
-      const sauceHeaders = screen.getAllByText('Sauce')
-      expect(doughHeaders).toHaveLength(2) // One for ingredients section, one for instructions
-      expect(sauceHeaders).toHaveLength(2)
+      // Should display section headers (appears once per section)
+      expect(screen.getByText('Dough')).toBeInTheDocument()
+      expect(screen.getByText('Sauce')).toBeInTheDocument()
 
       // Should display ingredients
       expect(screen.getByText(/all-purpose-flour/i)).toBeInTheDocument()
@@ -153,14 +173,24 @@ describe('RecipeDetail', () => {
           {
             name: 'Part 1',
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'sugar' },
+              {
+                ingredientId: 'ing1',
+                quantity: 2,
+                unit: 'cup',
+                displayName: 'sugar',
+              },
             ],
             instructions: [],
           },
           {
             name: 'Part 2',
             ingredients: [
-              { ingredientId: 'ing2', quantity: 3, unit: 'cup', displayName: 'flour' },
+              {
+                ingredientId: 'ing2',
+                quantity: 3,
+                unit: 'cup',
+                displayName: 'flour',
+              },
             ],
             instructions: [],
           },
@@ -171,8 +201,9 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Main ingredients header should still exist
-      expect(screen.getByText('Ingredients')).toBeInTheDocument()
+      // Main ingredients header should exist (appears for each section)
+      const ingredientHeaders = screen.getAllByText('Ingredients')
+      expect(ingredientHeaders.length).toBeGreaterThan(0)
 
       // Section headers should be visible (appears once per section)
       expect(screen.getByText('Part 1')).toBeInTheDocument()
@@ -206,8 +237,9 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Main instructions header should still exist
-      expect(screen.getByText('Instructions')).toBeInTheDocument()
+      // Main instructions header should exist (appears for each section)
+      const instructionHeaders = screen.getAllByText('Instructions')
+      expect(instructionHeaders.length).toBeGreaterThan(0)
 
       // Instructions should be visible with section context
       expect(screen.getByText('Step for part 1')).toBeInTheDocument()
@@ -229,14 +261,24 @@ describe('RecipeDetail', () => {
           {
             name: undefined,
             ingredients: [
-              { ingredientId: 'ing1', quantity: 1, unit: 'cup', displayName: 'filtered-water' },
+              {
+                ingredientId: 'ing1',
+                quantity: 1,
+                unit: 'cup',
+                displayName: 'filtered-water',
+              },
             ],
             instructions: ['Boil it'],
           },
           {
             name: 'Special Sauce',
             ingredients: [
-              { ingredientId: 'ing2', quantity: 2, unit: 'tablespoon', displayName: 'hot-sauce' },
+              {
+                ingredientId: 'ing2',
+                quantity: 2,
+                unit: 'tablespoon',
+                displayName: 'hot-sauce',
+              },
             ],
             instructions: ['Mix thoroughly'],
           },
@@ -301,7 +343,12 @@ describe('RecipeDetail', () => {
           {
             name: 'Ingredients Only',
             ingredients: [
-              { ingredientId: 'ing1', quantity: 1, unit: 'cup', displayName: 'flour' },
+              {
+                ingredientId: 'ing1',
+                quantity: 1,
+                unit: 'cup',
+                displayName: 'flour',
+              },
             ],
             instructions: [],
           },

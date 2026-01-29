@@ -903,11 +903,12 @@ describe('syncService', () => {
 
       // All recipes should be migrated
       expect(result.merged.recipes).toHaveLength(2)
-      result.merged.recipes.forEach((recipe) => {
+      result.merged.recipes.forEach(recipe => {
         expect(recipe.sections).toBeDefined()
         expect(recipe.sections).toHaveLength(1)
         expect((recipe as any).ingredients).toBeUndefined()
         expect((recipe as any).instructions).toBeUndefined()
       })
     })
-  })})
+  })
+})

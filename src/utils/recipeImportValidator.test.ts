@@ -70,20 +70,22 @@ describe('validateRecipeImport', () => {
       const result = validateRecipeImport(invalidRecipe, existingIngredients)
 
       expect(result.isValid).toBe(false)
-      expect(
-        result.errors.some(e => e.includes('At least one section'))
-      ).toBe(true)
+      expect(result.errors.some(e => e.includes('At least one section'))).toBe(
+        true
+      )
     })
 
     it('should return error when servings is less than 1', () => {
       const invalidRecipe = JSON.stringify({
         name: 'Test Recipe',
         description: 'A test recipe',
-        sections: [{
-          name: undefined,
-          ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
-          instructions: ['Mix ingredients']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix ingredients'],
+          },
+        ],
         servings: 0,
         prepTime: 10,
         cookTime: 20,
@@ -100,11 +102,13 @@ describe('validateRecipeImport', () => {
       const invalidRecipe = JSON.stringify({
         name: 'Test Recipe',
         description: 'A test recipe',
-        sections: [{
-          name: undefined,
-          ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
-          instructions: ['Mix ingredients']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix ingredients'],
+          },
+        ],
         servings: 4,
         prepTime: 0,
         cookTime: 20,
@@ -121,11 +125,13 @@ describe('validateRecipeImport', () => {
       const invalidRecipe = JSON.stringify({
         name: 'Test Recipe',
         description: 'A test recipe',
-        sections: [{
-          name: undefined,
-          ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
-          instructions: ['Mix ingredients']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix ingredients'],
+          },
+        ],
         servings: 4,
         prepTime: 10,
         cookTime: 0,
@@ -144,14 +150,16 @@ describe('validateRecipeImport', () => {
       const validRecipe = JSON.stringify({
         name: 'Cookies',
         description: 'Sugar cookies',
-        sections: [{
-          name: undefined,
-          ingredients: [
-            { name: 'flour', quantity: 2, unit: 'cup' },
-            { name: 'SUGAR', quantity: 1, unit: 'cup' },
-          ],
-          instructions: ['Mix and bake']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [
+              { name: 'flour', quantity: 2, unit: 'cup' },
+              { name: 'SUGAR', quantity: 1, unit: 'cup' },
+            ],
+            instructions: ['Mix and bake'],
+          },
+        ],
         servings: 24,
         prepTime: 15,
         cookTime: 12,
@@ -162,26 +170,32 @@ describe('validateRecipeImport', () => {
 
       expect(result.isValid).toBe(true)
       expect(result.newIngredients).toEqual([])
-      expect(result.recipe!.sections[0].ingredients[0].ingredientId).toBe('ing1')
-      expect(result.recipe!.sections[0].ingredients[1].ingredientId).toBe('ing2')
+      expect(result.recipe!.sections[0].ingredients[0].ingredientId).toBe(
+        'ing1'
+      )
+      expect(result.recipe!.sections[0].ingredients[1].ingredientId).toBe(
+        'ing2'
+      )
     })
 
     it('should handle optional displayName for ingredients', () => {
       const validRecipe = JSON.stringify({
         name: 'Pizza',
         description: 'Homemade pizza',
-        sections: [{
-          name: undefined,
-          ingredients: [
-            {
-              name: 'Flour',
-              quantity: 3,
-              unit: 'cup',
-              displayName: 'All-purpose flour',
-            },
-          ],
-          instructions: ['Make dough', 'Add toppings', 'Bake']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [
+              {
+                name: 'Flour',
+                quantity: 3,
+                unit: 'cup',
+                displayName: 'All-purpose flour',
+              },
+            ],
+            instructions: ['Make dough', 'Add toppings', 'Bake'],
+          },
+        ],
         servings: 4,
         prepTime: 30,
         cookTime: 20,
@@ -200,11 +214,13 @@ describe('validateRecipeImport', () => {
       const validRecipe = JSON.stringify({
         name: 'Burger',
         description: 'Classic burger',
-        sections: [{
-          name: undefined,
-          ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
-          instructions: ['Cook burger']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ name: 'Flour', quantity: 2, unit: 'cup' }],
+            instructions: ['Cook burger'],
+          },
+        ],
         servings: 2,
         prepTime: 10,
         cookTime: 15,
@@ -224,18 +240,20 @@ describe('validateRecipeImport', () => {
       const validRecipe = JSON.stringify({
         name: 'Recipe',
         description: 'Recipe',
-        sections: [{
-          name: undefined,
-          ingredients: [
-            {
-              name: 'Ingredient1',
-              quantity: 1,
-              unit: 'cup',
-              category: 'Category1',
-            },
-          ],
-          instructions: ['Do something']
-        }],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [
+              {
+                name: 'Ingredient1',
+                quantity: 1,
+                unit: 'cup',
+                category: 'Category1',
+              },
+            ],
+            instructions: ['Do something'],
+          },
+        ],
         servings: 1,
         prepTime: 5,
         cookTime: 10,

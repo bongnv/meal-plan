@@ -28,10 +28,9 @@ describe('RecipeForm - Sections Structure', () => {
 
   describe('Initial state', () => {
     it('should initialize with one unnamed section by default (new recipe)', () => {
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Should have "Add Section" button
       expect(screen.getByText('Add Section')).toBeInTheDocument()
@@ -157,10 +156,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should add a new section when "Add Section" is clicked', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Initially 1 section (no section name input visible)
       expect(
@@ -229,9 +227,7 @@ describe('RecipeForm - Sections Structure', () => {
 
       // Should now have only 1 section name input visible (or none if only 1 section remains)
       await waitFor(() => {
-        const inputs = screen.queryAllByPlaceholderText(
-          /e.g., BROTH, ASSEMBLY/
-        )
+        const inputs = screen.queryAllByPlaceholderText(/e.g., BROTH, ASSEMBLY/)
         // After removing, if we have only 1 section, the name input should be hidden
         expect(inputs.length).toBeLessThanOrEqual(1)
       })
@@ -240,10 +236,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should not allow removing the last section', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Should NOT have "Remove Section" button when only 1 section
       expect(screen.queryByText('Remove Section')).not.toBeInTheDocument()
@@ -260,10 +255,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should update section name when typing', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Add a section to make section names visible
       await user.click(screen.getByText('Add Section'))
@@ -288,10 +282,9 @@ describe('RecipeForm - Sections Structure', () => {
 
   describe('Section visibility rules', () => {
     it('should hide section name input when only 1 section exists', () => {
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Should NOT show section name input
       expect(
@@ -302,10 +295,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should show section name inputs when 2+ sections exist', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Add a section
       await user.click(screen.getByText('Add Section'))
@@ -367,10 +359,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should allow adding ingredients to a section', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Click "Add Ingredient"
       const addIngredientButton = screen.getByText('Add Ingredient')
@@ -386,10 +377,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should allow adding instructions to a section', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Click "Add Instruction"
       const addInstructionButton = screen.getByText('Add Instruction')
@@ -406,10 +396,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should submit simple recipe (1 unnamed section)', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Fill in basic fields
       await user.type(
@@ -455,10 +444,9 @@ describe('RecipeForm - Sections Structure', () => {
     it('should submit complex recipe (multiple named sections)', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Fill in basic fields
       await user.type(
@@ -508,17 +496,19 @@ describe('RecipeForm - Sections Structure', () => {
     it('should trim section names and convert empty to undefined', async () => {
       const user = userEvent.setup()
 
-      render(
-        <RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />,
-        { wrapper }
-      )
+      render(<RecipeForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />, {
+        wrapper,
+      })
 
       // Fill in basic fields
       await user.type(
         screen.getByPlaceholderText('Enter recipe name'),
         'Test Recipe'
       )
-      await user.type(screen.getByPlaceholderText('Describe your recipe'), 'Test')
+      await user.type(
+        screen.getByPlaceholderText('Describe your recipe'),
+        'Test'
+      )
       await user.clear(screen.getByPlaceholderText('Number of servings'))
       await user.type(screen.getByPlaceholderText('Number of servings'), '2')
       await user.clear(screen.getByPlaceholderText('Preparation time'))

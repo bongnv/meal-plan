@@ -69,7 +69,9 @@ export const RecipeSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  sections: z.array(RecipeSectionSchema).min(1, 'At least one section is required'),
+  sections: z
+    .array(RecipeSectionSchema)
+    .min(1, 'At least one section is required'),
   servings: z.number(),
   prepTime: z.number().positive('Prep time must be positive'),
   cookTime: z.number().positive('Cook time must be positive'),

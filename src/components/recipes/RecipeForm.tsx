@@ -62,9 +62,7 @@ export function RecipeForm({
   )
 
   const form = useForm<Omit<RecipeFormValues, 'sections'>>({
-    validate: zodResolver(
-      RecipeFormSchema.omit({ sections: true })
-    ),
+    validate: zodResolver(RecipeFormSchema.omit({ sections: true })),
     initialValues: {
       name: recipe?.name ?? '',
       description: recipe?.description ?? '',
@@ -146,7 +144,10 @@ export function RecipeForm({
     setSections(newSections)
   }
 
-  const removeInstruction = (sectionIndex: number, instructionIndex: number) => {
+  const removeInstruction = (
+    sectionIndex: number,
+    instructionIndex: number
+  ) => {
     const newSections = [...sections]
     newSections[sectionIndex].instructions.splice(instructionIndex, 1)
     setSections(newSections)
@@ -293,106 +294,114 @@ export function RecipeForm({
                     </Title>
 
                     <Stack gap="xs">
-                      {section.ingredients.map((ingredient, ingredientIndex) => {
-                        const selectedIngredient = ingredients.find(
-                          ing => ing.id === ingredient.ingredientId
-                        )
+                      {section.ingredients.map(
+                        (ingredient, ingredientIndex) => {
+                          const selectedIngredient = ingredients.find(
+                            ing => ing.id === ingredient.ingredientId
+                          )
 
-                        return (
-                          <Paper key={ingredientIndex} p="sm" withBorder>
-                            <Group align="flex-start" wrap="nowrap" gap="xs">
-                              <Select
-                                placeholder="Select ingredient"
-                                label="Ingredient"
-                                style={{ flex: 2, minWidth: 150 }}
-                                data={[
-                                  ...ingredients.map(ing => ({
-                                    value: ing.id,
-                                    label: ing.name,
-                                  })),
-                                  {
-                                    value: '__create_new__',
-                                    label: '+ Create New Ingredient',
-                                  },
-                                ]}
-                                value={ingredient.ingredientId}
-                                searchable
-                                onChange={value => {
-                                  if (value === '__create_new__') {
-                                    openCreateIngredient()
-                                  } else {
+                          return (
+                            <Paper key={ingredientIndex} p="sm" withBorder>
+                              <Group align="flex-start" wrap="nowrap" gap="xs">
+                                <Select
+                                  placeholder="Select ingredient"
+                                  label="Ingredient"
+                                  style={{ flex: 2, minWidth: 150 }}
+                                  data={[
+                                    ...ingredients.map(ing => ({
+                                      value: ing.id,
+                                      label: ing.name,
+                                    })),
+                                    {
+                                      value: '__create_new__',
+                                      label: '+ Create New Ingredient',
+                                    },
+                                  ]}
+                                  value={ingredient.ingredientId}
+                                  searchable
+                                  onChange={value => {
+                                    if (value === '__create_new__') {
+                                      openCreateIngredient()
+                                    } else {
+                                      updateIngredient(
+                                        sectionIndex,
+                                        ingredientIndex,
+                                        'ingredientId',
+                                        value || ''
+                                      )
+                                    }
+                                  }}
+                                />
+                                <NumberInput
+                                  placeholder="Quantity"
+                                  label="Quantity"
+                                  style={{ flex: 1, minWidth: 100 }}
+                                  min={0}
+                                  step={0.1}
+                                  value={ingredient.quantity}
+                                  onChange={value =>
                                     updateIngredient(
                                       sectionIndex,
                                       ingredientIndex,
-                                      'ingredientId',
-                                      value || ''
+                                      'quantity',
+                                      value
                                     )
                                   }
-                                }}
-                              />
-                              <NumberInput
-                                placeholder="Quantity"
-                                label="Quantity"
-                                style={{ flex: 1, minWidth: 100 }}
-                                min={0}
-                                step={0.1}
-                                value={ingredient.quantity}
-                                onChange={value =>
-                                  updateIngredient(
-                                    sectionIndex,
-                                    ingredientIndex,
-                                    'quantity',
-                                    value
-                                  )
-                                }
-                              />
-                              <Select
-                                placeholder="Unit"
-                                label="Unit"
-                                style={{ flex: 1, minWidth: 120 }}
-                                data={UNITS.map(u => ({ value: u, label: u }))}
-                                searchable
-                                value={ingredient.unit}
-                                onChange={value =>
-                                  updateIngredient(
-                                    sectionIndex,
-                                    ingredientIndex,
-                                    'unit',
-                                    value || 'whole'
-                                  )
-                                }
-                              />
-                              <TextInput
-                                placeholder={
-                                  selectedIngredient?.name || 'Custom name'
-                                }
-                                label="Custom Name (optional)"
-                                style={{ flex: 2, minWidth: 150 }}
-                                value={ingredient.displayName || ''}
-                                onChange={e =>
-                                  updateIngredient(
-                                    sectionIndex,
-                                    ingredientIndex,
-                                    'displayName',
-                                    e.target.value
-                                  )
-                                }
-                              />
-                              <ActionIcon
-                                color="red"
-                                variant="subtle"
-                                onClick={() =>
-                                  removeIngredient(sectionIndex, ingredientIndex)
-                                }
-                                aria-label="Remove ingredient"
-                                style={{ marginTop: 28, flexShrink: 0 }}
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Group>
-                          </Paper>
-                        )
-                      })}
+                                />
+                                <Select
+                                  placeholder="Unit"
+                                  label="Unit"
+                                  style={{ flex: 1, minWidth: 120 }}
+                                  data={UNITS.map(u => ({
+                                    value: u,
+                                    label: u,
+                                  }))}
+                                  searchable
+                                  value={ingredient.unit}
+                                  onChange={value =>
+                                    updateIngredient(
+                                      sectionIndex,
+                                      ingredientIndex,
+                                      'unit',
+                                      value || 'whole'
+                                    )
+                                  }
+                                />
+                                <TextInput
+                                  placeholder={
+                                    selectedIngredient?.name || 'Custom name'
+                                  }
+                                  label="Custom Name (optional)"
+                                  style={{ flex: 2, minWidth: 150 }}
+                                  value={ingredient.displayName || ''}
+                                  onChange={e =>
+                                    updateIngredient(
+                                      sectionIndex,
+                                      ingredientIndex,
+                                      'displayName',
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                                <ActionIcon
+                                  color="red"
+                                  variant="subtle"
+                                  onClick={() =>
+                                    removeIngredient(
+                                      sectionIndex,
+                                      ingredientIndex
+                                    )
+                                  }
+                                  aria-label="Remove ingredient"
+                                  style={{ marginTop: 28, flexShrink: 0 }}
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Group>
+                            </Paper>
+                          )
+                        }
+                      )}
                     </Stack>
                     <Button
                       leftSection={<IconPlus size={16} />}
@@ -413,37 +422,42 @@ export function RecipeForm({
                     </Title>
 
                     <Stack gap="xs">
-                      {section.instructions.map((instruction, instructionIndex) => (
-                        <Paper key={instructionIndex} p="sm" withBorder>
-                          <Group align="flex-start" wrap="nowrap" gap="xs">
-                            <Textarea
-                              placeholder={`Step ${instructionIndex + 1}`}
-                              label={`Step ${instructionIndex + 1}`}
-                              minRows={2}
-                              style={{ flex: 1, minWidth: 0 }}
-                              value={instruction}
-                              onChange={e =>
-                                updateInstruction(
-                                  sectionIndex,
-                                  instructionIndex,
-                                  e.target.value
-                                )
-                              }
-                            />
-                            <ActionIcon
-                              color="red"
-                              variant="subtle"
-                              onClick={() =>
-                                removeInstruction(sectionIndex, instructionIndex)
-                              }
-                              aria-label="Remove instruction"
-                              style={{ marginTop: 28, flexShrink: 0 }}
-                            >
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </Group>
-                        </Paper>
-                      ))}
+                      {section.instructions.map(
+                        (instruction, instructionIndex) => (
+                          <Paper key={instructionIndex} p="sm" withBorder>
+                            <Group align="flex-start" wrap="nowrap" gap="xs">
+                              <Textarea
+                                placeholder={`Step ${instructionIndex + 1}`}
+                                label={`Step ${instructionIndex + 1}`}
+                                minRows={2}
+                                style={{ flex: 1, minWidth: 0 }}
+                                value={instruction}
+                                onChange={e =>
+                                  updateInstruction(
+                                    sectionIndex,
+                                    instructionIndex,
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <ActionIcon
+                                color="red"
+                                variant="subtle"
+                                onClick={() =>
+                                  removeInstruction(
+                                    sectionIndex,
+                                    instructionIndex
+                                  )
+                                }
+                                aria-label="Remove instruction"
+                                style={{ marginTop: 28, flexShrink: 0 }}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          </Paper>
+                        )
+                      )}
                     </Stack>
                     <Button
                       leftSection={<IconPlus size={16} />}

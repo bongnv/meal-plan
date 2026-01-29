@@ -130,7 +130,7 @@ export class SyncService {
     const remote = validationResult.data as SyncData
 
     // Migrate recipes from old format if needed
-    remote.recipes = remote.recipes.map((recipe) =>
+    remote.recipes = remote.recipes.map(recipe =>
       this.migrateRecipeToSections(recipe)
     )
 
