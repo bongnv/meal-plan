@@ -134,10 +134,7 @@ export function RecipeDetailPage() {
           </Group>
         </Box>
 
-        <RecipeDetail
-          recipe={recipe}
-          onRecipeClick={recipeId => navigate(`/recipes/${recipeId}`)}
-        />
+        <RecipeDetail recipe={recipe} />
       </Stack>
     </Container>
   )

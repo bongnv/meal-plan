@@ -17,147 +17,119 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
       ? ingredients.map(ing => `  - ${ing.name}`).join('\n')
       : '  (No ingredients in library yet - any ingredients you include will be added automatically)'
 
-  return `Please parse the following recipe and convert it to JSON format matching this schema:
-
-## Recipe JSON Schema
+  return `Parse this recipe and return JSON matching this schema:
 
 \`\`\`json
 {
-  "name": "string (recipe name)",
-  "description": "string (brief description)",
-  "ingredients": [
+  "name": "string",
+  "description": "string",
+  "sections": [
     {
-      "name": "string (ingredient name - will be matched to library or created as new)",
-      "quantity": "number (numeric quantity)",
-      "unit": "string (REQUIRED - one of: cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package)",
-      "category": "string (REQUIRED for new ingredients - one of: Vegetables, Fruits, Meat, Poultry, Seafood, Dairy, Grains, Legumes, Nuts & Seeds, Herbs & Spices, Oils & Fats, Condiments, Baking, Other)",
-      "displayName": "string (optional - recipe-specific name as it appears in the recipe, e.g., 'Boneless Chicken Breast' instead of just 'Chicken')"
+      "name": "string | undefined (e.g., 'Broth', 'Assembly' - omit for simple recipes)",
+      "ingredients": [
+        {
+          "name": "string (ingredient name to Buy)",
+          "quantity": "number",
+          "unit": "cup | tablespoon | teaspoon | gram | kilogram | milliliter | liter | piece | whole | clove | slice | bunch | pinch | dash | can | package",
+          "category": "Vegetables | Fruits | Meat | Poultry | Seafood | Dairy | Grains | Legumes | Nuts & Seeds | Herbs & Spices | Oils & Fats | Condiments | Baking | Other",
+          "displayName": "string (optional - full ingredient name + recipe-specific preparation, e.g., 'Fresh cilantro, chopped')"
+        }
+      ],
+      "instructions": ["step 1", "step 2", ...]
     }
   ],
-  "subRecipes": [
-    {
-      "recipe": {
-        "name": "string (sub-recipe name)",
-        "description": "string",
-        "ingredients": [...],
-        "instructions": [...],
-        "servings": "number",
-        "prepTime": "number",
-        "cookTime": "number",
-        "tags": [...],
-        "subRecipes": []
-      },
-      "servings": "number (how many servings of this sub-recipe to use in the main recipe)",
-      "displayName": "string (optional - custom name for this component)"
-    }
-  ],
-  "instructions": ["string (step 1)", "string (step 2)", ...],
-  "servings": "number (number of servings)",
-  "prepTime": "number (preparation time in minutes)",
-  "cookTime": "number (cooking time in minutes)",
-  "tags": ["string (tag 1)", "string (tag 2)", ...],
-  "imageUrl": "string (optional - URL to recipe image if available, OMIT this field entirely if no image URL is available - do not use empty string)"
+  "servings": "number",
+  "prepTime": "number (minutes)",
+  "cookTime": "number (minutes)",
+  "tags": ["tag1", "tag2", ...],
+  "imageUrl": "string (optional - omit if unavailable)"
 }
 \`\`\`
 
-## Current Ingredient Library
-
+## Ingredient Library
 ${ingredientList}
 
-## Instructions
+## Guidelines
 
-1. Parse the recipe from the URL or text I provide
-2. For each ingredient in the recipe:
-   - Use the generic ingredient name (e.g., "Chicken", "Tomato", "Rice")
-   - The app will automatically match to existing ingredients or create new ones
-   - If the ingredient is NOT in the library, include a category (choose the best match from the list in schema above)
-   - If the recipe uses a specific variety (e.g., "Boneless Chicken Breast"), put the generic name in 'name' and the specific variety in 'displayName'
-   - Determine the appropriate unit from the recipe and convert unsupported units:
-     * pound (lb) → gram (1 lb = 454 grams)
-     * ounce (oz) → gram (1 oz = 28 grams)
-     * fluid ounce (fl oz) → milliliter (1 fl oz = 30 ml)
-     * pint → milliliter (1 pint = 473 ml)
-     * quart → liter (1 quart = 0.95 liter)
-     * gallon → liter (1 gallon = 3.8 liters)
-3. Every recipe ingredient MUST include a unit field from the list in step 2 (cup, tablespoon, teaspoon, gram, kilogram, milliliter, liter, piece, whole, clove, slice, bunch, pinch, dash, can, package)
-4. For sub-recipes (recipes that are components of this main recipe):
-   - Identify sub-recipes mentioned in instructions (e.g., "Make cilantro rice", "Prepare the sauce")
-   - Add them to the subRecipes array with the FULL recipe object inline:
-     * recipe: Complete recipe object with name, description, ingredients, instructions, servings, prepTime, cookTime, tags, subRecipes (see schema above)
-     * Do NOT include IDs - the app will generate them automatically
-     * servings: how many servings of that sub-recipe to use in the main recipe
-     * displayName: optional descriptive name (e.g., "Cilantro Rice", "Special Sauce")
-   - IMPORTANT: Include sub-recipe ingredients WITHIN the sub-recipe object, NOT in the main recipe ingredients
-   - Sub-recipes can also have sub-recipes (nesting is allowed)
-   - If no sub-recipes, use empty array: "subRecipes": []
-5. Extract quantities as numbers (convert fractions like "1/2" to 0.5, "1 1/2" to 1.5). If quantity is missing, omit the ingredient.
-6. Break instructions into clear, sequential steps. Keep each step concise and actionable.
-7. Estimate prepTime (preparation time) and cookTime (cooking time) separately in minutes. Both must be positive numbers.
-8. Generate relevant tags (e.g., "Italian", "Quick", "Vegetarian")
-9. Only include imageUrl if you have found a valid image URL. Omit entirely if not available - do NOT use empty string or null.
-10. CRITICAL: Validate the JSON structure is complete and valid before returning.
-11. Return ONLY the JSON object, no additional text, no explanations.
+**Sections:**
+- Simple: ONE section, name: undefined
+- Complex: Multiple named sections ("Broth", "Assembly", etc.)
 
-## Example Output Format
+**Ingredients:**
+- name: Generic ingredient to BUY (e.g., "Banana", "Cilantro", "Chicken Breast")
+- displayName: Full ingredient + preparation (e.g., "Ripe bananas, mashed", "Fresh cilantro, chopped", "Lime, cut into wedges")
+- Match library ingredients by name (case-insensitive)
+- Avoid vague: "Fresh Herbs", "Spices", "Meat" - Use specific: "Cilantro", "Cumin", "Chicken Breast"
+- New ingredients: include category
 
+**Units & Conversions:**
+- Convert: lb→gram (454g), oz→gram (28g), fl oz→ml (30ml), pint→ml (473ml), quart→L (0.95L)
+- Fractions: "1/2" → 0.5
+
+**Other:**
+- Break instructions into clear steps
+- Estimate prep/cook times separately
+- Generate relevant tags
+- Omit imageUrl if no valid URL available
+
+Return ONLY the JSON object.
+
+## Examples
+
+**Simple Recipe:**
 \`\`\`json
 {
-  "name": "Burrito Bowl",
-  "description": "Fresh burrito bowl with cilantro rice and beans",
-  "ingredients": [
-    { "name": "Black Beans", "quantity": 200, "unit": "gram", "category": "Legumes" },
-    { "name": "Cheese", "quantity": 50, "unit": "gram", "category": "Dairy", "displayName": "Cheddar Cheese" }
-  ],
-  "subRecipes": [
-    {
-      "recipe": {
-        "name": "Cilantro Rice",
-        "description": "Fresh cilantro-infused rice",
-        "ingredients": [
-          { "name": "Rice", "quantity": 200, "unit": "gram", "category": "Grains" },
-          { "name": "Cilantro", "quantity": 20, "unit": "gram", "category": "Herbs & Spices", "displayName": "Fresh Cilantro" },
-          { "name": "Lime Juice", "quantity": 1, "unit": "tablespoon", "category": "Condiments" }
-        ],
-        "instructions": [
-          "Cook rice according to package directions",
-          "Chop cilantro finely",
-          "Mix cooked rice with cilantro and lime juice"
-        ],
-        "servings": 4,
-        "prepTime": 5,
-        "cookTime": 15,
-        "tags": ["Side", "Mexican"],
-        "subRecipes": []
-      },
-      "servings": 2,
-      "displayName": "Cilantro Rice"
-    }
-  ],
-  "instructions": [
-    "Make cilantro rice using the sub-recipe",
-    "Heat black beans in a pot",
-    "Assemble bowl with rice, beans, and cheese",
-    "Top with your favorite toppings"
-  ],
-  "servings": 4,
-  "prepTime": 10,
-  "cookTime": 15,
-  "tags": ["Mexican", "Bowls", "Vegetarian"],
-  "imageUrl": "https://example.com/burrito-bowl.jpg"
+  "name": "Chocolate Chip Cookies",
+  "description": "Classic homemade cookies",
+  "sections": [{
+    "name": undefined,
+    "ingredients": [
+      { "name": "Flour", "quantity": 2, "unit": "cup", "category": "Baking", "displayName": "All-purpose flour" },
+      { "name": "Sugar", "quantity": 1, "unit": "cup", "category": "Baking" },
+      { "name": "Butter", "quantity": 0.5, "unit": "cup", "category": "Dairy", "displayName": "Unsalted butter, softened" },
+      { "name": "Chocolate Chips", "quantity": 2, "unit": "cup", "category": "Baking" }
+    ],
+    "instructions": ["Mix ingredients", "Bake at 350°F for 12 minutes"]
+  }],
+  "servings": 24,
+  "prepTime": 15,
+  "cookTime": 12,
+  "tags": ["Dessert", "Baking"]
 }
 \`\`\`
 
----
+**Complex Recipe:**
+\`\`\`json
+{
+  "name": "Chicken Pho",
+  "description": "Vietnamese soup",
+  "sections": [
+    {
+      "name": "Broth",
+      "ingredients": [
+        { "name": "Chicken Breast", "quantity": 1000, "unit": "gram", "category": "Poultry", "displayName": "Bone-in chicken breast" },
+        { "name": "Onion", "quantity": 2, "unit": "whole", "category": "Vegetables" },
+        { "name": "Ginger", "quantity": 50, "unit": "gram", "category": "Herbs & Spices", "displayName": "Fresh ginger, sliced" },
+        { "name": "Star Anise", "quantity": 3, "unit": "whole", "category": "Herbs & Spices" }
+      ],
+      "instructions": ["Char onion and ginger", "Simmer 2 hours"]
+    },
+    {
+      "name": "Assembly",
+      "ingredients": [
+        { "name": "Rice Noodles", "quantity": 400, "unit": "gram", "category": "Grains", "displayName": "Flat rice noodles (banh pho)" },
+        { "name": "Cilantro", "quantity": 0.5, "unit": "bunch", "category": "Herbs & Spices" },
+        { "name": "Lime", "quantity": 2, "unit": "whole", "category": "Fruits", "displayName": "Lime, cut into wedges" }
+      ],
+      "instructions": ["Cook noodles", "Assemble bowls", "Pour hot broth"]
+    }
+  ],
+  "servings": 4,
+  "prepTime": 30,
+  "cookTime": 120,
+  "tags": ["Vietnamese", "Soup", "Main Course"]
+}
+\`\`\`
 
-## Important Notes
-
-- **Quality**: Return well-structured, valid JSON with no errors or omissions
-- **Consistency**: Use consistent naming and formatting throughout
-- **Clarity**: Ingredient names should be singular and generic ("Tomato" not "Tomatoes")
-- **Categories**: Only use the exact categories listed in the schema
-- **Sub-recipes**: Only create sub-recipes for distinct recipe components mentioned explicitly in instructions
-
----
-
-I will provide the recipe URL or recipe text in my next message. Please wait for it, then parse it according to the instructions above and return only the JSON object.`
+I'll provide the recipe in my next message.`
 }

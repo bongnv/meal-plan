@@ -21,9 +21,13 @@ describe('EditRecipePage', () => {
     id: 'recipe1',
     name: 'Test Recipe',
     description: 'Test description',
-    ingredients: [{ ingredientId: 'ing1', quantity: 100, unit: 'gram' }],
-    subRecipes: [],
-    instructions: ['Step 1'],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [{ ingredientId: 'ing1', quantity: 100, unit: 'gram' }],
+        instructions: ['Step 1'],
+      },
+    ],
     servings: 4,
     prepTime: 10,
     cookTime: 20,

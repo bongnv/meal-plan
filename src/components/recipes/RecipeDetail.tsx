@@ -22,13 +22,11 @@ import type { Recipe } from '../../types/recipe'
 interface RecipeDetailProps {
   recipe: Recipe
   initialServings?: number // Override default servings (e.g., from meal plan)
-  onRecipeClick?: (recipeId: string) => void // Callback when sub-recipe is clicked
 }
 
 export function RecipeDetail({
   recipe,
   initialServings,
-  onRecipeClick,
 }: RecipeDetailProps) {
   const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
@@ -135,86 +133,80 @@ export function RecipeDetail({
 
         <Divider />
 
-        {/* Ingredients Section */}
-        <Box>
-          <Title order={2} size="h3" mb="md">
-            Ingredients
-          </Title>
-          <Stack gap="lg">
-            {recipe.sections.map((section, sectionIndex) => (
+        {/* Section-First Workflow: Group ingredients and instructions by section */}
+        <Stack gap="xl">
+          {recipe.sections.map((section, sectionIndex) => {
+            // Calculate global instruction numbering offset
+            const instructionOffset = recipe.sections
+              .slice(0, sectionIndex)
+              .reduce((acc, s) => acc + s.instructions.length, 0)
+
+            // For single unnamed section, use traditional layout
+            const isSimpleRecipe = recipe.sections.length === 1 && !section.name
+
+            return (
               <Box key={sectionIndex}>
                 {/* Section header - only show if named */}
                 {section.name && (
-                  <Title order={3} size="h4" mb="sm">
-                    {section.name}
-                  </Title>
-                )}
-                <Stack gap="xs">
-                  {section.ingredients.map((ingredient, ingredientIndex) => {
-                    const ingredientData = ingredients.find(
-                      i => i.id === ingredient.ingredientId
-                    )
-                    const displayName =
-                      ingredient.displayName ||
-                      ingredientData?.name ||
-                      'Unknown Ingredient'
-                    // Use recipe ingredient unit (migration ensures all recipes have units)
-                    const unit = ingredient.unit || 'piece'
-                    // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
-                    const displayUnit = unit === 'whole' ? '' : unit
-                    const adjustedQuantity = formatQuantity(
-                      ingredient.quantity * servingMultiplier
-                    )
-
-                    // Generate unique index for checkbox state across all sections
-                    const globalIndex = recipe.sections
-                      .slice(0, sectionIndex)
-                      .reduce((acc, s) => acc + s.ingredients.length, 0) + ingredientIndex
-
-                    return (
-                      <Checkbox
-                        key={ingredientIndex}
-                        checked={checkedIngredients.has(globalIndex)}
-                        onChange={() => toggleIngredient(globalIndex)}
-                        label={
-                          <Text>
-                            <Text component="span" fw={500}>
-                              {adjustedQuantity} {displayUnit}
-                            </Text>{' '}
-                            {displayName}
-                          </Text>
-                        }
-                      />
-                    )
-                  })}
-                </Stack>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
-
-        <Divider />
-
-        {/* Instructions Section */}
-        <Box>
-          <Title order={2} size="h3" mb="md">
-            Instructions
-          </Title>
-          <Stack gap="lg">
-            {recipe.sections.map((section, sectionIndex) => {
-              // Calculate global instruction numbering offset
-              const instructionOffset = recipe.sections
-                .slice(0, sectionIndex)
-                .reduce((acc, s) => acc + s.instructions.length, 0)
-
-              return (
-                <Box key={sectionIndex}>
-                  {/* Section header - only show if named */}
-                  {section.name && (
-                    <Title order={3} size="h4" mb="sm">
+                  <>
+                    {sectionIndex > 0 && <Divider mb="xl" />}
+                    <Title order={2} size="h3" mb="lg" mt={sectionIndex > 0 ? "xl" : undefined}>
                       {section.name}
                     </Title>
-                  )}
+                  </>
+                )}
+
+                {/* Ingredients */}
+                <Box mb="xl">
+                  <Title order={3} size="h4" mb="md">
+                    {isSimpleRecipe ? 'Ingredients' : 'Ingredients'}
+                  </Title>
+                  <Stack gap="xs">
+                    {section.ingredients.map((ingredient, ingredientIndex) => {
+                      const ingredientData = ingredients.find(
+                        i => i.id === ingredient.ingredientId
+                      )
+                      const displayName =
+                        ingredient.displayName ||
+                        ingredientData?.name ||
+                        'Unknown Ingredient'
+                      // Use recipe ingredient unit (migration ensures all recipes have units)
+                      const unit = ingredient.unit || 'piece'
+                      // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
+                      const displayUnit = unit === 'whole' ? '' : unit
+                      const adjustedQuantity = formatQuantity(
+                        ingredient.quantity * servingMultiplier
+                      )
+
+                      // Generate unique index for checkbox state across all sections
+                      const globalIndex = recipe.sections
+                        .slice(0, sectionIndex)
+                        .reduce((acc, s) => acc + s.ingredients.length, 0) + ingredientIndex
+
+                      return (
+                        <Checkbox
+                          key={ingredientIndex}
+                          checked={checkedIngredients.has(globalIndex)}
+                          onChange={() => toggleIngredient(globalIndex)}
+                          label={
+                            <Text>
+                              <Text component="span" fw={500}>
+                                {adjustedQuantity} {displayUnit}
+                              </Text>{' '}
+                              {displayName}
+                            </Text>
+                          }
+                        />
+                      )
+                    })}
+                  </Stack>
+                </Box>
+
+                {/* Instructions */}
+                <Box>
+                  <Title order={3} size="h4" mb="md">
+                    {isSimpleRecipe ? 'Instructions' : 'Instructions'}
+                  </Title>
                   <Stack gap="md">
                     {section.instructions.map((instruction, instructionIndex) => (
                       <Group key={instructionIndex} align="flex-start" gap="sm">
@@ -231,10 +223,10 @@ export function RecipeDetail({
                     ))}
                   </Stack>
                 </Box>
-              )
-            })}
-          </Stack>
-        </Box>
+              </Box>
+            )
+          })}
+        </Stack>
       </Stack>
     </Box>
   )

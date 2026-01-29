@@ -53,9 +53,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
-        instructions: ['Mix', 'Cook'],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ ingredientId: 'ing1', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix', 'Cook'],
+          },
+        ],
         tags: ['test', 'quick'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -75,9 +79,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: ['dessert', 'quick'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -90,9 +98,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: ['dinner'],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -444,9 +456,13 @@ describe('MealPlanDB', () => {
         servings: 4,
         prepTime: 10,
         cookTime: 20,
-        ingredients: [],
-        instructions: [],
-        subRecipes: [],
+        sections: [
+          {
+            name: undefined,
+            ingredients: [],
+            instructions: [],
+          },
+        ],
         tags: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -672,14 +688,10 @@ describe('MealPlanDB', () => {
       await oldDb.close()
 
       // Reopen with version 2
-      class TestDB extends MealPlanDB {
-        constructor() {
-          super()
-          this.name = testDbName
-        }
-      }
-
-      const newDb = new TestDB()
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
       await newDb.open()
 
       const schemaVersion = await newDb.metadata.get('schemaVersion')
@@ -721,14 +733,10 @@ describe('MealPlanDB', () => {
       await oldDb.table('recipes').add(oldRecipe)
       await oldDb.close()
 
-      class TestDB extends MealPlanDB {
-        constructor() {
-          super()
-          this.name = testDbName
-        }
-      }
-
-      const newDb = new TestDB()
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
       await newDb.open()
 
       const migrated = await newDb.recipes.get('recipe3')
@@ -786,14 +794,10 @@ describe('MealPlanDB', () => {
       ])
       await oldDb.close()
 
-      class TestDB extends MealPlanDB {
-        constructor() {
-          super()
-          this.name = testDbName
-        }
-      }
-
-      const newDb = new TestDB()
+      const newDb = new MealPlanDB()
+      // @ts-expect-error - Setting name for test purposes
+      newDb._dbName = testDbName
+      Object.defineProperty(newDb, 'name', { value: testDbName, writable: false })
       await newDb.open()
 
       // All recipes should be migrated

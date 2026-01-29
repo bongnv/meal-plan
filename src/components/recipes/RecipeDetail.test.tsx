@@ -35,7 +35,7 @@ describe('RecipeDetail', () => {
           {
             name: undefined,
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cups', displayName: 'flour' },
+              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'flour' },
               { ingredientId: 'ing2', quantity: 7, unit: 'whole', displayName: 'eggs' },
             ],
             instructions: ['Mix well', 'Add liquid', 'Bake'],
@@ -54,7 +54,7 @@ describe('RecipeDetail', () => {
       expect(screen.queryByRole('heading', { name: /section/i })).not.toBeInTheDocument()
 
       // Should display ingredients with quantities
-      expect(screen.getByText(/2 cups/i)).toBeInTheDocument()
+      expect(screen.getByText(/2 cup/i)).toBeInTheDocument()
       expect(screen.getByText(/7/i)).toBeInTheDocument() // unique number
       // Just verify labels are there
       const labels = screen.getAllByRole('checkbox')
@@ -107,7 +107,7 @@ describe('RecipeDetail', () => {
           {
             name: 'Dough',
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cups', displayName: 'all-purpose-flour' },
+              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'all-purpose-flour' },
             ],
             instructions: ['Mix well with water'],
           },
@@ -153,14 +153,14 @@ describe('RecipeDetail', () => {
           {
             name: 'Part 1',
             ingredients: [
-              { ingredientId: 'ing1', quantity: 2, unit: 'cups', displayName: 'sugar' },
+              { ingredientId: 'ing1', quantity: 2, unit: 'cup', displayName: 'sugar' },
             ],
             instructions: [],
           },
           {
             name: 'Part 2',
             ingredients: [
-              { ingredientId: 'ing2', quantity: 3, unit: 'cups', displayName: 'flour' },
+              { ingredientId: 'ing2', quantity: 3, unit: 'cup', displayName: 'flour' },
             ],
             instructions: [],
           },
@@ -174,11 +174,9 @@ describe('RecipeDetail', () => {
       // Main ingredients header should still exist
       expect(screen.getByText('Ingredients')).toBeInTheDocument()
 
-      // Section headers should be visible
-      const part1Headers = screen.getAllByText('Part 1')
-      const part2Headers = screen.getAllByText('Part 2')
-      expect(part1Headers.length).toBeGreaterThan(0)
-      expect(part2Headers.length).toBeGreaterThan(0)
+      // Section headers should be visible (appears once per section)
+      expect(screen.getByText('Part 1')).toBeInTheDocument()
+      expect(screen.getByText('Part 2')).toBeInTheDocument()
     })
 
     it('should display instructions grouped by sections', () => {
@@ -238,7 +236,7 @@ describe('RecipeDetail', () => {
           {
             name: 'Special Sauce',
             ingredients: [
-              { ingredientId: 'ing2', quantity: 2, unit: 'tbsp', displayName: 'hot-sauce' },
+              { ingredientId: 'ing2', quantity: 2, unit: 'tablespoon', displayName: 'hot-sauce' },
             ],
             instructions: ['Mix thoroughly'],
           },
@@ -249,9 +247,8 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Should show section header only for named section (appears twice)
-      const sauceHeaders = screen.getAllByText('Special Sauce')
-      expect(sauceHeaders).toHaveLength(2)
+      // Should show section header only for named section
+      expect(screen.getByText('Special Sauce')).toBeInTheDocument()
 
       // Should display all ingredients
       expect(screen.getByText(/filtered-water/i)).toBeInTheDocument()
@@ -286,9 +283,8 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Should display section even if no ingredients (appears twice)
-      const headers = screen.getAllByText('Empty Section')
-      expect(headers).toHaveLength(2)
+      // Should display section even if no ingredients
+      expect(screen.getByText('Empty Section')).toBeInTheDocument()
       expect(screen.getByText('Just do this')).toBeInTheDocument()
     })
 
@@ -316,9 +312,8 @@ describe('RecipeDetail', () => {
 
       render(<RecipeDetail recipe={recipe} />, { wrapper })
 
-      // Should display section even if no instructions (appears twice)
-      const headers = screen.getAllByText('Ingredients Only')
-      expect(headers).toHaveLength(2)
+      // Should display section even if no instructions
+      expect(screen.getByText('Ingredients Only')).toBeInTheDocument()
       expect(screen.getByText(/flour/i)).toBeInTheDocument()
     })
   })

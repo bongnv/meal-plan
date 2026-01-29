@@ -22,9 +22,13 @@ describe('MealPlanDetailPage', () => {
     id: 'recipe1',
     name: 'Test Recipe',
     description: 'Test description',
-    ingredients: [],
-    subRecipes: [],
-    instructions: ['Step 1'],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [],
+        instructions: ['Step 1'],
+      },
+    ],
     servings: 4,
     prepTime: 10,
     cookTime: 20,

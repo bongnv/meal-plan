@@ -21,12 +21,16 @@ describe('RecipeDetailPage', () => {
     id: 'recipe1',
     name: 'Spaghetti Carbonara',
     description: 'Classic Italian pasta dish',
-    ingredients: [
-      { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
-      { ingredientId: 'ing2', quantity: 200, unit: 'gram' },
+    sections: [
+      {
+        name: undefined,
+        ingredients: [
+          { ingredientId: 'ing1', quantity: 400, unit: 'gram' },
+          { ingredientId: 'ing2', quantity: 200, unit: 'gram' },
+        ],
+        instructions: ['Boil pasta', 'Mix eggs and cheese', 'Combine'],
+      },
     ],
-    subRecipes: [],
-    instructions: ['Boil pasta', 'Mix eggs and cheese', 'Combine'],
     servings: 4,
     prepTime: 10,
     cookTime: 15,

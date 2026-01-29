@@ -22,12 +22,16 @@ const mockRecipes: Recipe[] = [
     id: '1',
     name: 'Spaghetti Carbonara',
     description: 'A classic Italian pasta dish with eggs, cheese, and bacon',
-    ingredients: [
-      { ingredientId: '1', quantity: 400 },
-      { ingredientId: '2', quantity: 200 },
+    sections: [
+      {
+        name: undefined,
+        ingredients: [
+          { ingredientId: '1', quantity: 400, unit: 'gram' },
+          { ingredientId: '2', quantity: 200, unit: 'gram' },
+        ],
+        instructions: ['Boil pasta', 'Cook bacon', 'Mix with eggs'],
+      },
     ],
-    instructions: ['Boil pasta', 'Cook bacon', 'Mix with eggs'],
-    subRecipes: [],
     servings: 4,
     prepTime: 15,
     cookTime: 15,
@@ -40,12 +44,16 @@ const mockRecipes: Recipe[] = [
     id: '2',
     name: 'Chicken Stir Fry',
     description: 'Quick and healthy chicken with vegetables in a savory sauce',
-    ingredients: [
-      { ingredientId: '3', quantity: 500 },
-      { ingredientId: '4', quantity: 300 },
+    sections: [
+      {
+        name: undefined,
+        ingredients: [
+          { ingredientId: '3', quantity: 500, unit: 'gram' },
+          { ingredientId: '4', quantity: 300, unit: 'gram' },
+        ],
+        instructions: ['Cut chicken', 'Stir fry vegetables', 'Add sauce'],
+      },
     ],
-    instructions: ['Cut chicken', 'Stir fry vegetables', 'Add sauce'],
-    subRecipes: [],
     servings: 2,
     prepTime: 10,
     cookTime: 10,
@@ -58,9 +66,13 @@ const mockRecipes: Recipe[] = [
     name: 'Chocolate Cake',
     description:
       'Rich and moist chocolate cake with a creamy chocolate frosting that melts in your mouth',
-    ingredients: [{ ingredientId: '5', quantity: 200 }],
-    instructions: ['Mix ingredients', 'Bake', 'Frost'],
-    subRecipes: [],
+    sections: [
+      {
+        name: undefined,
+        ingredients: [{ ingredientId: '5', quantity: 200, unit: 'gram' }],
+        instructions: ['Mix ingredients', 'Bake', 'Frost'],
+      },
+    ],
     servings: 8,
     prepTime: 45,
     cookTime: 45,

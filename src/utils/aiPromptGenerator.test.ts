@@ -82,7 +82,7 @@ describe('generateRecipeImportPrompt', () => {
     const prompt = generateRecipeImportPrompt(ingredients)
 
     // Should have clear instructions
-    expect(prompt).toContain('parse')
+    expect(prompt).toContain('Parse')
     expect(prompt.toLowerCase()).toMatch(/recipe|url|text/)
 
     // Should instruct about ingredient mapping
@@ -158,10 +158,9 @@ describe('generateRecipeImportPrompt', () => {
 
     const prompt = generateRecipeImportPrompt(ingredients)
 
-    // Should instruct to omit field when no URL is available (not use empty string)
-    expect(prompt).toContain('OMIT')
+    // Should instruct to omit field when no URL is available
+    expect(prompt).toContain('omit')
     expect(prompt).toContain('imageUrl')
-    expect(prompt.toLowerCase()).toMatch(/empty string/)
   })
 
   it('should include displayName field in ingredient schema', () => {
@@ -210,8 +209,8 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt.toLowerCase()).toMatch(/unit/)
 
     // Should instruct to convert unsupported units
-    expect(prompt.toLowerCase()).toMatch(/unsupported unit/)
-    expect(prompt.toLowerCase()).toMatch(/pound.*gram/)
+    expect(prompt.toLowerCase()).toContain('convert')
+    expect(prompt).toMatch(/lb.*gram/i)
   })
 
   it('should provide unit conversion examples in instructions', () => {
@@ -232,30 +231,12 @@ describe('generateRecipeImportPrompt', () => {
     expect(prompt.toLowerCase()).toContain('unit')
   })
 
-  it('should include sub-recipes schema documentation', () => {
-    const prompt = generateRecipeImportPrompt([])
-
-    expect(prompt).toContain('"subRecipes":')
-    expect(prompt).toContain('"recipe":')
-    expect(prompt).toContain(
-      'For sub-recipes (recipes that are components of this main recipe)'
-    )
-  })
-
   it('should include sub-recipes example in output format', () => {
     const prompt = generateRecipeImportPrompt([])
 
-    expect(prompt).toContain('"Cilantro Rice"')
-    expect(prompt).toContain('Burrito Bowl')
+    expect(prompt).toContain('Chicken Pho')
+    expect(prompt).toContain('Chocolate Chip Cookies')
     expect(prompt).toContain('"ingredients":')
     expect(prompt).toContain('"instructions":')
-  })
-
-  it('should document that sub-recipe ingredients should not be in main ingredients', () => {
-    const prompt = generateRecipeImportPrompt([])
-
-    expect(prompt).toContain(
-      'Include sub-recipe ingredients WITHIN the sub-recipe object, NOT in the main recipe ingredients'
-    )
-  })
+})
 })

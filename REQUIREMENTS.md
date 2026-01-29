@@ -90,10 +90,10 @@ A client-side web application for managing recipes, planning meals, and organizi
   - Sectioned recipes use `sections` array instead
   - Display sections with clear headers in recipe detail view
   - RecipeForm supports toggling between simple and sectioned modes
-  - AI Import detects and preserves section structure from cookbook recipes
-  - Grocery list generation: flatten all sections into consolidated list
-  - Meal plan detail: display sections with collapsible headers
-  - Status: 📋 **PLANNED** - Implementation plan ready (I12.1-I12.9)
+  - AI Import detects and preserves section structure from cookbook recipes ✅
+  - Grocery list generation: flatten all sections into consolidated list (pending I12.11)
+  - Meal plan detail: display sections with collapsible headers (pending I12.11)
+  - Status: 🚧 **PARTIALLY COMPLETE** - AI import integration done (I12.8-I12.10 ✅), grocery list & final polish pending (I12.11-I12.12)
   - Rationale: Sub-recipes confused users when used for recipe organization (e.g., Chicken Pho "BROTH" section). Sections keep recipe as single entity while preserving natural flow.
 
 ### R2. Meal Planning

@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Box,
   Button,
+  Card,
   Group,
   Image,
   Modal,
@@ -27,11 +28,12 @@ import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
 import { IngredientForm } from '../ingredients/IngredientForm'
 
-import { SubRecipeCard } from './SubRecipeCard'
-import { SubRecipeSelector } from './SubRecipeSelector'
-
 import type { IngredientFormValues } from '../../types/ingredient'
-import type { Recipe, RecipeFormValues, SubRecipe } from '../../types/recipe'
+import type {
+  Recipe,
+  RecipeFormValues,
+  RecipeSection,
+} from '../../types/recipe'
 
 interface RecipeFormProps {
   recipe?: Recipe
@@ -48,72 +50,122 @@ export function RecipeForm({
 }: RecipeFormProps) {
   const isEditMode = !!recipe
   const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },
   ] = useDisclosure(false)
-  const [
-    subRecipeSelectorOpened,
-    { open: openSubRecipeSelector, close: closeSubRecipeSelector },
-  ] = useDisclosure(false)
   const [showImagePreview, setShowImagePreview] = useState(!!recipe?.imageUrl)
 
-  const form = useForm<RecipeFormValues>({
-    validate: zodResolver(RecipeFormSchema),
+  // Initialize sections from recipe or with one unnamed section
+  const [sections, setSections] = useState<RecipeSection[]>(
+    recipe?.sections ?? [{ name: undefined, ingredients: [], instructions: [] }]
+  )
+
+  const form = useForm<Omit<RecipeFormValues, 'sections'>>({
+    validate: zodResolver(
+      RecipeFormSchema.omit({ sections: true })
+    ),
     initialValues: {
       name: recipe?.name ?? '',
       description: recipe?.description ?? '',
       servings: recipe?.servings ?? 0,
       prepTime: recipe?.prepTime ?? 0,
       cookTime: recipe?.cookTime ?? 0,
-      ingredients: recipe?.ingredients ?? [],
-      subRecipes: recipe?.subRecipes ?? [],
-      instructions: recipe?.instructions ?? [],
       tags: recipe?.tags ?? [],
       imageUrl: recipe?.imageUrl,
     },
   })
 
-  const handleSubmit = (values: RecipeFormValues) => {
-    onSubmit(values)
+  const handleSubmit = (values: Omit<RecipeFormValues, 'sections'>) => {
+    // Combine form values with sections
+    const recipeData: RecipeFormValues = {
+      ...values,
+      sections: sections.map(s => ({
+        name: s.name?.trim() || undefined,
+        ingredients: s.ingredients,
+        instructions: s.instructions,
+      })),
+    }
+    onSubmit(recipeData)
   }
 
-  const addIngredient = () => {
-    form.insertListItem('ingredients', {
+  // Section management
+  const addSection = () => {
+    setSections([
+      ...sections,
+      { name: undefined, ingredients: [], instructions: [] },
+    ])
+  }
+
+  const removeSection = (index: number) => {
+    if (sections.length > 1) {
+      setSections(sections.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateSectionName = (index: number, name: string) => {
+    const newSections = [...sections]
+    newSections[index].name = name || undefined
+    setSections(newSections)
+  }
+
+  // Ingredient management within sections
+  const addIngredient = (sectionIndex: number) => {
+    const newSections = [...sections]
+    newSections[sectionIndex].ingredients.push({
       ingredientId: '',
       quantity: 0,
-      unit: 'whole', // Default to 'whole' for countable items
+      unit: 'whole',
       displayName: '',
     })
+    setSections(newSections)
   }
 
-  const removeIngredient = (index: number) => {
-    form.removeListItem('ingredients', index)
+  const removeIngredient = (sectionIndex: number, ingredientIndex: number) => {
+    const newSections = [...sections]
+    newSections[sectionIndex].ingredients.splice(ingredientIndex, 1)
+    setSections(newSections)
   }
 
-  const addInstruction = () => {
-    form.insertListItem('instructions', '')
+  const updateIngredient = (
+    sectionIndex: number,
+    ingredientIndex: number,
+    field: string,
+    value: any
+  ) => {
+    const newSections = [...sections]
+    ;(newSections[sectionIndex].ingredients[ingredientIndex] as any)[field] =
+      value
+    setSections(newSections)
   }
 
-  const removeInstruction = (index: number) => {
-    form.removeListItem('instructions', index)
+  // Instruction management within sections
+  const addInstruction = (sectionIndex: number) => {
+    const newSections = [...sections]
+    newSections[sectionIndex].instructions.push('')
+    setSections(newSections)
   }
 
-  const addSubRecipe = (subRecipe: SubRecipe) => {
-    form.insertListItem('subRecipes', subRecipe)
+  const removeInstruction = (sectionIndex: number, instructionIndex: number) => {
+    const newSections = [...sections]
+    newSections[sectionIndex].instructions.splice(instructionIndex, 1)
+    setSections(newSections)
   }
 
-  const removeSubRecipe = (index: number) => {
-    form.removeListItem('subRecipes', index)
+  const updateInstruction = (
+    sectionIndex: number,
+    instructionIndex: number,
+    value: string
+  ) => {
+    const newSections = [...sections]
+    newSections[sectionIndex].instructions[instructionIndex] = value
+    setSections(newSections)
   }
 
   const handleCreateIngredient = async (values: IngredientFormValues) => {
     try {
       await ingredientService.add(values)
       closeCreateIngredient()
-      // After creating, the new ingredient will be available in the dropdown
-      // User can select it manually
     } catch (error) {
       console.error('Failed to create ingredient:', error)
     }
@@ -137,14 +189,6 @@ export function RecipeForm({
       setShowImagePreview(false)
     }
   }
-
-  const ingredientSelectData = [
-    ...ingredients.map(ing => ({
-      value: ing.id,
-      label: ing.name,
-    })),
-    { value: '__create_new__', label: '+ Create New Ingredient' },
-  ]
 
   return (
     <Paper p="md" shadow="sm">
@@ -193,17 +237,7 @@ export function RecipeForm({
             )}
           </div>
 
-          <Group
-            grow
-            style={{ flexDirection: 'row' }}
-            styles={{
-              root: {
-                '@media (max-width: 768px)': {
-                  flexDirection: 'column',
-                },
-              },
-            }}
-          >
+          <Group grow>
             <NumberInput
               label="Servings"
               placeholder="Number of servings"
@@ -235,184 +269,217 @@ export function RecipeForm({
             {...form.getInputProps('tags')}
           />
 
-          <div>
-            <Group justify="space-between" mb="xs">
-              <Title order={4}>Sub-Recipes</Title>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                variant="light"
-                size="xs"
-                onClick={openSubRecipeSelector}
-              >
-                Add Sub-Recipe
-              </Button>
-            </Group>
-
-            <Stack gap="xs">
-              {form.values.subRecipes.map((subRecipe, index) => {
-                const subRecipeData = recipes.find(
-                  r => r.id === subRecipe.recipeId
-                )
-
-                return (
-                  <SubRecipeCard
-                    key={index}
-                    subRecipe={subRecipe}
-                    recipeData={subRecipeData}
-                    expandable={true}
-                    onRemove={() => removeSubRecipe(index)}
-                  />
-                )
-              })}
-            </Stack>
-          </div>
-
-          <div>
-            <Group justify="space-between" mb="xs">
-              <Title order={4}>Ingredients</Title>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                variant="light"
-                size="xs"
-                onClick={addIngredient}
-              >
-                Add Ingredient
-              </Button>
-            </Group>
-
-            <Stack gap="xs">
-              {form.values.ingredients.map((ingredient, index) => {
-                const selectedIngredient = ingredients.find(
-                  ing => ing.id === ingredient.ingredientId
-                )
-
-                return (
-                  <Paper key={index} p="sm" withBorder>
-                    <Group
-                      align="flex-start"
-                      wrap="nowrap"
-                      gap="xs"
-                      style={{
-                        flexDirection: 'row',
-                        '@media (max-width: 768px)': {
-                          flexDirection: 'column',
-                        },
-                      }}
-                      styles={{
-                        root: {
-                          '@media (max-width: 768px)': {
-                            flexDirection: 'column',
-                          },
-                        },
-                      }}
-                    >
-                      <Select
-                        placeholder="Select ingredient"
-                        label="Ingredient"
-                        style={{ flex: 2, minWidth: 150 }}
-                        data={ingredientSelectData}
-                        value={ingredient.ingredientId}
-                        searchable
-                        onChange={value => {
-                          if (value === '__create_new__') {
-                            openCreateIngredient()
-                          } else {
-                            form.setFieldValue(
-                              `ingredients.${index}.ingredientId`,
-                              value || ''
-                            )
-                          }
-                        }}
-                        error={form.errors[`ingredients.${index}.ingredientId`]}
-                      />
-                      <NumberInput
-                        placeholder="Quantity"
-                        label="Quantity"
-                        style={{ flex: 1, minWidth: 100 }}
-                        min={0}
-                        step={0.1}
-                        {...form.getInputProps(`ingredients.${index}.quantity`)}
-                      />
-                      <Select
-                        placeholder="Unit"
-                        label="Unit"
-                        style={{ flex: 1, minWidth: 120 }}
-                        data={UNITS.map(u => ({ value: u, label: u }))}
-                        searchable
-                        {...form.getInputProps(`ingredients.${index}.unit`)}
-                      />
-                      <TextInput
-                        placeholder={selectedIngredient?.name || 'Custom name'}
-                        label="Custom Name (optional)"
-                        style={{ flex: 2, minWidth: 150 }}
-                        {...form.getInputProps(
-                          `ingredients.${index}.displayName`
-                        )}
-                      />
-                      <ActionIcon
-                        color="red"
-                        variant="subtle"
-                        onClick={() => removeIngredient(index)}
-                        aria-label="Remove ingredient"
-                        style={{ marginTop: 28, flexShrink: 0 }}
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
-                    </Group>
-                  </Paper>
-                )
-              })}
-              {form.errors['ingredients'] && (
-                <div style={{ color: 'var(--mantine-color-error)' }}>
-                  {form.errors['ingredients']}
-                </div>
-              )}
-            </Stack>
-          </div>
-
-          <div>
-            <Group justify="space-between" mb="xs">
-              <Title order={4}>Instructions</Title>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                variant="light"
-                size="xs"
-                onClick={addInstruction}
-              >
-                Add Instruction
-              </Button>
-            </Group>
-
-            <Stack gap="xs">
-              {form.values.instructions.map((_, index) => (
-                <Paper key={index} p="sm" withBorder>
-                  <Group align="flex-start" wrap="nowrap" gap="xs">
-                    <Textarea
-                      placeholder={`Step ${index + 1}`}
-                      label={`Step ${index + 1}`}
-                      minRows={2}
-                      style={{ flex: 1, minWidth: 0 }}
-                      {...form.getInputProps(`instructions.${index}`)}
+          {/* Sections */}
+          <Stack gap="lg">
+            {sections.map((section, sectionIndex) => (
+              <Card key={sectionIndex} withBorder padding="md">
+                <Stack gap="md">
+                  {/* Section Name - only show when 2+ sections */}
+                  {sections.length > 1 && (
+                    <TextInput
+                      label="Section Name (optional)"
+                      placeholder="e.g., BROTH, ASSEMBLY, GARNISHES"
+                      value={section.name || ''}
+                      onChange={e =>
+                        updateSectionName(sectionIndex, e.target.value)
+                      }
                     />
-                    <ActionIcon
-                      color="red"
-                      variant="subtle"
-                      onClick={() => removeInstruction(index)}
-                      aria-label="Remove instruction"
-                      style={{ marginTop: 28, flexShrink: 0 }}
+                  )}
+
+                  {/* Ingredients */}
+                  <div>
+                    <Title order={4} mb="xs">
+                      Ingredients
+                    </Title>
+
+                    <Stack gap="xs">
+                      {section.ingredients.map((ingredient, ingredientIndex) => {
+                        const selectedIngredient = ingredients.find(
+                          ing => ing.id === ingredient.ingredientId
+                        )
+
+                        return (
+                          <Paper key={ingredientIndex} p="sm" withBorder>
+                            <Group align="flex-start" wrap="nowrap" gap="xs">
+                              <Select
+                                placeholder="Select ingredient"
+                                label="Ingredient"
+                                style={{ flex: 2, minWidth: 150 }}
+                                data={[
+                                  ...ingredients.map(ing => ({
+                                    value: ing.id,
+                                    label: ing.name,
+                                  })),
+                                  {
+                                    value: '__create_new__',
+                                    label: '+ Create New Ingredient',
+                                  },
+                                ]}
+                                value={ingredient.ingredientId}
+                                searchable
+                                onChange={value => {
+                                  if (value === '__create_new__') {
+                                    openCreateIngredient()
+                                  } else {
+                                    updateIngredient(
+                                      sectionIndex,
+                                      ingredientIndex,
+                                      'ingredientId',
+                                      value || ''
+                                    )
+                                  }
+                                }}
+                              />
+                              <NumberInput
+                                placeholder="Quantity"
+                                label="Quantity"
+                                style={{ flex: 1, minWidth: 100 }}
+                                min={0}
+                                step={0.1}
+                                value={ingredient.quantity}
+                                onChange={value =>
+                                  updateIngredient(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    'quantity',
+                                    value
+                                  )
+                                }
+                              />
+                              <Select
+                                placeholder="Unit"
+                                label="Unit"
+                                style={{ flex: 1, minWidth: 120 }}
+                                data={UNITS.map(u => ({ value: u, label: u }))}
+                                searchable
+                                value={ingredient.unit}
+                                onChange={value =>
+                                  updateIngredient(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    'unit',
+                                    value || 'whole'
+                                  )
+                                }
+                              />
+                              <TextInput
+                                placeholder={
+                                  selectedIngredient?.name || 'Custom name'
+                                }
+                                label="Custom Name (optional)"
+                                style={{ flex: 2, minWidth: 150 }}
+                                value={ingredient.displayName || ''}
+                                onChange={e =>
+                                  updateIngredient(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    'displayName',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <ActionIcon
+                                color="red"
+                                variant="subtle"
+                                onClick={() =>
+                                  removeIngredient(sectionIndex, ingredientIndex)
+                                }
+                                aria-label="Remove ingredient"
+                                style={{ marginTop: 28, flexShrink: 0 }}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          </Paper>
+                        )
+                      })}
+                    </Stack>
+                    <Button
+                      leftSection={<IconPlus size={16} />}
+                      variant="light"
+                      size="xs"
+                      onClick={() => addIngredient(sectionIndex)}
+                      mt="xs"
+                      fullWidth
                     >
-                      <IconTrash size={18} />
-                    </ActionIcon>
-                  </Group>
-                </Paper>
-              ))}
-              {form.errors['instructions'] && (
-                <div style={{ color: 'var(--mantine-color-error)' }}>
-                  {form.errors['instructions']}
-                </div>
-              )}
-            </Stack>
-          </div>
+                      Add Ingredient
+                    </Button>
+                  </div>
+
+                  {/* Instructions */}
+                  <div>
+                    <Title order={4} mb="xs">
+                      Instructions
+                    </Title>
+
+                    <Stack gap="xs">
+                      {section.instructions.map((instruction, instructionIndex) => (
+                        <Paper key={instructionIndex} p="sm" withBorder>
+                          <Group align="flex-start" wrap="nowrap" gap="xs">
+                            <Textarea
+                              placeholder={`Step ${instructionIndex + 1}`}
+                              label={`Step ${instructionIndex + 1}`}
+                              minRows={2}
+                              style={{ flex: 1, minWidth: 0 }}
+                              value={instruction}
+                              onChange={e =>
+                                updateInstruction(
+                                  sectionIndex,
+                                  instructionIndex,
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <ActionIcon
+                              color="red"
+                              variant="subtle"
+                              onClick={() =>
+                                removeInstruction(sectionIndex, instructionIndex)
+                              }
+                              aria-label="Remove instruction"
+                              style={{ marginTop: 28, flexShrink: 0 }}
+                            >
+                              <IconTrash size={18} />
+                            </ActionIcon>
+                          </Group>
+                        </Paper>
+                      ))}
+                    </Stack>
+                    <Button
+                      leftSection={<IconPlus size={16} />}
+                      variant="light"
+                      size="xs"
+                      onClick={() => addInstruction(sectionIndex)}
+                      mt="xs"
+                      fullWidth
+                    >
+                      Add Instruction
+                    </Button>
+                  </div>
+
+                  {/* Remove Section button (only show when 2+ sections) */}
+                  {sections.length > 1 && (
+                    <Button
+                      variant="light"
+                      color="red"
+                      onClick={() => removeSection(sectionIndex)}
+                    >
+                      Remove Section
+                    </Button>
+                  )}
+                </Stack>
+              </Card>
+            ))}
+
+            {/* Add Section button */}
+            <Button
+              leftSection={<IconPlus size={16} />}
+              variant="outline"
+              onClick={addSection}
+            >
+              Add Section
+            </Button>
+          </Stack>
 
           <Group
             justify={isEditMode && onDelete ? 'space-between' : 'flex-end'}
@@ -450,13 +517,6 @@ export function RecipeForm({
           onCancel={closeCreateIngredient}
         />
       </Modal>
-
-      <SubRecipeSelector
-        open={subRecipeSelectorOpened}
-        onClose={closeSubRecipeSelector}
-        onAdd={addSubRecipe}
-        currentRecipeId={recipe?.id}
-      />
     </Paper>
   )
 }
