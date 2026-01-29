@@ -37,19 +37,10 @@ export interface SyncData {
 }
 
 /**
- * MergeResult contains the merged data and whether changes were made
- */
-export interface MergeResult {
-  merged: SyncData
-  hasChanges: boolean
-}
-
-/**
  * SyncResult returned from performSync operation
  */
 export interface SyncResult {
   merged: SyncData
-  hasChanges: boolean
   updatedFileInfo?: FileInfo
 }
 
@@ -79,25 +70,25 @@ export class SyncService {
     const remote = await this.downloadAndValidateRemote(fileInfo)
 
     // Merge using LWW strategy
-    const mergeResult = await this.mergeWithLWW(local, remote)
+    const merged = await this.mergeWithLWW(local, remote)
 
     // Apply merged data
-    await this.applyMergedData(mergeResult.merged)
+    await this.applyMergedData(merged)
 
-    // Upload if changes were made during merge
-    if (mergeResult.hasChanges) {
+    // Upload if local has newer changes than remote
+    if (local.lastModified !== remote.lastModified) {
       const updatedFileInfo = await this.storage.uploadFile(
         fileInfo,
-        JSON.stringify(mergeResult.merged)
+        JSON.stringify(merged)
       )
 
       return {
-        ...mergeResult,
+        merged,
         updatedFileInfo,
       }
     }
 
-    return mergeResult
+    return { merged }
   }
 
   /**
@@ -162,35 +153,13 @@ export class SyncService {
    *
    * @param local - Local data snapshot
    * @param remote - Remote data snapshot
-   * @returns MergeResult with merged data and conflict information
+   * @returns Merged SyncData
    * @private
    */
   private async mergeWithLWW(
     local: SyncData,
     remote: SyncData
-  ): Promise<MergeResult> {
-    let hasChanges = false
-
-    // Check if remote is empty (new file sync)
-    const isRemoteEmpty =
-      remote.recipes.length === 0 &&
-      remote.mealPlans.length === 0 &&
-      remote.ingredients.length === 0 &&
-      remote.groceryLists.length === 0 &&
-      remote.groceryItems.length === 0
-
-    // If remote is empty but local has data, we need to upload
-    const hasLocalData =
-      local.recipes.length > 0 ||
-      local.mealPlans.length > 0 ||
-      local.ingredients.length > 0 ||
-      local.groceryLists.length > 0 ||
-      local.groceryItems.length > 0
-
-    if (isRemoteEmpty && hasLocalData) {
-      hasChanges = true
-    }
-
+  ): Promise<SyncData> {
     // Merge recipes using LWW
     const recipeMap = new Map<string, Recipe>()
     for (const recipe of local.recipes) {
@@ -201,11 +170,9 @@ export class SyncService {
       if (!existing) {
         // New recipe from remote
         recipeMap.set(recipe.id, recipe)
-        hasChanges = true
       } else if (recipe.updatedAt > existing.updatedAt) {
         // Remote is newer - use it
         recipeMap.set(recipe.id, recipe)
-        hasChanges = true
       }
       // If equal or local is newer, keep local
     }
@@ -219,10 +186,8 @@ export class SyncService {
       const existing = ingredientMap.get(ingredient.id)
       if (!existing) {
         ingredientMap.set(ingredient.id, ingredient)
-        hasChanges = true
       } else if (ingredient.updatedAt > existing.updatedAt) {
         ingredientMap.set(ingredient.id, ingredient)
-        hasChanges = true
       }
     }
 
@@ -235,10 +200,8 @@ export class SyncService {
       const existing = mealPlanMap.get(mealPlan.id)
       if (!existing) {
         mealPlanMap.set(mealPlan.id, mealPlan)
-        hasChanges = true
       } else if (mealPlan.updatedAt > existing.updatedAt) {
         mealPlanMap.set(mealPlan.id, mealPlan)
-        hasChanges = true
       }
     }
 
@@ -251,10 +214,8 @@ export class SyncService {
       const existing = groceryListMap.get(list.id)
       if (!existing) {
         groceryListMap.set(list.id, list)
-        hasChanges = true
       } else if (list.updatedAt > existing.updatedAt) {
         groceryListMap.set(list.id, list)
-        hasChanges = true
       }
     }
 
@@ -267,10 +228,8 @@ export class SyncService {
       const existing = groceryItemMap.get(item.id)
       if (!existing) {
         groceryItemMap.set(item.id, item)
-        hasChanges = true
       } else if (item.updatedAt > existing.updatedAt) {
         groceryItemMap.set(item.id, item)
-        hasChanges = true
       }
     }
 
@@ -284,7 +243,7 @@ export class SyncService {
       version: 1,
     }
 
-    return { merged, hasChanges }
+    return merged
   }
 
   /**

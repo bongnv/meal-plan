@@ -70,9 +70,10 @@ describe('syncService', () => {
 
       const result = await service.performSync(newFile)
 
-      expect(result.hasChanges).toBe(true)
+      // New file should be uploaded with generated ID
       expect(result.updatedFileInfo).toEqual({ ...newFile, id: '123' })
       expect(mockStorage.uploadFile).toHaveBeenCalled()
+      expect(result.merged.recipes).toEqual(mockRecipes)
     })
 
     it('should sync existing file - download, merge, upload if changes', async () => {
@@ -103,9 +104,11 @@ describe('syncService', () => {
         .mockResolvedValue(JSON.stringify(remoteData))
       mockStorage.uploadFile = vi.fn().mockResolvedValue(existingFile)
 
-      const result = await service.performSync(existingFile)
+      await service.performSync(existingFile)
 
-      expect(result.hasChanges).toBe(true)
+      // Should download, merge, and upload when lastModified differs
+      expect(mockStorage.downloadFile).toHaveBeenCalledWith(existingFile)
+      expect(mockStorage.uploadFile).toHaveBeenCalled()
     })
 
     it('should detect changes when local has new records not in remote', async () => {
@@ -148,7 +151,6 @@ describe('syncService', () => {
 
       const result = await service.performSync(existingFile)
 
-      expect(result.hasChanges).toBe(true)
       expect(result.merged.recipes).toHaveLength(1)
       expect(result.merged.recipes[0].id).toBe('local-1')
       expect(mockStorage.uploadFile).toHaveBeenCalled()
@@ -185,8 +187,9 @@ describe('syncService', () => {
 
       const result = await service.performSync(existingFile)
 
-      expect(result.hasChanges).toBe(false)
+      // Should not upload when lastModified is the same (no changes)
       expect(mockStorage.uploadFile).not.toHaveBeenCalled()
+      expect(result.merged.recipes).toEqual(sameData.recipes)
     })
 
     it('should throw error for invalid remote data', async () => {
@@ -276,9 +279,9 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.merged.recipes).toHaveLength(1)
-      expect(result.merged.recipes[0].name).toBe('Recipe 1 Updated')
-      expect(result.merged.recipes[0].updatedAt).toBe(2000)
+      expect(result.recipes).toHaveLength(1)
+      expect(result.recipes[0].name).toBe('Recipe 1 Updated')
+      expect(result.recipes[0].updatedAt).toBe(2000)
     })
 
     it('should keep local if it is newer', async () => {
@@ -307,8 +310,8 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.merged.ingredients).toHaveLength(1)
-      expect(result.merged.ingredients[0].name).toBe('Local Ingredient')
+      expect(result.ingredients).toHaveLength(1)
+      expect(result.ingredients[0].name).toBe('Local Ingredient')
     })
 
     it('should add new items from remote', async () => {
@@ -325,9 +328,9 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.merged.recipes).toHaveLength(2)
-      expect(result.merged.recipes.map(r => r.id)).toContain('1')
-      expect(result.merged.recipes.map(r => r.id)).toContain('2')
+      expect(result.recipes).toHaveLength(2)
+      expect(result.recipes.map(r => r.id)).toContain('1')
+      expect(result.recipes.map(r => r.id)).toContain('2')
     })
 
     it('should merge all entity types', async () => {
@@ -354,11 +357,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.merged.recipes).toHaveLength(2)
-      expect(result.merged.mealPlans).toHaveLength(2)
-      expect(result.merged.ingredients).toHaveLength(2)
-      expect(result.merged.groceryLists).toHaveLength(2)
-      expect(result.merged.groceryItems).toHaveLength(2)
+      expect(result.recipes).toHaveLength(2)
+      expect(result.mealPlans).toHaveLength(2)
+      expect(result.ingredients).toHaveLength(2)
+      expect(result.groceryLists).toHaveLength(2)
+      expect(result.groceryItems).toHaveLength(2)
     })
   })
 
@@ -441,8 +444,8 @@ describe('syncService', () => {
     })
   })
 
-  describe('hasChanges calculation', () => {
-    it('should set hasChanges=true when local has new records', async () => {
+  describe('Last Write Wins (LWW) merge logic', () => {
+    it('should include local records in merge when remote is empty', async () => {
       const local: SyncData = {
         recipes: [{ id: '1', name: 'Test', updatedAt: 1000 } as Recipe],
         mealPlans: [],
@@ -466,11 +469,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.hasChanges).toBe(true)
-      expect(result.merged.recipes).toHaveLength(1)
+      expect(result.recipes).toHaveLength(1)
+      expect(result.recipes[0].name).toBe('Test')
     })
 
-    it('should set hasChanges=false when local and remote are identical', async () => {
+    it('should produce identical result when local and remote are identical', async () => {
       const recipe = { id: '1', name: 'Test', updatedAt: 1000 } as Recipe
 
       const local: SyncData = {
@@ -496,10 +499,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.hasChanges).toBe(false)
+      expect(result.recipes).toHaveLength(1)
+      expect(result.lastModified).toBe(1000)
     })
 
-    it('should set hasChanges=true when remote has new records', async () => {
+    it('should include remote records when local is empty', async () => {
       const local: SyncData = {
         recipes: [],
         mealPlans: [],
@@ -523,10 +527,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.hasChanges).toBe(true)
+      expect(result.recipes).toHaveLength(1)
+      expect(result.recipes[0].name).toBe('Test')
     })
 
-    it('should set hasChanges=true when remote has newer version', async () => {
+    it('should use remote version when remote has newer timestamp', async () => {
       const local: SyncData = {
         recipes: [{ id: '1', name: 'Old', updatedAt: 1000 } as Recipe],
         mealPlans: [],
@@ -550,11 +555,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.hasChanges).toBe(true)
-      expect(result.merged.recipes[0].name).toBe('New')
+      expect(result.recipes[0].name).toBe('New')
+      expect(result.lastModified).toBe(2000)
     })
 
-    it('should set hasChanges=true for grocery items changes', async () => {
+    it('should merge grocery items from remote', async () => {
       const local: SyncData = {
         recipes: [],
         mealPlans: [],
@@ -580,10 +585,11 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      expect(result.hasChanges).toBe(true)
+      expect(result.groceryItems).toHaveLength(1)
+      expect(result.groceryItems[0].name).toBe('Item')
     })
 
-    it('should set hasChanges=false when local is newer (no upload needed)', async () => {
+    it('should keep local version when local is newer', async () => {
       const local: SyncData = {
         recipes: [{ id: '1', name: 'Newer', updatedAt: 2000 } as Recipe],
         mealPlans: [],
@@ -607,9 +613,9 @@ describe('syncService', () => {
       // @ts-expect-error - Accessing private method for testing
       const result = await service.mergeWithLWW(local, remote)
 
-      // Local is newer, so merged = local, no changes needed
-      expect(result.hasChanges).toBe(false)
-      expect(result.merged.recipes[0].name).toBe('Newer')
+      // Local is newer, so merged should use local version
+      expect(result.recipes[0].name).toBe('Newer')
+      expect(result.lastModified).toBe(2000)
     })
   })
 
