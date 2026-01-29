@@ -199,13 +199,13 @@ describe('syncService', () => {
         path: '/folder/new.json.gz',
         isSharedWithMe: false,
       }
-      
+
       // Local has mix of deleted and non-deleted records
       const mockRecipes = [
         { id: '1', name: 'Recipe 1', isDeleted: false, updatedAt: 1000 },
         { id: '2', name: 'Recipe 2', isDeleted: true, updatedAt: 2000 },
       ] as any
-      
+
       const mockMealPlans = [
         { id: 'mp1', type: 'recipe', isDeleted: true, updatedAt: 1000 },
       ] as any
@@ -224,13 +224,15 @@ describe('syncService', () => {
 
       // Verify uploadFile was called with filtered data
       expect(mockStorage.uploadFile).toHaveBeenCalled()
-      const uploadedData = JSON.parse(vi.mocked(mockStorage.uploadFile).mock.calls[0][1])
-      
+      const uploadedData = JSON.parse(
+        vi.mocked(mockStorage.uploadFile).mock.calls[0][1]
+      )
+
       // Uploaded data should only contain non-deleted records
       expect(uploadedData.recipes).toHaveLength(1)
       expect(uploadedData.recipes[0].id).toBe('1')
       expect(uploadedData.mealPlans).toHaveLength(0)
-      
+
       // Merged result includes ALL records (even deleted) for local database
       expect(result.merged.recipes).toHaveLength(2)
       expect(result.merged.recipes.find(r => r.id === '1')).toBeDefined()
@@ -303,22 +305,22 @@ describe('syncService', () => {
         { id: '2', name: 'Recipe 2', isDeleted: true, updatedAt: 2000 },
         { id: '3', name: 'Recipe 3', updatedAt: 3000 }, // no isDeleted field
       ] as any
-      
+
       const mockMealPlans = [
         { id: 'mp1', type: 'recipe', isDeleted: false, updatedAt: 1000 },
         { id: 'mp2', type: 'recipe', isDeleted: true, updatedAt: 2000 },
       ] as any
-      
+
       const mockIngredients = [
         { id: 'ing1', name: 'Flour', updatedAt: 1000 },
         { id: 'ing2', name: 'Sugar', isDeleted: true, updatedAt: 2000 },
       ] as any
-      
+
       const mockLists = [
         { id: 'gl1', name: 'List 1', updatedAt: 1000 },
         { id: 'gl2', name: 'List 2', isDeleted: true, updatedAt: 2000 },
       ] as any
-      
+
       const mockItems = [
         { id: 'gi1', listId: 'gl1', updatedAt: 1000 },
         { id: 'gi2', listId: 'gl1', isDeleted: true, updatedAt: 2000 },
@@ -337,16 +339,16 @@ describe('syncService', () => {
       // Should include ALL items (even deleted ones) for proper merge
       expect(result.recipes).toHaveLength(3)
       expect(result.recipes.map(r => r.id)).toEqual(['1', '2', '3'])
-      
+
       expect(result.mealPlans).toHaveLength(2)
       expect(result.mealPlans.map(m => m.id)).toEqual(['mp1', 'mp2'])
-      
+
       expect(result.ingredients).toHaveLength(2)
       expect(result.ingredients.map(i => i.id)).toEqual(['ing1', 'ing2'])
-      
+
       expect(result.groceryLists).toHaveLength(2)
       expect(result.groceryLists.map(l => l.id)).toEqual(['gl1', 'gl2'])
-      
+
       expect(result.groceryItems).toHaveLength(2)
       expect(result.groceryItems.map(i => i.id)).toEqual(['gi1', 'gi2'])
     })

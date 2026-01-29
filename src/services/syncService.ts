@@ -87,7 +87,7 @@ export class SyncService {
         lastModified: merged.lastModified,
         version: merged.version,
       }
-      
+
       const updatedFileInfo = await this.storage.uploadFile(
         fileInfo,
         JSON.stringify(dataForUpload)
