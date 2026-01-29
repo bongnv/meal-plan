@@ -46,7 +46,7 @@ export function EditMealPlanPage() {
   }
 
   const handleCancel = () => {
-    navigate('/meal-plans')
+    void navigate('/meal-plans')
   }
 
   const handleDelete = async (mealPlanId: string) => {
@@ -72,7 +72,7 @@ export function EditMealPlanPage() {
           <Text size="lg" c="red">
             Invalid meal plan ID
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>
+          <Button onClick={() => void navigate('/meal-plans')}>
             Back to Meal Plans
           </Button>
         </Stack>
@@ -87,7 +87,7 @@ export function EditMealPlanPage() {
           <Text size="lg" c="red">
             Meal plan not found
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>
+          <Button onClick={() => void navigate('/meal-plans')}>
             Back to Meal Plans
           </Button>
         </Stack>

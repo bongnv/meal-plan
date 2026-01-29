@@ -46,7 +46,7 @@ export function RecipeDetailPage() {
           <Text size="lg" c="red">
             Invalid recipe ID
           </Text>
-          <Button onClick={() => navigate('/recipes')}>
+          <Button onClick={() => void navigate('/recipes')}>
             Back to Recipes
           </Button>
         </Stack>
@@ -61,7 +61,7 @@ export function RecipeDetailPage() {
           <Text size="lg" c="red">
             Recipe not found
           </Text>
-          <Button onClick={async () => navigate('/recipes')}>
+          <Button onClick={() => void navigate('/recipes')}>
             Back to Recipes
           </Button>
         </Stack>
@@ -70,7 +70,7 @@ export function RecipeDetailPage() {
   }
 
   const handleEdit = (recipeId: string) => {
-    navigate(`/recipes/${recipeId}/edit`)
+    void navigate(`/recipes/${recipeId}/edit`)
   }
 
   const handleDelete = () => {
@@ -89,7 +89,7 @@ export function RecipeDetailPage() {
         if (id) {
           try {
             await recipeService.delete(id)
-            navigate('/recipes')
+            void navigate('/recipes')
           } catch (err) {
             console.error('Failed to delete recipe:', err)
           }
@@ -102,7 +102,7 @@ export function RecipeDetailPage() {
     <Container size="lg">
       <Stack gap="md">
         <Group>
-          <Button variant="subtle" onClick={() => navigate('/recipes')}>
+          <Button variant="subtle" onClick={() => void navigate('/recipes')}>
             ← Back to Recipes
           </Button>
         </Group>

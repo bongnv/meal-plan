@@ -22,11 +22,11 @@ export function EditRecipePage() {
     if (!id || !recipe) return
     const updatedRecipe = { ...recipe, ...values }
     await recipeService.update(updatedRecipe)
-    navigate('/recipes')
+    void navigate('/recipes')
   }
 
   const handleCancel = () => {
-    navigate('/recipes')
+    void navigate('/recipes')
   }
 
   const handleDelete = () => {

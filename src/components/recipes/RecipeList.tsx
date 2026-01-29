@@ -131,7 +131,7 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
                 aria-label="View recipe"
                 onClick={e => {
                   e.stopPropagation()
-                  navigate(`/recipes/${recipe.id}`)
+                  void navigate(`/recipes/${recipe.id}`)
                 }}
               >
                 <IconEye size={18} />

@@ -83,7 +83,7 @@ export function MealPlanDetailPage() {
 
   const handleEdit = () => {
     if (id) {
-      navigate(`/meal-plans/${id}/edit`)
+      void navigate(`/meal-plans/${id}/edit`)
     }
   }
 

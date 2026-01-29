@@ -32,7 +32,7 @@ export function AddMealPlanPage() {
   }
 
   const handleCancel = () => {
-    navigate('/meal-plans')
+    void navigate('/meal-plans')
   }
 
   const handleRecipeSelect = (recipeId: string) => {

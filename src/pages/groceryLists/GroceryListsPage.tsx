@@ -77,7 +77,7 @@ export const GroceryListsPage = () => {
   }
 
   const handleListClick = (listId: string) => {
-    navigate(`/grocery-lists/${listId}`)
+    void navigate(`/grocery-lists/${listId}`)
   }
 
   return (

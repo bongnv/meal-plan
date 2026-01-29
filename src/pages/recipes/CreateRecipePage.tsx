@@ -15,11 +15,11 @@ export function CreateRecipePage() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     })
-    navigate('/recipes')
+    void navigate('/recipes')
   }
 
   const handleCancel = () => {
-    navigate('/recipes')
+    void navigate('/recipes')
   }
 
   return (

@@ -3,6 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   createContext,
+  useCallback,
   useContext,
   useState,
   useEffect,
@@ -88,7 +89,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
    * Trigger manual sync with Last Write Wins (LWW) merge
    * Automatically resolves conflicts based on updatedAt timestamps
    */
-  const syncNow = async (): Promise<void> => {
+  const syncNow = useCallback(async (): Promise<void> => {
     if (!syncService || !selectedFile) {
       throw new Error('Not connected')
     }
@@ -122,7 +123,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setSyncStatus('error')
       throw error
     }
-  }
+  }, [syncService, selectedFile])
 
   // Debounced auto-sync function (waits 15 seconds after last change)
   const debouncedSync = useDebouncedCallback(async () => {
@@ -155,7 +156,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   // Track lastModified timestamp for auto-sync trigger
   // Note: useLiveQuery returns value directly, only re-renders when value changes
-  const lastModified = useLiveQuery(() => db.getLastModified())
+  const lastModified = useLiveQuery(async () => await db.getLastModified())
 
   // Set status to 'idle' when there are unsaved changes (local differs from last sync)
   useEffect(() => {
@@ -223,6 +224,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     syncStatus,
     needsReconnect,
     lastSyncTime,
+    syncNow,
   ])
 
   /**

@@ -44,7 +44,7 @@ export const RecipesPage = () => {
   )
 
   const handleEdit = (id: string) => {
-    navigate(`/recipes/${id}/edit`)
+    void navigate(`/recipes/${id}/edit`)
   }
 
   const handleDelete = (id: string) => {
@@ -80,7 +80,7 @@ export const RecipesPage = () => {
           <Button variant="default" onClick={() => setImportModalOpened(true)}>
             Import with AI
           </Button>
-          <Button onClick={() => navigate('/recipes/new')}>
+          <Button onClick={() => void navigate('/recipes/new')}>
             Create Recipe
           </Button>
         </Group>
