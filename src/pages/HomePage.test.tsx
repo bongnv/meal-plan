@@ -80,10 +80,15 @@ describe('HomePage', () => {
 
   describe('Next Meal Section', () => {
     it('should display the next upcoming meal', async () => {
+      // Use tomorrow's date to ensure the meal is in the future
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowDate = tomorrow.toISOString().split('T')[0]
+
       const mockMealPlans: MealPlan[] = [
         {
           id: '1',
-          date: '2026-01-29',
+          date: tomorrowDate,
           mealType: 'lunch',
           type: 'recipe',
           recipeId: 'recipe1',
@@ -130,10 +135,15 @@ describe('HomePage', () => {
     })
 
     it('should display custom meal text for non-recipe meals', async () => {
+      // Use tomorrow's date to ensure the meal is in the future
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowDate = tomorrow.toISOString().split('T')[0]
+
       const mockMealPlans: MealPlan[] = [
         {
           id: '1',
-          date: '2026-01-29',
+          date: tomorrowDate,
           mealType: 'dinner',
           type: 'dining-out',
           customText: 'Italian Restaurant',
@@ -159,10 +169,15 @@ describe('HomePage', () => {
 
     it('should navigate to meal plan detail when Next Meal card is clicked', async () => {
       const user = userEvent.setup()
+      // Use tomorrow's date to ensure the meal is in the future
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowDate = tomorrow.toISOString().split('T')[0]
+
       const mockMealPlans: MealPlan[] = [
         {
           id: '1',
-          date: '2026-01-29',
+          date: tomorrowDate,
           mealType: 'lunch',
           type: 'recipe',
           recipeId: 'recipe1',
@@ -215,10 +230,19 @@ describe('HomePage', () => {
 
   describe('Coming Up Section', () => {
     it('should display upcoming meals', async () => {
+      // Use dynamic dates: tomorrow and day after tomorrow to ensure meals are in the future
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowDate = tomorrow.toISOString().split('T')[0]
+
+      const dayAfter = new Date()
+      dayAfter.setDate(dayAfter.getDate() + 2)
+      const dayAfterDate = dayAfter.toISOString().split('T')[0]
+
       const mockMealPlans: MealPlan[] = [
         {
           id: '1',
-          date: '2026-01-29',
+          date: tomorrowDate,
           mealType: 'lunch',
           type: 'recipe',
           recipeId: 'recipe1',
@@ -228,7 +252,7 @@ describe('HomePage', () => {
         },
         {
           id: '2',
-          date: '2026-01-29',
+          date: tomorrowDate,
           mealType: 'dinner',
           type: 'recipe',
           recipeId: 'recipe2',
@@ -238,7 +262,7 @@ describe('HomePage', () => {
         },
         {
           id: '3',
-          date: '2026-01-30',
+          date: dayAfterDate,
           mealType: 'lunch',
           type: 'recipe',
           recipeId: 'recipe3',
