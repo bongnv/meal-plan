@@ -22,8 +22,9 @@ import { recipeService } from '../../services/recipeService'
 export const RecipesPage = () => {
   const navigate = useNavigate()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 
   // Import modal state
   const [importModalOpened, setImportModalOpened] = useState(false)

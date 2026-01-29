@@ -30,7 +30,7 @@ describe('ingredientService', () => {
   })
 
   describe('getAll', () => {
-    it('should return all ingredients', async () => {
+    it('should return all non-deleted ingredients', async () => {
       const mockIngredients: Ingredient[] = [
         {
           id: '1',
@@ -48,12 +48,14 @@ describe('ingredientService', () => {
         },
       ]
 
-      mockDb.ingredients.toArray = vi.fn().mockResolvedValue(mockIngredients)
+      mockDb.ingredients.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockIngredients),
+      })
 
       const result = await service.getAll()
 
       expect(result).toEqual(mockIngredients)
-      expect(mockDb.ingredients.toArray).toHaveBeenCalledOnce()
+      expect(mockDb.ingredients.filter).toHaveBeenCalled()
     })
   })
 
@@ -179,13 +181,19 @@ describe('ingredientService', () => {
   })
 
   describe('delete', () => {
-    it('should delete an ingredient', async () => {
-      mockDb.ingredients.delete = vi.fn().mockResolvedValue(undefined)
+    it('should soft delete an ingredient', async () => {
+      mockDb.ingredients.update = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
 
       await service.delete('1')
 
-      expect(mockDb.ingredients.delete).toHaveBeenCalledWith('1')
+      expect(mockDb.ingredients.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          isDeleted: true,
+          updatedAt: expect.any(Number),
+        })
+      )
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })

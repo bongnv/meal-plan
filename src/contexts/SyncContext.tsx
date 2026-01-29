@@ -1,4 +1,4 @@
-import { useThrottledCallback } from '@mantine/hooks'
+import { useDebouncedCallback } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -124,8 +124,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Throttled auto-sync function (max once per minute)
-  const throttledSync = useThrottledCallback(async () => {
+  // Debounced auto-sync function (waits 15 seconds after last change)
+  const debouncedSync = useDebouncedCallback(async () => {
     console.log('Auto-syncing...')
     try {
       await syncNow()
@@ -151,10 +151,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       })
       // Don't throw - let user continue with local data
     }
-  }, 60000) // 1 minute
+  }, 15000) // 15 seconds
 
   // Track lastModified timestamp for auto-sync trigger
-  const lastModified = useLiveQuery(() => db.getLastModified(), [])
+  // Note: useLiveQuery returns value directly, only re-renders when value changes
+  const lastModified = useLiveQuery(() => db.getLastModified())
 
   // Set status to 'idle' when there are unsaved changes (local differs from last sync)
   useEffect(() => {
@@ -185,27 +186,43 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     syncStatus,
   ])
 
-  // Auto-sync: immediate on first call, throttled on subsequent data changes
+  // Auto-sync: immediate first sync (lastSyncTime === null), then debounced (15s) when there are unsaved changes
   useEffect(() => {
     // Only auto-sync if we're connected, not already syncing, and don't need reconnect
     if (
       !cloudStorage.isAuthenticated ||
       !selectedFile ||
       syncStatus === 'syncing' ||
-      needsReconnect
+      needsReconnect ||
+      lastModified === undefined
     ) {
       return
     }
 
-    // Throttled sync (executes immediately on first call, then throttles)
-    throttledSync()
+    // First sync: lastSyncTime === null, execute immediately
+    if (lastSyncTime === null) {
+      console.log('First sync - executing immediately')
+      // Use setTimeout to avoid calling setState synchronously in effect
+      setTimeout(() => {
+        void syncNow().catch(error => {
+          console.error('First sync failed:', error)
+        })
+      }, 0)
+      return
+    }
+
+    // Subsequent syncs: only trigger when there are unsaved changes (lastModified > lastSyncTime)
+    if (lastModified > lastSyncTime) {
+      debouncedSync()
+    }
   }, [
     lastModified,
     cloudStorage.isAuthenticated,
     selectedFile,
-    throttledSync,
+    debouncedSync,
     syncStatus,
     needsReconnect,
+    lastSyncTime,
   ])
 
   /**

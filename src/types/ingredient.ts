@@ -59,6 +59,7 @@ export interface Ingredient {
   category: IngredientCategory
   createdAt: number // Unix timestamp
   updatedAt: number // Unix timestamp
+  isDeleted?: boolean // Soft delete flag
 }
 
 // Zod schema for Ingredient
@@ -76,6 +77,7 @@ export const IngredientSchema = z.object({
     .nonnegative()
     .optional()
     .default(() => Date.now()),
+  isDeleted: z.boolean().optional(),
 })
 
 // Form values type (without id)

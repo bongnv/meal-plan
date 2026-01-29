@@ -38,6 +38,7 @@ interface BaseMealPlan {
   note?: string // Optional note for any meal (e.g., "make extra for leftovers", "John's favorite")
   createdAt: number // Unix timestamp
   updatedAt: number // Unix timestamp
+  isDeleted?: boolean // Soft delete flag
 }
 
 export interface RecipeMealPlan extends BaseMealPlan {
@@ -128,6 +129,7 @@ const BaseMealPlanSchema = z.object({
     .nonnegative()
     .optional()
     .default(() => Date.now()),
+  isDeleted: z.boolean().optional(),
 })
 
 export const RecipeMealPlanSchema = BaseMealPlanSchema.extend({

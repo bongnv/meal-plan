@@ -14,7 +14,7 @@ import type { ReactNode } from 'react'
 
 // Mock MSAL React
 vi.mock('@azure/msal-react', () => ({
-  MsalProvider: ({ children }: { children: ReactNode }) => children,
+  MsalProvider: async ({ children }: { children: ReactNode }) => children,
   useMsal: () => ({
     instance: {
       getAllAccounts: vi.fn(() => []),
@@ -41,7 +41,8 @@ const mockCloudStorage = {
 }
 
 vi.mock('../../contexts/CloudStorageContext', () => ({
-  CloudStorageProvider: ({ children }: { children: ReactNode }) => children,
+  CloudStorageProvider: async ({ children }: { children: ReactNode }) =>
+    children,
   useCloudStorage: () => mockCloudStorage,
 }))
 

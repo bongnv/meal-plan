@@ -51,14 +51,16 @@ describe('recipeService', () => {
   })
 
   describe('getAll', () => {
-    it('should return all recipes', async () => {
+    it('should return all non-deleted recipes', async () => {
       const mockRecipes = [createMockRecipe(), createMockRecipe({ id: '2' })]
-      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.recipes.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockRecipes),
+      })
 
       const result = await service.getAll()
 
       expect(result).toEqual(mockRecipes)
-      expect(mockDb.recipes.toArray).toHaveBeenCalledOnce()
+      expect(mockDb.recipes.filter).toHaveBeenCalled()
     })
   })
 
@@ -138,13 +140,19 @@ describe('recipeService', () => {
   })
 
   describe('delete', () => {
-    it('should delete a recipe', async () => {
-      mockDb.recipes.delete = vi.fn().mockResolvedValue(undefined)
+    it('should soft delete a recipe', async () => {
+      mockDb.recipes.update = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
 
       await service.delete('1')
 
-      expect(mockDb.recipes.delete).toHaveBeenCalledWith('1')
+      expect(mockDb.recipes.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          isDeleted: true,
+          updatedAt: expect.any(Number),
+        })
+      )
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })
@@ -230,7 +238,9 @@ describe('recipeService', () => {
         createMockRecipe({ id: '3', tags: ['breakfast'] }),
       ]
 
-      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.recipes.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockRecipes),
+      })
 
       const result = await service.getAllTags()
 
@@ -244,7 +254,9 @@ describe('recipeService', () => {
         createMockRecipe({ id: '3', tags: undefined }),
       ]
 
-      mockDb.recipes.toArray = vi.fn().mockResolvedValue(mockRecipes)
+      mockDb.recipes.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockRecipes),
+      })
 
       const result = await service.getAllTags()
 
@@ -252,7 +264,9 @@ describe('recipeService', () => {
     })
 
     it('should return empty array when no recipes', async () => {
-      mockDb.recipes.toArray = vi.fn().mockResolvedValue([])
+      mockDb.recipes.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      })
 
       const result = await service.getAllTags()
 
@@ -269,6 +283,215 @@ describe('recipeService', () => {
 
       expect(result).toBe(timestamp)
       expect(mockDb.getLastModified).toHaveBeenCalledOnce()
+    })
+  })
+
+  describe('extractUniqueTags', () => {
+    it('should extract unique tags from recipes', () => {
+      const recipes = [
+        createMockRecipe({ id: '1', tags: ['dessert', 'quick'] }),
+        createMockRecipe({ id: '2', tags: ['dinner', 'quick'] }),
+        createMockRecipe({ id: '3', tags: ['breakfast'] }),
+      ]
+
+      const result = service.extractUniqueTags(recipes)
+
+      expect(result).toEqual(['breakfast', 'dessert', 'dinner', 'quick'])
+    })
+
+    it('should handle recipes with no tags', () => {
+      const recipes = [
+        createMockRecipe({ id: '1', tags: ['dessert'] }),
+        createMockRecipe({ id: '2', tags: [] }),
+        createMockRecipe({ id: '3', tags: undefined }),
+      ]
+
+      const result = service.extractUniqueTags(recipes)
+
+      expect(result).toEqual(['dessert'])
+    })
+
+    it('should return empty array for empty recipe list', () => {
+      const result = service.extractUniqueTags([])
+
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('filterRecipesAdvanced', () => {
+    const recipes = [
+      createMockRecipe({
+        id: '1',
+        name: 'Chocolate Cake',
+        tags: ['dessert', 'sweet'],
+        prepTime: 15,
+        cookTime: 30,
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ ingredientId: 'flour', quantity: 2, unit: 'cup' }],
+            instructions: ['Mix'],
+          },
+        ],
+      }),
+      createMockRecipe({
+        id: '2',
+        name: 'Quick Salad',
+        tags: ['lunch', 'healthy'],
+        prepTime: 10,
+        cookTime: 0,
+        sections: [
+          {
+            name: undefined,
+            ingredients: [
+              { ingredientId: 'lettuce', quantity: 1, unit: 'piece' },
+            ],
+            instructions: ['Toss'],
+          },
+        ],
+      }),
+      createMockRecipe({
+        id: '3',
+        name: 'Pasta Dinner',
+        tags: ['dinner', 'italian'],
+        prepTime: 20,
+        cookTime: 45,
+        sections: [
+          {
+            name: undefined,
+            ingredients: [
+              { ingredientId: 'pasta', quantity: 1, unit: 'kilogram' },
+            ],
+            instructions: ['Boil'],
+          },
+        ],
+      }),
+    ]
+
+    it('should filter by search text', () => {
+      const filters = { searchText: 'cake' }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Chocolate Cake')
+    })
+
+    it('should filter by search text case-insensitively', () => {
+      const filters = { searchText: 'SALAD' }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Quick Salad')
+    })
+
+    it('should filter by tags', () => {
+      const filters = { selectedTags: ['dessert'] }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Chocolate Cake')
+    })
+
+    it('should filter by multiple tags (OR logic)', () => {
+      const filters = { selectedTags: ['dessert', 'lunch'] }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(2)
+      expect(result.map(r => r.name)).toContain('Chocolate Cake')
+      expect(result.map(r => r.name)).toContain('Quick Salad')
+    })
+
+    it('should filter by ingredients', () => {
+      const filters = { selectedIngredients: ['pasta'] }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Pasta Dinner')
+    })
+
+    it('should filter by multiple ingredients (OR logic)', () => {
+      const filters = { selectedIngredients: ['flour', 'lettuce'] }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(2)
+    })
+
+    it('should filter by time range under-30', () => {
+      const filters = { timeRange: 'under-30' as const }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Quick Salad')
+    })
+
+    it('should filter by time range 30-60', () => {
+      const filters = { timeRange: '30-60' as const }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Chocolate Cake')
+    })
+
+    it('should filter by time range over-60', () => {
+      const filters = { timeRange: 'over-60' as const }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Pasta Dinner')
+    })
+
+    it('should combine multiple filters', () => {
+      const filters = {
+        searchText: 'pasta',
+        selectedTags: ['dinner'],
+        timeRange: 'over-60' as const,
+      }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Pasta Dinner')
+    })
+
+    it('should return empty array when no recipes match', () => {
+      const filters = { searchText: 'nonexistent' }
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(0)
+    })
+
+    it('should return all recipes when no filters applied', () => {
+      const filters = {}
+      const result = service.filterRecipesAdvanced(recipes, filters)
+
+      expect(result).toHaveLength(3)
+    })
+  })
+
+  describe('findRecipeById', () => {
+    it('should find recipe by id', () => {
+      const recipes = [
+        createMockRecipe({ id: '1', name: 'Recipe 1' }),
+        createMockRecipe({ id: '2', name: 'Recipe 2' }),
+      ]
+
+      const result = service.findRecipeById(recipes, '2')
+
+      expect(result).toBeDefined()
+      expect(result?.name).toBe('Recipe 2')
+    })
+
+    it('should return undefined for non-existent id', () => {
+      const recipes = [createMockRecipe({ id: '1', name: 'Recipe 1' })]
+
+      const result = service.findRecipeById(recipes, '999')
+
+      expect(result).toBeUndefined()
+    })
+
+    it('should return undefined for empty recipe list', () => {
+      const result = service.findRecipeById([], '1')
+
+      expect(result).toBeUndefined()
     })
   })
 })

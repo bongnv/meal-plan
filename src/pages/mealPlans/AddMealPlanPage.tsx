@@ -16,8 +16,9 @@ export function AddMealPlanPage() {
   const [searchParams] = useSearchParams()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | undefined>()
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 
   // Get date and mealType from query params
   const date =
@@ -27,7 +28,7 @@ export function AddMealPlanPage() {
   const handleSubmit = async (mealPlan: Partial<MealPlan>) => {
     const { id: _, ...mealPlanData } = mealPlan as MealPlan
     await mealPlanService.add(mealPlanData)
-    navigate('/meal-plans')
+    void navigate('/meal-plans')
   }
 
   const handleCancel = () => {

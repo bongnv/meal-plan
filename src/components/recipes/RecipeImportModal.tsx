@@ -46,7 +46,8 @@ export const RecipeImportModal = ({
   const navigate = useNavigate()
 
   // Reactive queries
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 
   // Generate the AI prompt with current ingredient library
   const prompt = generateRecipeImportPrompt(ingredients)
@@ -110,7 +111,7 @@ export const RecipeImportModal = ({
       const newRecipeId = await recipeService.add(recipeWithMappedIds)
 
       // Step 5: Navigate to recipe detail page with the generated ID
-      navigate(`/recipes/${newRecipeId}`)
+      void navigate(`/recipes/${newRecipeId}`)
 
       // Close modal
       handleClose()

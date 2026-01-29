@@ -22,7 +22,7 @@ import { recipeService } from '../../services/recipeService'
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipe = useLiveQuery(() => {
+  const recipe = useLiveQuery(async () => {
     if (!id) return undefined
     return db.recipes.get(id)
   }, [id])
@@ -46,7 +46,9 @@ export function RecipeDetailPage() {
           <Text size="lg" c="red">
             Invalid recipe ID
           </Text>
-          <Button onClick={() => navigate('/recipes')}>Back to Recipes</Button>
+          <Button onClick={() => navigate('/recipes')}>
+            Back to Recipes
+          </Button>
         </Stack>
       </Container>
     )
@@ -59,7 +61,9 @@ export function RecipeDetailPage() {
           <Text size="lg" c="red">
             Recipe not found
           </Text>
-          <Button onClick={() => navigate('/recipes')}>Back to Recipes</Button>
+          <Button onClick={async () => navigate('/recipes')}>
+            Back to Recipes
+          </Button>
         </Stack>
       </Container>
     )

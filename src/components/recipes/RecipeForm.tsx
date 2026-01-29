@@ -49,7 +49,8 @@ export function RecipeForm({
   onDelete,
 }: RecipeFormProps) {
   const isEditMode = !!recipe
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
   const [
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },

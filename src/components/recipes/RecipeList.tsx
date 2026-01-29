@@ -43,7 +43,11 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
           Create recipes with ingredients, instructions, and even link
           sub-recipes together to build complex dishes.
         </Text>
-        <Button size="lg" mt="md" onClick={() => navigate('/recipes/new')}>
+        <Button
+          size="lg"
+          mt="md"
+          onClick={() => void navigate('/recipes/new')}
+        >
           Create Your First Recipe
         </Button>
       </Stack>
@@ -69,7 +73,7 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
               'box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out',
             cursor: 'pointer',
           }}
-          onClick={() => navigate(`/recipes/${recipe.id}`)}
+          onClick={() => void navigate(`/recipes/${recipe.id}`)}
           onMouseEnter={e => {
             e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)'
             e.currentTarget.style.transform = 'translateY(-2px)'

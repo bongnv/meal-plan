@@ -23,7 +23,7 @@ export const createRecipeService = (db: MealPlanDB) => ({
    * Get all recipes
    */
   async getAll(): Promise<Recipe[]> {
-    return await db.recipes.toArray()
+    return await db.recipes.filter(r => r.isDeleted !== true).toArray()
   },
 
   /**
@@ -55,10 +55,10 @@ export const createRecipeService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Delete a recipe
+   * Soft delete a recipe
    */
   async delete(id: string): Promise<void> {
-    await db.recipes.delete(id)
+    await db.recipes.update(id, { isDeleted: true, updatedAt: Date.now() })
     await db.updateLastModified()
   },
 
@@ -94,7 +94,7 @@ export const createRecipeService = (db: MealPlanDB) => ({
    * Get all unique tags from recipes
    */
   async getAllTags(): Promise<string[]> {
-    const recipes = await db.recipes.toArray()
+    const recipes = await db.recipes.filter(r => r.isDeleted !== true).toArray()
     const tagSet = new Set<string>()
     recipes.forEach(recipe => {
       recipe.tags?.forEach(tag => tagSet.add(tag))

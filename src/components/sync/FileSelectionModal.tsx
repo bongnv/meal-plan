@@ -89,19 +89,19 @@ export function FileSelectionModal({
   // Load initial folder listing when modal opens
   useEffect(() => {
     if (opened) {
-      loadFolderContents(undefined)
+      void loadFolderContents(undefined)
     }
   }, [opened, loadFolderContents])
 
   const navigateToFolder = (folder: FolderInfo) => {
-    loadFolderContents(folder)
+    void loadFolderContents(folder)
     setBreadcrumbs([...breadcrumbs, { label: folder.name, path: folder.path }])
   }
 
   const navigateToBreadcrumb = (index: number) => {
     if (index === 0) {
       // Navigate to root
-      loadFolderContents(undefined)
+      void loadFolderContents(undefined)
       setBreadcrumbs([{ label: 'OneDrive' }])
     } else {
       const targetBreadcrumb = breadcrumbs[index]
@@ -114,7 +114,7 @@ export function FileSelectionModal({
           name: targetBreadcrumb.label,
           path: targetPath,
         }
-        loadFolderContents(targetFolder)
+        void loadFolderContents(targetFolder)
       }
       setBreadcrumbs(breadcrumbs.slice(0, index + 1))
     }
@@ -181,7 +181,7 @@ export function FileSelectionModal({
         size="xs"
         variant="light"
         mt="sm"
-        onClick={() => loadFolderContents()}
+        onClick={async () => loadFolderContents()}
       >
         Retry
       </Button>

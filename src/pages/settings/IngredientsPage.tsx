@@ -20,7 +20,8 @@ import { ingredientService } from '../../services/ingredientService'
 import type { IngredientFormValues } from '../../types/ingredient'
 
 export function IngredientsPage() {
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
   const loading = ingredients === undefined
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)

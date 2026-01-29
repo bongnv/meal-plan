@@ -64,7 +64,8 @@ export const MealPlanForm = ({
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   // Load ingredients for filtering
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 
   const handleDelete = () => {
     if (initialMeal && onDelete) {

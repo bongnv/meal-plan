@@ -48,7 +48,7 @@ export function DroppableDayCard({
   })
 
   const handleMealClick = (meal: MealPlan) => {
-    navigate(`/meal-plans/${meal.id}`)
+    void navigate(`/meal-plans/${meal.id}`)
   }
 
   return (
@@ -174,7 +174,7 @@ export function DroppableDayCard({
                             variant="subtle"
                             color="blue"
                             size="sm"
-                            onClick={() =>
+                            onClick={async () =>
                               navigate(`/meal-plans/${meal.id}/edit`)
                             }
                             aria-label="Edit"

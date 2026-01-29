@@ -21,8 +21,9 @@ import { DraggableRecipeCard } from './DraggableRecipeCard'
 
 export const RecipeSidebar = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 
   // Filter state and actions from custom hook
   const { filters, actions } = useRecipeFilters()

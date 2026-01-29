@@ -60,6 +60,7 @@ export interface Recipe {
   imageUrl?: string // optional
   createdAt: number // Unix timestamp
   updatedAt: number // Unix timestamp
+  isDeleted?: boolean // Soft delete flag
 }
 
 /**
@@ -102,6 +103,7 @@ export const RecipeSchema = z.object({
     .nonnegative()
     .optional()
     .default(() => Date.now()),
+  isDeleted: z.boolean().optional(),
 })
 
 /**

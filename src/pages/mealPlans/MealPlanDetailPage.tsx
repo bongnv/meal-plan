@@ -31,8 +31,8 @@ import {
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const mealPlan = useLiveQuery(() => {
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const mealPlan = useLiveQuery(async () => {
     if (!id) return undefined
     return db.mealPlans.get(id)
   }, [id])
@@ -58,7 +58,7 @@ export function MealPlanDetailPage() {
           <Text size="lg" c="red">
             Invalid meal plan ID
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>
+          <Button onClick={async () => navigate('/meal-plans')}>
             Back to Meal Plans
           </Button>
         </Stack>
@@ -73,7 +73,7 @@ export function MealPlanDetailPage() {
           <Text size="lg" c="red">
             Meal plan not found
           </Text>
-          <Button onClick={() => navigate('/meal-plans')}>
+          <Button onClick={async () => navigate('/meal-plans')}>
             Back to Meal Plans
           </Button>
         </Stack>
@@ -99,9 +99,9 @@ export function MealPlanDetailPage() {
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
-      onConfirm: () => {
-        mealPlanService.delete(id)
-        navigate('/meal-plans')
+      onConfirm: async () => {
+        await mealPlanService.delete(id)
+        void navigate('/meal-plans')
       },
     })
   }
@@ -127,7 +127,10 @@ export function MealPlanDetailPage() {
       <Stack gap="md">
         {/* Back button */}
         <Group>
-          <Button variant="subtle" onClick={() => navigate('/meal-plans')}>
+          <Button
+            variant="subtle"
+            onClick={async () => navigate('/meal-plans')}
+          >
             ← Back to Meal Plans
           </Button>
         </Group>

@@ -46,7 +46,7 @@ export default tseslint.config(
         },
       ],
       '@typescript-eslint/no-explicit-any': 'off',
-      // Enforce async/await patterns - configured to be practical
+      // Enforce async/await patterns for better error handling and readability
       // Allow promise-returning event handlers (common React pattern)
       '@typescript-eslint/no-misused-promises': [
         'error',
@@ -59,11 +59,27 @@ export default tseslint.config(
           },
         },
       ],
-      // Don't require floating promises to be handled in all cases
-      // (allows fire-and-forget in effects and callbacks)
-      '@typescript-eslint/no-floating-promises': 'off',
-      // Prefer async functions but don't enforce everywhere
-      '@typescript-eslint/promise-function-async': 'off',
+      // Require promises to be awaited or explicitly handled
+      // Use `void` operator for intentional fire-and-forget: void somePromise()
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          ignoreVoid: true, // Allow: void somePromise() for fire-and-forget
+          ignoreIIFE: true, // Allow immediately invoked function expressions
+        },
+      ],
+      // Enforce async/await over promise chains (.then/.catch)
+      // Ensures consistent promise handling patterns across codebase
+      '@typescript-eslint/promise-function-async': [
+        'error',
+        {
+          allowedPromiseNames: ['Thenable'],
+          checkArrowFunctions: true,
+          checkFunctionDeclarations: true,
+          checkFunctionExpressions: true,
+          checkMethodDeclarations: true,
+        },
+      ],
       'import/default': 'off',
       'import/no-named-as-default-member': 'off',
       'unicorn/filename-case': [

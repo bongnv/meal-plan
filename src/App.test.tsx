@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 
 // Mock MSAL React
 vi.mock('@azure/msal-react', () => ({
-  MsalProvider: ({ children }: { children: ReactNode }) => children,
+  MsalProvider: async ({ children }: { children: ReactNode }) => children,
   useMsal: () => ({
     instance: {
       getAllAccounts: vi.fn(() => []),

@@ -710,7 +710,7 @@ describe('FileSelectionModal', () => {
     it('should allow retry after listing error', async () => {
       const user = userEvent.setup()
       let callCount = 0
-      mockListFoldersAndFiles.mockImplementation(() => {
+      mockListFoldersAndFiles.mockImplementation(async () => {
         callCount++
         if (callCount === 1) {
           return Promise.reject(new Error('Listing failed'))

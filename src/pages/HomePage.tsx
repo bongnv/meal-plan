@@ -28,10 +28,12 @@ export function HomePage() {
   const navigate = useNavigate()
 
   // Fetch data
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
-  const groceryLists = useLiveQuery(() => db.groceryLists.toArray(), []) ?? []
-  const groceryItems = useLiveQuery(() => db.groceryItems.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const groceryLists =
+    useLiveQuery(async () => db.groceryLists.toArray(), []) ?? []
+  const groceryItems =
+    useLiveQuery(async () => db.groceryItems.toArray(), []) ?? []
 
   // Get next meal and upcoming meals
   const nextMeal = getNextMeal(mealPlans)
@@ -65,7 +67,7 @@ export function HomePage() {
               radius="md"
               withBorder
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/meal-plans/${nextMeal.id}`)}
+              onClick={async () => navigate(`/meal-plans/${nextMeal.id}`)}
             >
               <div>
                 <Text size="sm" c="dimmed" mb={4}>
@@ -100,11 +102,14 @@ export function HomePage() {
                 <Group gap="xs">
                   <Button
                     variant="light"
-                    onClick={() => navigate('/meal-plans')}
+                    onClick={async () => navigate('/meal-plans')}
                   >
                     Plan a Meal
                   </Button>
-                  <Button variant="subtle" onClick={() => navigate('/recipes')}>
+                  <Button
+                    variant="subtle"
+                    onClick={async () => navigate('/recipes')}
+                  >
                     Browse Recipes
                   </Button>
                 </Group>
@@ -127,7 +132,7 @@ export function HomePage() {
                   radius="md"
                   withBorder
                   style={{ cursor: 'pointer' }}
-                  onClick={() => navigate(`/meal-plans/${meal.id}`)}
+                  onClick={async () => navigate(`/meal-plans/${meal.id}`)}
                 >
                   <Group justify="space-between">
                     <div>
@@ -156,7 +161,7 @@ export function HomePage() {
               <Button
                 variant="subtle"
                 size="sm"
-                onClick={() => navigate('/meal-plans')}
+                onClick={async () => navigate('/meal-plans')}
               >
                 View All Meals →
               </Button>
@@ -188,13 +193,17 @@ export function HomePage() {
                 <Group gap="xs">
                   <Button
                     variant="filled"
-                    onClick={() => navigate(`/grocery-lists/${activeList.id}`)}
+                    onClick={async () =>
+                      navigate(`/grocery-lists/${activeList.id}`)
+                    }
                   >
                     View List
                   </Button>
                   <Button
                     variant="light"
-                    onClick={() => navigate(`/grocery-lists/${activeList.id}`)}
+                    onClick={async () =>
+                      navigate(`/grocery-lists/${activeList.id}`)
+                    }
                   >
                     Check Off Items
                   </Button>
@@ -208,13 +217,13 @@ export function HomePage() {
                 <Group gap="xs">
                   <Button
                     variant="light"
-                    onClick={() => navigate('/grocery-lists')}
+                    onClick={async () => navigate('/grocery-lists')}
                   >
                     Generate List
                   </Button>
                   <Button
                     variant="subtle"
-                    onClick={() => navigate('/grocery-lists')}
+                    onClick={async () => navigate('/grocery-lists')}
                   >
                     Create List
                   </Button>
@@ -233,21 +242,21 @@ export function HomePage() {
             <Button
               variant="light"
               leftSection={<IconCalendar size={18} />}
-              onClick={() => navigate('/meal-plans')}
+              onClick={async () => navigate('/meal-plans')}
             >
               Plan a Meal
             </Button>
             <Button
               variant="light"
               leftSection={<IconChefHat size={18} />}
-              onClick={() => navigate('/recipes')}
+              onClick={async () => navigate('/recipes')}
             >
               Browse Recipes
             </Button>
             <Button
               variant="light"
               leftSection={<IconShoppingCart size={18} />}
-              onClick={() => navigate('/grocery-lists')}
+              onClick={async () => navigate('/grocery-lists')}
             >
               New Grocery List
             </Button>

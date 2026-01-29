@@ -13,14 +13,14 @@ export const createGroceryListService = (db: MealPlanDB) => ({
    * Get all grocery lists
    */
   async getAllLists(): Promise<GroceryList[]> {
-    return await db.groceryLists.toArray()
+    return await db.groceryLists.filter(l => l.isDeleted !== true).toArray()
   },
 
   /**
    * Get all grocery items
    */
   async getAllItems(): Promise<GroceryItem[]> {
-    return await db.groceryItems.toArray()
+    return await db.groceryItems.filter(i => i.isDeleted !== true).toArray()
   },
 
   /**
@@ -34,7 +34,11 @@ export const createGroceryListService = (db: MealPlanDB) => ({
    * Get items for a specific list
    */
   async getItemsForList(listId: string): Promise<GroceryItem[]> {
-    return await db.groceryItems.where('listId').equals(listId).toArray()
+    return await db.groceryItems
+      .where('listId')
+      .equals(listId)
+      .filter(item => item.isDeleted !== true)
+      .toArray()
   },
 
   /**
@@ -63,12 +67,17 @@ export const createGroceryListService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Delete a grocery list and all its items
+   * Delete a grocery list and all its items (soft delete)
    */
   async deleteList(id: string): Promise<void> {
+    const now = Date.now()
     await db.transaction('rw', [db.groceryLists, db.groceryItems], async () => {
-      await db.groceryLists.delete(id)
-      await db.groceryItems.where('listId').equals(id).delete()
+      await db.groceryLists.update(id, { isDeleted: true, updatedAt: now })
+      const items = await db.groceryItems.where('listId').equals(id).toArray()
+      const updates = items.map(async item =>
+        db.groceryItems.update(item.id, { isDeleted: true, updatedAt: now })
+      )
+      await Promise.all(updates)
     })
     await db.updateLastModified()
   },
@@ -94,10 +103,13 @@ export const createGroceryListService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Remove a grocery item
+   * Remove a grocery item (soft delete)
    */
   async removeItem(itemId: string): Promise<void> {
-    await db.groceryItems.delete(itemId)
+    await db.groceryItems.update(itemId, {
+      isDeleted: true,
+      updatedAt: Date.now(),
+    })
     await db.updateLastModified()
   },
 

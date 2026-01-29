@@ -25,9 +25,10 @@ export function EditMealPlanPage() {
   const navigate = useNavigate()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | undefined>()
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
-  const mealPlan = useLiveQuery(() => {
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+  const mealPlan = useLiveQuery(async () => {
     if (!id) return undefined
     return db.mealPlans.get(id)
   }, [id])
@@ -40,7 +41,7 @@ export function EditMealPlanPage() {
   const handleSubmit = async (updatedMealPlan: Partial<MealPlan>) => {
     if (updatedMealPlan.id) {
       await mealPlanService.update(updatedMealPlan as MealPlan)
-      navigate('/meal-plans')
+      void navigate('/meal-plans')
     }
   }
 
@@ -50,7 +51,7 @@ export function EditMealPlanPage() {
 
   const handleDelete = async (mealPlanId: string) => {
     await mealPlanService.delete(mealPlanId)
-    navigate('/meal-plans')
+    void navigate('/meal-plans')
   }
 
   if (loading) {

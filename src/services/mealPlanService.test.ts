@@ -42,17 +42,19 @@ describe('mealPlanService', () => {
   })
 
   describe('getAll', () => {
-    it('should return all meal plans', async () => {
+    it('should return all non-deleted meal plans', async () => {
       const mockMealPlans = [
         createMockMealPlan(),
         createMockMealPlan({ id: 'mp2' }),
       ]
-      mockDb.mealPlans.toArray = vi.fn().mockResolvedValue(mockMealPlans)
+      mockDb.mealPlans.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockMealPlans),
+      })
 
       const result = await service.getAll()
 
       expect(result).toEqual(mockMealPlans)
-      expect(mockDb.mealPlans.toArray).toHaveBeenCalledOnce()
+      expect(mockDb.mealPlans.filter).toHaveBeenCalled()
     })
   })
 
@@ -124,13 +126,19 @@ describe('mealPlanService', () => {
   })
 
   describe('delete', () => {
-    it('should delete a meal plan', async () => {
-      mockDb.mealPlans.delete = vi.fn().mockResolvedValue(undefined)
+    it('should soft delete a meal plan', async () => {
+      mockDb.mealPlans.update = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
 
       await service.delete('mp1')
 
-      expect(mockDb.mealPlans.delete).toHaveBeenCalledWith('mp1')
+      expect(mockDb.mealPlans.update).toHaveBeenCalledWith(
+        'mp1',
+        expect.objectContaining({
+          isDeleted: true,
+          updatedAt: expect.any(Number),
+        })
+      )
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })
@@ -518,6 +526,183 @@ describe('mealPlanService', () => {
       ]
       const result = service.determineDefaultMealType(mealPlans, '2024-01-15')
       expect(result).toBe('lunch')
+    })
+  })
+
+  describe('sortMealsByType', () => {
+    it('should sort meals by type in correct order', () => {
+      const mealPlans: any[] = [
+        { id: '1', mealType: 'dinner', date: '2024-01-15' },
+        { id: '2', mealType: 'breakfast', date: '2024-01-15' },
+        { id: '3', mealType: 'snack', date: '2024-01-15' },
+        { id: '4', mealType: 'lunch', date: '2024-01-15' },
+      ]
+
+      const result = service.sortMealsByType(mealPlans)
+
+      expect(result[0].mealType).toBe('breakfast')
+      expect(result[1].mealType).toBe('lunch')
+      expect(result[2].mealType).toBe('dinner')
+      expect(result[3].mealType).toBe('snack')
+    })
+
+    it('should handle meals with unknown meal types', () => {
+      const mealPlans: any[] = [
+        { id: '1', mealType: 'dinner', date: '2024-01-15' },
+        { id: '2', mealType: 'unknown' as any, date: '2024-01-15' },
+        { id: '3', mealType: 'breakfast', date: '2024-01-15' },
+      ]
+
+      const result = service.sortMealsByType(mealPlans)
+
+      expect(result[0].mealType).toBe('breakfast')
+      expect(result[1].mealType).toBe('dinner')
+      expect(result[2].mealType).toBe('unknown')
+    })
+
+    it('should not mutate original array', () => {
+      const mealPlans: any[] = [
+        { id: '1', mealType: 'dinner', date: '2024-01-15' },
+        { id: '2', mealType: 'breakfast', date: '2024-01-15' },
+      ]
+      const original = [...mealPlans]
+
+      service.sortMealsByType(mealPlans)
+
+      expect(mealPlans).toEqual(original)
+    })
+
+    it('should handle empty array', () => {
+      const result = service.sortMealsByType([])
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('countRecipeMealsInRange', () => {
+    it('should count recipe meals in date range', () => {
+      const mealPlans: any[] = [
+        {
+          id: '1',
+          date: '2024-01-15',
+          type: 'recipe',
+          recipeId: 'recipe-1',
+        },
+        {
+          id: '2',
+          date: '2024-01-16',
+          type: 'recipe',
+          recipeId: 'recipe-2',
+        },
+        {
+          id: '3',
+          date: '2024-01-17',
+          type: 'custom',
+        },
+      ]
+
+      const result = service.countRecipeMealsInRange(
+        mealPlans,
+        new Date('2024-01-15'),
+        new Date('2024-01-16')
+      )
+
+      expect(result).toBe(2)
+    })
+
+    it('should exclude meals outside date range', () => {
+      const mealPlans: any[] = [
+        {
+          id: '1',
+          date: '2024-01-14',
+          type: 'recipe',
+          recipeId: 'recipe-1',
+        },
+        {
+          id: '2',
+          date: '2024-01-15',
+          type: 'recipe',
+          recipeId: 'recipe-2',
+        },
+        {
+          id: '3',
+          date: '2024-01-18',
+          type: 'recipe',
+          recipeId: 'recipe-3',
+        },
+      ]
+
+      const result = service.countRecipeMealsInRange(
+        mealPlans,
+        new Date('2024-01-15'),
+        new Date('2024-01-17')
+      )
+
+      expect(result).toBe(1)
+    })
+
+    it('should exclude non-recipe meals', () => {
+      const mealPlans: any[] = [
+        {
+          id: '1',
+          date: '2024-01-15',
+          type: 'custom',
+        },
+        {
+          id: '2',
+          date: '2024-01-16',
+          type: 'recipe',
+          recipeId: 'recipe-1',
+        },
+      ]
+
+      const result = service.countRecipeMealsInRange(
+        mealPlans,
+        new Date('2024-01-15'),
+        new Date('2024-01-16')
+      )
+
+      expect(result).toBe(1)
+    })
+
+    it('should exclude recipe meals without recipeId', () => {
+      const mealPlans: any[] = [
+        {
+          id: '1',
+          date: '2024-01-15',
+          type: 'recipe',
+          recipeId: null,
+        },
+        {
+          id: '2',
+          date: '2024-01-15',
+          type: 'recipe',
+          recipeId: '',
+        },
+        {
+          id: '3',
+          date: '2024-01-15',
+          type: 'recipe',
+          recipeId: 'recipe-1',
+        },
+      ]
+
+      const result = service.countRecipeMealsInRange(
+        mealPlans,
+        new Date('2024-01-15'),
+        new Date('2024-01-15')
+      )
+
+      expect(result).toBe(1)
+    })
+
+    it('should return 0 for empty array', () => {
+      const result = service.countRecipeMealsInRange(
+        [],
+        new Date('2024-01-15'),
+        new Date('2024-01-16')
+      )
+
+      expect(result).toBe(0)
     })
   })
 })

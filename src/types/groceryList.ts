@@ -25,6 +25,7 @@ export const GroceryItemSchema = z.object({
     .nonnegative()
     .optional()
     .default(() => Date.now()),
+  isDeleted: z.boolean().optional(),
 })
 
 export type GroceryItem = z.infer<typeof GroceryItemSchema>
@@ -51,6 +52,7 @@ export const GroceryListSchema = z
       .optional()
       .default(() => Date.now()), // Unix timestamp
     note: z.string().optional(), // Optional note for the grocery list
+    isDeleted: z.boolean().optional(),
   })
   .refine(
     data => {

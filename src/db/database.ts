@@ -97,6 +97,17 @@ export class MealPlanDB extends Dexie {
           value: 2,
         })
       })
+
+    // Version 3: Add isDeleted field for soft delete support
+    this.version(3).stores({
+      // Add isDeleted index to all entity tables for filtering
+      recipes: 'id, name, *tags, isDeleted',
+      ingredients: 'id, name, category, isDeleted',
+      mealPlans: 'id, date, mealType, type, isDeleted',
+      groceryLists: 'id, dateRange.start, dateRange.end, isDeleted',
+      groceryItems: 'id, listId, category, checked, isDeleted',
+      metadata: 'key',
+    })
   }
 
   // Helper methods for lastModified tracking

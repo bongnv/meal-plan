@@ -86,7 +86,7 @@ export function CloudSyncSettings() {
       await disconnectAndReset()
 
       // Navigate to home page where welcome screen will show
-      navigate('/')
+      void navigate('/')
     } catch (error) {
       console.error('[CloudSyncSettings] Failed to disconnect:', error)
     }

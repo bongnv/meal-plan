@@ -20,10 +20,10 @@ vi.mock('@microsoft/microsoft-graph-client', () => ({
 
 // Mock compression utilities
 vi.mock('../../compression', () => ({
-  compressData: vi.fn((_data: string) =>
+  compressData: vi.fn(async (_data: string) =>
     Promise.resolve(new Blob([new Uint8Array([1, 2, 3])]))
   ),
-  decompressData: vi.fn((_data: Uint8Array) =>
+  decompressData: vi.fn(async (_data: Uint8Array) =>
     Promise.resolve('{"test":"data"}')
   ),
 }))

@@ -48,7 +48,7 @@ export function CopyMealPlanModal({
   mealPlanId,
   onClose,
 }: CopyMealPlanModalProps) {
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
 
   // Form state
   const [targetDate, setTargetDate] = useState<Date | null>(new Date())
@@ -126,7 +126,7 @@ export function CopyMealPlanModal({
           : undefined,
     }
 
-    mealPlanService.copyMealPlan(meal.id, options, conflictResolution)
+    void mealPlanService.copyMealPlan(meal.id, options, conflictResolution)
     onClose()
   }
 

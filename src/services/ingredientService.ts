@@ -14,7 +14,7 @@ export const createIngredientService = (db: MealPlanDB) => ({
    * Get all ingredients
    */
   async getAll(): Promise<Ingredient[]> {
-    return await db.ingredients.toArray()
+    return await db.ingredients.filter(i => i.isDeleted !== true).toArray()
   },
 
   /**
@@ -63,10 +63,10 @@ export const createIngredientService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Delete an ingredient
+   * Delete an ingredient (soft delete)
    */
   async delete(id: string): Promise<void> {
-    await db.ingredients.delete(id)
+    await db.ingredients.update(id, { isDeleted: true, updatedAt: Date.now() })
     await db.updateLastModified()
   },
 

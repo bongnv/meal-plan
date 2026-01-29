@@ -21,7 +21,7 @@ export const createMealPlanService = (db: MealPlanDB) => ({
    * Get all meal plans
    */
   async getAll(): Promise<MealPlan[]> {
-    return await db.mealPlans.toArray()
+    return await db.mealPlans.filter(m => m.isDeleted !== true).toArray()
   },
 
   /**
@@ -53,10 +53,10 @@ export const createMealPlanService = (db: MealPlanDB) => ({
   },
 
   /**
-   * Delete a meal plan
+   * Delete a meal plan (soft delete)
    */
   async delete(id: string): Promise<void> {
-    await db.mealPlans.delete(id)
+    await db.mealPlans.update(id, { isDeleted: true, updatedAt: Date.now() })
     await db.updateLastModified()
   },
 

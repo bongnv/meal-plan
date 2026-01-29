@@ -60,26 +60,30 @@ describe('groceryListService', () => {
   })
 
   describe('getAllLists', () => {
-    it('should return all grocery lists', async () => {
+    it('should return all non-deleted grocery lists', async () => {
       const mockLists = [createMockList(), createMockList({ id: 'list2' })]
-      mockDb.groceryLists.toArray = vi.fn().mockResolvedValue(mockLists)
+      mockDb.groceryLists.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockLists),
+      })
 
       const result = await service.getAllLists()
 
       expect(result).toEqual(mockLists)
-      expect(mockDb.groceryLists.toArray).toHaveBeenCalledOnce()
+      expect(mockDb.groceryLists.filter).toHaveBeenCalled()
     })
   })
 
   describe('getAllItems', () => {
-    it('should return all grocery items', async () => {
+    it('should return all non-deleted grocery items', async () => {
       const mockItems = [createMockItem(), createMockItem({ id: 'item2' })]
-      mockDb.groceryItems.toArray = vi.fn().mockResolvedValue(mockItems)
+      mockDb.groceryItems.filter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockItems),
+      })
 
       const result = await service.getAllItems()
 
       expect(result).toEqual(mockItems)
-      expect(mockDb.groceryItems.toArray).toHaveBeenCalledOnce()
+      expect(mockDb.groceryItems.filter).toHaveBeenCalled()
     })
   })
 
@@ -112,7 +116,9 @@ describe('groceryListService', () => {
 
       const mockWhere = {
         equals: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue(mockItems),
+          filter: vi.fn().mockReturnValue({
+            toArray: vi.fn().mockResolvedValue(mockItems),
+          }),
         }),
       }
 
@@ -178,26 +184,38 @@ describe('groceryListService', () => {
   })
 
   describe('deleteList', () => {
-    it('should delete a list and all its items', async () => {
+    it('should soft delete a list and all its items', async () => {
       mockDb.transaction = vi.fn(async (_mode, _tables, callback) => {
         return await callback()
       }) as any
-      mockDb.groceryLists.delete = vi.fn().mockResolvedValue(undefined)
+      mockDb.groceryLists.update = vi.fn().mockResolvedValue(undefined)
 
+      const mockItems = [
+        { id: 'item1', listId: 'list1' },
+        { id: 'item2', listId: 'list1' },
+      ]
       const mockWhere = {
         equals: vi.fn().mockReturnValue({
-          delete: vi.fn().mockResolvedValue(undefined),
+          toArray: vi.fn().mockResolvedValue(mockItems),
         }),
       }
       mockDb.groceryItems.where = vi.fn().mockReturnValue(mockWhere)
+      mockDb.groceryItems.update = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
 
       await service.deleteList('list1')
 
       expect(mockDb.transaction).toHaveBeenCalled()
-      expect(mockDb.groceryLists.delete).toHaveBeenCalledWith('list1')
+      expect(mockDb.groceryLists.update).toHaveBeenCalledWith(
+        'list1',
+        expect.objectContaining({
+          isDeleted: true,
+          updatedAt: expect.any(Number),
+        })
+      )
       expect(mockDb.groceryItems.where).toHaveBeenCalledWith('listId')
       expect(mockWhere.equals).toHaveBeenCalledWith('list1')
+      expect(mockDb.groceryItems.update).toHaveBeenCalledTimes(2)
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })
@@ -241,13 +259,19 @@ describe('groceryListService', () => {
   })
 
   describe('removeItem', () => {
-    it('should remove a grocery item', async () => {
-      mockDb.groceryItems.delete = vi.fn().mockResolvedValue(undefined)
+    it('should soft delete a grocery item', async () => {
+      mockDb.groceryItems.update = vi.fn().mockResolvedValue(undefined)
       mockDb.updateLastModified = vi.fn().mockResolvedValue(undefined)
 
       await service.removeItem('item1')
 
-      expect(mockDb.groceryItems.delete).toHaveBeenCalledWith('item1')
+      expect(mockDb.groceryItems.update).toHaveBeenCalledWith(
+        'item1',
+        expect.objectContaining({
+          isDeleted: true,
+          updatedAt: expect.any(Number),
+        })
+      )
       expect(mockDb.updateLastModified).toHaveBeenCalledOnce()
     })
   })

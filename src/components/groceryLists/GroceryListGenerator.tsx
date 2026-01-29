@@ -40,7 +40,7 @@ export const GroceryListGenerator = ({
 
   // Get data from contexts
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
 
   const quickSelectRanges = [
     { label: 'Next 7 days', days: 7 },

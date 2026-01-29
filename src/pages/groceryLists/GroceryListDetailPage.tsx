@@ -23,14 +23,14 @@ import type { IngredientCategory, Unit } from '../../types/ingredient'
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
-  const groceryList = useLiveQuery(() => {
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const groceryList = useLiveQuery(async () => {
     if (!id) return undefined
     return db.groceryLists.get(id)
   }, [id])
   const items =
-    useLiveQuery(() => {
+    useLiveQuery(async () => {
       if (!id) return []
       return db.groceryItems.where('listId').equals(id).toArray()
     }, [id]) ?? []
@@ -51,7 +51,7 @@ export const GroceryListDetailPage = () => {
 
   const handleSaveEdit = () => {
     if (groceryList && editedName.trim()) {
-      groceryListService.updateList({
+      void groceryListService.updateList({
         ...groceryList,
         name: editedName.trim(),
         note: editedNote.trim() || undefined,
@@ -66,39 +66,39 @@ export const GroceryListDetailPage = () => {
 
   const handleConfirmDelete = () => {
     if (groceryList) {
-      groceryListService.deleteList(groceryList.id)
-      navigate('/grocery-lists')
+      void groceryListService.deleteList(groceryList.id)
+      void navigate('/grocery-lists')
     }
   }
 
   const handleBack = () => {
-    navigate('/grocery-lists')
+    void navigate('/grocery-lists')
   }
 
-  const handleCheckItem = (itemId: string) => {
+  const handleCheckItem = async (itemId: string) => {
     const item = items.find(i => i.id === itemId)
     if (!item) return
 
-    groceryListService.updateItem(itemId, { checked: !item.checked })
+    await groceryListService.updateItem(itemId, { checked: !item.checked })
   }
 
-  const handleUpdateQuantity = (
+  const handleUpdateQuantity = async (
     itemId: string,
     quantity: number,
     unit: string
   ) => {
-    groceryListService.updateItem(itemId, { quantity, unit: unit as Unit })
+    await groceryListService.updateItem(itemId, { quantity, unit: unit as Unit })
   }
 
-  const handleUpdateNotes = (itemId: string, notes: string) => {
-    groceryListService.updateItem(itemId, { notes })
+  const handleUpdateNotes = async (itemId: string, notes: string) => {
+    await groceryListService.updateItem(itemId, { notes })
   }
 
-  const handleRemoveItem = (itemId: string) => {
-    groceryListService.removeItem(itemId)
+  const handleRemoveItem = async (itemId: string) => {
+    await groceryListService.removeItem(itemId)
   }
 
-  const handleAddManualItem = (item: {
+  const handleAddManualItem = async (item: {
     name: string
     quantity: number
     unit: string
@@ -119,7 +119,7 @@ export const GroceryListDetailPage = () => {
       updatedAt: Date.now(),
     }
 
-    groceryListService.addItem(newItem)
+    await groceryListService.addItem(newItem)
   }
 
   const getRecipeName = (recipeId: string): string => {

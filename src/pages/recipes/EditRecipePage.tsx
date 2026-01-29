@@ -12,7 +12,7 @@ import type { RecipeFormValues } from '../../types/recipe'
 export function EditRecipePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const recipe = useLiveQuery(() => {
+  const recipe = useLiveQuery(async () => {
     if (!id) return undefined
     return db.recipes.get(id)
   }, [id])
@@ -44,7 +44,7 @@ export function EditRecipePage() {
       confirmProps: { color: 'red' },
       onConfirm: async () => {
         await recipeService.delete(id)
-        navigate('/recipes')
+        void navigate('/recipes')
       },
     })
   }

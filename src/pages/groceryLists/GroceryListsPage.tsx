@@ -25,11 +25,14 @@ export const GroceryListsPage = () => {
   const [modalOpened, setModalOpened] = useState(false)
 
   // Get data from queries
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
-  const groceryLists = useLiveQuery(() => db.groceryLists.toArray(), []) ?? []
-  const groceryItems = useLiveQuery(() => db.groceryItems.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+  const groceryLists =
+    useLiveQuery(async () => db.groceryLists.toArray(), []) ?? []
+  const groceryItems =
+    useLiveQuery(async () => db.groceryItems.toArray(), []) ?? []
 
   const hasLists = groceryLists.length > 0
 
@@ -41,7 +44,7 @@ export const GroceryListsPage = () => {
     setModalOpened(false)
   }
 
-  const handleGenerate = (params: {
+  const handleGenerate = async (params: {
     startDate: Date
     endDate: Date
     name?: string
@@ -62,7 +65,7 @@ export const GroceryListsPage = () => {
     )
 
     // Save to database
-    groceryListService.generateList(list, items)
+    await groceryListService.generateList(list, items)
     setModalOpened(false)
 
     // Show success notification

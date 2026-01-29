@@ -25,7 +25,8 @@ interface RecipeDetailProps {
 }
 
 export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
-  const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
+  const ingredients =
+    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()

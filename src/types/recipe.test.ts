@@ -4,6 +4,7 @@ import {
   RecipeIngredientSchema,
   RecipeSchema,
   RecipeSectionSchema,
+  RecipeFormSchema,
 } from './recipe'
 
 describe('RecipeSection Types', () => {
@@ -483,165 +484,141 @@ describe('Recipe Types', () => {
   })
 })
 
-describe('Recipe Types', () => {
-  describe('RecipeSchema with sections', () => {
-    it('should validate Recipe with sections array', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Chicken Pho',
-        description: 'Vietnamese soup',
-        sections: [
-          {
-            name: 'BROTH',
-            ingredients: [
-              { ingredientId: 'ing-1', quantity: 2, unit: 'liter' },
-            ],
-            instructions: ['Boil water', 'Add spices'],
-          },
-          {
-            name: 'ASSEMBLY',
-            ingredients: [
-              { ingredientId: 'ing-2', quantity: 200, unit: 'gram' },
-            ],
-            instructions: ['Add noodles', 'Pour broth'],
-          },
-        ],
-        servings: 4,
-        prepTime: 30,
-        cookTime: 120,
-        tags: ['soup', 'vietnamese'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+describe('RecipeFormSchema', () => {
+  it('should validate valid recipe form data', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.sections).toHaveLength(2)
-        expect(result.data.sections[0].name).toBe('BROTH')
-        expect(result.data.sections[1].name).toBe('ASSEMBLY')
-      }
-    })
+    expect(result.success).toBe(true)
+  })
 
-    it('should validate Recipe with single unnamed section (simple recipe)', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Simple Pasta',
-        description: 'Quick pasta dish',
-        sections: [
-          {
-            name: undefined,
-            ingredients: [
-              { ingredientId: 'ing-1', quantity: 200, unit: 'gram' },
-            ],
-            instructions: ['Boil pasta', 'Add sauce'],
-          },
-        ],
-        servings: 2,
-        prepTime: 5,
-        cookTime: 10,
-        tags: ['pasta'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+  it('should accept valid https imageUrl', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+      imageUrl: 'https://example.com/image.jpg',
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.sections).toHaveLength(1)
-        expect(result.data.sections[0].name).toBeUndefined()
-      }
-    })
+    expect(result.success).toBe(true)
+  })
 
-    it('should reject Recipe with empty sections array', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Test Recipe',
-        description: 'A test recipe',
-        sections: [],
-        servings: 4,
-        prepTime: 15,
-        cookTime: 15,
-        tags: ['test'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+  it('should accept valid http imageUrl', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+      imageUrl: 'http://example.com/image.jpg',
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      expect(result.success).toBe(false)
-    })
+    expect(result.success).toBe(true)
+  })
 
-    it('should reject Recipe with missing sections field', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Test Recipe',
-        description: 'A test recipe',
-        servings: 4,
-        prepTime: 15,
-        cookTime: 15,
-        tags: ['test'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+  it('should reject imageUrl with invalid protocol', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+      imageUrl: 'ftp://example.com/image.jpg',
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      expect(result.success).toBe(false)
-    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain('http')
+    }
+  })
 
-    it('should reject Recipe with sections but also has flat ingredients', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Test Recipe',
-        description: 'A test recipe',
-        sections: [
-          {
-            name: 'MAIN',
-            ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
-            instructions: ['Cook'],
-          },
-        ],
-        ingredients: [{ ingredientId: 'ing-2', quantity: 2 }], // should not exist
-        servings: 4,
-        prepTime: 15,
-        cookTime: 15,
-        tags: ['test'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+  it('should reject invalid imageUrl format', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+      imageUrl: 'not-a-valid-url',
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      // Should still validate since we're removing flat fields from schema
-      expect(result.success).toBe(true)
-    })
+    expect(result.success).toBe(false)
+  })
 
-    it('should validate Recipe with sections containing empty arrays', () => {
-      const recipe = {
-        id: 'recipe-123',
-        name: 'Test Recipe',
-        description: 'A test recipe',
-        sections: [
-          {
-            name: 'PREP',
-            ingredients: [],
-            instructions: ['Prepare station'],
-          },
-        ],
-        servings: 4,
-        prepTime: 15,
-        cookTime: 15,
-        tags: ['test'],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
+  it('should transform empty string imageUrl to undefined', () => {
+    const formData = {
+      name: 'Test Recipe',
+      description: 'A test recipe',
+      sections: [
+        {
+          ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+          instructions: ['Cook'],
+        },
+      ],
+      servings: 4,
+      prepTime: 15,
+      cookTime: 15,
+      tags: ['test'],
+      imageUrl: '',
+    }
 
-      const result = RecipeSchema.safeParse(recipe)
+    const result = RecipeFormSchema.safeParse(formData)
 
-      expect(result.success).toBe(true)
-    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.imageUrl).toBeUndefined()
+    }
   })
 })

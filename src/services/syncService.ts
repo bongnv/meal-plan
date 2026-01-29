@@ -190,6 +190,7 @@ export class SyncService {
 
   /**
    * Merge local and remote data using Last Write Wins (LWW) strategy
+   * Handles soft deletes: items with isDeleted are kept if they have the latest updatedAt
    * No user input needed - automatically resolves conflicts based on updatedAt timestamp
    *
    * @param local - Local data snapshot
@@ -201,90 +202,54 @@ export class SyncService {
     local: SyncData,
     remote: SyncData
   ): Promise<SyncData> {
-    // Merge recipes using LWW
-    const recipeMap = new Map<string, Recipe>()
-    for (const recipe of local.recipes) {
-      recipeMap.set(recipe.id, recipe)
-    }
-    for (const recipe of remote.recipes) {
-      const existing = recipeMap.get(recipe.id)
-      if (!existing) {
-        // New recipe from remote
-        recipeMap.set(recipe.id, recipe)
-      } else if (recipe.updatedAt > existing.updatedAt) {
-        // Remote is newer - use it
-        recipeMap.set(recipe.id, recipe)
-      }
-      // If equal or local is newer, keep local
-    }
-
-    // Merge ingredients using LWW
-    const ingredientMap = new Map<string, Ingredient>()
-    for (const ingredient of local.ingredients) {
-      ingredientMap.set(ingredient.id, ingredient)
-    }
-    for (const ingredient of remote.ingredients) {
-      const existing = ingredientMap.get(ingredient.id)
-      if (!existing) {
-        ingredientMap.set(ingredient.id, ingredient)
-      } else if (ingredient.updatedAt > existing.updatedAt) {
-        ingredientMap.set(ingredient.id, ingredient)
-      }
-    }
-
-    // Merge meal plans using LWW
-    const mealPlanMap = new Map<string, MealPlan>()
-    for (const mealPlan of local.mealPlans) {
-      mealPlanMap.set(mealPlan.id, mealPlan)
-    }
-    for (const mealPlan of remote.mealPlans) {
-      const existing = mealPlanMap.get(mealPlan.id)
-      if (!existing) {
-        mealPlanMap.set(mealPlan.id, mealPlan)
-      } else if (mealPlan.updatedAt > existing.updatedAt) {
-        mealPlanMap.set(mealPlan.id, mealPlan)
-      }
-    }
-
-    // Merge grocery lists using LWW
-    const groceryListMap = new Map<string, GroceryList>()
-    for (const list of local.groceryLists) {
-      groceryListMap.set(list.id, list)
-    }
-    for (const list of remote.groceryLists) {
-      const existing = groceryListMap.get(list.id)
-      if (!existing) {
-        groceryListMap.set(list.id, list)
-      } else if (list.updatedAt > existing.updatedAt) {
-        groceryListMap.set(list.id, list)
-      }
-    }
-
-    // Merge grocery items using LWW
-    const groceryItemMap = new Map<string, GroceryItem>()
-    for (const item of local.groceryItems) {
-      groceryItemMap.set(item.id, item)
-    }
-    for (const item of remote.groceryItems) {
-      const existing = groceryItemMap.get(item.id)
-      if (!existing) {
-        groceryItemMap.set(item.id, item)
-      } else if (item.updatedAt > existing.updatedAt) {
-        groceryItemMap.set(item.id, item)
-      }
-    }
-
+    // Merge all entity types
     const merged: SyncData = {
-      recipes: Array.from(recipeMap.values()),
-      ingredients: Array.from(ingredientMap.values()),
-      mealPlans: Array.from(mealPlanMap.values()),
-      groceryLists: Array.from(groceryListMap.values()),
-      groceryItems: Array.from(groceryItemMap.values()),
+      recipes: this.mergeLWWItems(local.recipes, remote.recipes),
+      ingredients: this.mergeLWWItems(local.ingredients, remote.ingredients),
+      mealPlans: this.mergeLWWItems(local.mealPlans, remote.mealPlans),
+      groceryLists: this.mergeLWWItems(local.groceryLists, remote.groceryLists),
+      groceryItems: this.mergeLWWItems(local.groceryItems, remote.groceryItems),
       lastModified: Math.max(local.lastModified, remote.lastModified),
       version: 1,
     }
 
     return merged
+  }
+
+  /**
+   * Generic merge function using Last Write Wins strategy
+   * Compares items by updatedAt timestamp and keeps the most recent version
+   *
+   * @param localItems - Local items
+   * @param remoteItems - Remote items
+   * @returns Merged array with latest versions of all items
+   * @private
+   */
+  private mergeLWWItems<T extends { id: string; updatedAt: number }>(
+    localItems: T[],
+    remoteItems: T[]
+  ): T[] {
+    const itemMap = new Map<string, T>()
+
+    // Add all local items
+    for (const item of localItems) {
+      itemMap.set(item.id, item)
+    }
+
+    // Merge with remote items using LWW
+    for (const item of remoteItems) {
+      const existing = itemMap.get(item.id)
+      if (!existing) {
+        // New item from remote
+        itemMap.set(item.id, item)
+      } else if (item.updatedAt > existing.updatedAt) {
+        // Remote is newer - use it (even if deleted)
+        itemMap.set(item.id, item)
+      }
+      // If equal or local is newer, keep local
+    }
+
+    return Array.from(itemMap.values())
   }
 
   /**

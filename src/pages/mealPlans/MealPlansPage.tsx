@@ -27,8 +27,8 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
 export function MealPlansPage() {
   const navigate = useNavigate()
-  const mealPlans = useLiveQuery(() => db.mealPlans.toArray(), []) ?? []
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
 
   // Detect if we're on desktop (>= 1024px)
@@ -41,7 +41,7 @@ export function MealPlansPage() {
       params.date
     )
 
-    navigate(`/meal-plans/new?date=${params.date}&mealType=${mealType}`)
+    void navigate(`/meal-plans/new?date=${params.date}&mealType=${mealType}`)
   }
 
   const handleDragStart = (event: DragStartEvent) => {

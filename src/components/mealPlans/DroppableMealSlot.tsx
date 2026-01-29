@@ -35,7 +35,7 @@ export function DroppableMealSlot({
 
   const handleMealClick = () => {
     if (meal) {
-      navigate(`/meal-plans/${meal.id}`)
+      void navigate(`/meal-plans/${meal.id}`)
     }
   }
 

@@ -124,7 +124,7 @@ const ItemRow = ({
 
   const handleMealClick = (mealPlan: MealPlan) => {
     // Navigate to calendar view with the meal plan's date
-    navigate(`/?date=${mealPlan.date}`)
+    void navigate(`/?date=${mealPlan.date}`)
   }
 
   return (
