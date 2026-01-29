@@ -28,7 +28,7 @@ export function HomePage() {
   const navigate = useNavigate()
 
   // Fetch data
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
   const groceryLists =
     useLiveQuery(async () => db.groceryLists.toArray(), []) ?? []

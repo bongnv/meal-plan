@@ -22,7 +22,7 @@ import { recipeService } from '../../services/recipeService'
 export const RecipesPage = () => {
   const navigate = useNavigate()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const ingredients =
     useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 

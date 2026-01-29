@@ -25,7 +25,7 @@ export const GroceryListsPage = () => {
   const [modalOpened, setModalOpened] = useState(false)
 
   // Get data from queries
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
   const ingredients =
     useLiveQuery(async () => db.ingredients.toArray(), []) ?? []

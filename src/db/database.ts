@@ -121,6 +121,37 @@ export class MealPlanDB extends Dexie {
     await this.metadata.put({ key: 'lastModified', value: Date.now() })
   }
 
+  // Helper method to get active (non-deleted) recipes
+  async getActiveRecipes() {
+    return this.recipes.filter(recipe => !recipe.isDeleted).toArray()
+  }
+
+  // Helper method to get active (non-deleted) ingredients
+  async getActiveIngredients() {
+    return this.ingredients
+      .filter(ingredient => !ingredient.isDeleted)
+      .toArray()
+  }
+
+  // Helper method to get active (non-deleted) meal plans
+  async getActiveMealPlans() {
+    return this.mealPlans.filter(mealPlan => !mealPlan.isDeleted).toArray()
+  }
+
+  // Helper method to get active (non-deleted) grocery lists
+  async getActiveGroceryLists() {
+    return this.groceryLists
+      .filter(groceryList => !groceryList.isDeleted)
+      .toArray()
+  }
+
+  // Helper method to get active (non-deleted) grocery items
+  async getActiveGroceryItems() {
+    return this.groceryItems
+      .filter(groceryItem => !groceryItem.isDeleted)
+      .toArray()
+  }
+
   // Clear all data from database
   async clearAllData(): Promise<void> {
     await this.transaction(

@@ -24,7 +24,7 @@ import type { IngredientCategory, Unit } from '../../types/ingredient'
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
   const groceryList = useLiveQuery(async () => {
     if (!id) return undefined

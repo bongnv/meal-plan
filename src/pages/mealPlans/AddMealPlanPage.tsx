@@ -16,7 +16,7 @@ export function AddMealPlanPage() {
   const [searchParams] = useSearchParams()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | undefined>()
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const ingredients =
     useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
 

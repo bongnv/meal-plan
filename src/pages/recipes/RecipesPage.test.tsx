@@ -201,10 +201,10 @@ describe('RecipesPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     const { useLiveQuery } = await import('dexie-react-hooks')
-    vi.mocked(useLiveQuery).mockImplementation((queryFn: () => unknown) => {
+    vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
       const query = queryFn.toString()
       // Return recipes for recipe queries
-      if (query.includes('recipes')) {
+      if (query.includes('recipes') || query.includes('getActiveRecipes')) {
         return mockRecipes
       }
       // Return ingredients for ingredient queries

@@ -31,7 +31,7 @@ import {
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(async () => db.recipes.toArray(), []) ?? []
+  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
   const mealPlan = useLiveQuery(async () => {
     if (!id) return undefined
     return db.mealPlans.get(id)
