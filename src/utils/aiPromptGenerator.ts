@@ -32,7 +32,7 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
           "quantity": "number",
           "unit": "cup | tablespoon | teaspoon | gram | kilogram | milliliter | liter | piece | whole | clove | slice | bunch | pinch | dash | can | package",
           "category": "Vegetables | Fruits | Meat | Poultry | Seafood | Dairy | Grains | Legumes | Nuts & Seeds | Herbs & Spices | Oils & Fats | Condiments | Baking | Other",
-          "displayName": "string (optional - full ingredient name + recipe-specific preparation, e.g., 'Fresh cilantro, chopped')"
+          "displayName": "string (optional)"
         }
       ],
       "instructions": ["step 1", "step 2", ...]
@@ -57,7 +57,7 @@ ${ingredientList}
 
 **Ingredients:**
 - name: Generic ingredient to BUY (e.g., "Banana", "Cilantro", "Chicken Breast")
-- displayName: Full ingredient + preparation (e.g., "Ripe bananas, mashed", "Fresh cilantro, chopped", "Lime, cut into wedges")
+- displayName: Ingredient description shown in recipe (replaces 'name') - NO quantity, just preparation/adjectives (e.g., "Fresh cilantro, chopped", "Ripe bananas, mashed")
 - Match library ingredients by name (case-insensitive)
 - Avoid vague: "Fresh Herbs", "Spices", "Meat" - Use specific: "Cilantro", "Cumin", "Chicken Breast"
 - New ingredients: include category
