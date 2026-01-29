@@ -2457,15 +2457,17 @@ interface Recipe {
   sections: RecipeSection[] // ALWAYS an array (not optional)
   // REMOVED: ingredients: RecipeIngredient[] (flat array)
   // REMOVED: instructions: string[] (flat array)
+  // REMOVED: subRecipes: SubRecipe[] (sections replace this functionality)
 }
 ```
 
 **Migration Strategy:**
-- Schema version bump: `version: 2` in cloud files
-- One-time migration: convert flat structure to single unnamed section
+- **Dexie version bump**: 1 → 2 with `.upgrade()` callback for one-time DB migration
+- **Cloud schema version**: `version: 2` in cloud files
+- **Migration logic**: Convert flat structure to single unnamed section
 - Simple recipes: `sections: [{ name: undefined, ingredients: [...], instructions: [...] }]`
 - Complex recipes: `sections: [{ name: "BROTH", ... }, { name: "ASSEMBLY", ... }]`
-- Auto-migrate on load from storage/cloud
+- **Metadata tracking**: Store `schemaVersion: 2` in metadata table
 
 **User Experience:**
 - RecipeForm: Toggle between "Simple" and "Sectioned" mode
@@ -2494,22 +2496,64 @@ interface Recipe {
   - **Quality checks**: Run type tests, save to `tmp/i12.1-types.txt`
   - **Result**: Type system enforces sections-only structure
 
-- [ ] I12.2. Create migration utilities (TDD)
-  - **WriteStorage Integration & Migration**
+- [ ] I12.2. Implement Dexie schema version bump and migration (TDD)
+  - **Write tests first** in `src/db/database.test.ts`:
+    - Test version 2 upgrade callback runs
+    - Test recipes without sections get migrated
+    - Test recipes with sections are not double-migrated
+    - Test schemaVersion metadata is set to 2 after migration
+    - Test migration is transactional (all-or-nothing)
+  - **Update `database.ts`**:
+    - Add version 2 with `.upgrade()` callback:
+      ```typescript
+      this.version(2)
+        .stores({
+          recipes: '++id, name, *tags',
+          ingredients: '++id, name, category',
+          mealPlans: '++id, date',
+          groceryLists: '++id, name',
+          groceryItems: '++id, groceryListId, ingredientId',
+          metadata: 'key'
+        })
+        .upgrade(async tx => {
+          // Migrate recipes: flat → sections
+          const recipes = await tx.table('recipes').toArray()
+          for (const recipe of recipes) {
+            if (!recipe.sections) {
+              await tx.table('recipes').update(recipe.id, {
+                sections: [{
+                  name: undefined,
+                  ingredients: recipe.ingredients || [],
+                  instructions: recipe.instructions || []
+                }]
+              })
+            }
+          }
+          // Store schema version in metadata
+          await tx.table('metadata').put({
+            key: 'schemaVersion',
+            value: 2,
+            lastModified: Date.now()
+          })
+        })
+      ```
+  - **Quality checks**: Run database tests, save to `tmp/i12.2-dexie.txt`
+  - **Result**: One-time migration runs automatically on first app load
 
-- [ ] I12.3. Integrate migration into storage layer (TDD)
+- [ ] I12.3. Update storage layer for sections schema (TDD)
   - **Write tests first** in `src/utils/storage/recipeStorage.test.ts`:
-    - Test loading old format recipes → auto-migrated to sections
-    - Test loading new format recipes → no double migration
-    - Test saving always uses new format with sections
-    - Test mixed storage (some old, some new) all migrate correctly
+    - Test loading recipes with sections array
+    - Test saving recipes with sections array
+    - Test validation ensures sections array exists
+    - Test validation ensures at least one section present
   - **Update RecipeStorage** in `src/utils/storage/recipeStorage.ts`:
-    - Import migration utilities
-    - In `loadRecipes()`: apply migration before validation
-    - Migration converts flat structure to single unnamed section
+    - Remove any old migration logic (Dexie handles it)
     - Validation ensures all recipes have sections array
+    - No special handling needed - Dexie migration already ran
   - **Quality checks**: Run storage tests, save to `tmp/i12.3-storage.txt`
-  - **Result**: Local storage auto-migrates on load
+  - **Result**: Storage layer works with new sections schema
+
+**Phase 2: Cloud Sync Migration**
 
 - [ ] I12.4. Integrate migration into SyncContext (TDD)
   - **Write tests first** in `src/contexts/SyncContext.test.tsx`:
@@ -2527,7 +2571,31 @@ interface Recipe {
   - **Result**: Cloud sync handles old format transparently
 
 **Phase 3: Display Layer (RecipeDetail)**
-4: Input Layer (RecipeForm)**
+
+- [ ] I12.5. Update RecipeDetail to display sections (TDD)
+  - **Write tests first** in `src/components/recipes/RecipeDetail.test.tsx`:
+    - Test displays sections with headers when named
+    - Test hides headers for unnamed sections
+    - Test ingredients display within sections
+    - Test instructions display within sections
+    - Test section order preserved
+  - **Update `RecipeDetail`** in `src/components/recipes/RecipeDetail.tsx`:
+    - **ALWAYS** render from sections array:
+      ```tsx
+      {recipe.sections.map((section, idx) => (
+        <Box key={idx}>
+          {section.name && <Title order={3}>{section.name}</Title>}
+          <IngredientsList ingredients={section.ingredients} />
+          <InstructionsList instructions={section.instructions} />
+        </Box>
+      ))}
+      ```
+    - Hide section header when name is undefined/empty
+    - For single unnamed section: looks identical to old simple recipe
+  - **Quality checks**: Run RecipeDetail tests, manual browser check, save to `tmp/i12.5-detail.txt`
+  - **Result**: Can view all recipes with sections structure
+
+**Phase 4: Input Layer (RecipeForm)**
 
 - [ ] I12.6. Update RecipeForm to use sections (TDD)
   - **Write tests first** in `src/components/recipes/RecipeForm.test.tsx`:
@@ -2596,34 +2664,9 @@ interface Recipe {
       - Minimum 1 section required
       - Each section must have at least one ingredient or instruction
   - **Quality checks**: Run RecipeForm tests, test create/edit flows, save to `tmp/i12.7-form-submit.txt`
-  - **Result**: Can save all recipes with sections structur flat)
-    - Test instructions within sections work (same as flat)
-    - Test reorder sections (drag-and-drop or up/down buttons)
-  - **Update `RecipeForm`** sectioned mode implementation:
-    - State structure:
-      ```typescript
-      const [sections, setSections] = useState<RecipeSection[]>([
-        { name: '', ingredients: [], instructions: [] },
-      ])
-      ```
-    - UI structure:
-      ```tsx
-      {sections.map((section, sectionIdx) => (
-        <Card key={sectionIdx}>
-          <TextInput
-            label="Section Name"
-            value={section.name}
-            placeholder="e.g., BROTH, ASSEMBLY, GARNISHES"
-          />
-          {/* Ingredients for this section - reuse existing ingredient row logic */}
-          <IngredientRows
-            ingredients={section.ingredients}
-            onChange={...}
-          />
-          {/* Instructions for this section - reuse existing instruction logic */}
-          <InstructionSteps
-            instructions={section.instructions}
-        5: AI Import Integration**
+  - **Result**: Can save all recipes with sections structure
+
+**Phase 5: AI Import Integration**
 
 - [ ] I12.8. Update AI prompt to support sections (TDD)
   - **Write tests first** in `src/utils/aiPromptGenerator.test.ts`:
@@ -2672,32 +2715,9 @@ interface Recipe {
     - Use same rendering logic as RecipeDetail
     - Apply consistent styling
   - **Quality checks**: Run import modal tests, verify preview looks good, save to `tmp/i12.10-import-preview.txt`
-  - **Result**: Can preview and import alls (TDD)
-  - **Write tests first** in `src/utils/aiPromptGenerator.test.ts`:
-    - Test generated prompt includes section structure in schema
-    - Test prompt includes examples of sectioned recipes
-    - Test instructions explain when to use sections
-  - **Update `aiPromptGenerator.ts`**:
-    - Add `sections` field to recipe schema in prompt
-    - Add explanation: "Use sections for complex recipes with distinct phases (e.g., BROTH, ASSEMBLY, GARNISHES in Chicken Pho)"
-    - Add example: show Chicken Pho with sections
-    - Add guidance: "Use sections when recipe has clear headers like 'FOR THE BROTH', 'ASSEMBLY', 'GARNISHES', etc."
-    - Update instructions: AI should detect section headers and structure accordingly
-  - **Quality checks**: Run prompt generator tests, manually verify prompt quality, save to `tmp/i12.6-prompt.txt`
-  - **Result**: AI can generate sectioned recipes
+  - **Result**: Can preview and import all recipes with sections
 
-- [ ] I12.7. Update recipe import validator (TDD)
-  - **Write tests first** in `src/utils/recipeImportValidator.test.ts`:
-    - Test validates sectioned recipes correctly
-    - Test validates simple recipes correctly
-    - Test rejects recipes with both structures
-    - Test validates section structure (names, ingredients, instructions)
-  - **Update `recipeImportValidator.ts`**:
-    - Update validation to handle optional `sections` field
-    - Validate section structure when present
-    - Validate mutual exclusivity (not both flat and sectioned)
-    - Ensure ingredient IDs in sections reference valid ingredients
-  - **Qu6: Integration & Polishing**
+**Phase 6: Integration & Polishing**
 
 - [ ] I12.11. Update grocery list generation for sections (TDD)
   - **Write tests first** in `src/utils/generateGroceryList.test.ts`:
@@ -2715,23 +2735,7 @@ interface Recipe {
   - **Quality checks**: Run grocery list tests, test end-to-end flow, save to `tmp/i12.11-grocery.txt`
   - **Result**: Grocery lists work with sections structure
 
-- [ ] I12.12. Update sub-recipe expansion for sections (TDD)
-  - **Write tests first** in `src/utils/expandSubRecipes.test.ts`:
-    - Test expanding sub-recipes that use sections structure
-    - Test recursive expansion with sections
-    - Test scaling works correctly with sections
-  - **Update `expandSubRecipes.ts`**:
-    - Update ingredient extraction to use sections:
-      ```typescript
-      const ingredients = recipe.sections.flatMap(s => s.ingredients)
-      ```
-  - **Quality checks**: Run sub-recipe tests, save to `tmp/i12.12-subrecipes.txt`
-  - **Result**: Sub-recipe expansion works with sections
-
-- [ ] I12.13y checks**: Run grocery list tests, test end-to-end flow, save to `tmp/i12.9-grocery.txt`
-  - **Result**: Grocery lists work with sectioned recipes
-
-- [ ] I12.13. Final polish and quality checks
+- [ ] I12.12. Final polish and quality checks
   - Run full test suite: `npm test`
   - Run lint: `npm run lint`
   - Run build: `npm run build`

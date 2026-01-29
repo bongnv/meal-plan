@@ -17,8 +17,6 @@ import { useState } from 'react'
 import { db } from '../../db/database'
 import { formatQuantity } from '../../utils/formatQuantity'
 
-import { CookingSubRecipeCard } from './CookingSubRecipeCard'
-
 import type { Recipe } from '../../types/recipe'
 
 interface RecipeDetailProps {
@@ -33,12 +31,8 @@ export function RecipeDetail({
   onRecipeClick,
 }: RecipeDetailProps) {
   const ingredients = useLiveQuery(() => db.ingredients.toArray(), []) ?? []
-  const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
-    new Set()
-  )
-  const [completedSubRecipes, setCompletedSubRecipes] = useState<Set<number>>(
     new Set()
   )
 
@@ -59,16 +53,6 @@ export function RecipeDetail({
       newSet.add(index)
     }
     setCheckedIngredients(newSet)
-  }
-
-  const toggleSubRecipeComplete = (index: number) => {
-    const newSet = new Set(completedSubRecipes)
-    if (newSet.has(index)) {
-      newSet.delete(index)
-    } else {
-      newSet.add(index)
-    }
-    setCompletedSubRecipes(newSet)
   }
 
   return (
@@ -149,52 +133,6 @@ export function RecipeDetail({
           <Text size="lg">{recipe.description || 'No description'}</Text>
         </Box>
 
-        {/* Sub-Recipes Section */}
-        {recipe.subRecipes && recipe.subRecipes.length > 0 && (
-          <>
-            <Divider />
-            <Box>
-              <Group justify="space-between" mb="md">
-                <Title order={2} size="h3">
-                  🔨 Make These First
-                </Title>
-                {recipe.subRecipes.length > 0 && (
-                  <Badge variant="light" color="blue" size="lg">
-                    {completedSubRecipes.size}/{recipe.subRecipes.length} Done
-                  </Badge>
-                )}
-              </Group>
-              <Stack gap="md">
-                {recipe.subRecipes.map((subRecipe, index) => {
-                  const subRecipeData = recipes.find(
-                    r => r.id === subRecipe.recipeId
-                  )
-                  const scaledSubRecipeServings =
-                    subRecipe.servings * servingMultiplier
-                  const subRecipeServingMultiplier =
-                    scaledSubRecipeServings / (subRecipeData?.servings || 1)
-
-                  return (
-                    <CookingSubRecipeCard
-                      key={index}
-                      subRecipe={subRecipe}
-                      subRecipeData={subRecipeData}
-                      servingMultiplier={subRecipeServingMultiplier}
-                      isCompleted={completedSubRecipes.has(index)}
-                      onToggleComplete={() => toggleSubRecipeComplete(index)}
-                      onViewDetails={
-                        onRecipeClick
-                          ? () => onRecipeClick(subRecipe.recipeId)
-                          : undefined
-                      }
-                    />
-                  )
-                })}
-              </Stack>
-            </Box>
-          </>
-        )}
-
         <Divider />
 
         {/* Ingredients Section */}
@@ -202,39 +140,56 @@ export function RecipeDetail({
           <Title order={2} size="h3" mb="md">
             Ingredients
           </Title>
-          <Stack gap="xs">
-            {recipe.ingredients.map((ingredient, index) => {
-              const ingredientData = ingredients.find(
-                i => i.id === ingredient.ingredientId
-              )
-              const displayName =
-                ingredient.displayName ||
-                ingredientData?.name ||
-                'Unknown Ingredient'
-              // Use recipe ingredient unit (migration ensures all recipes have units)
-              const unit = ingredient.unit || 'piece'
-              // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
-              const displayUnit = unit === 'whole' ? '' : unit
-              const adjustedQuantity = formatQuantity(
-                ingredient.quantity * servingMultiplier
-              )
+          <Stack gap="lg">
+            {recipe.sections.map((section, sectionIndex) => (
+              <Box key={sectionIndex}>
+                {/* Section header - only show if named */}
+                {section.name && (
+                  <Title order={3} size="h4" mb="sm">
+                    {section.name}
+                  </Title>
+                )}
+                <Stack gap="xs">
+                  {section.ingredients.map((ingredient, ingredientIndex) => {
+                    const ingredientData = ingredients.find(
+                      i => i.id === ingredient.ingredientId
+                    )
+                    const displayName =
+                      ingredient.displayName ||
+                      ingredientData?.name ||
+                      'Unknown Ingredient'
+                    // Use recipe ingredient unit (migration ensures all recipes have units)
+                    const unit = ingredient.unit || 'piece'
+                    // Hide "whole" unit for natural reading (e.g., "4 eggs" instead of "4 whole eggs")
+                    const displayUnit = unit === 'whole' ? '' : unit
+                    const adjustedQuantity = formatQuantity(
+                      ingredient.quantity * servingMultiplier
+                    )
 
-              return (
-                <Checkbox
-                  key={index}
-                  checked={checkedIngredients.has(index)}
-                  onChange={() => toggleIngredient(index)}
-                  label={
-                    <Text>
-                      <Text component="span" fw={500}>
-                        {adjustedQuantity} {displayUnit}
-                      </Text>{' '}
-                      {displayName}
-                    </Text>
-                  }
-                />
-              )
-            })}
+                    // Generate unique index for checkbox state across all sections
+                    const globalIndex = recipe.sections
+                      .slice(0, sectionIndex)
+                      .reduce((acc, s) => acc + s.ingredients.length, 0) + ingredientIndex
+
+                    return (
+                      <Checkbox
+                        key={ingredientIndex}
+                        checked={checkedIngredients.has(globalIndex)}
+                        onChange={() => toggleIngredient(globalIndex)}
+                        label={
+                          <Text>
+                            <Text component="span" fw={500}>
+                              {adjustedQuantity} {displayUnit}
+                            </Text>{' '}
+                            {displayName}
+                          </Text>
+                        }
+                      />
+                    )
+                  })}
+                </Stack>
+              </Box>
+            ))}
           </Stack>
         </Box>
 
@@ -245,20 +200,39 @@ export function RecipeDetail({
           <Title order={2} size="h3" mb="md">
             Instructions
           </Title>
-          <Stack gap="md">
-            {recipe.instructions.map((instruction, index) => (
-              <Group key={index} align="flex-start" gap="sm">
-                <Badge
-                  size="lg"
-                  variant="light"
-                  color="blue"
-                  style={{ minWidth: 32, flexShrink: 0 }}
-                >
-                  {index + 1}
-                </Badge>
-                <Text style={{ flex: 1 }}>{instruction}</Text>
-              </Group>
-            ))}
+          <Stack gap="lg">
+            {recipe.sections.map((section, sectionIndex) => {
+              // Calculate global instruction numbering offset
+              const instructionOffset = recipe.sections
+                .slice(0, sectionIndex)
+                .reduce((acc, s) => acc + s.instructions.length, 0)
+
+              return (
+                <Box key={sectionIndex}>
+                  {/* Section header - only show if named */}
+                  {section.name && (
+                    <Title order={3} size="h4" mb="sm">
+                      {section.name}
+                    </Title>
+                  )}
+                  <Stack gap="md">
+                    {section.instructions.map((instruction, instructionIndex) => (
+                      <Group key={instructionIndex} align="flex-start" gap="sm">
+                        <Badge
+                          size="lg"
+                          variant="light"
+                          color="blue"
+                          style={{ minWidth: 32, flexShrink: 0 }}
+                        >
+                          {instructionOffset + instructionIndex + 1}
+                        </Badge>
+                        <Text style={{ flex: 1 }}>{instruction}</Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </Box>
+              )
+            })}
           </Stack>
         </Box>
       </Stack>

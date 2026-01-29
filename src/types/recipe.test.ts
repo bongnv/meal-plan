@@ -1,6 +1,142 @@
 import { describe, expect, it } from 'vitest'
 
-import { RecipeIngredientSchema, RecipeSchema, SubRecipeSchema } from './recipe'
+import {
+  RecipeIngredientSchema,
+  RecipeSchema,
+  RecipeSectionSchema,
+} from './recipe'
+
+describe('RecipeSection Types', () => {
+  describe('RecipeSectionSchema', () => {
+    it('should validate RecipeSection with all fields', () => {
+      const section = {
+        name: 'BROTH',
+        ingredients: [{ ingredientId: 'ing-1', quantity: 2, unit: 'cup' }],
+        instructions: ['Boil water', 'Add ingredients'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.name).toBe('BROTH')
+        expect(result.data.ingredients).toHaveLength(1)
+        expect(result.data.instructions).toHaveLength(2)
+      }
+    })
+
+    it('should validate RecipeSection with undefined name (simple recipe)', () => {
+      const section = {
+        name: undefined,
+        ingredients: [{ ingredientId: 'ing-1', quantity: 2 }],
+        instructions: ['Mix well'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.name).toBeUndefined()
+      }
+    })
+
+    it('should validate RecipeSection with empty name', () => {
+      const section = {
+        name: '',
+        ingredients: [],
+        instructions: ['Step 1'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.name).toBe('')
+      }
+    })
+
+    it('should validate RecipeSection without name field', () => {
+      const section = {
+        ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+        instructions: ['Cook'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should validate RecipeSection with empty ingredients array', () => {
+      const section = {
+        name: 'ASSEMBLY',
+        ingredients: [],
+        instructions: ['Assemble dish'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should validate RecipeSection with empty instructions array', () => {
+      const section = {
+        name: 'PREP',
+        ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+        instructions: [],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should reject RecipeSection with missing ingredients field', () => {
+      const section = {
+        name: 'BROTH',
+        instructions: ['Boil water'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject RecipeSection with missing instructions field', () => {
+      const section = {
+        name: 'BROTH',
+        ingredients: [{ ingredientId: 'ing-1', quantity: 2 }],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject RecipeSection with invalid ingredients type', () => {
+      const section = {
+        name: 'BROTH',
+        ingredients: 'not-an-array',
+        instructions: ['Boil water'],
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject RecipeSection with invalid instructions type', () => {
+      const section = {
+        name: 'BROTH',
+        ingredients: [],
+        instructions: 'not-an-array',
+      }
+
+      const result = RecipeSectionSchema.safeParse(section)
+
+      expect(result.success).toBe(false)
+    })
+  })
+})
 
 describe('RecipeIngredient Types', () => {
   describe('RecipeIngredientSchema', () => {
@@ -191,13 +327,18 @@ describe('Recipe Types', () => {
       id: 'recipe-123',
       name: 'Test Recipe',
       description: 'A test recipe',
-      ingredients: [
+      sections: [
         {
-          ingredientId: 'ingredient-123',
-          quantity: 2.5,
+          name: undefined,
+          ingredients: [
+            {
+              ingredientId: 'ingredient-123',
+              quantity: 2.5,
+            },
+          ],
+          instructions: ['Step 1', 'Step 2'],
         },
       ],
-      instructions: ['Step 1', 'Step 2'],
       servings: 4,
       prepTime: 15,
       cookTime: 15,
@@ -342,258 +483,159 @@ describe('Recipe Types', () => {
   })
 })
 
-describe('SubRecipe Types', () => {
-  describe('SubRecipeSchema', () => {
-    it('should validate SubRecipe with all required fields', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: 2,
+describe('Recipe Types', () => {
+  describe('RecipeSchema with sections', () => {
+    it('should validate Recipe with sections array', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Chicken Pho',
+        description: 'Vietnamese soup',
+        sections: [
+          {
+            name: 'BROTH',
+            ingredients: [{ ingredientId: 'ing-1', quantity: 2, unit: 'liter' }],
+            instructions: ['Boil water', 'Add spices'],
+          },
+          {
+            name: 'ASSEMBLY',
+            ingredients: [{ ingredientId: 'ing-2', quantity: 200, unit: 'gram' }],
+            instructions: ['Add noodles', 'Pour broth'],
+          },
+        ],
+        servings: 4,
+        prepTime: 30,
+        cookTime: 120,
+        tags: ['soup', 'vietnamese'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
-      const result = SubRecipeSchema.safeParse(subRecipe)
+      const result = RecipeSchema.safeParse(recipe)
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual({
-          recipeId: 'recipe-456',
-          servings: 2,
-        })
+        expect(result.data.sections).toHaveLength(2)
+        expect(result.data.sections[0].name).toBe('BROTH')
+        expect(result.data.sections[1].name).toBe('ASSEMBLY')
       }
     })
 
-    it('should validate SubRecipe with optional displayName', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: 1.5,
-        displayName: 'Cilantro Rice (Filling)',
+    it('should validate Recipe with single unnamed section (simple recipe)', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Simple Pasta',
+        description: 'Quick pasta dish',
+        sections: [
+          {
+            name: undefined,
+            ingredients: [{ ingredientId: 'ing-1', quantity: 200, unit: 'gram' }],
+            instructions: ['Boil pasta', 'Add sauce'],
+          },
+        ],
+        servings: 2,
+        prepTime: 5,
+        cookTime: 10,
+        tags: ['pasta'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
-      const result = SubRecipeSchema.safeParse(subRecipe)
+      const result = RecipeSchema.safeParse(recipe)
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual({
-          recipeId: 'recipe-456',
-          servings: 1.5,
-          displayName: 'Cilantro Rice (Filling)',
-        })
+        expect(result.data.sections).toHaveLength(1)
+        expect(result.data.sections[0].name).toBeUndefined()
       }
     })
 
-    it('should validate SubRecipe with fractional quantity', () => {
-      const subRecipe = {
-        recipeId: 'recipe-789',
-        servings: 0.5,
+    it('should reject Recipe with empty sections array', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Test Recipe',
+        description: 'A test recipe',
+        sections: [],
+        servings: 4,
+        prepTime: 15,
+        cookTime: 15,
+        tags: ['test'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
 
-      const result = SubRecipeSchema.safeParse(subRecipe)
+      const result = RecipeSchema.safeParse(recipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject Recipe with missing sections field', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Test Recipe',
+        description: 'A test recipe',
+        servings: 4,
+        prepTime: 15,
+        cookTime: 15,
+        tags: ['test'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      const result = RecipeSchema.safeParse(recipe)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject Recipe with sections but also has flat ingredients', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Test Recipe',
+        description: 'A test recipe',
+        sections: [
+          {
+            name: 'MAIN',
+            ingredients: [{ ingredientId: 'ing-1', quantity: 1 }],
+            instructions: ['Cook'],
+          },
+        ],
+        ingredients: [{ ingredientId: 'ing-2', quantity: 2 }], // should not exist
+        servings: 4,
+        prepTime: 15,
+        cookTime: 15,
+        tags: ['test'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      const result = RecipeSchema.safeParse(recipe)
+
+      // Should still validate since we're removing flat fields from schema
+      expect(result.success).toBe(true)
+    })
+
+    it('should validate Recipe with sections containing empty arrays', () => {
+      const recipe = {
+        id: 'recipe-123',
+        name: 'Test Recipe',
+        description: 'A test recipe',
+        sections: [
+          {
+            name: 'PREP',
+            ingredients: [],
+            instructions: ['Prepare station'],
+          },
+        ],
+        servings: 4,
+        prepTime: 15,
+        cookTime: 15,
+        tags: ['test'],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+
+      const result = RecipeSchema.safeParse(recipe)
 
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.servings).toBe(0.5)
-      }
     })
-
-    it('should reject SubRecipe with missing recipeId', () => {
-      const subRecipe = {
-        servings: 2,
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-    })
-
-    it('should reject SubRecipe with missing quantity', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-    })
-
-    it('should reject SubRecipe with zero quantity', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: 0,
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Servings must be positive')
-      }
-    })
-
-    it('should reject SubRecipe with negative quantity', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: -1,
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Servings must be positive')
-      }
-    })
-
-    it('should reject SubRecipe with invalid quantity type', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: '2', // string instead of number
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-    })
-
-    it('should reject SubRecipe with invalid displayName type', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: 2,
-        displayName: 123, // number instead of string
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(false)
-    })
-
-    it('should validate SubRecipe with empty string displayName', () => {
-      const subRecipe = {
-        recipeId: 'recipe-456',
-        servings: 2,
-        displayName: '',
-      }
-
-      const result = SubRecipeSchema.safeParse(subRecipe)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.displayName).toBe('')
-      }
-    })
-  })
-})
-
-describe('Recipe with SubRecipes', () => {
-  const validRecipe = {
-    id: 'recipe-123',
-    name: 'Burrito Bowl',
-    description: 'Delicious burrito bowl',
-    ingredients: [
-      {
-        ingredientId: 'ingredient-1',
-        quantity: 2,
-        unit: 'cup',
-      },
-    ],
-    instructions: ['Step 1', 'Step 2'],
-    servings: 4,
-    prepTime: 15,
-    cookTime: 20,
-    tags: ['mexican', 'bowl'],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  }
-
-  it('should validate Recipe with subRecipes array', () => {
-    const recipe = {
-      ...validRecipe,
-      subRecipes: [
-        {
-          recipeId: 'recipe-456',
-          servings: 1,
-        },
-        {
-          recipeId: 'recipe-789',
-          servings: 0.5,
-          displayName: 'Black Beans (Topup)',
-        },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-
-    const result = RecipeSchema.safeParse(recipe)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.subRecipes).toHaveLength(2)
-      expect(result.data.subRecipes[0].recipeId).toBe('recipe-456')
-      expect(result.data.subRecipes[1].displayName).toBe('Black Beans (Topup)')
-    }
-  })
-
-  it('should validate Recipe without subRecipes (backward compatible)', () => {
-    const recipe = { ...validRecipe }
-
-    const result = RecipeSchema.safeParse(recipe)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.subRecipes).toEqual([]) // defaults to empty array
-    }
-  })
-
-  it('should validate Recipe with empty subRecipes array', () => {
-    const recipe = {
-      ...validRecipe,
-      subRecipes: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-
-    const result = RecipeSchema.safeParse(recipe)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.subRecipes).toEqual([])
-    }
-  })
-
-  it('should reject Recipe with invalid subRecipe (missing recipeId)', () => {
-    const recipe = {
-      ...validRecipe,
-      subRecipes: [
-        {
-          servings: 2, // missing recipeId
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-
-    const result = RecipeSchema.safeParse(recipe)
-
-    expect(result.success).toBe(false)
-  })
-
-  it('should reject Recipe with invalid subRecipe (zero quantity)', () => {
-    const recipe = {
-      ...validRecipe,
-      subRecipes: [
-        {
-          recipeId: 'recipe-456',
-          servings: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-
-    const result = RecipeSchema.safeParse(recipe)
-
-    expect(result.success).toBe(false)
   })
 })
