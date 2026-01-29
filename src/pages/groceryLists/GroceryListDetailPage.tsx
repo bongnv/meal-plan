@@ -17,6 +17,7 @@ import { GroceryListView } from '../../components/groceryLists/GroceryListView'
 import { db } from '../../db/database'
 import { groceryListService } from '../../services/groceryListService'
 import { GroceryItem } from '../../types/groceryList'
+import { generateId } from '../../utils/idGenerator'
 
 import type { IngredientCategory, Unit } from '../../types/ingredient'
 
@@ -87,7 +88,10 @@ export const GroceryListDetailPage = () => {
     quantity: number,
     unit: string
   ) => {
-    await groceryListService.updateItem(itemId, { quantity, unit: unit as Unit })
+    await groceryListService.updateItem(itemId, {
+      quantity,
+      unit: unit as Unit,
+    })
   }
 
   const handleUpdateNotes = async (itemId: string, notes: string) => {
@@ -107,7 +111,7 @@ export const GroceryListDetailPage = () => {
     if (!groceryList) return
 
     const newItem: GroceryItem = {
-      id: `item-${Date.now()}`,
+      id: generateId(),
       listId: groceryList.id,
       name: item.name,
       quantity: item.quantity,

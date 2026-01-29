@@ -45,11 +45,14 @@ export function IngredientsPage() {
 
   const handleUpdate = async (values: IngredientFormValues) => {
     if (selectedIngredientId) {
+      const ingredient = ingredients.find(i => i.id === selectedIngredientId)
+      if (!ingredient) return
+
       try {
         await ingredientService.update({
           ...values,
           id: selectedIngredientId,
-          createdAt: Date.now(),
+          createdAt: ingredient.createdAt, // Preserve original createdAt
           updatedAt: Date.now(),
         })
         setEditModalOpen(false)

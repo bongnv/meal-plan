@@ -43,11 +43,7 @@ export const RecipeList = ({ recipes, onEdit, onDelete }: RecipeListProps) => {
           Create recipes with ingredients, instructions, and even link
           sub-recipes together to build complex dishes.
         </Text>
-        <Button
-          size="lg"
-          mt="md"
-          onClick={() => void navigate('/recipes/new')}
-        >
+        <Button size="lg" mt="md" onClick={() => void navigate('/recipes/new')}>
           Create Your First Recipe
         </Button>
       </Stack>

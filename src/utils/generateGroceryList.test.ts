@@ -430,8 +430,15 @@ describe('generateGroceryList', () => {
         mockIngredients
       )
 
+      // List ID should start with 'gl_'
       expect(result.list.id).toMatch(/^gl_/)
-      expect(result.items.every(item => item.id.startsWith('gi_'))).toBe(true)
+
+      // All item IDs should be non-empty strings
+      expect(
+        result.items.every(
+          item => typeof item.id === 'string' && item.id.length > 0
+        )
+      ).toBe(true)
 
       // All IDs should be unique
       const itemIds = result.items.map(item => item.id)

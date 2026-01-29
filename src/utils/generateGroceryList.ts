@@ -1,3 +1,4 @@
+import { generateId } from './idGenerator'
 import { roundQuantity } from './quantityRounding'
 import {
   consolidateUnit,
@@ -195,7 +196,7 @@ export function generateGroceryList(
     )
 
     return {
-      id: `gi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateId(),
       listId, // Link item to the parent list
       name: acc.name,
       quantity: consolidatedQuantity,

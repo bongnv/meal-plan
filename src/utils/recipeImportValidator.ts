@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { Ingredient, UnitSchema } from '../types/ingredient'
 import { Recipe, RecipeSchema } from '../types/recipe'
+import { generateId } from './idGenerator'
 
 /**
  * Extended ingredient schema for AI-generated recipes
@@ -105,7 +106,7 @@ export function validateRecipeImport(
         idMapping[ingredientName] = matchingExisting.id
       } else {
         // Create new ingredient with provided category
-        const newId = `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        const newId = generateId()
         idMapping[ingredientName] = newId
 
         // Check if we already added this ingredient (avoid duplicates)
@@ -138,7 +139,7 @@ export function validateRecipeImport(
   // Step 4: Build final recipe with clean sections
   const cleanRecipe: Recipe = {
     ...importedRecipe,
-    id: `recipe_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Always generate ID
+    id: generateId(), // Always generate ID
     sections: importedRecipe.sections.map(section => ({
       name: section.name,
       ingredients: section.ingredients.map(ing => ({
