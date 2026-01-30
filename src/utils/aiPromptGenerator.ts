@@ -17,7 +17,7 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
       ? ingredients.map(ing => `  - ${ing.name}`).join('\n')
       : '  (No ingredients in library yet - any ingredients you include will be added automatically)'
 
-  return `Parse this recipe and return JSON matching this schema:
+  return `Parse this recipe and return VALID JSON matching this schema:
 
 \`\`\`json
 {
@@ -25,7 +25,7 @@ export function generateRecipeImportPrompt(ingredients: Ingredient[]): string {
   "description": "string",
   "sections": [
     {
-      "name": "string | undefined (e.g., 'Broth', 'Assembly' - omit for simple recipes)",
+      "name": "string (optional - omit for simple recipes)",
       "ingredients": [
         {
           "name": "string (ingredient name to Buy)",
@@ -52,7 +52,7 @@ ${ingredientList}
 ## Guidelines
 
 **Sections:**
-- Simple: ONE section, name: undefined
+- Simple: ONE section, omit "name" property
 - Complex: Multiple named sections ("Broth", "Assembly", etc.)
 
 **Ingredients:**
@@ -82,7 +82,6 @@ Return ONLY the JSON object.
   "name": "Chocolate Chip Cookies",
   "description": "Classic homemade cookies",
   "sections": [{
-    "name": undefined,
     "ingredients": [
       { "name": "Flour", "quantity": 2, "unit": "cup", "category": "Baking", "displayName": "All-purpose flour" },
       { "name": "Sugar", "quantity": 1, "unit": "cup", "category": "Baking" },

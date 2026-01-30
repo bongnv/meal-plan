@@ -192,7 +192,11 @@ export const RecipeImportModal = ({
                 placeholder="Paste JSON here..."
                 minRows={6}
                 value={jsonInput}
-                onChange={e => setJsonInput(e.currentTarget.value)}
+                onChange={e => {
+                  setJsonInput(e.currentTarget.value)
+                  // Clear validation result when JSON changes
+                  setValidationResult(null)
+                }}
               />
 
               {validationResult && !validationResult.isValid && (
@@ -364,6 +368,9 @@ export const RecipeImportModal = ({
                 } else if (validationResult.isValid) {
                   // Already validated and valid: proceed to next step
                   handleNext()
+                } else {
+                  // Failed validation: allow re-validation
+                  handleParse()
                 }
               }}
               disabled={!jsonInput.trim()}
