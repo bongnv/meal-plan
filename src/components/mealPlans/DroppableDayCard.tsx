@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Group,
+  Image,
   Stack,
   Text,
   Tooltip,
@@ -108,9 +109,24 @@ export function DroppableDayCard({
                   }}
                 >
                   <Group gap="sm" style={{ width: '100%' }} wrap="nowrap">
-                    <Text size="lg" style={{ flexShrink: 0 }}>
-                      {meal.mealType === 'lunch' ? '🥗' : '🍽️'}
-                    </Text>
+                    {/* Recipe image or meal type icon */}
+                    {isRecipe && recipe?.imageUrl ? (
+                      <Box style={{ flexShrink: 0 }}>
+                        <Image
+                          src={recipe.imageUrl}
+                          alt={recipe.name}
+                          w={60}
+                          h={60}
+                          radius="sm"
+                          fit="cover"
+                          fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect fill='%23e9ecef' width='60' height='60'/%3E%3Ctext fill='%23868e96' font-family='sans-serif' font-size='24' dy='9' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3E🍽%3C/text%3E%3C/svg%3E"
+                        />
+                      </Box>
+                    ) : (
+                      <Text size="lg" style={{ flexShrink: 0 }}>
+                        {isRecipe ? '🍽' : typeInfo?.icon || '🍽️'}
+                      </Text>
+                    )}
                     <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                       <Group gap="xs" wrap="wrap">
                         <Badge variant="light" size="xs">
@@ -118,33 +134,21 @@ export function DroppableDayCard({
                             meal.mealType.slice(1)}
                         </Badge>
                       </Group>
-                      <Group gap="xs">
-                        {isRecipe && (
-                          <Text size="xs" style={{ flexShrink: 0 }}>
-                            🍽
-                          </Text>
-                        )}
-                        {!isRecipe && typeInfo && (
-                          <Text size="xs" style={{ flexShrink: 0 }}>
-                            {typeInfo.icon}
-                          </Text>
-                        )}
-                        <Text
-                          size="sm"
-                          fw={500}
-                          lineClamp={1}
-                          style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {isRecipe
-                            ? recipe?.name || 'Unknown Recipe'
-                            : (meal as { customText?: string }).customText ||
-                              typeInfo?.label ||
-                              ''}
-                        </Text>
-                      </Group>
+                      <Text
+                        size="sm"
+                        fw={500}
+                        lineClamp={1}
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {isRecipe
+                          ? recipe?.name || 'Unknown Recipe'
+                          : (meal as { customText?: string }).customText ||
+                            typeInfo?.label ||
+                            ''}
+                      </Text>
                       {isRecipe && 'servings' in meal && (
                         <Text size="xs" c="dimmed">
                           {(meal as { servings: number }).servings} servings

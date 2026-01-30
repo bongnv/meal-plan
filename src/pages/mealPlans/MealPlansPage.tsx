@@ -16,7 +16,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { CalendarView } from '../../components/mealPlans/CalendarView'
+import { MealPlansList } from '../../components/mealPlans/MealPlansList'
 import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
 import { db } from '../../db/database'
 import { mealPlanService } from '../../services/mealPlanService'
@@ -116,7 +116,7 @@ export function MealPlansPage() {
         >
           {/* Main Content Area - List View */}
           <Grid.Col
-            span={{ base: 12, lg: 7 }}
+            span={{ base: 12, lg: 6 }}
             style={{
               height: '100%',
               overflow: 'hidden',
@@ -124,7 +124,7 @@ export function MealPlansPage() {
               flexDirection: 'column',
             }}
           >
-            <CalendarView
+            <MealPlansList
               mealPlans={mealPlans}
               getRecipeById={id => recipes.find(r => r.id === id)}
               onAddMeal={handleAddMeal}
@@ -141,7 +141,7 @@ export function MealPlansPage() {
           {/* Recipe Sidebar - desktop only */}
           {isDesktop && (
             <Grid.Col
-              span={{ base: 12, lg: 5 }}
+              span={{ base: 12, lg: 6 }}
               style={{
                 height: '100%',
                 overflow: 'hidden',

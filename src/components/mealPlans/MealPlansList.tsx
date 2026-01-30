@@ -11,7 +11,7 @@ import { DroppableDayCard } from './DroppableDayCard'
 import type { MealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
 
-interface CalendarViewProps {
+interface MealPlansListProps {
   mealPlans: MealPlan[]
   getRecipeById: (id: string) => Recipe | undefined
   onAddMeal: (params: { date: string }) => void
@@ -20,12 +20,12 @@ interface CalendarViewProps {
 
 type QuickFilterType = 'today' | 'nextweek' | 'custom'
 
-export function CalendarView({
+export function MealPlansList({
   mealPlans,
   getRecipeById,
   onAddMeal,
   onDeleteMeal,
-}: CalendarViewProps) {
+}: MealPlansListProps) {
   // Memoize today's date string to ensure it's stable across renders
   const todayString = useMemo(() => {
     return mealPlanService.getLocalDateString(new Date())
