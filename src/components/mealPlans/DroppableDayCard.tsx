@@ -109,24 +109,22 @@ export function DroppableDayCard({
                   }}
                 >
                   <Group gap="sm" style={{ width: '100%' }} wrap="nowrap">
-                    {/* Recipe image or meal type icon */}
-                    {isRecipe && recipe?.imageUrl ? (
-                      <Box style={{ flexShrink: 0 }}>
-                        <Image
-                          src={recipe.imageUrl}
-                          alt={recipe.name}
-                          w={60}
-                          h={60}
-                          radius="sm"
-                          fit="cover"
-                          fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect fill='%23e9ecef' width='60' height='60'/%3E%3Ctext fill='%23868e96' font-family='sans-serif' font-size='24' dy='9' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3E🍽%3C/text%3E%3C/svg%3E"
-                        />
-                      </Box>
-                    ) : (
-                      <Text size="lg" style={{ flexShrink: 0 }}>
-                        {isRecipe ? '🍽' : typeInfo?.icon || '🍽️'}
-                      </Text>
-                    )}
+                    {/* Recipe image or placeholder */}
+                    <Box style={{ flexShrink: 0 }}>
+                      <Image
+                        src={isRecipe ? recipe?.imageUrl : undefined}
+                        alt={
+                          isRecipe
+                            ? recipe?.name || 'Recipe'
+                            : typeInfo?.label || 'Meal'
+                        }
+                        w={60}
+                        h={60}
+                        radius="sm"
+                        fit="cover"
+                        fallbackSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect fill='%23e9ecef' width='60' height='60'/%3E%3Ctext fill='%23868e96' font-family='sans-serif' font-size='24' dy='9' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3E${encodeURIComponent(isRecipe ? '🍽' : typeInfo?.icon || '🍽️')}%3C/text%3E%3C/svg%3E`}
+                      />
+                    </Box>
                     <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                       <Group gap="xs" wrap="wrap">
                         <Badge variant="light" size="xs">
