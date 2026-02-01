@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Card,
+  Flex,
   Group,
   Image,
   Modal,
@@ -303,11 +304,18 @@ export function RecipeForm({
 
                           return (
                             <Paper key={ingredientIndex} p="sm" withBorder>
-                              <Group align="flex-start" wrap="nowrap" gap="xs">
+                              <Flex
+                                gap="xs"
+                                align="flex-start"
+                                wrap={{ base: 'wrap', sm: 'nowrap' }}
+                              >
                                 <Select
                                   placeholder="Select ingredient"
                                   label="Ingredient"
-                                  style={{ flex: 2, minWidth: 150 }}
+                                  style={{
+                                    flex: '2 1 0',
+                                    minWidth: 'min(150px, 100%)',
+                                  }}
                                   data={[
                                     ...ingredients.map(ing => ({
                                       value: ing.id,
@@ -336,7 +344,10 @@ export function RecipeForm({
                                 <NumberInput
                                   placeholder="Quantity"
                                   label="Quantity"
-                                  style={{ flex: 1, minWidth: 100 }}
+                                  style={{
+                                    flex: '1 1 0',
+                                    minWidth: 'min(100px, 45%)',
+                                  }}
                                   min={0}
                                   step={0.1}
                                   value={ingredient.quantity}
@@ -352,7 +363,10 @@ export function RecipeForm({
                                 <Select
                                   placeholder="Unit"
                                   label="Unit"
-                                  style={{ flex: 1, minWidth: 120 }}
+                                  style={{
+                                    flex: '1 1 0',
+                                    minWidth: 'min(120px, 45%)',
+                                  }}
                                   data={UNITS.map(u => ({
                                     value: u,
                                     label: u,
@@ -373,7 +387,10 @@ export function RecipeForm({
                                     selectedIngredient?.name || 'Custom name'
                                   }
                                   label="Custom Name (optional)"
-                                  style={{ flex: 2, minWidth: 150 }}
+                                  style={{
+                                    flex: '2 1 0',
+                                    minWidth: 'min(150px, 100%)',
+                                  }}
                                   value={ingredient.displayName || ''}
                                   onChange={e =>
                                     updateIngredient(
@@ -384,21 +401,27 @@ export function RecipeForm({
                                     )
                                   }
                                 />
-                                <ActionIcon
-                                  color="red"
-                                  variant="subtle"
-                                  onClick={() =>
-                                    removeIngredient(
-                                      sectionIndex,
-                                      ingredientIndex
-                                    )
-                                  }
-                                  aria-label="Remove ingredient"
-                                  style={{ marginTop: 28, flexShrink: 0 }}
+                                <Box
+                                  style={{
+                                    marginTop: 28,
+                                    flexShrink: 0,
+                                  }}
                                 >
-                                  <IconTrash size={18} />
-                                </ActionIcon>
-                              </Group>
+                                  <ActionIcon
+                                    color="red"
+                                    variant="subtle"
+                                    onClick={() =>
+                                      removeIngredient(
+                                        sectionIndex,
+                                        ingredientIndex
+                                      )
+                                    }
+                                    aria-label="Remove ingredient"
+                                  >
+                                    <IconTrash size={18} />
+                                  </ActionIcon>
+                                </Box>
+                              </Flex>
                             </Paper>
                           )
                         }
