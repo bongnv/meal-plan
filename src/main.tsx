@@ -13,7 +13,6 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
 import { msalConfig } from './config/msalConfig'
-import { CloudStorageProvider } from './contexts/CloudStorageContext'
 import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
 
@@ -23,20 +22,18 @@ const msalInstance = new PublicClientApplication(msalConfig)
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <MsalProvider instance={msalInstance}>
-      <CloudStorageProvider>
-        <ServicesProvider>
-          <MantineProvider>
-            <Notifications position="top-right" />
-            <ModalsProvider>
-              <BrowserRouter>
-                <SyncProvider>
-                  <App />
-                </SyncProvider>
-              </BrowserRouter>
-            </ModalsProvider>
-          </MantineProvider>
-        </ServicesProvider>
-      </CloudStorageProvider>
+      <ServicesProvider>
+        <MantineProvider>
+          <Notifications position="top-right" />
+          <ModalsProvider>
+            <BrowserRouter>
+              <SyncProvider>
+                <App />
+              </SyncProvider>
+            </BrowserRouter>
+          </ModalsProvider>
+        </MantineProvider>
+      </ServicesProvider>
     </MsalProvider>
   </React.StrictMode>
 )

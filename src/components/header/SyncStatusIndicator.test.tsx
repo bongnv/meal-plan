@@ -10,11 +10,9 @@ import type { CloudProvider } from '../../utils/storage/CloudProvider'
 
 // Mock contexts
 const mockSyncNow = vi.fn()
-const mockCloudStorage = {
+const mockSyncContext = {
   currentProvider: 'onedrive' as CloudProvider | null,
   isAuthenticated: true,
-}
-const mockSyncContext = {
   syncStatus: 'idle' as SyncStatus,
   lastSyncTime: (Date.now() - 5 * 60 * 1000) as number | null, // 5 minutes ago
   selectedFile: { id: '1', name: 'meal-plan-data.json.gz', path: '/data' } as {
@@ -24,10 +22,6 @@ const mockSyncContext = {
   } | null,
   syncNow: mockSyncNow,
 }
-
-vi.mock('../../contexts/CloudStorageContext', () => ({
-  useCloudStorage: () => mockCloudStorage,
-}))
 
 vi.mock('../../contexts/SyncContext', () => ({
   useSyncContext: () => mockSyncContext,
@@ -46,8 +40,8 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('SyncStatusIndicator', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCloudStorage.isAuthenticated = true
-    mockCloudStorage.currentProvider = 'onedrive' as CloudProvider
+    mockSyncContext.isAuthenticated = true
+    mockSyncContext.currentProvider = 'onedrive' as CloudProvider
     mockSyncContext.syncStatus = 'idle'
     mockSyncContext.lastSyncTime = Date.now() - 5 * 60 * 1000
     mockSyncContext.selectedFile = {
@@ -59,7 +53,7 @@ describe('SyncStatusIndicator', () => {
 
   describe('when not connected', () => {
     it('should show offline indicator', () => {
-      mockCloudStorage.isAuthenticated = false
+      mockSyncContext.isAuthenticated = false
       mockSyncContext.selectedFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
@@ -70,7 +64,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should show "Not connected" tooltip', async () => {
-      mockCloudStorage.isAuthenticated = false
+      mockSyncContext.isAuthenticated = false
       mockSyncContext.selectedFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
@@ -84,7 +78,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should be disabled when not connected', () => {
-      mockCloudStorage.isAuthenticated = false
+      mockSyncContext.isAuthenticated = false
       mockSyncContext.selectedFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
@@ -250,7 +244,7 @@ describe('SyncStatusIndicator', () => {
 
   describe('when offline', () => {
     it('should show offline indicator when no network', () => {
-      mockCloudStorage.isAuthenticated = true
+      mockSyncContext.isAuthenticated = true
       mockSyncContext.syncStatus = 'error'
       // Simulate offline by setting navigator.onLine to false (would need actual implementation)
 

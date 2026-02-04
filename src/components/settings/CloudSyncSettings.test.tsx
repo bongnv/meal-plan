@@ -26,26 +26,6 @@ vi.mock('@azure/msal-react', () => ({
   }),
 }))
 
-// Mock CloudStorageContext - now provides methods directly
-const mockCloudStorage = {
-  currentProvider: null as CloudProvider | null,
-  isAuthenticated: false,
-  connect: vi.fn().mockResolvedValue(undefined),
-  disconnect: vi.fn().mockResolvedValue(undefined),
-  getAccountInfo: vi
-    .fn()
-    .mockReturnValue({ name: 'John Doe', email: 'john@example.com' }),
-  uploadFile: vi.fn().mockResolvedValue(undefined),
-  downloadFile: vi.fn().mockResolvedValue('{}'),
-  listFoldersAndFiles: vi.fn().mockResolvedValue({ folders: [], files: [] }),
-}
-
-vi.mock('../../contexts/CloudStorageContext', () => ({
-  CloudStorageProvider: async ({ children }: { children: ReactNode }) =>
-    children,
-  useCloudStorage: () => mockCloudStorage,
-}))
-
 // Mock FileSelectionModal
 vi.mock('../sync/FileSelectionModal', () => ({
   FileSelectionModal: vi.fn(() => null),
@@ -61,22 +41,33 @@ const AllProviders = ({ children }: { children: ReactNode }) => (
 )
 
 // Mock SyncContext
-const mockConnectProvider = vi.fn()
+const mockSelectFile = vi.fn()
 const mockDisconnectAndReset = vi.fn()
 const mockSyncNow = vi.fn()
-const mockResolveConflict = vi.fn()
-const mockHasSelectedFile = vi.fn(() => false)
+const mockConnect = vi.fn()
+const mockDisconnect = vi.fn()
+const mockGetAccountInfo = vi
+  .fn()
+  .mockReturnValue({ name: 'John Doe', email: 'john@example.com' })
 
-let mockSyncContextValue = {
+const mockSyncContextValue = {
+  currentProvider: null as CloudProvider | null,
+  isAuthenticated: false,
   syncStatus: 'idle' as 'idle' | 'syncing' | 'success' | 'error',
   lastSyncTime: null as number | null,
   selectedFile: null as FileInfo | null,
-  conflicts: [],
-  connectProvider: mockConnectProvider,
+  isInitializing: false,
+  needsReconnect: false,
+  connect: mockConnect,
+  disconnect: mockDisconnect,
+  getAccountInfo: mockGetAccountInfo,
+  uploadFile: vi.fn().mockResolvedValue(undefined),
+  downloadFile: vi.fn().mockResolvedValue('{}'),
+  listFoldersAndFiles: vi.fn().mockResolvedValue({ folders: [], files: [] }),
+  selectFile: mockSelectFile,
   disconnectAndReset: mockDisconnectAndReset,
   syncNow: mockSyncNow,
-  resolveConflict: mockResolveConflict,
-  hasSelectedFile: mockHasSelectedFile,
+  clearReconnectFlag: vi.fn(),
 }
 
 vi.mock('../../contexts/SyncContext', async () => {
@@ -91,19 +82,11 @@ describe('CloudSyncSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset to disconnected state
-    mockCloudStorage.isAuthenticated = false
-    mockCloudStorage.currentProvider = null
-    mockSyncContextValue = {
-      syncStatus: 'idle' as const,
-      lastSyncTime: null,
-      selectedFile: null,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectAndReset: mockDisconnectAndReset,
-      syncNow: mockSyncNow,
-      resolveConflict: mockResolveConflict,
-      hasSelectedFile: mockHasSelectedFile,
-    }
+    mockSyncContextValue.isAuthenticated = false
+    mockSyncContextValue.currentProvider = null
+    mockSyncContextValue.syncStatus = 'idle'
+    mockSyncContextValue.lastSyncTime = null
+    mockSyncContextValue.selectedFile = null
   })
 
   it('should render connect button when not connected', () => {
@@ -142,19 +125,11 @@ describe('CloudSyncSettings - Connected State', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Set to connected state
-    mockCloudStorage.isAuthenticated = true
-    mockCloudStorage.currentProvider = CloudProvider.ONEDRIVE
-    mockSyncContextValue = {
-      syncStatus: 'idle' as const,
-      lastSyncTime: Date.now() - 60000,
-      selectedFile: mockFileInfo,
-      conflicts: [],
-      connectProvider: mockConnectProvider,
-      disconnectAndReset: mockDisconnectAndReset,
-      syncNow: mockSyncNow,
-      resolveConflict: mockResolveConflict,
-      hasSelectedFile: mockHasSelectedFile,
-    }
+    mockSyncContextValue.isAuthenticated = true
+    mockSyncContextValue.currentProvider = CloudProvider.ONEDRIVE
+    mockSyncContextValue.syncStatus = 'idle'
+    mockSyncContextValue.lastSyncTime = Date.now() - 60000
+    mockSyncContextValue.selectedFile = mockFileInfo
   })
 
   it('should display account information when connected', () => {

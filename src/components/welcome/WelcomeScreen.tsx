@@ -13,7 +13,6 @@ import { useState } from 'react'
 
 import { FileInfo } from '@/utils/storage/ICloudStorageProvider'
 
-import { useCloudStorage } from '../../contexts/CloudStorageContext'
 import { useSyncContext } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 import { FileSelectionModal } from '../sync/FileSelectionModal'
@@ -23,8 +22,14 @@ import { FileSelectionModal } from '../sync/FileSelectionModal'
  * Prompts user to connect to OneDrive or skip to work offline
  */
 export function WelcomeScreen() {
-  const cloudStorage = useCloudStorage()
-  const { connectProvider, selectedFile, isInitializing } = useSyncContext()
+  const {
+    selectFile,
+    selectedFile,
+    isInitializing,
+    isAuthenticated,
+    connect,
+    disconnectAndReset,
+  } = useSyncContext()
 
   const [isDismissed, setIsDismissed] = useState(false)
 
@@ -36,10 +41,10 @@ export function WelcomeScreen() {
   const handleConnect = async () => {
     try {
       // Authenticate with OneDrive - connectionState will change to pendingFileSelection
-      await cloudStorage.connect(CloudProvider.ONEDRIVE)
+      await connect(CloudProvider.ONEDRIVE)
     } catch (error) {
       console.error('Failed to connect to OneDrive:', error)
-      // Error will be visible to user via cloudStorage.error
+      // Error will be visible to user
     }
   }
 
@@ -50,17 +55,17 @@ export function WelcomeScreen() {
   }
 
   const handleFileSelected = async (fileInfo: FileInfo) => {
-    await connectProvider(fileInfo)
+    await selectFile(fileInfo)
   }
 
   const handleModalClose = async () => {
     // User canceled file selection - disconnect and return to welcome screen
-    await cloudStorage.disconnect()
+    await disconnectAndReset()
   }
 
   return (
     <>
-      {!cloudStorage.isAuthenticated && (
+      {!isAuthenticated && (
         <Overlay
           fixed
           color="var(--mantine-color-gray-0)"
@@ -129,11 +134,7 @@ export function WelcomeScreen() {
       )}
 
       <FileSelectionModal
-        opened={
-          cloudStorage.isAuthenticated &&
-          selectedFile === null &&
-          !isInitializing
-        }
+        opened={isAuthenticated && selectedFile === null && !isInitializing}
         onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />

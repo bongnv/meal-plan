@@ -13,7 +13,6 @@ import { IconCloud, IconCloudOff } from '@tabler/icons-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { useCloudStorage } from '../../contexts/CloudStorageContext'
 import { useSyncContext } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 import { FileSelectionModal } from '../sync/FileSelectionModal'
@@ -34,21 +33,20 @@ export function CloudSyncSettings() {
     selectedFile,
     lastSyncTime,
     syncStatus,
-    connectProvider,
+    selectFile,
     disconnectAndReset,
     isInitializing,
+    isAuthenticated,
+    getAccountInfo,
+    connect,
   } = useSyncContext()
 
-  // Get cloud storage context (for provider and account info)
-  const cloudStorage = useCloudStorage()
   const navigate = useNavigate()
 
   const isSyncing = syncStatus === 'syncing'
 
   // Get account info only when authenticated
-  const accountInfo = cloudStorage.isAuthenticated
-    ? cloudStorage.getAccountInfo()
-    : null
+  const accountInfo = isAuthenticated ? getAccountInfo() : null
 
   /**
    * Handle connect to OneDrive
@@ -56,7 +54,7 @@ export function CloudSyncSettings() {
   const handleConnect = async () => {
     try {
       // Authenticate - will trigger modal to show
-      await cloudStorage.connect(CloudProvider.ONEDRIVE)
+      await connect(CloudProvider.ONEDRIVE)
     } catch (error) {
       console.error('Authentication failed:', error)
     }
@@ -66,14 +64,14 @@ export function CloudSyncSettings() {
    * Handle file selection from modal
    */
   const handleFileSelected = async (fileInfo: FileInfo) => {
-    await connectProvider(fileInfo)
+    await selectFile(fileInfo)
   }
 
   /**
    * Handle modal close (user canceled)
    */
   const handleModalClose = async () => {
-    await cloudStorage.disconnect()
+    await disconnectAndReset()
   }
 
   /**
@@ -166,9 +164,7 @@ export function CloudSyncSettings() {
             <Paper p="md" withBorder>
               <Stack gap="md">
                 <Group justify="apart">
-                  <Text fw={500}>
-                    Connected to {cloudStorage.currentProvider}
-                  </Text>
+                  <Text fw={500}>Connected to OneDrive</Text>
                   <Badge color="green" variant="light">
                     Active
                   </Badge>
@@ -245,11 +241,7 @@ export function CloudSyncSettings() {
       </Stack>
 
       <FileSelectionModal
-        opened={
-          cloudStorage.isAuthenticated &&
-          selectedFile === null &&
-          !isInitializing
-        }
+        opened={isAuthenticated && selectedFile === null && !isInitializing}
         onClose={handleModalClose}
         onSelectFile={handleFileSelected}
       />

@@ -9,27 +9,19 @@ import type { ReactNode } from 'react'
 
 // Mock contexts
 const mockConnect = vi.fn()
-const mockConnectProvider = vi.fn()
-const mockDismissAutoOpenFileModal = vi.fn()
+const mockSelectFile = vi.fn()
+const mockDisconnectAndReset = vi.fn()
 let mockIsAuthenticated = false
 let mockSelectedFile: { id: string; name: string; path: string } | null = null
-const mockShouldAutoOpenFileModal = false
-
-vi.mock('../../contexts/CloudStorageContext', () => ({
-  useCloudStorage: () => ({
-    isAuthenticated: mockIsAuthenticated,
-    connect: mockConnect,
-  }),
-}))
 
 vi.mock('../../contexts/SyncContext', () => ({
   useSyncContext: () => ({
     selectedFile: mockSelectedFile,
-    hasSelectedFile: () => mockSelectedFile !== null,
-    connectProvider: mockConnectProvider,
-    shouldAutoOpenFileModal: mockShouldAutoOpenFileModal,
-    dismissAutoOpenFileModal: mockDismissAutoOpenFileModal,
+    selectFile: mockSelectFile,
     isInitializing: false,
+    isAuthenticated: mockIsAuthenticated,
+    connect: mockConnect,
+    disconnectAndReset: mockDisconnectAndReset,
   }),
 }))
 
@@ -253,9 +245,9 @@ describe('WelcomeScreen', () => {
         </MantineProvider>
       )
 
-      // Verify connectProvider was called with file info
+      // Verify selectFile was called with file info
       await waitFor(() => {
-        expect(mockConnectProvider).toHaveBeenCalledWith({
+        expect(mockSelectFile).toHaveBeenCalledWith({
           id: '1',
           name: 'test.json.gz',
           path: '/test.json.gz',

@@ -6,7 +6,6 @@ import {
   IconCloudX,
 } from '@tabler/icons-react'
 
-import { useCloudStorage } from '../../contexts/CloudStorageContext'
 import { useSyncContext } from '../../contexts/SyncContext'
 
 import type { SyncStatus } from '../../contexts/SyncContext'
@@ -97,10 +96,10 @@ function getStatusColor(status: SyncStatus, isConnected: boolean): string {
  * Shows current sync state and allows manual sync trigger
  */
 export function SyncStatusIndicator() {
-  const cloudStorage = useCloudStorage()
-  const { syncStatus, lastSyncTime, selectedFile, syncNow } = useSyncContext()
+  const { syncStatus, lastSyncTime, selectedFile, syncNow, isAuthenticated } =
+    useSyncContext()
 
-  const isConnected = cloudStorage.isAuthenticated && selectedFile !== null
+  const isConnected = isAuthenticated && selectedFile !== null
 
   const handleClick = async () => {
     if (!isConnected || syncStatus === 'syncing') return

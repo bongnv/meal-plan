@@ -14,7 +14,6 @@ import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
 import { ReconnectModal } from './components/sync/ReconnectModal'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
-import { useCloudStorage } from './contexts/CloudStorageContext'
 import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
@@ -32,8 +31,13 @@ import { IngredientsPage } from './pages/settings/IngredientsPage'
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
-  const cloudStorage = useCloudStorage()
-  const { needsReconnect, selectedFile, clearReconnectFlag } = useSyncContext()
+  const {
+    needsReconnect,
+    selectedFile,
+    clearReconnectFlag,
+    currentProvider,
+    connect,
+  } = useSyncContext()
 
   // Detect if we're on mobile (< 768px)
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -64,8 +68,8 @@ function App() {
   const handleReconnect = async () => {
     try {
       // Re-authenticate with OneDrive
-      if (cloudStorage.currentProvider) {
-        await cloudStorage.connect(cloudStorage.currentProvider)
+      if (currentProvider) {
+        await connect(currentProvider)
       }
       // Clear reconnect flag - auto-sync will resume automatically
       clearReconnectFlag()

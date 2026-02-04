@@ -4,7 +4,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 
 import App from './App'
-import { CloudStorageProvider } from './contexts/CloudStorageContext'
 import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
 
@@ -46,15 +45,13 @@ vi.mock('dexie-react-hooks', () => ({
 const renderApp = (initialRoute: string = '/') => {
   return render(
     <ServicesProvider>
-      <CloudStorageProvider>
-        <SyncProvider>
-          <MantineProvider>
-            <MemoryRouter initialEntries={[initialRoute]}>
-              <App />
-            </MemoryRouter>
-          </MantineProvider>
-        </SyncProvider>
-      </CloudStorageProvider>
+      <SyncProvider>
+        <MantineProvider>
+          <MemoryRouter initialEntries={[initialRoute]}>
+            <App />
+          </MemoryRouter>
+        </MantineProvider>
+      </SyncProvider>
     </ServicesProvider>
   )
 }

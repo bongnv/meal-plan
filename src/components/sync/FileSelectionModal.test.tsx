@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import * as CloudStorageContext from '../../contexts/CloudStorageContext'
+import * as SyncContext from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 
 import { FileSelectionModal } from './FileSelectionModal'
@@ -36,36 +36,38 @@ const mockListFoldersAndFiles = vi.fn().mockResolvedValue({
   ],
 } as FolderListResult)
 
-const createMockCloudStorage = () => ({
+const createMockSyncContext = () => ({
   currentProvider: CloudProvider.ONEDRIVE,
   isAuthenticated: true,
-  isConnecting: false,
-  accountInfo: { name: 'Test User', email: 'test@example.com' },
-  error: null,
-  providerInstance: null,
-  setProvider: vi.fn(),
+  syncStatus: 'idle' as const,
+  lastSyncTime: null,
+  selectedFile: null,
+  isInitializing: false,
+  needsReconnect: false,
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn().mockResolvedValue(undefined),
-  uploadFile: vi.fn().mockResolvedValue(undefined),
-  downloadFile: vi.fn().mockResolvedValue('{}'),
-  listFoldersAndFiles: mockListFoldersAndFiles,
   getAccountInfo: vi.fn().mockReturnValue({
     name: 'Test User',
     email: 'test@example.com',
   }),
+  uploadFile: vi.fn().mockResolvedValue(undefined),
+  downloadFile: vi.fn().mockResolvedValue('{}'),
+  listFoldersAndFiles: mockListFoldersAndFiles,
+  selectFile: vi.fn().mockResolvedValue(undefined),
+  disconnectAndReset: vi.fn().mockResolvedValue(undefined),
+  syncNow: vi.fn().mockResolvedValue(undefined),
+  clearReconnectFlag: vi.fn(),
 })
 
 describe('FileSelectionModal', () => {
-  let mockCloudStorage: ReturnType<typeof createMockCloudStorage>
+  let mockSyncContext: ReturnType<typeof createMockSyncContext>
   const onSelectFile = vi.fn()
   const onCancel = vi.fn()
 
   beforeEach(() => {
-    mockCloudStorage = createMockCloudStorage()
+    mockSyncContext = createMockSyncContext()
     vi.clearAllMocks()
-    vi.spyOn(CloudStorageContext, 'useCloudStorage').mockReturnValue(
-      mockCloudStorage
-    )
+    vi.spyOn(SyncContext, 'useSyncContext').mockReturnValue(mockSyncContext)
   })
 
   describe('Modal Rendering', () => {

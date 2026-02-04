@@ -23,7 +23,7 @@ import {
 } from '@tabler/icons-react'
 import { useState, useEffect, useCallback } from 'react'
 
-import { useCloudStorage } from '../../contexts/CloudStorageContext'
+import { useSyncContext } from '../../contexts/SyncContext'
 import { syncService } from '../../services/syncService'
 
 import type {
@@ -47,7 +47,7 @@ export function FileSelectionModal({
   onClose,
   onSelectFile,
 }: FileSelectionModalProps) {
-  const cloudStorage = useCloudStorage()
+  const { listFoldersAndFiles } = useSyncContext()
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -70,7 +70,7 @@ export function FileSelectionModal({
       setError(null)
 
       try {
-        const result = await cloudStorage.listFoldersAndFiles(folder)
+        const result = await listFoldersAndFiles(folder)
         setFolders(result.folders)
         setFiles(result.files)
         setCurrentFolder(folder)
@@ -83,7 +83,7 @@ export function FileSelectionModal({
         setIsLoading(false)
       }
     },
-    [cloudStorage]
+    [listFoldersAndFiles]
   )
 
   // Load initial folder listing when modal opens
