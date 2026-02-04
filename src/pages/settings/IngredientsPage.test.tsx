@@ -3,30 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { db } from '../../db/database'
-import { render, screen, waitFor } from '../../test/test-utils'
+import { renderWithProviders, screen, waitFor } from '../../test/test-utils'
 
 import { IngredientsPage } from './IngredientsPage'
 
 import type { Ingredient } from '../../types/ingredient'
-
-vi.mock('../../services/ingredientService', () => ({
-  ingredientService: {
-    filterIngredients: (
-      ingredients: any[],
-      searchText: string,
-      category?: string
-    ) => {
-      return ingredients.filter(ingredient => {
-        const matchesSearch =
-          !searchText ||
-          ingredient.name.toLowerCase().includes(searchText.toLowerCase())
-        const matchesCategory =
-          !category || category === 'all' || ingredient.category === category
-        return matchesSearch && matchesCategory
-      })
-    },
-  },
-}))
 
 vi.mock('@mantine/modals', () => ({
   modals: {
@@ -59,7 +40,7 @@ describe('IngredientsPage', () => {
   })
 
   it('should render ingredient library page', async () => {
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Ingredient Library')).toBeInTheDocument()
@@ -67,7 +48,7 @@ describe('IngredientsPage', () => {
   })
 
   it('should display list of ingredients', async () => {
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Tomato')).toBeInTheDocument()
@@ -76,7 +57,7 @@ describe('IngredientsPage', () => {
   })
 
   it('should have add ingredient button', async () => {
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       const addButton = screen.getByRole('button', { name: /add ingredient/i })
@@ -86,7 +67,7 @@ describe('IngredientsPage', () => {
 
   it('should open create modal when add button is clicked', async () => {
     const user = userEvent.setup()
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Ingredient Library')).toBeInTheDocument()
@@ -101,7 +82,7 @@ describe('IngredientsPage', () => {
   })
 
   it('should have modal for creating ingredients', async () => {
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Ingredient Library')).toBeInTheDocument()
@@ -113,7 +94,7 @@ describe('IngredientsPage', () => {
 
   it('should open delete confirmation modal when delete is clicked', async () => {
     const user = userEvent.setup()
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Tomato')).toBeInTheDocument()
@@ -131,7 +112,7 @@ describe('IngredientsPage', () => {
   it('should show empty state when no ingredients', async () => {
     await db.ingredients.clear()
 
-    render(<IngredientsPage />)
+    renderWithProviders(<IngredientsPage />)
 
     await waitFor(() => {
       expect(

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
+
 import { RecipesPage } from './RecipesPage'
 
 // Mock the navigate function
@@ -21,76 +23,6 @@ vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
 }))
 
-// Mock recipeService
-vi.mock('../../services/recipeService', () => ({
-  recipeService: {
-    delete: vi.fn(),
-    extractUniqueTags: vi.fn((recipes: any[]) => {
-      const tagSet = new Set<string>()
-      recipes.forEach((recipe: any) => {
-        recipe.tags.forEach((tag: string) => tagSet.add(tag))
-      })
-      return Array.from(tagSet).sort()
-    }),
-    filterRecipesAdvanced: vi.fn((recipes: any[], filters: any) => {
-      // Implementation for testing - mirrors the actual service logic
-      return recipes.filter((recipe: any) => {
-        // Filter by search text (name)
-        if (filters.searchText) {
-          const searchLower = filters.searchText.toLowerCase()
-          if (!recipe.name.toLowerCase().includes(searchLower)) {
-            return false
-          }
-        }
-
-        // Filter by tags (OR logic)
-        if (filters.selectedTags && filters.selectedTags.length > 0) {
-          const hasMatchingTag = filters.selectedTags.some((tag: string) =>
-            recipe.tags.includes(tag)
-          )
-          if (!hasMatchingTag) {
-            return false
-          }
-        }
-
-        // Filter by ingredients (OR logic)
-        if (
-          filters.selectedIngredients &&
-          filters.selectedIngredients.length > 0
-        ) {
-          const hasMatchingIngredient = filters.selectedIngredients.some(
-            (ingredientId: string) =>
-              recipe.ingredients.some(
-                (ing: any) => ing.ingredientId === ingredientId
-              )
-          )
-          if (!hasMatchingIngredient) {
-            return false
-          }
-        }
-
-        // Filter by time range
-        if (filters.timeRange) {
-          const totalTime = recipe.prepTime + recipe.cookTime
-          switch (filters.timeRange) {
-            case 'under-30':
-              if (totalTime >= 30) return false
-              break
-            case '30-60':
-              if (totalTime < 30 || totalTime > 60) return false
-              break
-            case 'over-60':
-              if (totalTime <= 60) return false
-              break
-          }
-        }
-
-        return true
-      })
-    }),
-  },
-}))
-
 // Mock modals
 vi.mock('@mantine/modals', () => ({
   modals: {
@@ -100,9 +32,11 @@ vi.mock('@mantine/modals', () => ({
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MantineProvider>
-      <MemoryRouter>{component}</MemoryRouter>
-    </MantineProvider>
+    <ServicesProvider>
+      <MantineProvider>
+        <MemoryRouter>{component}</MemoryRouter>
+      </MantineProvider>
+    </ServicesProvider>
   )
 }
 

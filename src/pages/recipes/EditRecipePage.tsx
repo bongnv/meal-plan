@@ -4,18 +4,18 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { RecipeForm } from '../../components/recipes/RecipeForm'
-import { db } from '../../db/database'
-import { recipeService } from '../../services/recipeService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type { RecipeFormValues } from '../../types/recipe'
 
 export function EditRecipePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const { recipeService } = useServices()
   const recipe = useLiveQuery(async () => {
     if (!id) return undefined
-    return db.recipes.get(id)
-  }, [id])
+    return recipeService.getById(id)
+  }, [id, recipeService])
   const loading = recipe === undefined
 
   const handleSubmit = async (values: RecipeFormValues) => {

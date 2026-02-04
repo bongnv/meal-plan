@@ -15,23 +15,24 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeSelector } from '../../components/mealPlans/RecipeSelector'
-import { db } from '../../db/database'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type { MealPlan } from '../../types/mealPlan'
 
 export function EditMealPlanPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { mealPlanService, recipeService, ingredientService } = useServices()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | undefined>()
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
   const mealPlan = useLiveQuery(async () => {
     if (!id) return undefined
-    return db.mealPlans.get(id)
-  }, [id])
+    return mealPlanService.getById(id)
+  }, [id, mealPlanService])
   const loading = mealPlan === undefined
 
   const handleRecipeSelect = (recipeId: string) => {

@@ -18,9 +18,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { db } from '../../db/database'
-import { ingredientService } from '../../services/ingredientService'
-import { recipeService } from '../../services/recipeService'
+import { useServices } from '../../contexts/ServicesContext'
 import { generateRecipeImportPrompt } from '../../utils/aiPromptGenerator'
 import {
   validateRecipeImport,
@@ -44,10 +42,11 @@ export const RecipeImportModal = ({
   const [importing, setImporting] = useState(false)
 
   const navigate = useNavigate()
+  const { ingredientService, recipeService } = useServices()
 
   // Reactive queries
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
 
   // Generate the AI prompt with current ingredient library
   const prompt = generateRecipeImportPrompt(ingredients)

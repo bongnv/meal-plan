@@ -20,8 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { db } from '../../db/database'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 import {
   isRecipeMealPlan,
   isCustomMealPlan,
@@ -31,11 +30,13 @@ import {
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const { mealPlanService, recipeService } = useServices()
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const mealPlan = useLiveQuery(async () => {
     if (!id) return undefined
-    return db.mealPlans.get(id)
-  }, [id])
+    return mealPlanService.getById(id)
+  }, [id, mealPlanService])
   const loading = mealPlan === undefined
   const [copyModalOpened, setCopyModalOpened] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')

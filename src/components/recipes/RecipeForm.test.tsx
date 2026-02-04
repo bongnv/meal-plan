@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
+
 import { RecipeForm } from './RecipeForm'
 
 import type { Recipe } from '../../types/recipe'
@@ -11,9 +13,13 @@ import type { Recipe } from '../../types/recipe'
 // Mock dexie-react-hooks
 vi.mock('dexie-react-hooks')
 
-// Wrapper with MantineProvider
+// Wrapper with ServicesProvider and MantineProvider
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  return <MantineProvider>{children}</MantineProvider>
+  return (
+    <ServicesProvider>
+      <MantineProvider>{children}</MantineProvider>
+    </ServicesProvider>
+  )
 }
 
 describe('RecipeForm - Sections Structure', () => {

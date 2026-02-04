@@ -18,6 +18,13 @@ export const createIngredientService = (db: MealPlanDB) => ({
   },
 
   /**
+   * Get all ingredients (alias for useLiveQuery compatibility)
+   */
+  async getIngredients(): Promise<Ingredient[]> {
+    return await db.ingredients.toArray()
+  },
+
+  /**
    * Get ingredient by ID
    */
   async getById(id: string): Promise<Ingredient | undefined> {

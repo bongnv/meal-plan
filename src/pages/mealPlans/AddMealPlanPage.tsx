@@ -6,19 +6,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
 import { RecipeSelector } from '../../components/mealPlans/RecipeSelector'
-import { db } from '../../db/database'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type { MealPlan, MealType } from '../../types/mealPlan'
 
 export function AddMealPlanPage() {
   const navigate = useNavigate()
+  const { mealPlanService, recipeService, ingredientService } = useServices()
   const [searchParams] = useSearchParams()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | undefined>()
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
 
   // Get date and mealType from query params
   const date =

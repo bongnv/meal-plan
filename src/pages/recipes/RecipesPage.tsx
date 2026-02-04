@@ -15,16 +15,18 @@ import { useNavigate } from 'react-router-dom'
 import { RecipeFilterPanel } from '../../components/recipes/RecipeFilterPanel'
 import { RecipeImportModal } from '../../components/recipes/RecipeImportModal'
 import { RecipeList } from '../../components/recipes/RecipeList'
-import { db } from '../../db/database'
+import { useServices } from '../../contexts/ServicesContext'
 import { useRecipeFilters } from '../../hooks/useRecipeFilters'
-import { recipeService } from '../../services/recipeService'
 
 export const RecipesPage = () => {
   const navigate = useNavigate()
+  const { recipeService, ingredientService } = useServices()
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
 
   // Import modal state
   const [importModalOpened, setImportModalOpened] = useState(false)
@@ -35,12 +37,12 @@ export const RecipesPage = () => {
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
     return recipeService.extractUniqueTags(recipes)
-  }, [recipes])
+  }, [recipes, recipeService])
 
   // Filter recipes using the service
   const filteredRecipes = useMemo(
     () => recipeService.filterRecipesAdvanced(recipes, filters),
-    [recipes, filters]
+    [recipes, filters, recipeService]
   )
 
   const handleEdit = (id: string) => {

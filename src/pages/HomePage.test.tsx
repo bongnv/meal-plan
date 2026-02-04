@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ServicesProvider } from '../contexts/ServicesContext'
+
 import { HomePage } from './HomePage'
 
 import type { GroceryList, GroceryItem } from '../types/groceryList'
@@ -27,9 +29,11 @@ vi.mock('dexie-react-hooks', () => ({
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MantineProvider>
-      <MemoryRouter>{component}</MemoryRouter>
-    </MantineProvider>
+    <ServicesProvider>
+      <MantineProvider>
+        <MemoryRouter>{component}</MemoryRouter>
+      </MantineProvider>
+    </ServicesProvider>
   )
 }
 
@@ -41,13 +45,16 @@ describe('HomePage', () => {
     // Default: return empty arrays
     vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
       const query = queryFn.toString()
-      if (query.includes('recipes') || query.includes('getActiveRecipes')) {
+      if (
+        query.includes('getActiveRecipes') ||
+        query.includes('getActiveRecipes')
+      ) {
         return []
-      } else if (query.includes('mealPlans')) {
+      } else if (query.includes('getMealPlans')) {
         return []
-      } else if (query.includes('groceryLists')) {
+      } else if (query.includes('getAllLists')) {
         return []
-      } else if (query.includes('groceryItems')) {
+      } else if (query.includes('getAllItems')) {
         return []
       }
       return []
@@ -124,11 +131,13 @@ describe('HomePage', () => {
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('recipes') || query.includes('getActiveRecipes')) {
+        if (query.includes('getActiveRecipes')) {
           return mockRecipes
-        } else if (query.includes('mealPlans')) {
+        } else if (query.includes('getMealPlans')) {
           return mockMealPlans
-        } else if (query.includes('groceryLists')) {
+        } else if (query.includes('getAllLists')) {
+          return []
+        } else if (query.includes('getAllItems')) {
           return []
         }
         return []
@@ -161,7 +170,7 @@ describe('HomePage', () => {
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('mealPlans')) {
+        if (query.includes('getMealPlans')) {
           return mockMealPlans
         }
         return []
@@ -217,9 +226,12 @@ describe('HomePage', () => {
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('recipes') || query.includes('getActiveRecipes')) {
+        if (
+          query.includes('getActiveRecipes') ||
+          query.includes('getActiveRecipes')
+        ) {
           return mockRecipes
-        } else if (query.includes('mealPlans')) {
+        } else if (query.includes('getMealPlans')) {
           return mockMealPlans
         }
         return []
@@ -342,9 +354,12 @@ describe('HomePage', () => {
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('recipes') || query.includes('getActiveRecipes')) {
+        if (
+          query.includes('getActiveRecipes') ||
+          query.includes('getActiveRecipes')
+        ) {
           return mockRecipes
-        } else if (query.includes('mealPlans')) {
+        } else if (query.includes('getMealPlans')) {
           return mockMealPlans
         }
         return []
@@ -414,9 +429,9 @@ describe('HomePage', () => {
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('groceryLists')) {
+        if (query.includes('getAllLists')) {
           return mockGroceryLists
-        } else if (query.includes('groceryItems')) {
+        } else if (query.includes('getAllItems')) {
           return mockGroceryItems
         }
         return []
@@ -443,11 +458,28 @@ describe('HomePage', () => {
         },
       ]
 
+      const mockGroceryItems: GroceryItem[] = [
+        {
+          id: '1',
+          listId: 'list1',
+          name: 'Chicken breast',
+          quantity: 500,
+          unit: 'gram',
+          category: 'Poultry',
+          checked: false,
+          mealPlanIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]
+
       const { useLiveQuery } = await import('dexie-react-hooks')
       vi.mocked(useLiveQuery).mockImplementation((queryFn: any) => {
         const query = queryFn.toString()
-        if (query.includes('groceryLists')) {
+        if (query.includes('getAllLists')) {
           return mockGroceryLists
+        } else if (query.includes('getAllItems')) {
+          return mockGroceryItems
         }
         return []
       })

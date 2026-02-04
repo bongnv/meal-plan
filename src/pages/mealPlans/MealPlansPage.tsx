@@ -18,8 +18,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { MealPlansList } from '../../components/mealPlans/MealPlansList'
 import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
-import { db } from '../../db/database'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type { RecipeMealPlan } from '../../types/mealPlan'
 import type { Recipe } from '../../types/recipe'
@@ -27,8 +26,11 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
 export function MealPlansPage() {
   const navigate = useNavigate()
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const { mealPlanService, recipeService } = useServices()
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null)
 
   // Detect if we're on desktop (>= 1024px)

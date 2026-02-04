@@ -3,13 +3,17 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
+
 import { CreateRecipePage } from './CreateRecipePage'
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MantineProvider>
-      <MemoryRouter>{component}</MemoryRouter>
-    </MantineProvider>
+    <ServicesProvider>
+      <MantineProvider>
+        <MemoryRouter>{component}</MemoryRouter>
+      </MantineProvider>
+    </ServicesProvider>
   )
 }
 

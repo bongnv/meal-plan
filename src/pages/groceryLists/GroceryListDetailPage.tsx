@@ -14,8 +14,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { GroceryListView } from '../../components/groceryLists/GroceryListView'
-import { db } from '../../db/database'
-import { groceryListService } from '../../services/groceryListService'
+import { useServices } from '../../contexts/ServicesContext'
 import { GroceryItem } from '../../types/groceryList'
 import { generateId } from '../../utils/idGenerator'
 
@@ -24,17 +23,20 @@ import type { IngredientCategory, Unit } from '../../types/ingredient'
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const { groceryListService, recipeService, mealPlanService } = useServices()
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
   const groceryList = useLiveQuery(async () => {
     if (!id) return undefined
-    return db.groceryLists.get(id)
-  }, [id])
+    return groceryListService.getList(id)
+  }, [id, groceryListService])
   const items =
     useLiveQuery(async () => {
       if (!id) return []
-      return db.groceryItems.where('listId').equals(id).toArray()
-    }, [id]) ?? []
+      return groceryListService.getItems(id)
+    }, [id, groceryListService]) ?? []
 
   // Modal states
   const [editModalOpened, setEditModalOpened] = useState(false)

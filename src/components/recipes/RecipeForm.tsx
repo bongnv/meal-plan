@@ -23,8 +23,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { db } from '../../db/database'
-import { ingredientService } from '../../services/ingredientService'
+import { useServices } from '../../contexts/ServicesContext'
 import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
 import { IngredientForm } from '../ingredients/IngredientForm'
@@ -50,8 +49,9 @@ export function RecipeForm({
   onDelete,
 }: RecipeFormProps) {
   const isEditMode = !!recipe
+  const { ingredientService } = useServices()
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
   const [
     createIngredientOpened,
     { open: openCreateIngredient, close: closeCreateIngredient },

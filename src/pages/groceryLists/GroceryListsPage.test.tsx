@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
+
 import { GroceryListsPage } from './GroceryListsPage'
 
 const mockNavigate = vi.fn()
@@ -16,24 +18,14 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-// Mock storage service
-vi.mock('../../utils/storage/groceryListStorage', () => ({
-  GroceryListStorageService: class {
-    loadGroceryLists() {
-      return []
-    }
-    saveGroceryLists() {
-      // mock save
-    }
-  },
-}))
-
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MantineProvider>
-      <Notifications />
-      <MemoryRouter>{component}</MemoryRouter>
-    </MantineProvider>
+    <ServicesProvider>
+      <MantineProvider>
+        <Notifications />
+        <MemoryRouter>{component}</MemoryRouter>
+      </MantineProvider>
+    </ServicesProvider>
   )
 }
 

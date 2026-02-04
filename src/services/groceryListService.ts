@@ -31,6 +31,13 @@ export const createGroceryListService = (db: MealPlanDB) => ({
   },
 
   /**
+   * Get grocery list by ID (alias for useLiveQuery compatibility)
+   */
+  async getList(id: string): Promise<GroceryList | undefined> {
+    return await db.groceryLists.get(id)
+  },
+
+  /**
    * Get items for a specific list
    */
   async getItemsForList(listId: string): Promise<GroceryItem[]> {
@@ -39,6 +46,13 @@ export const createGroceryListService = (db: MealPlanDB) => ({
       .equals(listId)
       .filter(item => item.isDeleted !== true)
       .toArray()
+  },
+
+  /**
+   * Get items for a specific list (includes potentially deleted items, alias for useLiveQuery)
+   */
+  async getItems(listId: string): Promise<GroceryItem[]> {
+    return await db.groceryItems.where('listId').equals(listId).toArray()
   },
 
   /**

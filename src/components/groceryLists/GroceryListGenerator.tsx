@@ -13,9 +13,7 @@ import { notifications } from '@mantine/notifications'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 
-import { db } from '../../db/database'
-import { groceryListService } from '../../services/groceryListService'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 
 interface GroceryListGeneratorProps {
   opened: boolean
@@ -37,10 +35,12 @@ export const GroceryListGenerator = ({
     null,
   ])
   const [name, setName] = useState('')
+  const { mealPlanService, groceryListService } = useServices()
 
   // Get data from contexts
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
 
   const quickSelectRanges = [
     { label: 'Next 7 days', days: 7 },
@@ -101,7 +101,7 @@ export const GroceryListGenerator = ({
     const start = startDate instanceof Date ? startDate : new Date(startDate)
     const end = endDate instanceof Date ? endDate : new Date(endDate)
     return mealPlanService.countRecipeMealsInRange(mealPlans, start, end)
-  }, [startDate, endDate, mealPlans])
+  }, [startDate, endDate, mealPlans, mealPlanService])
 
   return (
     <Modal

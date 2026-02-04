@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 import App from './App'
 import { CloudStorageProvider } from './contexts/CloudStorageContext'
+import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
 
 import type { ReactNode } from 'react'
@@ -44,15 +45,17 @@ vi.mock('dexie-react-hooks', () => ({
 
 const renderApp = (initialRoute: string = '/') => {
   return render(
-    <CloudStorageProvider>
-      <SyncProvider>
-        <MantineProvider>
-          <MemoryRouter initialEntries={[initialRoute]}>
-            <App />
-          </MemoryRouter>
-        </MantineProvider>
-      </SyncProvider>
-    </CloudStorageProvider>
+    <ServicesProvider>
+      <CloudStorageProvider>
+        <SyncProvider>
+          <MantineProvider>
+            <MemoryRouter initialEntries={[initialRoute]}>
+              <App />
+            </MemoryRouter>
+          </MantineProvider>
+        </SyncProvider>
+      </CloudStorageProvider>
+    </ServicesProvider>
   )
 }
 

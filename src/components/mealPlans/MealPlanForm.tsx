@@ -15,7 +15,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo } from 'react'
 import { z } from 'zod'
 
-import { db } from '../../db/database'
+import { useServices } from '../../contexts/ServicesContext'
 import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
 
 import { RecipeSelectorModal } from './RecipeSelectorModal'
@@ -62,10 +62,11 @@ export const MealPlanForm = ({
 
   // Detect mobile devices (< 768px)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const { ingredientService } = useServices()
 
   // Load ingredients for filtering
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
 
   const handleDelete = () => {
     if (initialMeal && onDelete) {

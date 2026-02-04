@@ -4,14 +4,18 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
+
 import { GroceryListGenerator } from './GroceryListGenerator'
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MantineProvider>
-      <Notifications />
-      {component}
-    </MantineProvider>
+    <ServicesProvider>
+      <MantineProvider>
+        <Notifications />
+        {component}
+      </MantineProvider>
+    </ServicesProvider>
   )
 }
 

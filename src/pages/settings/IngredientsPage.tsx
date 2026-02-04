@@ -14,14 +14,14 @@ import { useState } from 'react'
 
 import { IngredientForm } from '../../components/ingredients/IngredientForm'
 import { IngredientList } from '../../components/ingredients/IngredientList'
-import { db } from '../../db/database'
-import { ingredientService } from '../../services/ingredientService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type { IngredientFormValues } from '../../types/ingredient'
 
 export function IngredientsPage() {
+  const { ingredientService } = useServices()
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
   const loading = ingredients === undefined
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)

@@ -14,7 +14,7 @@ import { IconPlus, IconMinus } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { db } from '../../db/database'
+import { useServices } from '../../contexts/ServicesContext'
 import { formatQuantity } from '../../utils/formatQuantity'
 
 import type { Recipe } from '../../types/recipe'
@@ -25,8 +25,9 @@ interface RecipeDetailProps {
 }
 
 export function RecipeDetail({ recipe, initialServings }: RecipeDetailProps) {
+  const { ingredientService } = useServices()
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
   const [servings, setServings] = useState(initialServings ?? recipe.servings)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()

@@ -16,16 +16,16 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { db } from '../../db/database'
-import { recipeService } from '../../services/recipeService'
+import { useServices } from '../../contexts/ServicesContext'
 
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { recipeService } = useServices()
   const recipe = useLiveQuery(async () => {
     if (!id) return undefined
-    return db.recipes.get(id)
-  }, [id])
+    return recipeService.getById(id)
+  }, [id, recipeService])
   const loading = recipe === undefined
 
   if (loading) {

@@ -72,10 +72,108 @@ The application follows a clean 3-layer architecture:
 
 - **Location:** `/src/services/`, `/src/utils/`
 - **Responsibility:** Stateless operations, complex queries, and transformations
+- **Dependency Injection:** Services created via factory functions with db instance injected
+- **Access Pattern:** Services provided to components via `ServicesContext`
 - Search and filter operations
 - Data validation and transformation
 - ID generation and utilities
 - Does NOT manage state or database connections
+
+### Services & Dependency Injection
+
+The application uses **ServicesProvider** for dependency injection, making services available throughout the component tree.
+
+**Service Creation (Factory Pattern):**
+
+```typescript
+// services/recipeService.ts
+export const createRecipeService = (db: MealPlanDB) => ({
+  async getActiveRecipes(): Promise<Recipe[]> {
+    return await db.getActiveRecipes()
+  },
+  
+  async add(recipe: Omit<Recipe, 'id'>): Promise<string> {
+    const newRecipe = { ...recipe, id: generateId() }
+    await db.recipes.add(newRecipe)
+    return newRecipe.id
+  },
+  
+  // ...other methods
+})
+
+// Singleton instance for direct imports (backward compatibility)
+export const recipeService = createRecipeService(db)
+```
+
+**Services Context:**
+
+```typescript
+// contexts/ServicesContext.tsx
+export const ServicesProvider = ({ children }: ServicesProviderProps) => {
+  const services = useMemo(() => ({
+    recipeService: createRecipeService(db),
+    mealPlanService: createMealPlanService(db),
+    groceryListService: createGroceryListService(db),
+    ingredientService: createIngredientService(db),
+  }), [])
+  
+  return (
+    <ServicesContext.Provider value={services}>
+      {children}
+    </ServicesContext.Provider>
+  )
+}
+
+export const useServices = () => {
+  const context = useContext(ServicesContext)
+  if (!context) throw new Error('useServices must be used within ServicesProvider')
+  return context
+}
+```
+
+**Usage in Components:**
+
+```typescript
+// pages/RecipesPage.tsx
+export const RecipesPage = () => {
+  const { recipeService, ingredientService } = useServices()
+  
+  // Reactive queries using service methods
+  const recipes = useLiveQuery(() => recipeService.getActiveRecipes(), []) ?? []
+  const ingredients = useLiveQuery(() => ingredientService.getIngredients(), []) ?? []
+  
+  // CRUD operations
+  const handleDelete = async (id: string) => {
+    await recipeService.delete(id)
+  }
+}
+```
+
+**Testing with Mocked Services:**
+
+```typescript
+// Mock the useServices hook
+vi.mock('../../contexts/ServicesContext')
+
+test('displays recipes', async () => {
+  // Mock service methods
+  vi.mocked(useServices).mockReturnValue({
+    recipeService: {
+      getActiveRecipes: vi.fn().mockResolvedValue([
+        { id: '1', name: 'Pasta' }
+      ]),
+      delete: vi.fn()
+    },
+    // ... other services
+  })
+  
+  render(<RecipesPage />)
+  
+  await waitFor(() => {
+    expect(screen.getByText('Pasta')).toBeInTheDocument()
+  })
+})
+```
 
 **Layer 3: Database (Data Persistence)**
 
@@ -103,37 +201,59 @@ The application follows a clean 3-layer architecture:
 
 ### Data Access Patterns
 
-**CRUD Operations (in Contexts):**
+**Reading Data (with useLiveQuery + Services):**
 
 ```typescript
-// Create
-const newRecipe = { ...data, id: generateId() }
-await db.recipes.add(newRecipe)
+// In components/pages - reactive queries through services
+const { recipeService } = useServices()
+const recipes = useLiveQuery(() => recipeService.getActiveRecipes(), []) ?? []
 
-// Read (reactive)
-const recipes = useLiveQuery(() => db.recipes.toArray(), []) ?? []
+// Queries with parameters
+const { groceryListService } = useServices()
+const items = useLiveQuery(() => {
+  if (!id) return []
+  return groceryListService.getItems(id)
+}, [id, groceryListService]) ?? []
+```
+
+**Writing Data (CRUD Operations via Services):**
+
+```typescript
+const { recipeService } = useServices()
+
+// Create
+const newId = await recipeService.add({
+  name: 'Pasta',
+  ingredients: [...],
+  // ...
+})
 
 // Update
-await db.recipes.put(updatedRecipe)
+await recipeService.update(updatedRecipe)
 
-// Delete
-await db.recipes.delete(id)
-
-// Bulk Operations
-await db.recipes.bulkAdd(recipes)
-await db.recipes.bulkDelete(ids)
+// Delete  
+await recipeService.delete(id)
 ```
 
 **Complex Queries (in Services):**
 
 ```typescript
-// Search
-const results = await db.recipes
-  .filter(r => r.name.toLowerCase().includes(query))
-  .toArray()
-
-// Indexed queries
-const byTag = await db.recipes.where('tags').equals(tag).toArray()
+// services/recipeService.ts
+export const createRecipeService = (db: MealPlanDB) => ({
+  // ...
+  
+  async searchRecipes(query: string): Promise<Recipe[]> {
+    return db.recipes
+      .filter(r => r.name.toLowerCase().includes(query.toLowerCase()))
+      .toArray()
+  },
+  
+  filterRecipesAdvanced(recipes: Recipe[], filters: RecipeFilters): Recipe[] {
+    return recipes.filter(recipe => {
+      // Complex filtering logic
+    })
+  }
+})
 ```
 
 ### Error Handling

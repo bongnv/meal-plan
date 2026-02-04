@@ -16,7 +16,7 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 
-import { db } from '../db/database'
+import { useServices } from '../contexts/ServicesContext'
 import { isRecipeMealPlan, getMealPlanTypeInfo } from '../types/mealPlan'
 import {
   getNextMeal,
@@ -26,14 +26,17 @@ import {
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { recipeService, mealPlanService, groceryListService } = useServices()
 
   // Fetch data
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
   const groceryLists =
-    useLiveQuery(async () => db.groceryLists.toArray(), []) ?? []
+    useLiveQuery(async () => groceryListService.getAllLists(), []) ?? []
   const groceryItems =
-    useLiveQuery(async () => db.groceryItems.toArray(), []) ?? []
+    useLiveQuery(async () => groceryListService.getAllItems(), []) ?? []
 
   // Get next meal and upcoming meals
   const nextMeal = getNextMeal(mealPlans)

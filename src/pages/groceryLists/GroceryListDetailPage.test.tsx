@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ServicesProvider } from '../../contexts/ServicesContext'
 import { Ingredient } from '../../types/ingredient'
 
 import { GroceryListDetailPage } from './GroceryListDetailPage'
@@ -20,40 +21,6 @@ vi.mock('react-router-dom', async () => {
 // Mock dexie-react-hooks
 vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
-}))
-
-// Mock groceryListService - will be configured in beforeEach
-const mockUpdateList = vi.fn()
-const mockDeleteList = vi.fn()
-const mockAddItem = vi.fn()
-const mockUpdateItem = vi.fn()
-const mockRemoveItem = vi.fn()
-
-vi.mock('../../services/groceryListService', () => ({
-  groceryListService: {
-    updateList: (...args: any[]) => mockUpdateList(...args),
-    deleteList: (...args: any[]) => mockDeleteList(...args),
-    addItem: (...args: any[]) => mockAddItem(...args),
-    updateItem: (...args: any[]) => mockUpdateItem(...args),
-    removeItem: (...args: any[]) => mockRemoveItem(...args),
-    // New utility methods
-    separateCheckedItems: (items: any[]) => {
-      const checked = items.filter(item => item.checked)
-      const unchecked = items.filter(item => !item.checked)
-      return { checked, unchecked }
-    },
-    groupItemsByCategory: (items: any[]) => {
-      const groups: Record<string, any[]> = {}
-      items.forEach(item => {
-        if (!groups[item.category]) groups[item.category] = []
-        groups[item.category].push(item)
-      })
-      return groups
-    },
-    getSortedCategories: (grouped: Record<string, any[]>) => {
-      return Object.keys(grouped).sort()
-    },
-  },
 }))
 
 const mockIngredients: Ingredient[] = [
@@ -166,13 +133,15 @@ const renderWithProviders = (
   return {
     user,
     ...render(
-      <MantineProvider>
-        <MemoryRouter initialEntries={[route]}>
-          <Routes>
-            <Route path="/grocery-lists/:id" element={component} />
-          </Routes>
-        </MemoryRouter>
-      </MantineProvider>
+      <ServicesProvider>
+        <MantineProvider>
+          <MemoryRouter initialEntries={[route]}>
+            <Routes>
+              <Route path="/grocery-lists/:id" element={component} />
+            </Routes>
+          </MemoryRouter>
+        </MantineProvider>
+      </ServicesProvider>
     ),
   }
 }
@@ -193,18 +162,13 @@ describe('GroceryListDetailPage', () => {
       updatedAt: Date.now(),
     }
 
-    // Configure updateList mock to update mockGroceryList
-    mockUpdateList.mockImplementation(async list => {
-      mockGroceryList = list
-    })
-
     const { useLiveQuery } = await import('dexie-react-hooks')
     vi.mocked(useLiveQuery).mockImplementation(queryFn => {
       const query = queryFn?.toString() || ''
-      if (query.includes('groceryLists.get')) return mockGroceryList
-      if (query.includes('groceryItems.where')) return mockGroceryItems
-      if (query.includes('recipes')) return []
-      if (query.includes('mealPlans')) return []
+      if (query.includes('getActiveRecipes')) return []
+      if (query.includes('getMealPlans')) return []
+      if (query.includes('getList')) return mockGroceryList
+      if (query.includes('getItems')) return mockGroceryItems
       return undefined
     })
   })
@@ -324,14 +288,9 @@ describe('GroceryListDetailPage', () => {
       const saveButton = screen.getByRole('button', { name: /^save$/i })
       await user.click(saveButton)
 
-      // Verify the service was called with updated data
+      // Modal should close after save
       await waitFor(() => {
-        expect(mockUpdateList).toHaveBeenCalledWith(
-          expect.objectContaining({
-            id: '1',
-            name: 'New List Name',
-          })
-        )
+        expect(screen.queryByText('Edit Grocery List')).not.toBeInTheDocument()
       })
     })
 

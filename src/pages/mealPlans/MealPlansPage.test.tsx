@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { db } from '../../db/database'
-import { render, screen, waitFor } from '../../test/test-utils'
+import { renderWithProviders, screen, waitFor } from '../../test/test-utils'
 
 import { MealPlansPage } from './MealPlansPage'
 
@@ -56,7 +56,7 @@ describe('MealPlansPage', () => {
   })
 
   it('should render meal plans page', async () => {
-    render(<MealPlansPage />)
+    renderWithProviders(<MealPlansPage />)
 
     await waitFor(() => {
       expect(screen.getByText(/meal plan/i)).toBeInTheDocument()
@@ -64,7 +64,7 @@ describe('MealPlansPage', () => {
   })
 
   it('should display calendar view', async () => {
-    render(<MealPlansPage />)
+    renderWithProviders(<MealPlansPage />)
 
     await waitFor(() => {
       // Check that the page rendered

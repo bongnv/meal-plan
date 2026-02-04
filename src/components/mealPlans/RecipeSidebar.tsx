@@ -13,17 +13,19 @@ import { IconSearch } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 
-import { db } from '../../db/database'
+import { useServices } from '../../contexts/ServicesContext'
 import { useRecipeFilters } from '../../hooks/useRecipeFilters'
-import { recipeService } from '../../services/recipeService'
 
 import { DraggableRecipeCard } from './DraggableRecipeCard'
 
 export const RecipeSidebar = () => {
+  const { recipeService, ingredientService } = useServices()
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
 
   // Filter state and actions from custom hook
   const { filters, actions } = useRecipeFilters()
@@ -31,12 +33,12 @@ export const RecipeSidebar = () => {
   // Get all unique tags from recipes
   const allTags = useMemo(() => {
     return recipeService.extractUniqueTags(recipes)
-  }, [recipes])
+  }, [recipes, recipeService])
 
   // Filter recipes using the service
   const filteredRecipes = useMemo(
     () => recipeService.filterRecipesAdvanced(recipes, filters),
-    [recipes, filters]
+    [recipes, filters, recipeService]
   )
 
   return (

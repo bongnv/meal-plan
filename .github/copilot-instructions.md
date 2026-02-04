@@ -50,6 +50,14 @@ The application follows a clean 3-layer architecture:
 - Business logic belongs in **services**, not contexts
 - Avoid "XxxContext" that duplicate service functionality
 
+## Code Style
+
+- Self-documenting code with clear names
+- Small, focused functions
+- Minimal comments (only for non-obvious logic)
+- Respect layer boundaries (no cross-layer violations)
+- Use path aliases (`@/components/`, `@/hooks/`, `@/services/`, etc.) instead of relative imports
+
 ## Implementation Planning
 
 - Use IMPLEMENTATION_PLAN.md to plan features; mark REQUIREMENTS.md checkboxes when planned

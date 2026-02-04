@@ -27,6 +27,13 @@ export const createRecipeService = (db: MealPlanDB) => ({
   },
 
   /**
+   * Get all active (non-deleted) recipes
+   */
+  async getActiveRecipes(): Promise<Recipe[]> {
+    return await db.getActiveRecipes()
+  },
+
+  /**
    * Get recipe by ID
    */
   async getById(id: string): Promise<Recipe | undefined> {

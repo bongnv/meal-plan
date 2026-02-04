@@ -16,8 +16,7 @@ import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { db } from '../../db/database'
-import { mealPlanService } from '../../services/mealPlanService'
+import { useServices } from '../../contexts/ServicesContext'
 
 import type {
   CopyFrequency,
@@ -48,7 +47,9 @@ export function CopyMealPlanModal({
   mealPlanId,
   onClose,
 }: CopyMealPlanModalProps) {
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const { mealPlanService } = useServices()
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
 
   // Form state
   const [targetDate, setTargetDate] = useState<Date | null>(new Date())

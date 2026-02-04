@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { db } from '../../db/database'
-import { render, screen, waitFor } from '../../test/test-utils'
+import { renderWithProviders, screen, waitFor } from '../../test/test-utils'
 
 import { EditRecipePage } from './EditRecipePage'
 
@@ -51,7 +51,7 @@ describe('EditRecipePage', () => {
   })
 
   it('should render edit recipe page', async () => {
-    render(<EditRecipePage />)
+    renderWithProviders(<EditRecipePage />)
 
     await waitFor(() => {
       expect(screen.getByText('Edit Recipe')).toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('EditRecipePage', () => {
   })
 
   it('should load recipe data into form', async () => {
-    render(<EditRecipePage />)
+    renderWithProviders(<EditRecipePage />)
 
     await waitFor(() => {
       const nameInput = screen.getByDisplayValue('Test Recipe')

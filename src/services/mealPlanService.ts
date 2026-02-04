@@ -25,6 +25,13 @@ export const createMealPlanService = (db: MealPlanDB) => ({
   },
 
   /**
+   * Get all meal plans (alias for useLiveQuery compatibility)
+   */
+  async getMealPlans(): Promise<MealPlan[]> {
+    return await db.mealPlans.toArray()
+  },
+
+  /**
    * Get meal plan by ID
    */
   async getById(id: string): Promise<MealPlan | undefined> {

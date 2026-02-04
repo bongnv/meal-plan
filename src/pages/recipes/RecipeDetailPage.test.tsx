@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { db } from '../../db/database'
-import { render, screen, waitFor } from '../../test/test-utils'
+import { renderWithProviders, screen, waitFor } from '../../test/test-utils'
 
 import { RecipeDetailPage } from './RecipeDetailPage'
 
@@ -63,7 +63,7 @@ describe('RecipeDetailPage', () => {
   })
 
   it('should render recipe detail page', async () => {
-    render(<RecipeDetailPage />)
+    renderWithProviders(<RecipeDetailPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Spaghetti Carbonara')).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe('RecipeDetailPage', () => {
   })
 
   it('should display recipe description', async () => {
-    render(<RecipeDetailPage />)
+    renderWithProviders(<RecipeDetailPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Classic Italian pasta dish')).toBeInTheDocument()
@@ -79,7 +79,7 @@ describe('RecipeDetailPage', () => {
   })
 
   it('should display recipe servings and times', async () => {
-    render(<RecipeDetailPage />)
+    renderWithProviders(<RecipeDetailPage />)
 
     await waitFor(() => {
       expect(screen.getByText(/4 servings/i)).toBeInTheDocument()

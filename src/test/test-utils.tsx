@@ -10,6 +10,9 @@ import {
 import { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
+import { ServicesProvider } from '../contexts/ServicesContext'
+
+// Default render - just Mantine (for tests that mock services themselves)
 function render(ui: ReactElement, options?: RenderOptions) {
   return rtlRender(ui, {
     wrapper: ({ children }) => <MantineProvider>{children}</MantineProvider>,
@@ -25,13 +28,16 @@ export function renderWithMantine(ui: ReactElement, options?: RenderOptions) {
   })
 }
 
-// Helper to render with providers - components need to set up their own context mocks
+// Helper to render with all providers - includes ServicesProvider, MantineProvider, and MemoryRouter
+// Use this for integration tests that need real services
 export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   return rtlRender(ui, {
     wrapper: ({ children }) => (
-      <MantineProvider>
-        <MemoryRouter>{children}</MemoryRouter>
-      </MantineProvider>
+      <ServicesProvider>
+        <MantineProvider>
+          <MemoryRouter>{children}</MemoryRouter>
+        </MantineProvider>
+      </ServicesProvider>
     ),
     ...options,
   })

@@ -16,23 +16,30 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
-import { db } from '../../db/database'
-import { groceryListService } from '../../services/groceryListService'
+import { useServices } from '../../contexts/ServicesContext'
 import { generateGroceryList } from '../../utils/generateGroceryList'
 
 export const GroceryListsPage = () => {
   const navigate = useNavigate()
+  const {
+    groceryListService,
+    recipeService,
+    mealPlanService,
+    ingredientService,
+  } = useServices()
   const [modalOpened, setModalOpened] = useState(false)
 
   // Get data from queries
-  const recipes = useLiveQuery(async () => db.getActiveRecipes(), []) ?? []
-  const mealPlans = useLiveQuery(async () => db.mealPlans.toArray(), []) ?? []
+  const recipes =
+    useLiveQuery(async () => recipeService.getActiveRecipes(), []) ?? []
+  const mealPlans =
+    useLiveQuery(async () => mealPlanService.getMealPlans(), []) ?? []
   const ingredients =
-    useLiveQuery(async () => db.ingredients.toArray(), []) ?? []
+    useLiveQuery(async () => ingredientService.getIngredients(), []) ?? []
   const groceryLists =
-    useLiveQuery(async () => db.groceryLists.toArray(), []) ?? []
+    useLiveQuery(async () => groceryListService.getAllLists(), []) ?? []
   const groceryItems =
-    useLiveQuery(async () => db.groceryItems.toArray(), []) ?? []
+    useLiveQuery(async () => groceryListService.getAllItems(), []) ?? []
 
   const hasLists = groceryLists.length > 0
 
