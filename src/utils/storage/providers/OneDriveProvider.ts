@@ -31,8 +31,22 @@ export class OneDriveProvider implements ICloudStorageProvider {
    * @private
    */
   private getAccount(): AccountInfo | null {
-    const accounts = this.msalInstance.getAllAccounts()
-    return accounts.length > 0 ? accounts[0] : null
+    try {
+      const accounts = this.msalInstance.getAllAccounts()
+      return accounts.length > 0 ? accounts[0] : null
+    } catch (error) {
+      // Handle MSAL not ready gracefully
+      console.warn('[OneDrive] MSAL not ready:', error)
+      return null
+    }
+  }
+
+  /**
+   * Authenticate with OneDrive via MSAL redirect
+   * This will redirect the page - code after this call won't execute
+   */
+  async authenticate(): Promise<void> {
+    await this.msalInstance.loginRedirect(loginRequest)
   }
 
   /**

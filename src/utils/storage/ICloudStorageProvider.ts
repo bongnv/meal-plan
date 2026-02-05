@@ -48,6 +48,14 @@ export interface FolderListResult {
  */
 export interface ICloudStorageProvider {
   /**
+   * Authenticate with the cloud provider
+   * May redirect the page or open a popup depending on provider
+   *
+   * @throws Error if authentication fails
+   */
+  authenticate(): Promise<void>
+
+  /**
    * Check if user is authenticated with this provider
    *
    * @returns true if authenticated, false otherwise

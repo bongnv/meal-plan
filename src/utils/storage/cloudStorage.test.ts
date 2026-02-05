@@ -11,6 +11,10 @@ class MockCloudProvider implements ICloudStorageProvider {
     this.authenticated = isAuth
   }
 
+  async authenticate(): Promise<void> {
+    this.authenticated = true
+  }
+
   isAuthenticated(): boolean {
     return this.authenticated
   }

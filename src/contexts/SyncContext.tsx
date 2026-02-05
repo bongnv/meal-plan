@@ -11,7 +11,6 @@ import {
   type ReactNode,
 } from 'react'
 
-import { loginRequest } from '../config/msalConfig'
 import { useAppContext } from '../contexts/AppContext'
 import { db } from '../db/database'
 import { SyncService } from '../services/syncService'
@@ -247,41 +246,25 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
   // Note: useLiveQuery returns value directly, only re-renders when value changes
   const lastModified = useLiveQuery(async () => await db.getLastModified())
 
-  // Set status to 'idle' when there are unsaved changes (local differs from last sync)
+  // Auto-sync: immediate first sync, then debounced sync with status updates
   useEffect(() => {
-    // Only check when status is 'synced' - don't interrupt syncing or override error
-    if (!isAuthenticated || !selectedFile || syncStatus !== 'synced') {
-      return
-    }
-
-    // Get current local timestamp - handle undefined from useLiveQuery
-    if (lastModified === undefined || lastSyncTime === null) {
-      return
-    }
-
-    // If local changed after last sync, set status to idle
-    if (lastModified > lastSyncTime) {
-      // Queue state update to avoid synchronous setState in effect
-      queueMicrotask(() => setSyncStatus('idle'))
-    }
-  }, [lastModified, lastSyncTime, isAuthenticated, selectedFile, syncStatus])
-
-  // Auto-sync: immediate first sync (lastSyncTime === null), then debounced (15s) when there are unsaved changes
-  useEffect(() => {
-    // Only auto-sync if we're connected, not already syncing
+    // Only run if we're connected and have data
     if (
       !isAuthenticated ||
       !selectedFile ||
-      syncStatus === 'syncing' ||
       lastModified === undefined
     ) {
       return
     }
 
-    // First sync: lastSyncTime === null, execute immediately
+    // Don't interrupt ongoing sync
+    if (syncStatus === 'syncing') {
+      return
+    }
+
+    // First sync: execute immediately
     if (lastSyncTime === null) {
       console.log('First sync - executing immediately')
-      // Use setTimeout to avoid calling setState synchronously in effect
       setTimeout(() => {
         void syncNow().catch(error => {
           console.error('First sync failed:', error)
@@ -290,8 +273,14 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
       return
     }
 
-    // Subsequent syncs: only trigger when there are unsaved changes (lastModified > lastSyncTime)
+    // Subsequent syncs: only trigger when there are unsaved changes
     if (lastModified > lastSyncTime) {
+      // Update UI state to show unsaved changes
+      if (syncStatus === 'synced') {
+        queueMicrotask(() => setSyncStatus('idle'))
+      }
+
+      // Trigger debounced sync (waits 15s after last change)
       debouncedSync()
     }
   }, [
@@ -304,7 +293,7 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
     syncNow,
   ])
 
-  // Connect to a specific provider (handles authentication via MSAL)
+  // Connect to a specific provider (triggers authentication)
   const connect = async (provider: CloudProvider): Promise<void> => {
     const providerInstance = providers.get(provider)
     if (!providerInstance) {
@@ -315,14 +304,9 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
     setCurrentProvider(provider)
     localStorage.setItem(CONNECTED_PROVIDER_KEY, provider)
 
-    // Authenticate via MSAL redirect
-    if (provider === CloudProvider.ONEDRIVE) {
-      // Trigger redirect - page will reload after authentication
-      await msalInstance.loginRedirect(loginRequest)
-      return // Code after this won't execute due to redirect
-    }
-    // Show file selection modal when authenticated
-    setShowFileSelection(true)
+    // Trigger authentication (may redirect page)
+    await providerInstance.authenticate()
+    // Note: Code after this may not execute if provider redirects (like OneDrive)
   }
 
   // Disconnect from current provider
