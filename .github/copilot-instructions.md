@@ -10,45 +10,29 @@
 - Refer to REQUIREMENTS.md for product requirements and specifications
 - Follow the requirements defined in REQUIREMENTS.md when implementing features
 
-## Architecture & Tech Stack
+## Architecture
 
-- Refer to ARCHITECTURE.md for technical architecture and technology decisions
-- Follow the architecture guidelines and tech stack defined in ARCHITECTURE.md for all implementations
+**3-layer**: Components → Hooks → Services
 
-### 3-Layer Architecture
+### Components (`src/components/`) - Presentation Only
+- Render UI, call hooks, handle events
+- NO useState/useEffect (except trivial UI state like menu open)
+- NO business logic, NO calculations, NO validation
 
-The application follows a clean 3-layer architecture:
+### Hooks (`src/hooks/`) - UI Logic
+**Structure**:
+- `primitives/` - Generic patterns: `useFormState`, `useDialogState`, `useAsyncComputation`, `useFilterState`
+- `[domain]/` - Domain hooks: `accounts/`, `transactions/`, `assets/`, `reports/`
+- Don't include business logic (delegate to services)
 
-**Layer 1: UI (User Interface)**
+### Services (`src/services/`) - Business Logic
+- All calculations, validations, transformations, domain rules
+- NO React imports, NO hooks, NO JSX
+- Stateless, pure functions, constructor-injected dependencies
 
-- Location: `/src/pages/`, `/src/components/`, `/src/hooks/`
-- React components for presentation and user interaction
-- Custom hooks for managing UI state and calling services
-- Keep components focused on rendering and user events
-- No business logic in components
-
-**Layer 2: Services (Business Logic)**
-
-- Location: `/src/services/`, `/src/utils/`
-- **Stateless** services with pure business logic
-- All dependencies should be **injected** (db instance, other services)
-- Services handle CRUD operations, validation, transformations
-- Services are testable without React
-- No React hooks or components in services
-
-**Layer 3: Database**
-
-- Location: `/src/db/`
-- Dexie database instance and schema definitions
-- No business logic, just data persistence
-
-### Context Usage
-
-- React Context should **only** be used for:
-  - Global UI state (theme, auth status, modals)
-  - Sharing services across components
-- Business logic belongs in **services**, not contexts
-- Avoid "XxxContext" that duplicate service functionality
+### Supporting
+- **Utils** (`src/utils/`): Pure functions, no state
+- **Database** (`src/db/`): Dexie schema, IndexedDB only
 
 ## Code Style
 

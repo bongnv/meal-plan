@@ -45,35 +45,10 @@ export function MealPlansList({
     useState<MealPlan | null>(null)
 
   // Get date range based on filter (always 7 days from starting date)
-  const getDateRange = (): { start: Date; end: Date } => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const start = new Date(today)
-
-    switch (quickFilter) {
-      case 'today':
-        // Start from today
-        break
-      case 'nextweek': {
-        // Start from next Monday
-        const daysUntilMonday = (8 - start.getDay()) % 7 || 7
-        start.setDate(start.getDate() + daysUntilMonday)
-        break
-      }
-      case 'custom':
-        if (selectedDate) {
-          start.setTime(selectedDate.getTime())
-        }
-        break
-    }
-
-    const end = new Date(start)
-    end.setDate(end.getDate() + 6)
-
-    return { start, end }
-  }
-
-  const dateRange = getDateRange()
+  const dateRange = mealPlanService.calculateDateRange(
+    quickFilter,
+    selectedDate
+  )
 
   // Generate all days in range (including empty days)
   const daysInRange = useMemo(() => {
@@ -84,16 +59,6 @@ export function MealPlansList({
   const groupedMeals = useMemo(() => {
     return mealPlanService.groupMealsByDate(mealPlans, daysInRange)
   }, [daysInRange, mealPlans])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
 
   const handleDeleteConfirm = () => {
     if (deleteConfirmation && onDeleteMeal) {
@@ -198,7 +163,7 @@ export function MealPlansList({
                       fontWeight: isToday ? 700 : 400,
                     }}
                   >
-                    {formatDate(group.date)}
+                    {mealPlanService.formatLongDate(group.date)}
                   </Title>
 
                   <DroppableDayCard

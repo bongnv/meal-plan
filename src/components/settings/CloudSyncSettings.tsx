@@ -10,11 +10,11 @@ import {
   Container,
 } from '@mantine/core'
 import { IconCloud, IconCloudOff } from '@tabler/icons-react'
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useSyncContext } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
+import { formatRelativeTime } from '../../utils/timeFormatter'
 
 /**
  * Cloud Storage Sync Settings component
@@ -69,33 +69,6 @@ export function CloudSyncSettings() {
       console.error('[CloudSyncSettings] Failed to disconnect:', error)
     }
   }
-
-  /**
-   * Format last sync time
-   */
-  const formatLastSyncTime = useMemo(() => {
-    return (timestamp: number | null): string => {
-      if (!timestamp) {
-        return 'Never'
-      }
-
-      const now = Date.now()
-      const diff = now - timestamp
-      const minutes = Math.floor(diff / 60000)
-      const hours = Math.floor(diff / 3600000)
-      const days = Math.floor(diff / 86400000)
-
-      if (minutes < 1) {
-        return 'Just now'
-      } else if (minutes < 60) {
-        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
-      } else if (hours < 24) {
-        return `${hours} hour${hours > 1 ? 's' : ''} ago`
-      } else {
-        return `${days} day${days > 1 ? 's' : ''} ago`
-      }
-    }
-  }, [])
 
   /**
    * Extract folder path from file path
@@ -180,7 +153,7 @@ export function CloudSyncSettings() {
                     </Text>
 
                     <Text size="xs" c="dimmed">
-                      Last synced: {formatLastSyncTime(lastSyncTime)}
+                      Last synced: {formatRelativeTime(lastSyncTime)}
                     </Text>
                   </Stack>
 

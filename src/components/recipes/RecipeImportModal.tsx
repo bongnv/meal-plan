@@ -76,40 +76,17 @@ export const RecipeImportModal = ({
 
     setImporting(true)
     try {
-      // Step 1: Add all new ingredients at once and get generated IDs
-      const newIds = await ingredientService.addMany(
-        validationResult.newIngredients
-      )
-
-      // Step 2: Build ID mapping from placeholder IDs to generated IDs
-      const idMapping: Record<string, string> = {}
-      validationResult.newIngredients.forEach((ingredient, index) => {
-        idMapping[ingredient.id] = newIds[index]
-      })
-
-      // Also add mappings for existing ingredients (ID -> ID for consistency)
-      ingredients.forEach(ing => {
-        idMapping[ing.id] = ing.id
-      })
-
-      // Step 3: Update ingredient IDs in main recipe sections
       const { id: _id, ...recipeWithoutId } = validationResult.recipe
 
-      const recipeWithMappedIds = {
-        ...recipeWithoutId,
-        sections: recipeWithoutId.sections.map(section => ({
-          ...section,
-          ingredients: section.ingredients.map(ing => ({
-            ...ing,
-            ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
-          })),
-        })),
-      }
+      // Use service to handle the complex import orchestration
+      const newRecipeId = await recipeService.importRecipe(
+        recipeWithoutId,
+        validationResult.newIngredients,
+        ingredients,
+        ingredientService
+      )
 
-      // Step 4: Add main recipe (service will generate and return recipe ID)
-      const newRecipeId = await recipeService.add(recipeWithMappedIds)
-
-      // Step 5: Navigate to recipe detail page with the generated ID
+      // Navigate to recipe detail page with the generated ID
       void navigate(`/recipes/${newRecipeId}`)
 
       // Close modal

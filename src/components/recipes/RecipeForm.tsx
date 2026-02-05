@@ -24,15 +24,16 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
 import { useServices } from '../../contexts/ServicesContext'
+import { useRecipeSectionManager } from '../../hooks/useRecipeSectionManager'
 import { UNITS } from '../../types/ingredient'
 import { RecipeFormSchema } from '../../types/recipe'
+import { isValidImageUrl } from '../../utils/urlValidator'
 import { IngredientForm } from '../ingredients/IngredientForm'
 
 import type { IngredientFormValues } from '../../types/ingredient'
 import type {
   Recipe,
   RecipeFormValues,
-  RecipeSection,
 } from '../../types/recipe'
 
 interface RecipeFormProps {
@@ -58,10 +59,19 @@ export function RecipeForm({
   ] = useDisclosure(false)
   const [showImagePreview, setShowImagePreview] = useState(!!recipe?.imageUrl)
 
-  // Initialize sections from recipe or with one unnamed section
-  const [sections, setSections] = useState<RecipeSection[]>(
-    recipe?.sections ?? [{ name: undefined, ingredients: [], instructions: [] }]
-  )
+  // Use custom hook for section management
+  const {
+    sections,
+    addSection,
+    removeSection,
+    updateSectionName,
+    addIngredient,
+    removeIngredient,
+    updateIngredient,
+    addInstruction,
+    removeInstruction,
+    updateInstruction,
+  } = useRecipeSectionManager(recipe?.sections)
 
   const form = useForm<Omit<RecipeFormValues, 'sections'>>({
     validate: zodResolver(RecipeFormSchema.omit({ sections: true })),
@@ -89,82 +99,6 @@ export function RecipeForm({
     onSubmit(recipeData)
   }
 
-  // Section management
-  const addSection = () => {
-    setSections([
-      ...sections,
-      { name: undefined, ingredients: [], instructions: [] },
-    ])
-  }
-
-  const removeSection = (index: number) => {
-    if (sections.length > 1) {
-      setSections(sections.filter((_, i) => i !== index))
-    }
-  }
-
-  const updateSectionName = (index: number, name: string) => {
-    const newSections = [...sections]
-    newSections[index].name = name || undefined
-    setSections(newSections)
-  }
-
-  // Ingredient management within sections
-  const addIngredient = (sectionIndex: number) => {
-    const newSections = [...sections]
-    newSections[sectionIndex].ingredients.push({
-      ingredientId: '',
-      quantity: 0,
-      unit: 'whole',
-      displayName: '',
-    })
-    setSections(newSections)
-  }
-
-  const removeIngredient = (sectionIndex: number, ingredientIndex: number) => {
-    const newSections = [...sections]
-    newSections[sectionIndex].ingredients.splice(ingredientIndex, 1)
-    setSections(newSections)
-  }
-
-  const updateIngredient = (
-    sectionIndex: number,
-    ingredientIndex: number,
-    field: string,
-    value: any
-  ) => {
-    const newSections = [...sections]
-    ;(newSections[sectionIndex].ingredients[ingredientIndex] as any)[field] =
-      value
-    setSections(newSections)
-  }
-
-  // Instruction management within sections
-  const addInstruction = (sectionIndex: number) => {
-    const newSections = [...sections]
-    newSections[sectionIndex].instructions.push('')
-    setSections(newSections)
-  }
-
-  const removeInstruction = (
-    sectionIndex: number,
-    instructionIndex: number
-  ) => {
-    const newSections = [...sections]
-    newSections[sectionIndex].instructions.splice(instructionIndex, 1)
-    setSections(newSections)
-  }
-
-  const updateInstruction = (
-    sectionIndex: number,
-    instructionIndex: number,
-    value: string
-  ) => {
-    const newSections = [...sections]
-    newSections[sectionIndex].instructions[instructionIndex] = value
-    setSections(newSections)
-  }
-
   const handleCreateIngredient = async (values: IngredientFormValues) => {
     try {
       await ingredientService.add(values)
@@ -176,21 +110,7 @@ export function RecipeForm({
 
   const handleImageUrlChange = (value: string) => {
     form.setFieldValue('imageUrl', value || undefined)
-    // Check if URL is valid for preview
-    try {
-      if (value && value.trim()) {
-        const url = new URL(value)
-        if (url.protocol === 'http:' || url.protocol === 'https:') {
-          setShowImagePreview(true)
-        } else {
-          setShowImagePreview(false)
-        }
-      } else {
-        setShowImagePreview(false)
-      }
-    } catch {
-      setShowImagePreview(false)
-    }
+    setShowImagePreview(isValidImageUrl(value))
   }
 
   return (

@@ -2,6 +2,7 @@ import { db } from '../db/database'
 import { generateId } from '../utils/idGenerator'
 
 import type { MealPlanDB } from '../db/database'
+import type { Ingredient, IngredientFormValues } from '../types/ingredient'
 import type { Recipe } from '../types/recipe'
 
 export type TimeRange = 'under-30' | '30-60' | 'over-60' | null
@@ -51,6 +52,53 @@ export const createRecipeService = (db: MealPlanDB) => ({
     await db.recipes.add(newRecipe)
     await db.updateLastModified()
     return newRecipe.id
+  },
+
+  /**
+   * Import a recipe with new ingredients
+   * Handles the orchestration of adding new ingredients and mapping IDs
+   * @param recipeData Recipe data without ID
+   * @param newIngredients New ingredients to add
+   * @param existingIngredients Existing ingredients for ID mapping
+   * @param ingredientService Reference to ingredient service for adding ingredients
+   * @returns ID of the newly created recipe
+   */
+  async importRecipe(
+    recipeData: Omit<Recipe, 'id'>,
+    newIngredients: IngredientFormValues[],
+    existingIngredients: Ingredient[],
+    ingredientService: { addMany: (ingredients: IngredientFormValues[]) => Promise<string[]> }
+  ): Promise<string> {
+    // Step 1: Add all new ingredients and get generated IDs
+    const newIds = await ingredientService.addMany(newIngredients)
+
+    // Step 2: Build ID mapping from placeholder IDs to generated IDs
+    const idMapping: Record<string, string> = {}
+    
+    // Map new ingredient placeholder IDs to generated IDs
+    newIngredients.forEach((ingredient, index) => {
+      idMapping[(ingredient as any).id] = newIds[index]
+    })
+
+    // Map existing ingredients (ID -> ID for consistency)
+    existingIngredients.forEach(ing => {
+      idMapping[ing.id] = ing.id
+    })
+
+    // Step 3: Update ingredient IDs in recipe sections
+    const recipeWithMappedIds = {
+      ...recipeData,
+      sections: recipeData.sections.map(section => ({
+        ...section,
+        ingredients: section.ingredients.map(ing => ({
+          ...ing,
+          ingredientId: idMapping[ing.ingredientId] || ing.ingredientId,
+        })),
+      })),
+    }
+
+    // Step 4: Add the recipe and return its ID
+    return await this.add(recipeWithMappedIds)
   },
 
   /**

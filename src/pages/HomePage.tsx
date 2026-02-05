@@ -42,8 +42,8 @@ export function HomePage() {
   const nextMeal = getNextMeal(mealPlans)
   const upcomingMeals = getUpcomingMeals(mealPlans, 4).slice(1) // Skip first (it's the next meal)
 
-  // Get most recent grocery list (no completed field in schema)
-  const activeList = groceryLists.sort((a, b) => b.createdAt - a.createdAt)[0]
+  // Get most recent grocery list
+  const activeList = groceryListService.getMostRecentList(groceryLists)
 
   // Get items for active list
   const activeListItems = activeList

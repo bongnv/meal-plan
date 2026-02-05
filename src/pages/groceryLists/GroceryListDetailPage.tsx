@@ -15,8 +15,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { GroceryListView } from '../../components/groceryLists/GroceryListView'
 import { useServices } from '../../contexts/ServicesContext'
-import { GroceryItem } from '../../types/groceryList'
-import { generateId } from '../../utils/idGenerator'
 
 import type { IngredientCategory, Unit } from '../../types/ingredient'
 
@@ -112,20 +110,12 @@ export const GroceryListDetailPage = () => {
   }) => {
     if (!groceryList) return
 
-    const newItem: GroceryItem = {
-      id: generateId(),
-      listId: groceryList.id,
+    await groceryListService.addManualItem(groceryList.id, {
       name: item.name,
       quantity: item.quantity,
       unit: item.unit as Unit,
       category: item.category as IngredientCategory,
-      checked: false,
-      mealPlanIds: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-
-    await groceryListService.addItem(newItem)
+    })
   }
 
   const getRecipeName = (recipeId: string): string => {

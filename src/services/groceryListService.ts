@@ -1,7 +1,9 @@
 import { db } from '../db/database'
+import { generateId } from '../utils/idGenerator'
 
 import type { MealPlanDB } from '../db/database'
 import type { GroceryList, GroceryItem } from '../types/groceryList'
+import type { IngredientCategory, Unit } from '../types/ingredient'
 
 /**
  * Grocery List Service
@@ -103,6 +105,41 @@ export const createGroceryListService = (db: MealPlanDB) => ({
     const now = Date.now()
     await db.groceryItems.add({ ...item, createdAt: now, updatedAt: now })
     await db.updateLastModified()
+  },
+
+  /**
+   * Add a manual grocery item (user-created, not from recipe)
+   * Handles ID generation and timestamps automatically
+   * @param listId ID of the grocery list
+   * @param itemData Item data without ID or timestamps
+   * @returns ID of the newly created item
+   */
+  async addManualItem(
+    listId: string,
+    itemData: {
+      name: string
+      quantity: number
+      unit: Unit
+      category: IngredientCategory
+    }
+  ): Promise<string> {
+    const now = Date.now()
+    const newItem: GroceryItem = {
+      id: generateId(),
+      listId,
+      name: itemData.name,
+      quantity: itemData.quantity,
+      unit: itemData.unit,
+      category: itemData.category,
+      checked: false,
+      mealPlanIds: [],
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    await db.groceryItems.add(newItem)
+    await db.updateLastModified()
+    return newItem.id
   },
 
   /**

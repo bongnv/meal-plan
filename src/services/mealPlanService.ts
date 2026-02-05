@@ -306,6 +306,58 @@ export const createMealPlanService = (db: MealPlanDB) => ({
   },
 
   /**
+   * Calculate date range based on filter type
+   * @param filterType Type of filter ('today', 'nextweek', 'custom')
+   * @param customDate Custom date if filter is 'custom'
+   * @returns Object with start and end dates (7 days total)
+   */
+  calculateDateRange(
+    filterType: 'today' | 'nextweek' | 'custom',
+    customDate?: Date | null
+  ): { start: Date; end: Date } {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const start = new Date(today)
+
+    switch (filterType) {
+      case 'today':
+        // Start from today
+        break
+      case 'nextweek': {
+        // Start from next Monday
+        const daysUntilMonday = (8 - start.getDay()) % 7 || 7
+        start.setDate(start.getDate() + daysUntilMonday)
+        break
+      }
+      case 'custom':
+        if (customDate) {
+          start.setTime(customDate.getTime())
+        }
+        break
+    }
+
+    const end = new Date(start)
+    end.setDate(end.getDate() + 6)
+
+    return { start, end }
+  },
+
+  /**
+   * Format date string to long format
+   * @param dateString Date string in YYYY-MM-DD format
+   * @returns Formatted date string (e.g., "Monday, February 5, 2026")
+   */
+  formatLongDate(dateString: string): string {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  },
+
+  /**
    * Group meal plans by date
    * @param mealPlans Array of meal plans
    * @param dates Array of dates to group by
