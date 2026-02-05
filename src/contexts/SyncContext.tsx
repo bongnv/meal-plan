@@ -57,10 +57,6 @@ interface SyncContextType {
   // Cloud provider actions
   connect: (provider: CloudProvider) => Promise<void>
   getAccountInfo: () => { name: string; email: string }
-
-  // File operations (delegated to provider)
-  uploadFile: (fileInfo: FileInfo, data: string) => Promise<FileInfo>
-  downloadFile: (fileInfo: FileInfo) => Promise<string>
   listFoldersAndFiles: (folder?: FolderInfo) => Promise<FolderListResult>
 
   // Sync actions
@@ -370,25 +366,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return activeProvider.getAccountInfo()
   }
 
-  // Upload file using active provider
-  const uploadFile = async (
-    fileInfo: FileInfo,
-    data: string
-  ): Promise<FileInfo> => {
-    if (!activeProvider) {
-      throw new Error('Not authenticated')
-    }
-    return activeProvider.uploadFile(fileInfo, data)
-  }
-
-  // Download file using active provider
-  const downloadFile = async (fileInfo: FileInfo): Promise<string> => {
-    if (!activeProvider) {
-      throw new Error('Not authenticated')
-    }
-    return activeProvider.downloadFile(fileInfo)
-  }
-
   // List folders and files using active provider
   const listFoldersAndFiles = async (
     folder?: FolderInfo
@@ -452,8 +429,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         needsReconnect,
         connect,
         getAccountInfo,
-        uploadFile,
-        downloadFile,
         listFoldersAndFiles,
         selectFile,
         disconnectAndReset,
