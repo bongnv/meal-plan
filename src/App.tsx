@@ -48,13 +48,8 @@ function App() {
   } = useAppContext()
 
   // Get business logic from SyncContext
-  const {
-    selectedFile,
-    currentProvider,
-    connect,
-    selectFile,
-    disconnectAndReset,
-  } = useSyncContext()
+  const { currentProvider, connect, selectFile, disconnectAndReset } =
+    useSyncContext()
 
   // Detect if we're on mobile (< 768px)
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -138,7 +133,6 @@ function App() {
       )}
       {showReconnectModal && (
         <ReconnectModal
-          fileName={selectedFile?.name || 'Unknown file'}
           onReconnect={handleReconnect}
           onWorkOffline={handleWorkOffline}
         />

@@ -31,7 +31,10 @@ export async function initializeMsal(): Promise<void> {
     const response = await msalInstance.handleRedirectPromise()
     if (response) {
       // User just logged in via redirect
-      console.log('[MSAL] Redirect authentication successful:', response.account?.username)
+      console.log(
+        '[MSAL] Redirect authentication successful:',
+        response.account?.username
+      )
     }
   } catch (error) {
     console.error('[MSAL] Redirect authentication failed:', error)

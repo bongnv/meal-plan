@@ -68,7 +68,6 @@ interface SyncProviderProps {
 }
 
 export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
-
   // Cloud provider state
   const [currentProvider, setCurrentProvider] = useState<CloudProvider | null>(
     () => {
@@ -171,7 +170,12 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
       }
       // else: authenticated and has file → all good, no modal
     })
-  }, [activeProvider, setShowWelcome, setShowFileSelection, setShowReconnectModal])
+  }, [
+    activeProvider,
+    setShowWelcome,
+    setShowFileSelection,
+    setShowReconnectModal,
+  ])
 
   /**
    * Trigger manual sync with Last Write Wins (LWW) merge
@@ -249,11 +253,7 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
   // Auto-sync: immediate first sync, then debounced sync with status updates
   useEffect(() => {
     // Only run if we're connected and have data
-    if (
-      !isAuthenticated ||
-      !selectedFile ||
-      lastModified === undefined
-    ) {
+    if (!isAuthenticated || !selectedFile || lastModified === undefined) {
       return
     }
 

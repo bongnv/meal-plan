@@ -1,10 +1,7 @@
 import { Button, Group, Select, Stack, TextInput } from '@mantine/core'
 import { zodResolver, useForm } from '@mantine/form'
 
-import {
-  INGREDIENT_CATEGORIES,
-  IngredientFormSchema,
-} from '@/types/ingredient'
+import { INGREDIENT_CATEGORIES, IngredientFormSchema } from '@/types/ingredient'
 
 import type {
   Ingredient,

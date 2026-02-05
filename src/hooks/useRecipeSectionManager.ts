@@ -34,9 +34,7 @@ export function useRecipeSectionManager(
   initialSections?: RecipeSection[]
 ): RecipeSectionManagerReturn {
   const [sections, setSections] = useState<RecipeSection[]>(
-    initialSections ?? [
-      { name: undefined, ingredients: [], instructions: [] },
-    ]
+    initialSections ?? [{ name: undefined, ingredients: [], instructions: [] }]
   )
 
   // Section management

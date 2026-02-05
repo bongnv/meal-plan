@@ -1,8 +1,7 @@
-import { Modal, Text, Button, Stack, Alert, Group, Code } from '@mantine/core'
+import { Modal, Text, Button, Stack, Alert, Group } from '@mantine/core'
 import { IconAlertTriangle, IconCloud, IconCloudOff } from '@tabler/icons-react'
 
 interface ReconnectModalProps {
-  fileName: string
   onReconnect: () => void
   onWorkOffline: () => void
 }
@@ -12,7 +11,6 @@ interface ReconnectModalProps {
  * Prompts user to reconnect or work offline
  */
 export function ReconnectModal({
-  fileName,
   onReconnect,
   onWorkOffline,
 }: ReconnectModalProps) {
@@ -38,13 +36,6 @@ export function ReconnectModal({
             Please reconnect to continue syncing your meal plan data.
           </Text>
         </Alert>
-
-        <div>
-          <Text size="sm" c="dimmed" mb="xs">
-            File to sync:
-          </Text>
-          <Code block>{fileName}</Code>
-        </div>
 
         <Text size="sm" c="dimmed">
           Your local changes are safe. Choose to reconnect now or work offline

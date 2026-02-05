@@ -31,10 +31,7 @@ import { RecipeFormSchema } from '@/types/recipe'
 import { isValidImageUrl } from '@/utils/urlValidator'
 
 import type { IngredientFormValues } from '@/types/ingredient'
-import type {
-  Recipe,
-  RecipeFormValues,
-} from '@/types/recipe'
+import type { Recipe, RecipeFormValues } from '@/types/recipe'
 
 interface RecipeFormProps {
   recipe?: Recipe

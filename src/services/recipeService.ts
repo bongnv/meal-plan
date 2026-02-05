@@ -67,14 +67,16 @@ export const createRecipeService = (db: MealPlanDB) => ({
     recipeData: Omit<Recipe, 'id'>,
     newIngredients: IngredientFormValues[],
     existingIngredients: Ingredient[],
-    ingredientService: { addMany: (ingredients: IngredientFormValues[]) => Promise<string[]> }
+    ingredientService: {
+      addMany: (ingredients: IngredientFormValues[]) => Promise<string[]>
+    }
   ): Promise<string> {
     // Step 1: Add all new ingredients and get generated IDs
     const newIds = await ingredientService.addMany(newIngredients)
 
     // Step 2: Build ID mapping from placeholder IDs to generated IDs
     const idMapping: Record<string, string> = {}
-    
+
     // Map new ingredient placeholder IDs to generated IDs
     newIngredients.forEach((ingredient, index) => {
       idMapping[(ingredient as any).id] = newIds[index]

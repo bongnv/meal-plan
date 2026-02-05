@@ -17,7 +17,6 @@ describe('ReconnectModal', () => {
   it('should render when opened', () => {
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -27,23 +26,9 @@ describe('ReconnectModal', () => {
     expect(screen.getByText(/session has expired/i)).toBeInTheDocument()
   })
 
-  it('should display the file name', () => {
-    render(
-      <ReconnectModal
-        fileName="my-meal-plan.json.gz"
-        onReconnect={mockOnReconnect}
-        onWorkOffline={mockOnWorkOffline}
-      />,
-      { wrapper: Wrapper }
-    )
-
-    expect(screen.getByText(/my-meal-plan\.json\.gz/)).toBeInTheDocument()
-  })
-
   it('should have Reconnect to OneDrive button', () => {
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -58,7 +43,6 @@ describe('ReconnectModal', () => {
   it('should have Work Offline button', () => {
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -75,7 +59,6 @@ describe('ReconnectModal', () => {
 
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -95,7 +78,6 @@ describe('ReconnectModal', () => {
 
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -113,7 +95,6 @@ describe('ReconnectModal', () => {
   it('should not allow dismissing by clicking outside', () => {
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
@@ -127,7 +108,6 @@ describe('ReconnectModal', () => {
   it('should show helpful explanation message', () => {
     render(
       <ReconnectModal
-        fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
       />,
