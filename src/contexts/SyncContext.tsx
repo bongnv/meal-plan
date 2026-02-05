@@ -1,4 +1,3 @@
-import { useMsal } from '@azure/msal-react'
 import { useDebouncedCallback } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -26,6 +25,8 @@ import {
   type ICloudStorageProvider,
 } from '../utils/storage/ICloudStorageProvider'
 import { OneDriveProvider } from '../utils/storage/providers/OneDriveProvider'
+
+import type { IPublicClientApplication } from '@azure/msal-browser'
 
 /**
  * LocalStorage keys for persisting selections
@@ -62,8 +63,12 @@ interface SyncContextType {
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined)
 
-export function SyncProvider({ children }: { children: ReactNode }) {
-  const { instance: msalInstance, inProgress } = useMsal()
+interface SyncProviderProps {
+  children: ReactNode
+  msalInstance: IPublicClientApplication
+}
+
+export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
 
   // Cloud provider state
   const [currentProvider, setCurrentProvider] = useState<CloudProvider | null>(
@@ -97,13 +102,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [msalInstance])
 
   // Compute isAuthenticated from active provider
-  // Wait for MSAL to finish initializing
   const isAuthenticated = useMemo(() => {
-    // Wait for MSAL to finish initializing
-    if (inProgress !== 'none') {
-      return false
-    }
-
     if (!currentProvider) {
       return false
     }
@@ -111,7 +110,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     const provider = providers.get(currentProvider)
     const providerAuth = provider?.isAuthenticated() ?? false
     return providerAuth
-  }, [inProgress, currentProvider, providers])
+  }, [currentProvider, providers])
 
   // Get the current provider instance
   const activeProvider = useMemo(() => {
@@ -132,13 +131,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     useAppContext()
 
   // Initialize on mount: restore file and show appropriate modal
-  // Only runs once after MSAL finishes initializing
   useEffect(() => {
-    // Wait for MSAL to finish initializing before checking auth state
-    if (inProgress !== 'none') {
-      return
-    }
-
     // Check auth state synchronously (don't add to dependencies)
     const authenticated = activeProvider?.isAuthenticated() ?? false
     let savedFile = localStorage.getItem(SELECTED_FILE_KEY)
@@ -179,13 +172,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       }
       // else: authenticated and has file → all good, no modal
     })
-  }, [
-    inProgress,
-    activeProvider,
-    setShowWelcome,
-    setShowFileSelection,
-    setShowReconnectModal,
-  ])
+  }, [activeProvider, setShowWelcome, setShowFileSelection, setShowReconnectModal])
 
   /**
    * Trigger manual sync with Last Write Wins (LWW) merge

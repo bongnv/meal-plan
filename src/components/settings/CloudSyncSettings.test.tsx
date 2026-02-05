@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { SyncProvider } from '../../contexts/SyncContext'
+import { createMockMsalInstance } from '../../test/mockMsal'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
 
 import { CloudSyncSettings } from './CloudSyncSettings'
@@ -44,13 +45,17 @@ vi.mock('../../contexts/AppContext', () => ({
 }))
 
 // Create AllProviders wrapper
-const AllProviders = ({ children }: { children: ReactNode }) => (
-  <MantineProvider>
-    <MemoryRouter>
-      <SyncProvider>{children}</SyncProvider>
-    </MemoryRouter>
-  </MantineProvider>
-)
+const AllProviders = ({ children }: { children: React.ReactNode }) => {
+  const mockMsalInstance = createMockMsalInstance()
+
+  return (
+    <MantineProvider>
+      <MemoryRouter>
+        <SyncProvider msalInstance={mockMsalInstance}>{children}</SyncProvider>
+      </MemoryRouter>
+    </MantineProvider>
+  )
+}
 
 // Mock SyncContext
 const mockSelectFile = vi.fn()

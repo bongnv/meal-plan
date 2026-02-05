@@ -2,8 +2,6 @@ import '@mantine/core/styles.css'
 import '@mantine/dates/styles.css'
 import '@mantine/notifications/styles.css'
 
-import { PublicClientApplication } from '@azure/msal-browser'
-import { MsalProvider } from '@azure/msal-react'
 import { MantineProvider } from '@mantine/core'
 import { ModalsProvider } from '@mantine/modals'
 import { Notifications } from '@mantine/notifications'
@@ -12,24 +10,22 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
-import { msalConfig } from './config/msalConfig'
+import { initializeMsal, msalInstance } from './config/msalInstance'
 import { AppProvider } from './contexts/AppContext'
 import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
 
-// Initialize MSAL instance
-const msalInstance = new PublicClientApplication(msalConfig)
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <MsalProvider instance={msalInstance}>
+// Initialize MSAL before rendering
+void initializeMsal().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
       <ServicesProvider>
         <MantineProvider>
           <Notifications position="top-right" />
           <ModalsProvider>
             <BrowserRouter>
               <AppProvider>
-                <SyncProvider>
+                <SyncProvider msalInstance={msalInstance}>
                   <App />
                 </SyncProvider>
               </AppProvider>
@@ -37,6 +33,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </ModalsProvider>
         </MantineProvider>
       </ServicesProvider>
-    </MsalProvider>
-  </React.StrictMode>
-)
+    </React.StrictMode>
+  )
+})

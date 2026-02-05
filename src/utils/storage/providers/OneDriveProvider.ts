@@ -31,13 +31,8 @@ export class OneDriveProvider implements ICloudStorageProvider {
    * @private
    */
   private getAccount(): AccountInfo | null {
-    try {
-      const accounts = this.msalInstance.getAllAccounts()
-      return accounts.length > 0 ? accounts[0] : null
-    } catch (error) {
-      console.warn('[OneDrive] MSAL not ready yet:', error)
-      return null
-    }
+    const accounts = this.msalInstance.getAllAccounts()
+    return accounts.length > 0 ? accounts[0] : null
   }
 
   /**

@@ -7,6 +7,7 @@ import App from './App'
 import { AppProvider } from './contexts/AppContext'
 import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
+import { createMockMsalInstance } from './test/mockMsal'
 
 import type { ReactNode } from 'react'
 
@@ -44,10 +45,12 @@ vi.mock('dexie-react-hooks', () => ({
 }))
 
 const renderApp = (initialRoute: string = '/') => {
+  const mockMsalInstance = createMockMsalInstance()
+
   return render(
     <ServicesProvider>
       <AppProvider>
-        <SyncProvider>
+        <SyncProvider msalInstance={mockMsalInstance}>
           <MantineProvider>
             <MemoryRouter initialEntries={[initialRoute]}>
               <App />
