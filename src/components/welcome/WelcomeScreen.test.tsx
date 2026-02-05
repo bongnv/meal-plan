@@ -28,15 +28,12 @@ vi.mock('../../contexts/SyncContext', () => ({
 // Mock FileSelectionModal
 vi.mock('../sync/FileSelectionModal', () => ({
   FileSelectionModal: ({
-    opened,
     onClose,
     onSelectFile,
   }: {
-    opened: boolean
     onClose: () => void
     onSelectFile: (file: unknown) => void
   }) => {
-    if (!opened) return null
     return (
       <div data-testid="file-selection-modal">
         <button
@@ -61,6 +58,14 @@ const renderWithProviders = (component: ReactNode) => {
 }
 
 describe('WelcomeScreen', () => {
+  const mockOnConnect = vi.fn()
+  const mockOnSkip = vi.fn()
+
+  const defaultProps = {
+    onConnect: mockOnConnect,
+    onSkip: mockOnSkip,
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
@@ -69,8 +74,8 @@ describe('WelcomeScreen', () => {
   })
 
   describe('Display Logic', () => {
-    it('should render when no localStorage data and not connected', () => {
-      renderWithProviders(<WelcomeScreen />)
+    it('should render when opened prop is true', () => {
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
       expect(
@@ -85,46 +90,36 @@ describe('WelcomeScreen', () => {
         JSON.stringify([{ id: '1', name: 'Test Recipe' }])
       )
 
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       // Welcome screen should still show to encourage backup
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
     })
 
-    it('should not render when user is already connected', () => {
-      // Set up connected state
-      mockIsAuthenticated = true
-      mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test' }
-
-      renderWithProviders(<WelcomeScreen />)
-
-      expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
-    })
-
     it('should check for any localStorage keys (recipes, mealPlans, ingredients)', () => {
       localStorage.setItem('mealPlans', JSON.stringify([]))
 
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       // Welcome screen should still show to encourage backup
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
     })
 
     it('should show welcome screen again after disconnect', async () => {
-      // Start connected
+      // Start connected - welcome screen should not be rendered by parent
       mockIsAuthenticated = true
       mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test' }
 
-      renderWithProviders(<WelcomeScreen />)
-
-      // Should not show when connected
+      // When connected, parent doesn't render WelcomeScreen at all
+      renderWithProviders(<div />)
       expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
 
       // Simulate disconnect - user disconnects completely, not just file
       mockIsAuthenticated = false
       mockSelectedFile = null
 
-      renderWithProviders(<WelcomeScreen />)
+      // After disconnect, parent renders WelcomeScreen
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       // Should show welcome screen after complete disconnect
       await waitFor(() => {
@@ -135,14 +130,14 @@ describe('WelcomeScreen', () => {
 
   describe('UI Elements', () => {
     it('should display welcome message and app intro', () => {
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
       expect(screen.getByText(/meal plan/i)).toBeInTheDocument()
     })
 
     it('should display "Connect to OneDrive" primary button', () => {
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       const connectButton = screen.getByRole('button', {
         name: /connect to onedrive/i,
@@ -151,7 +146,7 @@ describe('WelcomeScreen', () => {
     })
 
     it('should display "Skip - Work Offline" secondary link', () => {
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       const skipLink = screen.getByRole('button', {
         name: /skip.*work offline/i,
@@ -160,7 +155,7 @@ describe('WelcomeScreen', () => {
     })
 
     it('should display warning about offline limitations', () => {
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       expect(screen.getByText(/offline limitations/i)).toBeInTheDocument()
       expect(screen.getByText(/not be backed up/i)).toBeInTheDocument()
@@ -168,34 +163,10 @@ describe('WelcomeScreen', () => {
   })
 
   describe('Connect to OneDrive', () => {
-    it('should open FileSelectionModal when connect button is clicked', async () => {
+    it('should call onConnect when connect button is clicked', async () => {
       const user = userEvent.setup()
-      mockConnect.mockImplementation(async () => {
-        mockIsAuthenticated = true
-      })
-      const { rerender } = renderWithProviders(<WelcomeScreen />)
-
-      const connectButton = screen.getByRole('button', {
-        name: /connect to onedrive/i,
-      })
-      await user.click(connectButton)
-
-      // Rerender to reflect authentication state change
-      rerender(
-        <MantineProvider>
-          <WelcomeScreen />
-        </MantineProvider>
-      )
-
-      await waitFor(() => {
-        expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
-      })
-    })
-
-    it('should authenticate before opening file selection', async () => {
-      const user = userEvent.setup()
-      mockConnect.mockResolvedValue(undefined)
-      renderWithProviders(<WelcomeScreen />)
+      mockOnConnect.mockResolvedValue(undefined)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       const connectButton = screen.getByRole('button', {
         name: /connect to onedrive/i,
@@ -203,98 +174,15 @@ describe('WelcomeScreen', () => {
       await user.click(connectButton)
 
       await waitFor(() => {
-        expect(mockConnect).toHaveBeenCalled()
+        expect(mockOnConnect).toHaveBeenCalled()
       })
-    })
-
-    it('should hide welcome screen after file selection', async () => {
-      const user = userEvent.setup()
-      mockConnect.mockImplementation(async () => {
-        mockIsAuthenticated = true
-      })
-      const { rerender } = renderWithProviders(<WelcomeScreen />)
-
-      const connectButton = screen.getByRole('button', {
-        name: /connect to onedrive/i,
-      })
-      await user.click(connectButton)
-
-      // Rerender to reflect authentication state change
-      rerender(
-        <MantineProvider>
-          <WelcomeScreen />
-        </MantineProvider>
-      )
-
-      await waitFor(() => {
-        expect(screen.getByTestId('file-selection-modal')).toBeInTheDocument()
-      })
-
-      const selectButton = screen.getByRole('button', { name: /select file/i })
-      await user.click(selectButton)
-
-      // Simulate file selection completing
-      mockSelectedFile = {
-        id: '1',
-        name: 'test.json.gz',
-        path: '/test.json.gz',
-      }
-      rerender(
-        <MantineProvider>
-          <WelcomeScreen />
-        </MantineProvider>
-      )
-
-      // Verify selectFile was called with file info
-      await waitFor(() => {
-        expect(mockSelectFile).toHaveBeenCalledWith({
-          id: '1',
-          name: 'test.json.gz',
-          path: '/test.json.gz',
-        })
-      })
-
-      // After file selection, welcome screen should be hidden
-      await waitFor(() => {
-        expect(
-          screen.queryByTestId('file-selection-modal')
-        ).not.toBeInTheDocument()
-        expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
-      })
-    })
-
-    it('should handle authentication errors gracefully', async () => {
-      const user = userEvent.setup()
-      mockConnect.mockRejectedValue(new Error('Auth failed'))
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-      renderWithProviders(<WelcomeScreen />)
-
-      const connectButton = screen.getByRole('button', {
-        name: /connect to onedrive/i,
-      })
-      await user.click(connectButton)
-
-      await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to connect'),
-          expect.any(Error)
-        )
-      })
-
-      // Modal should not open on error
-      expect(
-        screen.queryByTestId('file-selection-modal')
-      ).not.toBeInTheDocument()
-
-      consoleSpy.mockRestore()
     })
   })
 
   describe('Skip to Offline', () => {
-    it('should hide welcome screen when skip button is clicked', async () => {
+    it('should call onSkip when skip button is clicked', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       const skipButton = screen.getByRole('button', {
         name: /skip.*work offline/i,
@@ -302,13 +190,13 @@ describe('WelcomeScreen', () => {
       await user.click(skipButton)
 
       await waitFor(() => {
-        expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
+        expect(mockOnSkip).toHaveBeenCalled()
       })
     })
 
     it('should NOT persist skip choice to localStorage (will show again on reload)', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       const skipButton = screen.getByRole('button', {
         name: /skip.*work offline/i,
@@ -316,7 +204,7 @@ describe('WelcomeScreen', () => {
       await user.click(skipButton)
 
       await waitFor(() => {
-        expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
+        expect(mockOnSkip).toHaveBeenCalled()
       })
 
       // Verify no localStorage flag was set
@@ -326,7 +214,7 @@ describe('WelcomeScreen', () => {
     it('should show welcome screen again on next visit if user skipped and has no data', () => {
       // This simulates a page reload after user clicked skip
       // Since no localStorage flag is set and user is not connected, welcome should show
-      renderWithProviders(<WelcomeScreen />)
+      renderWithProviders(<WelcomeScreen {...defaultProps} />)
 
       expect(screen.getByText(/welcome/i)).toBeInTheDocument()
     })
@@ -334,7 +222,9 @@ describe('WelcomeScreen', () => {
 
   describe('Styling', () => {
     it('should use Center layout for centering content', () => {
-      const { container } = renderWithProviders(<WelcomeScreen />)
+      const { container } = renderWithProviders(
+        <WelcomeScreen {...defaultProps} />
+      )
 
       // Check if Center component is used (rendered as div)
       const centerElement = container.querySelector(
@@ -344,7 +234,9 @@ describe('WelcomeScreen', () => {
     })
 
     it('should have full-height overlay', () => {
-      const { container } = renderWithProviders(<WelcomeScreen />)
+      const { container } = renderWithProviders(
+        <WelcomeScreen {...defaultProps} />
+      )
 
       const overlay = container.querySelector('[data-testid="welcome-screen"]')
       expect(overlay).toBeInTheDocument()

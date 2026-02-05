@@ -2,7 +2,6 @@ import { Modal, Text, Button, Stack, Alert, Group, Code } from '@mantine/core'
 import { IconAlertTriangle, IconCloud, IconCloudOff } from '@tabler/icons-react'
 
 interface ReconnectModalProps {
-  opened: boolean
   fileName: string
   onReconnect: () => void
   onWorkOffline: () => void
@@ -13,14 +12,13 @@ interface ReconnectModalProps {
  * Prompts user to reconnect or work offline
  */
 export function ReconnectModal({
-  opened,
   fileName,
   onReconnect,
   onWorkOffline,
 }: ReconnectModalProps) {
   return (
     <Modal
-      opened={opened}
+      opened={true}
       onClose={() => {
         /* Cannot close without action */
       }}

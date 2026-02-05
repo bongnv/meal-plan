@@ -14,24 +14,9 @@ describe('ReconnectModal', () => {
   const mockOnReconnect = vi.fn()
   const mockOnWorkOffline = vi.fn()
 
-  it('should not render when closed', () => {
-    render(
-      <ReconnectModal
-        opened={false}
-        fileName="data.json.gz"
-        onReconnect={mockOnReconnect}
-        onWorkOffline={mockOnWorkOffline}
-      />,
-      { wrapper: Wrapper }
-    )
-
-    expect(screen.queryByText(/session has expired/i)).not.toBeInTheDocument()
-  })
-
   it('should render when opened', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -45,7 +30,6 @@ describe('ReconnectModal', () => {
   it('should display the file name', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="my-meal-plan.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -59,7 +43,6 @@ describe('ReconnectModal', () => {
   it('should have Reconnect to OneDrive button', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -75,7 +58,6 @@ describe('ReconnectModal', () => {
   it('should have Work Offline button', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -93,7 +75,6 @@ describe('ReconnectModal', () => {
 
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -114,7 +95,6 @@ describe('ReconnectModal', () => {
 
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -133,7 +113,6 @@ describe('ReconnectModal', () => {
   it('should not allow dismissing by clicking outside', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}
@@ -148,7 +127,6 @@ describe('ReconnectModal', () => {
   it('should show helpful explanation message', () => {
     render(
       <ReconnectModal
-        opened={true}
         fileName="data.json.gz"
         onReconnect={mockOnReconnect}
         onWorkOffline={mockOnWorkOffline}

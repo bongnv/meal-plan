@@ -14,12 +14,10 @@ interface BreadcrumbItem {
 }
 
 interface UseFileSelectionModalParams {
-  opened: boolean
   onSelectFile: (fileInfo: FileInfo) => void
 }
 
 export function useFileSelectionModal({
-  opened,
   onSelectFile,
 }: UseFileSelectionModalParams) {
   const { listFoldersAndFiles } = useSyncContext()
@@ -61,12 +59,11 @@ export function useFileSelectionModal({
     [listFoldersAndFiles]
   )
 
-  // Load initial folder listing when modal opens
+  // Load initial folder listing on mount
   useEffect(() => {
-    if (opened) {
-      void loadFolderContents(undefined)
-    }
-  }, [opened, loadFolderContents])
+    void loadFolderContents(undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount
 
   const navigateToFolder = useCallback(
     (folder: FolderInfo) => {

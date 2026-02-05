@@ -13,6 +13,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
 import { msalConfig } from './config/msalConfig'
+import { AppProvider } from './contexts/AppContext'
 import { ServicesProvider } from './contexts/ServicesContext'
 import { SyncProvider } from './contexts/SyncContext'
 
@@ -27,9 +28,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Notifications position="top-right" />
           <ModalsProvider>
             <BrowserRouter>
-              <SyncProvider>
-                <App />
-              </SyncProvider>
+              <AppProvider>
+                <SyncProvider>
+                  <App />
+                </SyncProvider>
+              </AppProvider>
             </BrowserRouter>
           </ModalsProvider>
         </MantineProvider>

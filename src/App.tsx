@@ -12,8 +12,10 @@ import { Route, Routes, useLocation, Link } from 'react-router-dom'
 
 import { SyncStatusIndicator } from './components/header/SyncStatusIndicator'
 import { CloudSyncSettings } from './components/settings/CloudSyncSettings'
+import { FileSelectionModal } from './components/sync/FileSelectionModal'
 import { ReconnectModal } from './components/sync/ReconnectModal'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
+import { useAppContext } from './contexts/AppContext'
 import { useSyncContext } from './contexts/SyncContext'
 import { GroceryListDetailPage } from './pages/groceryLists/GroceryListDetailPage'
 import { GroceryListsPage } from './pages/groceryLists/GroceryListsPage'
@@ -27,16 +29,31 @@ import { EditRecipePage } from './pages/recipes/EditRecipePage'
 import { RecipeDetailPage } from './pages/recipes/RecipeDetailPage'
 import { RecipesPage } from './pages/recipes/RecipesPage'
 import { IngredientsPage } from './pages/settings/IngredientsPage'
+import { CloudProvider } from './utils/storage/CloudProvider'
+
+import type { FileInfo } from './utils/storage/ICloudStorageProvider'
 
 function App() {
   const [opened, { toggle, close }] = useDisclosure()
   const location = useLocation()
+
+  // Get modal visibility state from AppContext
   const {
-    needsReconnect,
+    showWelcome,
+    showFileSelection,
+    showReconnectModal,
+    setShowWelcome,
+    setShowFileSelection,
+    setShowReconnectModal,
+  } = useAppContext()
+
+  // Get business logic from SyncContext
+  const {
     selectedFile,
-    clearReconnectFlag,
     currentProvider,
     connect,
+    selectFile,
+    disconnectAndReset,
   } = useSyncContext()
 
   // Detect if we're on mobile (< 768px)
@@ -64,6 +81,29 @@ function App() {
     { path: '/settings/cloud-sync', label: 'Cloud Sync', icon: IconCloud },
   ]
 
+  // Handlers for welcome screen
+  const handleConnect = async () => {
+    try {
+      await connect(CloudProvider.ONEDRIVE)
+    } catch (error) {
+      console.error('Failed to connect:', error)
+    }
+  }
+
+  const handleSkipWelcome = () => {
+    setShowWelcome(false)
+  }
+
+  // Handlers for file selection
+  const handleFileSelected = async (fileInfo: FileInfo) => {
+    await selectFile(fileInfo)
+  }
+
+  const handleCancelFileSelection = async () => {
+    await disconnectAndReset()
+    setShowFileSelection(false)
+  }
+
   // Handler for reconnect button
   const handleReconnect = async () => {
     try {
@@ -71,8 +111,8 @@ function App() {
       if (currentProvider) {
         await connect(currentProvider)
       }
-      // Clear reconnect flag - auto-sync will resume automatically
-      clearReconnectFlag()
+      // Modal will auto-close when connection succeeds
+      setShowReconnectModal(false)
     } catch (error) {
       console.error('Reconnect failed:', error)
       // Keep reconnect modal open if reconnection fails
@@ -81,19 +121,28 @@ function App() {
 
   // Handler for work offline button
   const handleWorkOffline = () => {
-    // Just clear the reconnect flag - keep data and selectedFile intact
-    clearReconnectFlag()
+    // Just close modal - keep data and selectedFile intact
+    setShowReconnectModal(false)
   }
 
   return (
     <>
-      <WelcomeScreen />
-      <ReconnectModal
-        opened={needsReconnect}
-        fileName={selectedFile?.name || 'Unknown file'}
-        onReconnect={handleReconnect}
-        onWorkOffline={handleWorkOffline}
-      />
+      {showWelcome && (
+        <WelcomeScreen onConnect={handleConnect} onSkip={handleSkipWelcome} />
+      )}
+      {showFileSelection && (
+        <FileSelectionModal
+          onClose={handleCancelFileSelection}
+          onSelectFile={handleFileSelected}
+        />
+      )}
+      {showReconnectModal && (
+        <ReconnectModal
+          fileName={selectedFile?.name || 'Unknown file'}
+          onReconnect={handleReconnect}
+          onWorkOffline={handleWorkOffline}
+        />
+      )}
       <AppShell
         header={{ height: 60 }}
         navbar={{

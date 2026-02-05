@@ -73,36 +73,16 @@ describe('FileSelectionModal', () => {
   describe('Modal Rendering', () => {
     it('should render modal when opened', async () => {
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       expect(screen.getByRole('dialog')).toBeInTheDocument()
       expect(screen.getByRole('dialog')).toHaveAttribute('aria-labelledby')
     })
 
-    it('should not render modal when closed', () => {
-      renderWithMantine(
-        <FileSelectionModal
-          opened={false}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
-      )
-
-      expect(screen.queryByText(/select file/i)).not.toBeInTheDocument()
-    })
-
     it('should list folders and files when opened', async () => {
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -118,11 +98,7 @@ describe('FileSelectionModal', () => {
   describe('Folder Navigation', () => {
     it('should display breadcrumb navigation', async () => {
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -134,11 +110,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -188,11 +160,7 @@ describe('FileSelectionModal', () => {
         })
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -247,11 +215,7 @@ describe('FileSelectionModal', () => {
         })
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Navigate into Documents
@@ -280,11 +244,7 @@ describe('FileSelectionModal', () => {
   describe('Folder and File Display', () => {
     it('should show shared badge for shared folders', async () => {
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -313,11 +273,7 @@ describe('FileSelectionModal', () => {
       })
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -338,11 +294,7 @@ describe('FileSelectionModal', () => {
       })
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -356,11 +308,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -379,11 +327,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -405,11 +349,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -436,11 +376,7 @@ describe('FileSelectionModal', () => {
   describe('File Creation', () => {
     it('should show create file section', async () => {
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -452,11 +388,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -477,11 +409,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -507,11 +435,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -537,11 +461,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -572,11 +492,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -601,11 +517,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       // Click Create New File button to open the nested modal
@@ -637,11 +549,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -672,11 +580,7 @@ describe('FileSelectionModal', () => {
       const user = userEvent.setup()
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -697,11 +601,7 @@ describe('FileSelectionModal', () => {
       mockListFoldersAndFiles.mockRejectedValueOnce(new Error('Listing failed'))
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {
@@ -731,11 +631,7 @@ describe('FileSelectionModal', () => {
       })
 
       renderWithMantine(
-        <FileSelectionModal
-          opened={true}
-          onClose={onCancel}
-          onSelectFile={onSelectFile}
-        />
+        <FileSelectionModal onClose={onCancel} onSelectFile={onSelectFile} />
       )
 
       await waitFor(() => {

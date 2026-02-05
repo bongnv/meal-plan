@@ -27,7 +27,6 @@ import { useFileSelectionModal } from '../../hooks/useFileSelectionModal'
 import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
 
 interface FileSelectionModalProps {
-  opened: boolean
   onClose: () => void
   onSelectFile: (fileInfo: FileInfo) => void
 }
@@ -37,7 +36,6 @@ interface FileSelectionModalProps {
  * Pure presentation component - UI logic handled by useFileSelectionModal hook
  */
 export function FileSelectionModal({
-  opened,
   onClose,
   onSelectFile,
 }: FileSelectionModalProps) {
@@ -64,7 +62,7 @@ export function FileSelectionModal({
     handleFileNameChange,
     handleCreateFile,
     closeCreateModal,
-  } = useFileSelectionModal({ opened, onSelectFile })
+  } = useFileSelectionModal({ onSelectFile })
 
   const renderError = () => (
     <Alert
@@ -181,7 +179,7 @@ export function FileSelectionModal({
   return (
     <>
       <Modal
-        opened={opened}
+        opened={true}
         onClose={onClose}
         title="Select File"
         size="lg"

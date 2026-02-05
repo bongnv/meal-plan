@@ -31,6 +31,18 @@ vi.mock('../sync/FileSelectionModal', () => ({
   FileSelectionModal: vi.fn(() => null),
 }))
 
+// Mock AppContext
+vi.mock('../../contexts/AppContext', () => ({
+  useAppContext: () => ({
+    showWelcome: false,
+    showFileSelection: false,
+    showReconnectModal: false,
+    setShowWelcome: vi.fn(),
+    setShowFileSelection: vi.fn(),
+    setShowReconnectModal: vi.fn(),
+  }),
+}))
+
 // Create AllProviders wrapper
 const AllProviders = ({ children }: { children: ReactNode }) => (
   <MantineProvider>

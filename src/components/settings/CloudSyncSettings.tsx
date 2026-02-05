@@ -15,9 +15,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { useSyncContext } from '../../contexts/SyncContext'
 import { CloudProvider } from '../../utils/storage/CloudProvider'
-import { FileSelectionModal } from '../sync/FileSelectionModal'
-
-import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
 
 /**
  * Cloud Storage Sync Settings component
@@ -33,10 +30,7 @@ export function CloudSyncSettings() {
     selectedFile,
     lastSyncTime,
     syncStatus,
-    selectFile,
     disconnectAndReset,
-    isInitializing,
-    isAuthenticated,
     getAccountInfo,
     connect,
   } = useSyncContext()
@@ -45,8 +39,8 @@ export function CloudSyncSettings() {
 
   const isSyncing = syncStatus === 'syncing'
 
-  // Get account info only when authenticated
-  const accountInfo = isAuthenticated ? getAccountInfo() : null
+  // Get account info (returns null if not authenticated)
+  const accountInfo = getAccountInfo()
 
   /**
    * Handle connect to OneDrive
@@ -58,20 +52,6 @@ export function CloudSyncSettings() {
     } catch (error) {
       console.error('Authentication failed:', error)
     }
-  }
-
-  /**
-   * Handle file selection from modal
-   */
-  const handleFileSelected = async (fileInfo: FileInfo) => {
-    await selectFile(fileInfo)
-  }
-
-  /**
-   * Handle modal close (user canceled)
-   */
-  const handleModalClose = async () => {
-    await disconnectAndReset()
   }
 
   /**
@@ -239,12 +219,6 @@ export function CloudSyncSettings() {
           </Text>
         )}
       </Stack>
-
-      <FileSelectionModal
-        opened={isAuthenticated && selectedFile === null && !isInitializing}
-        onClose={handleModalClose}
-        onSelectFile={handleFileSelected}
-      />
     </Container>
   )
 }
