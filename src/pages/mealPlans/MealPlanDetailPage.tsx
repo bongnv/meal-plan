@@ -18,14 +18,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { CopyMealPlanModal } from '../../components/mealPlans/CopyMealPlanModal'
-import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { useServices } from '../../contexts/ServicesContext'
+import { CopyMealPlanModal } from '@/components/mealPlans/CopyMealPlanModal'
+import { RecipeDetail } from '@/components/recipes/RecipeDetail'
+import { useServices } from '@/contexts/ServicesContext'
 import {
   isRecipeMealPlan,
   isCustomMealPlan,
   getMealPlanTypeInfo,
-} from '../../types/mealPlan'
+} from '@/types/mealPlan'
 
 export function MealPlanDetailPage() {
   const { id } = useParams<{ id: string }>()

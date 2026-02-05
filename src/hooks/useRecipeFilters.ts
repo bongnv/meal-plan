@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 
-import type { TimeRange } from '../services/recipeService'
+import type { TimeRange } from '@/services/recipeService'
 
 export interface RecipeFilterState {
   searchText: string

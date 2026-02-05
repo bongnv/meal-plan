@@ -1,16 +1,16 @@
 import { z } from 'zod'
 
-import { db, type MealPlanDB } from '../db/database'
+import { db, type MealPlanDB } from '@/db/database'
 import {
   isExistingFile,
   type FileInfo,
   type ICloudStorageProvider,
-} from '../utils/storage/ICloudStorageProvider'
+} from '@/utils/storage/ICloudStorageProvider'
 
-import type { GroceryList, GroceryItem } from '../types/groceryList'
-import type { Ingredient } from '../types/ingredient'
-import type { MealPlan } from '../types/mealPlan'
-import type { Recipe } from '../types/recipe'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { Ingredient } from '@/types/ingredient'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 // Zod schema for validating remote sync data
 const SyncDataSchema = z.object({

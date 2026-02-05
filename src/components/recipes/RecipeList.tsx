@@ -19,7 +19,7 @@ import {
 } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 interface RecipeListProps {
   recipes: Recipe[]

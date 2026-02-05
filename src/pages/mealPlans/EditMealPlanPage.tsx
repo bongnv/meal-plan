@@ -13,11 +13,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
-import { RecipeSelector } from '../../components/mealPlans/RecipeSelector'
-import { useServices } from '../../contexts/ServicesContext'
+import { MealPlanForm } from '@/components/mealPlans/MealPlanForm'
+import { RecipeSelector } from '@/components/mealPlans/RecipeSelector'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { MealPlan } from '../../types/mealPlan'
+import type { MealPlan } from '@/types/mealPlan'
 
 export function EditMealPlanPage() {
   const { id } = useParams<{ id: string }>()

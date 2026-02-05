@@ -22,9 +22,9 @@ import {
   IconShare,
 } from '@tabler/icons-react'
 
-import { useFileSelectionModal } from '../../hooks/useFileSelectionModal'
+import { useFileSelectionModal } from '@/hooks/useFileSelectionModal'
 
-import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
+import type { FileInfo } from '@/utils/storage/ICloudStorageProvider'
 
 interface FileSelectionModalProps {
   onClose: () => void

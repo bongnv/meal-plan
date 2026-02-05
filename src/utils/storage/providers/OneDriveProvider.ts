@@ -1,15 +1,15 @@
 import { IPublicClientApplication, AccountInfo } from '@azure/msal-browser'
 import { Client } from '@microsoft/microsoft-graph-client'
 
-import { loginRequest } from '../../../config/msalConfig'
-import { compressData, decompressData } from '../../compression'
-import { TokenExpiredError } from '../../errors/TokenExpiredError'
+import { loginRequest } from '@/config/msalConfig'
+import { compressData, decompressData } from '@/utils/compression'
+import { TokenExpiredError } from '@/utils/errors/TokenExpiredError'
 import {
   ICloudStorageProvider,
   type FileInfo,
   type FolderInfo,
   type FolderListResult,
-} from '../ICloudStorageProvider'
+} from '@/utils/storage/ICloudStorageProvider'
 
 /**
  * OneDrive storage provider implementation

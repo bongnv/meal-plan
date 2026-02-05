@@ -1,9 +1,9 @@
-import { db } from '../db/database'
-import { generateId } from '../utils/idGenerator'
+import { db } from '@/db/database'
+import { generateId } from '@/utils/idGenerator'
 
-import type { MealPlanDB } from '../db/database'
-import type { GroceryList, GroceryItem } from '../types/groceryList'
-import type { IngredientCategory, Unit } from '../types/ingredient'
+import type { MealPlanDB } from '@/db/database'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { IngredientCategory, Unit } from '@/types/ingredient'
 
 /**
  * Grocery List Service

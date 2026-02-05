@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 import { validateRecipeImport } from './recipeImportValidator'
 
-import type { Ingredient } from '../types/ingredient'
+import type { Ingredient } from '@/types/ingredient'
 
 describe('validateRecipeImport', () => {
   const existingIngredients: Ingredient[] = [

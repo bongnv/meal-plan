@@ -6,10 +6,10 @@ import {
   convertQuantity,
 } from './unitConversion'
 
-import type { GroceryList, GroceryItem } from '../types/groceryList'
-import type { Ingredient, IngredientCategory, Unit } from '../types/ingredient'
-import type { MealPlan } from '../types/mealPlan'
-import type { Recipe } from '../types/recipe'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { Ingredient, IngredientCategory, Unit } from '@/types/ingredient'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 interface DateRange {
   start: string // ISO date string YYYY-MM-DD

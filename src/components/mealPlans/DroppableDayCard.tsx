@@ -15,10 +15,10 @@ import { useMediaQuery } from '@mantine/hooks'
 import { IconCopy, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
-import { getMealPlanTypeInfo } from '../../types/mealPlan'
+import { getMealPlanTypeInfo } from '@/types/mealPlan'
 
-import type { MealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 interface DroppableDayCardProps {
   dateString: string

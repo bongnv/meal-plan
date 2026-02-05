@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { useSyncContext } from '../contexts/SyncContext'
-import { syncService } from '../services/syncService'
+import { useSyncContext } from '@/contexts/SyncContext'
+import { syncService } from '@/services/syncService'
 
 import type {
   FileInfo,
   FolderInfo,
-} from '../utils/storage/ICloudStorageProvider'
+} from '@/utils/storage/ICloudStorageProvider'
 
 interface BreadcrumbItem {
   label: string

@@ -1,9 +1,9 @@
-import { db } from '../db/database'
-import { generateId } from '../utils/idGenerator'
+import { db } from '@/db/database'
+import { generateId } from '@/utils/idGenerator'
 
-import type { MealPlanDB } from '../db/database'
-import type { Ingredient, IngredientFormValues } from '../types/ingredient'
-import type { Recipe } from '../types/recipe'
+import type { MealPlanDB } from '@/db/database'
+import type { Ingredient, IngredientFormValues } from '@/types/ingredient'
+import type { Recipe } from '@/types/recipe'
 
 export type TimeRange = 'under-30' | '30-60' | 'over-60' | null
 

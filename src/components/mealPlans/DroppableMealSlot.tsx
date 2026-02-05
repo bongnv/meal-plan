@@ -2,10 +2,10 @@ import { useDroppable } from '@dnd-kit/core'
 import { Box, Button, Group, Text } from '@mantine/core'
 import { useNavigate } from 'react-router-dom'
 
-import { getMealPlanTypeInfo, isRecipeMealPlan } from '../../types/mealPlan'
+import { getMealPlanTypeInfo, isRecipeMealPlan } from '@/types/mealPlan'
 
-import type { MealPlan, MealType } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { MealPlan, MealType } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 interface DroppableMealSlotProps {
   dateString: string

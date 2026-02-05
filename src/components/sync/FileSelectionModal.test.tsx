@@ -3,12 +3,12 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import * as SyncContext from '../../contexts/SyncContext'
-import { CloudProvider } from '../../utils/storage/CloudProvider'
+import * as SyncContext from '@/contexts/SyncContext'
+import { CloudProvider } from '@/utils/storage/CloudProvider'
 
 import { FileSelectionModal } from './FileSelectionModal'
 
-import type { FolderListResult } from '../../utils/storage/ICloudStorageProvider'
+import type { FolderListResult } from '@/utils/storage/ICloudStorageProvider'
 
 // Helper to render with Mantine provider
 const renderWithMantine = (ui: React.ReactElement) => {

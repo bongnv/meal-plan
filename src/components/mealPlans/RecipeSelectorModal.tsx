@@ -13,13 +13,13 @@ import {
 import { IconCheck } from '@tabler/icons-react'
 import { useMemo } from 'react'
 
-import { useRecipeFilters } from '../../hooks/useRecipeFilters'
-import { recipeService } from '../../services/recipeService'
-import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
-import { RecipeFilterPanel } from '../recipes/RecipeFilterPanel'
+import { RecipeFilterPanel } from '@/components/recipes/RecipeFilterPanel'
+import { useRecipeFilters } from '@/hooks/useRecipeFilters'
+import { recipeService } from '@/services/recipeService'
+import { CUSTOM_MEAL_TYPES } from '@/types/mealPlan'
 
-import type { Ingredient } from '../../types/ingredient'
-import type { Recipe } from '../../types/recipe'
+import type { Ingredient } from '@/types/ingredient'
+import type { Recipe } from '@/types/recipe'
 
 interface RecipeSelectorModalProps {
   opened: boolean

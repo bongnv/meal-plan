@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { Ingredient } from '../types/ingredient'
+import { Ingredient } from '@/types/ingredient'
 
 import { generateRecipeImportPrompt } from './aiPromptGenerator'
 

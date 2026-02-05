@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { GroceryItem, GroceryList } from '../../types/groceryList'
-import { MealPlan } from '../../types/mealPlan'
+import { GroceryItem, GroceryList } from '@/types/groceryList'
+import { MealPlan } from '@/types/mealPlan'
 
 import { GroceryListView } from './GroceryListView'
 

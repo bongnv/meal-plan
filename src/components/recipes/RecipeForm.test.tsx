@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { ServicesProvider } from '../../contexts/ServicesContext'
+import { ServicesProvider } from '@/contexts/ServicesContext'
 
 import { RecipeForm } from './RecipeForm'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 // Mock dexie-react-hooks
 vi.mock('dexie-react-hooks')

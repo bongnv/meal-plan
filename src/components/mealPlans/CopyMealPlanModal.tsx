@@ -16,7 +16,7 @@ import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useServices } from '../../contexts/ServicesContext'
+import { useServices } from '@/contexts/ServicesContext'
 
 import type {
   CopyFrequency,
@@ -24,7 +24,7 @@ import type {
   CopyOptions,
   CopyResult,
   ConflictResolution,
-} from '../../types/mealPlan'
+} from '@/types/mealPlan'
 
 interface CopyMealPlanModalProps {
   opened: boolean

@@ -4,13 +4,13 @@ import { zodResolver, useForm } from '@mantine/form'
 import {
   INGREDIENT_CATEGORIES,
   IngredientFormSchema,
-} from '../../types/ingredient'
+} from '@/types/ingredient'
 
 import type {
   Ingredient,
   IngredientCategory,
   IngredientFormValues,
-} from '../../types/ingredient'
+} from '@/types/ingredient'
 
 interface IngredientFormProps {
   ingredient?: Ingredient

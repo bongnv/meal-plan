@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { RecipeSection } from '../types/recipe'
+import type { RecipeSection } from '@/types/recipe'
 
 export interface RecipeSectionManagerReturn {
   sections: RecipeSection[]

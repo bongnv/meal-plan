@@ -7,7 +7,7 @@ import {
   formatMealDate,
 } from './upcomingMeals'
 
-import type { MealPlan } from '../../types/mealPlan'
+import type { MealPlan } from '@/types/mealPlan'
 
 describe('getMealTime', () => {
   it('should return 12:00:00 for lunch', () => {

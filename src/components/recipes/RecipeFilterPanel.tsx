@@ -13,8 +13,8 @@ import { IconSearch, IconX } from '@tabler/icons-react'
 import type {
   RecipeFilterActions,
   RecipeFilterState,
-} from '../../hooks/useRecipeFilters'
-import type { Ingredient } from '../../types/ingredient'
+} from '@/hooks/useRecipeFilters'
+import type { Ingredient } from '@/types/ingredient'
 
 export interface RecipeFilterPanelProps {
   filters: RecipeFilterState

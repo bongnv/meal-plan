@@ -15,12 +15,12 @@ import {
 import { IconClock, IconSearch } from '@tabler/icons-react'
 import { useMemo } from 'react'
 
-import { useRecipeFilters } from '../../hooks/useRecipeFilters'
-import { recipeService } from '../../services/recipeService'
-import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
+import { useRecipeFilters } from '@/hooks/useRecipeFilters'
+import { recipeService } from '@/services/recipeService'
+import { CUSTOM_MEAL_TYPES } from '@/types/mealPlan'
 
-import type { Ingredient } from '../../types/ingredient'
-import type { Recipe } from '../../types/recipe'
+import type { Ingredient } from '@/types/ingredient'
+import type { Recipe } from '@/types/recipe'
 
 interface RecipeSelectorProps {
   recipes: Recipe[]

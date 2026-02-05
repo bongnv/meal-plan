@@ -2,7 +2,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { Badge, Box, Card, Group, Image, Stack, Text } from '@mantine/core'
 import { IconClock } from '@tabler/icons-react'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 interface DraggableRecipeCardProps {
   recipe: Recipe

@@ -26,11 +26,11 @@ import {
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { groceryListService } from '../../services/groceryListService'
-import { GroceryItem, GroceryList } from '../../types/groceryList'
-import { INGREDIENT_CATEGORIES, UNITS, Unit } from '../../types/ingredient'
-import { MealPlan } from '../../types/mealPlan'
-import { formatQuantity } from '../../utils/formatQuantity'
+import { groceryListService } from '@/services/groceryListService'
+import { GroceryItem, GroceryList } from '@/types/groceryList'
+import { INGREDIENT_CATEGORIES, UNITS, Unit } from '@/types/ingredient'
+import { MealPlan } from '@/types/mealPlan'
+import { formatQuantity } from '@/utils/formatQuantity'
 
 interface GroceryListViewProps {
   groceryList: GroceryList

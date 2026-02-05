@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { ServicesProvider } from '../../contexts/ServicesContext'
+import { ServicesProvider } from '@/contexts/ServicesContext'
 
 import { GroceryListGenerator } from './GroceryListGenerator'
 

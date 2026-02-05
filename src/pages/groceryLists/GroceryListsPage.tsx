@@ -15,9 +15,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { GroceryListGenerator } from '../../components/groceryLists/GroceryListGenerator'
-import { useServices } from '../../contexts/ServicesContext'
-import { generateGroceryList } from '../../utils/generateGroceryList'
+import { GroceryListGenerator } from '@/components/groceryLists/GroceryListGenerator'
+import { useServices } from '@/contexts/ServicesContext'
+import { generateGroceryList } from '@/utils/generateGroceryList'
 
 export const GroceryListsPage = () => {
   const navigate = useNavigate()

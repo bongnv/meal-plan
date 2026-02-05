@@ -6,9 +6,9 @@ import {
   IconCloudX,
 } from '@tabler/icons-react'
 
-import { useSyncContext } from '../../contexts/SyncContext'
+import { useSyncContext } from '@/contexts/SyncContext'
 
-import type { SyncStatus } from '../../contexts/SyncContext'
+import type { SyncStatus } from '@/contexts/SyncContext'
 
 /**
  * Format relative time string (e.g., "5 minutes ago")

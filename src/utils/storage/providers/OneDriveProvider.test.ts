@@ -2,7 +2,7 @@ import { PublicClientApplication } from '@azure/msal-browser'
 import { Client } from '@microsoft/microsoft-graph-client'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { decompressData } from '../../compression'
+import { decompressData } from '@/utils/compression'
 
 import { OneDriveProvider } from './OneDriveProvider'
 

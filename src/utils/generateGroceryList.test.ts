@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { generateGroceryList } from './generateGroceryList'
 
-import type { Ingredient } from '../types/ingredient'
-import type { MealPlan } from '../types/mealPlan'
-import type { Recipe } from '../types/recipe'
+import type { Ingredient } from '@/types/ingredient'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 describe('generateGroceryList', () => {
   const mockIngredients: Ingredient[] = [

@@ -1,4 +1,4 @@
-import { Ingredient } from '../types/ingredient'
+import { Ingredient } from '@/types/ingredient'
 
 /**
  * Generates a prompt for AI tools (ChatGPT, Claude) to parse recipes

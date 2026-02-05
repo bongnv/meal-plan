@@ -23,18 +23,18 @@ import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useServices } from '../../contexts/ServicesContext'
-import { useRecipeSectionManager } from '../../hooks/useRecipeSectionManager'
-import { UNITS } from '../../types/ingredient'
-import { RecipeFormSchema } from '../../types/recipe'
-import { isValidImageUrl } from '../../utils/urlValidator'
-import { IngredientForm } from '../ingredients/IngredientForm'
+import { IngredientForm } from '@/components/ingredients/IngredientForm'
+import { useServices } from '@/contexts/ServicesContext'
+import { useRecipeSectionManager } from '@/hooks/useRecipeSectionManager'
+import { UNITS } from '@/types/ingredient'
+import { RecipeFormSchema } from '@/types/recipe'
+import { isValidImageUrl } from '@/utils/urlValidator'
 
-import type { IngredientFormValues } from '../../types/ingredient'
+import type { IngredientFormValues } from '@/types/ingredient'
 import type {
   Recipe,
   RecipeFormValues,
-} from '../../types/recipe'
+} from '@/types/recipe'
 
 interface RecipeFormProps {
   recipe?: Recipe

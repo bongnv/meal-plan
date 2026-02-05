@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { createIngredientService } from './ingredientService'
 
-import type { MealPlanDB } from '../db/database'
-import type { Ingredient } from '../types/ingredient'
+import type { MealPlanDB } from '@/db/database'
+import type { Ingredient } from '@/types/ingredient'
 
 describe('ingredientService', () => {
   let mockDb: MealPlanDB

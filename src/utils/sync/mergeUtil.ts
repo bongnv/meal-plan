@@ -4,10 +4,10 @@ import type {
   ConflictResolution,
   RecordChanges,
 } from './types'
-import type { GroceryList, GroceryItem } from '../../types/groceryList'
-import type { Ingredient } from '../../types/ingredient'
-import type { MealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { Ingredient } from '@/types/ingredient'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 /**
  * Result of a merge operation

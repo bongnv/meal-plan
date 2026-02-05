@@ -4,11 +4,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { MealPlanForm } from '../../components/mealPlans/MealPlanForm'
-import { RecipeSelector } from '../../components/mealPlans/RecipeSelector'
-import { useServices } from '../../contexts/ServicesContext'
+import { MealPlanForm } from '@/components/mealPlans/MealPlanForm'
+import { RecipeSelector } from '@/components/mealPlans/RecipeSelector'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { MealPlan, MealType } from '../../types/mealPlan'
+import type { MealPlan, MealType } from '@/types/mealPlan'
 
 export function AddMealPlanPage() {
   const navigate = useNavigate()

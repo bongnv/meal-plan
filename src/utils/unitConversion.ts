@@ -1,4 +1,4 @@
-import type { Unit } from '../types/ingredient'
+import type { Unit } from '@/types/ingredient'
 
 /**
  * Conversion ratios for unit consolidation

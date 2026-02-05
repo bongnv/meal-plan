@@ -3,10 +3,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SyncService } from './syncService'
 
 import type { SyncData } from './syncService'
-import type { MealPlanDB } from '../db/database'
-import type { GroceryItem } from '../types/groceryList'
-import type { Recipe } from '../types/recipe'
-import type { ICloudStorageProvider } from '../utils/storage/ICloudStorageProvider'
+import type { MealPlanDB } from '@/db/database'
+import type { GroceryItem } from '@/types/groceryList'
+import type { Recipe } from '@/types/recipe'
+import type { ICloudStorageProvider } from '@/utils/storage/ICloudStorageProvider'
 
 describe('syncService', () => {
   let mockDb: MealPlanDB

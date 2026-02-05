@@ -1,7 +1,7 @@
-import type { GroceryList, GroceryItem } from '../../types/groceryList'
-import type { Ingredient } from '../../types/ingredient'
-import type { MealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { Ingredient } from '@/types/ingredient'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 /**
  * Structure of synced data

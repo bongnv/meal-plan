@@ -113,6 +113,19 @@ export default tseslint.config(
           },
         },
       ],
+      // Enforce @ path aliases instead of relative parent imports (../)
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*'],
+              message:
+                'Use @ path aliases instead of relative parent imports (../). Import from @/components, @/services, @/types, etc.',
+            },
+          ],
+        },
+      ],
     },
   },
   // Disable react-refresh warning for context files

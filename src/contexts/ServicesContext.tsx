@@ -1,10 +1,10 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 
-import { db } from '../db/database'
-import { createGroceryListService } from '../services/groceryListService'
-import { createIngredientService } from '../services/ingredientService'
-import { createMealPlanService } from '../services/mealPlanService'
-import { createRecipeService } from '../services/recipeService'
+import { db } from '@/db/database'
+import { createGroceryListService } from '@/services/groceryListService'
+import { createIngredientService } from '@/services/ingredientService'
+import { createMealPlanService } from '@/services/mealPlanService'
+import { createRecipeService } from '@/services/recipeService'
 
 /**
  * Services Context

@@ -8,8 +8,8 @@ import { RecipeFilterPanel } from './RecipeFilterPanel'
 import type {
   RecipeFilterActions,
   RecipeFilterState,
-} from '../../hooks/useRecipeFilters'
-import type { Ingredient } from '../../types/ingredient'
+} from '@/hooks/useRecipeFilters'
+import type { Ingredient } from '@/types/ingredient'
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<MantineProvider>{ui}</MantineProvider>)

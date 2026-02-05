@@ -1,7 +1,7 @@
-import { db } from '../db/database'
-import { generateId } from '../utils/idGenerator'
+import { db } from '@/db/database'
+import { generateId } from '@/utils/idGenerator'
 
-import type { MealPlanDB } from '../db/database'
+import type { MealPlanDB } from '@/db/database'
 import type {
   MealPlan,
   MealType,
@@ -9,7 +9,7 @@ import type {
   CopyResult,
   CopyPreviewItem,
   ConflictResolution,
-} from '../types/mealPlan'
+} from '@/types/mealPlan'
 
 /**
  * Meal Plan Service

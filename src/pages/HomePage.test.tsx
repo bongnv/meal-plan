@@ -4,13 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ServicesProvider } from '../contexts/ServicesContext'
+import { ServicesProvider } from '@/contexts/ServicesContext'
 
 import { HomePage } from './HomePage'
 
-import type { GroceryList, GroceryItem } from '../types/groceryList'
-import type { MealPlan } from '../types/mealPlan'
-import type { Recipe } from '../types/recipe'
+import type { GroceryList, GroceryItem } from '@/types/groceryList'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 // Mock the navigate function
 const mockNavigate = vi.fn()

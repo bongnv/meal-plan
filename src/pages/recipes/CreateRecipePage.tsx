@@ -1,10 +1,10 @@
 import { Container, Title } from '@mantine/core'
 import { useNavigate } from 'react-router-dom'
 
-import { RecipeForm } from '../../components/recipes/RecipeForm'
-import { useServices } from '../../contexts/ServicesContext'
+import { RecipeForm } from '@/components/recipes/RecipeForm'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { RecipeFormValues } from '../../types/recipe'
+import type { RecipeFormValues } from '@/types/recipe'
 
 export function CreateRecipePage() {
   const navigate = useNavigate()

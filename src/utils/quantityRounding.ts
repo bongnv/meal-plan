@@ -1,4 +1,4 @@
-import type { Unit } from '../types/ingredient'
+import type { Unit } from '@/types/ingredient'
 
 /**
  * Apply smart rounding to ingredient quantities based on unit type.

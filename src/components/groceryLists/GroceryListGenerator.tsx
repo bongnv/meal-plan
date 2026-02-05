@@ -13,7 +13,7 @@ import { notifications } from '@mantine/notifications'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 
-import { useServices } from '../../contexts/ServicesContext'
+import { useServices } from '@/contexts/ServicesContext'
 
 interface GroceryListGeneratorProps {
   opened: boolean

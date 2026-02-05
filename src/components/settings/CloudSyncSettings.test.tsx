@@ -4,13 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { SyncProvider } from '../../contexts/SyncContext'
-import { createMockMsalInstance } from '../../test/mockMsal'
-import { CloudProvider } from '../../utils/storage/CloudProvider'
+import { SyncProvider } from '@/contexts/SyncContext'
+import { createMockMsalInstance } from '@/test/mockMsal'
+import { CloudProvider } from '@/utils/storage/CloudProvider'
 
 import { CloudSyncSettings } from './CloudSyncSettings'
 
-import type { FileInfo } from '../../utils/storage/ICloudStorageProvider'
+import type { FileInfo } from '@/utils/storage/ICloudStorageProvider'
 import type { ReactNode } from 'react'
 
 // Mock MSAL React

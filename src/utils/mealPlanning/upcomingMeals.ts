@@ -1,4 +1,4 @@
-import type { MealPlan, MealType } from '../../types/mealPlan'
+import type { MealPlan, MealType } from '@/types/mealPlan'
 
 /**
  * Get the time string for a meal type (for sorting and comparison)

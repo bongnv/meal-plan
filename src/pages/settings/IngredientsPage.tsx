@@ -12,11 +12,11 @@ import { IconPlus } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { IngredientForm } from '../../components/ingredients/IngredientForm'
-import { IngredientList } from '../../components/ingredients/IngredientList'
-import { useServices } from '../../contexts/ServicesContext'
+import { IngredientForm } from '@/components/ingredients/IngredientForm'
+import { IngredientList } from '@/components/ingredients/IngredientList'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { IngredientFormValues } from '../../types/ingredient'
+import type { IngredientFormValues } from '@/types/ingredient'
 
 export function IngredientsPage() {
   const { ingredientService } = useServices()

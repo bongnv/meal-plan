@@ -11,10 +11,10 @@ import {
 import { IconEdit, IconSearch, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
-import { ingredientService } from '../../services/ingredientService'
-import { INGREDIENT_CATEGORIES } from '../../types/ingredient'
+import { ingredientService } from '@/services/ingredientService'
+import { INGREDIENT_CATEGORIES } from '@/types/ingredient'
 
-import type { Ingredient } from '../../types/ingredient'
+import type { Ingredient } from '@/types/ingredient'
 
 interface IngredientListProps {
   ingredients: Ingredient[]

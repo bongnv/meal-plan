@@ -13,8 +13,8 @@ import { IconSearch } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 
-import { useServices } from '../../contexts/ServicesContext'
-import { useRecipeFilters } from '../../hooks/useRecipeFilters'
+import { useServices } from '@/contexts/ServicesContext'
+import { useRecipeFilters } from '@/hooks/useRecipeFilters'
 
 import { DraggableRecipeCard } from './DraggableRecipeCard'
 

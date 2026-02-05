@@ -18,12 +18,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { useServices } from '../../contexts/ServicesContext'
-import { generateRecipeImportPrompt } from '../../utils/aiPromptGenerator'
+import { useServices } from '@/contexts/ServicesContext'
+import { generateRecipeImportPrompt } from '@/utils/aiPromptGenerator'
 import {
   validateRecipeImport,
   ValidationResult,
-} from '../../utils/recipeImportValidator'
+} from '@/utils/recipeImportValidator'
 
 interface RecipeImportModalProps {
   opened: boolean

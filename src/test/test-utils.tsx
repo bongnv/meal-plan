@@ -10,7 +10,7 @@ import {
 import { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { ServicesProvider } from '../contexts/ServicesContext'
+import { ServicesProvider } from '@/contexts/ServicesContext'
 
 // Default render - just Mantine (for tests that mock services themselves)
 function render(ui: ReactElement, options?: RenderOptions) {

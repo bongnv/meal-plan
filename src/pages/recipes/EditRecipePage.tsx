@@ -3,10 +3,10 @@ import { modals } from '@mantine/modals'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { RecipeForm } from '../../components/recipes/RecipeForm'
-import { useServices } from '../../contexts/ServicesContext'
+import { RecipeForm } from '@/components/recipes/RecipeForm'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { RecipeFormValues } from '../../types/recipe'
+import type { RecipeFormValues } from '@/types/recipe'
 
 export function EditRecipePage() {
   const navigate = useNavigate()

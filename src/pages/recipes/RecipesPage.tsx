@@ -12,11 +12,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { RecipeFilterPanel } from '../../components/recipes/RecipeFilterPanel'
-import { RecipeImportModal } from '../../components/recipes/RecipeImportModal'
-import { RecipeList } from '../../components/recipes/RecipeList'
-import { useServices } from '../../contexts/ServicesContext'
-import { useRecipeFilters } from '../../hooks/useRecipeFilters'
+import { RecipeFilterPanel } from '@/components/recipes/RecipeFilterPanel'
+import { RecipeImportModal } from '@/components/recipes/RecipeImportModal'
+import { RecipeList } from '@/components/recipes/RecipeList'
+import { useServices } from '@/contexts/ServicesContext'
+import { useRecipeFilters } from '@/hooks/useRecipeFilters'
 
 export const RecipesPage = () => {
   const navigate = useNavigate()

@@ -5,8 +5,8 @@ import { Ingredient } from '@/types/ingredient'
 import { merge, resolveConflicts } from './mergeUtil'
 
 import type { SyncData, ConflictInfo, ConflictResolution } from './types'
-import type { MealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 describe('mergeUtil', () => {
   // Sample data

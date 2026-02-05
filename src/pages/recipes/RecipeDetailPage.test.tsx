@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { db } from '../../db/database'
-import { renderWithProviders, screen, waitFor } from '../../test/test-utils'
+import { db } from '@/db/database'
+import { renderWithProviders, screen, waitFor } from '@/test/test-utils'
 
 import { RecipeDetailPage } from './RecipeDetailPage'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')

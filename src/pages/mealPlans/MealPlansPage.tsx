@@ -16,12 +16,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { MealPlansList } from '../../components/mealPlans/MealPlansList'
-import { RecipeSidebar } from '../../components/mealPlans/RecipeSidebar'
-import { useServices } from '../../contexts/ServicesContext'
+import { MealPlansList } from '@/components/mealPlans/MealPlansList'
+import { RecipeSidebar } from '@/components/mealPlans/RecipeSidebar'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { RecipeMealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { RecipeMealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
 export function MealPlansPage() {

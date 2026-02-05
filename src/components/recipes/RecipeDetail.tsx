@@ -14,10 +14,10 @@ import { IconPlus, IconMinus } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 
-import { useServices } from '../../contexts/ServicesContext'
-import { formatQuantity } from '../../utils/formatQuantity'
+import { useServices } from '@/contexts/ServicesContext'
+import { formatQuantity } from '@/utils/formatQuantity'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 interface RecipeDetailProps {
   recipe: Recipe

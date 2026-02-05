@@ -3,13 +3,13 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconCalendar } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 
-import { mealPlanService } from '../../services/mealPlanService'
+import { mealPlanService } from '@/services/mealPlanService'
 
 import { CopyMealPlanModal } from './CopyMealPlanModal'
 import { DroppableDayCard } from './DroppableDayCard'
 
-import type { MealPlan } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { MealPlan } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 interface MealPlansListProps {
   mealPlans: MealPlan[]

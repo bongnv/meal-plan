@@ -16,13 +16,13 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 
-import { useServices } from '../contexts/ServicesContext'
-import { isRecipeMealPlan, getMealPlanTypeInfo } from '../types/mealPlan'
+import { useServices } from '@/contexts/ServicesContext'
+import { isRecipeMealPlan, getMealPlanTypeInfo } from '@/types/mealPlan'
 import {
   getNextMeal,
   getUpcomingMeals,
   formatMealDate,
-} from '../utils/mealPlanning/upcomingMeals'
+} from '@/utils/mealPlanning/upcomingMeals'
 
 export function HomePage() {
   const navigate = useNavigate()

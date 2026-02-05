@@ -15,8 +15,8 @@ import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { RecipeDetail } from '../../components/recipes/RecipeDetail'
-import { useServices } from '../../contexts/ServicesContext'
+import { RecipeDetail } from '@/components/recipes/RecipeDetail'
+import { useServices } from '@/contexts/ServicesContext'
 
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()

@@ -15,13 +15,13 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo } from 'react'
 import { z } from 'zod'
 
-import { useServices } from '../../contexts/ServicesContext'
-import { CUSTOM_MEAL_TYPES } from '../../types/mealPlan'
+import { useServices } from '@/contexts/ServicesContext'
+import { CUSTOM_MEAL_TYPES } from '@/types/mealPlan'
 
 import { RecipeSelectorModal } from './RecipeSelectorModal'
 
-import type { MealPlan, MealType } from '../../types/mealPlan'
-import type { Recipe } from '../../types/recipe'
+import type { MealPlan, MealType } from '@/types/mealPlan'
+import type { Recipe } from '@/types/recipe'
 
 interface MealPlanFormProps {
   recipes: Recipe[]

@@ -1,11 +1,11 @@
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { render, screen } from '../../test/test-utils'
+import { render, screen } from '@/test/test-utils'
 
 import { IngredientList } from './IngredientList'
 
-import type { Ingredient } from '../../types/ingredient'
+import type { Ingredient } from '@/types/ingredient'
 
 describe('IngredientList', () => {
   const mockIngredients: Ingredient[] = [

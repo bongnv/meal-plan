@@ -12,9 +12,9 @@ import {
 import { IconCloud, IconCloudOff } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
-import { useSyncContext } from '../../contexts/SyncContext'
-import { CloudProvider } from '../../utils/storage/CloudProvider'
-import { formatRelativeTime } from '../../utils/timeFormatter'
+import { useSyncContext } from '@/contexts/SyncContext'
+import { CloudProvider } from '@/utils/storage/CloudProvider'
+import { formatRelativeTime } from '@/utils/timeFormatter'
 
 /**
  * Cloud Storage Sync Settings component

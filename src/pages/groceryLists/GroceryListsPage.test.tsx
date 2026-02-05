@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ServicesProvider } from '../../contexts/ServicesContext'
+import { ServicesProvider } from '@/contexts/ServicesContext'
 
 import { GroceryListsPage } from './GroceryListsPage'
 

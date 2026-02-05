@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RecipeList } from './RecipeList'
 
-import type { Recipe } from '../../types/recipe'
+import type { Recipe } from '@/types/recipe'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {

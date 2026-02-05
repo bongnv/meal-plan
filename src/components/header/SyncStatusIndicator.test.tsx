@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { SyncStatusIndicator } from './SyncStatusIndicator'
 
-import type { SyncStatus } from '../../contexts/SyncContext'
-import type { CloudProvider } from '../../utils/storage/CloudProvider'
+import type { SyncStatus } from '@/contexts/SyncContext'
+import type { CloudProvider } from '@/utils/storage/CloudProvider'
 
 // Mock contexts
 const mockSyncNow = vi.fn()

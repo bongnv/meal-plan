@@ -1,11 +1,11 @@
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { render, screen } from '../../test/test-utils'
+import { render, screen } from '@/test/test-utils'
 
 import { IngredientForm } from './IngredientForm'
 
-import type { Ingredient } from '../../types/ingredient'
+import type { Ingredient } from '@/types/ingredient'
 
 describe('IngredientForm', () => {
   describe('Create mode', () => {

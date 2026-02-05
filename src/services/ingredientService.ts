@@ -1,8 +1,8 @@
-import { db } from '../db/database'
-import { generateId } from '../utils/idGenerator'
+import { db } from '@/db/database'
+import { generateId } from '@/utils/idGenerator'
 
-import type { MealPlanDB } from '../db/database'
-import type { Ingredient, IngredientFormValues } from '../types/ingredient'
+import type { MealPlanDB } from '@/db/database'
+import type { Ingredient, IngredientFormValues } from '@/types/ingredient'
 
 /**
  * Ingredient Service

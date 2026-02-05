@@ -11,19 +11,19 @@ import {
   type ReactNode,
 } from 'react'
 
-import { useAppContext } from '../contexts/AppContext'
-import { db } from '../db/database'
-import { SyncService } from '../services/syncService'
-import { isTokenExpiredError } from '../utils/errors/isTokenExpiredError'
-import { CloudProvider } from '../utils/storage/CloudProvider'
+import { useAppContext } from '@/contexts/AppContext'
+import { db } from '@/db/database'
+import { SyncService } from '@/services/syncService'
+import { isTokenExpiredError } from '@/utils/errors/isTokenExpiredError'
+import { CloudProvider } from '@/utils/storage/CloudProvider'
 import {
   isExistingFile,
   type FileInfo,
   type FolderInfo,
   type FolderListResult,
   type ICloudStorageProvider,
-} from '../utils/storage/ICloudStorageProvider'
-import { OneDriveProvider } from '../utils/storage/providers/OneDriveProvider'
+} from '@/utils/storage/ICloudStorageProvider'
+import { OneDriveProvider } from '@/utils/storage/providers/OneDriveProvider'
 
 import type { IPublicClientApplication } from '@azure/msal-browser'
 

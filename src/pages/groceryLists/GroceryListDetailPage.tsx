@@ -13,10 +13,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { GroceryListView } from '../../components/groceryLists/GroceryListView'
-import { useServices } from '../../contexts/ServicesContext'
+import { GroceryListView } from '@/components/groceryLists/GroceryListView'
+import { useServices } from '@/contexts/ServicesContext'
 
-import type { IngredientCategory, Unit } from '../../types/ingredient'
+import type { IngredientCategory, Unit } from '@/types/ingredient'
 
 export const GroceryListDetailPage = () => {
   const { id } = useParams<{ id: string }>()
