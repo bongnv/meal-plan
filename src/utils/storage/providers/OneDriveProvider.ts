@@ -43,7 +43,7 @@ export class OneDriveProvider implements ICloudStorageProvider {
 
   /**
    * Authenticate with OneDrive via MSAL redirect
-   * This will redirect the page - code after this call won't execute
+   * Redirects the browser to Microsoft login page
    */
   async authenticate(): Promise<void> {
     await this.msalInstance.loginRedirect(loginRequest)

@@ -20,7 +20,7 @@ interface UseFileSelectionModalParams {
 export function useFileSelectionModal({
   onSelectFile,
 }: UseFileSelectionModalParams) {
-  const { listFoldersAndFiles } = useSyncContext()
+  const { provider } = useSyncContext()
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +43,10 @@ export function useFileSelectionModal({
       setError(null)
 
       try {
-        const result = await listFoldersAndFiles(folder)
+        if (!provider) {
+          throw new Error('Provider not available')
+        }
+        const result = await provider.listFoldersAndFiles(folder)
         setFolders(result.folders)
         setFiles(result.files)
         setCurrentFolder(folder)
@@ -56,7 +59,7 @@ export function useFileSelectionModal({
         setIsLoading(false)
       }
     },
-    [listFoldersAndFiles]
+    [provider]
   )
 
   // Load initial folder listing on mount

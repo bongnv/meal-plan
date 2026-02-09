@@ -11,45 +11,23 @@ import { useSyncContext } from '@/contexts/SyncContext'
 import type { SyncStatus } from '@/contexts/SyncContext'
 
 /**
- * Format relative time string (e.g., "5 minutes ago")
- */
-function formatRelativeTime(timestamp: number | null): string {
-  if (!timestamp) return 'Never synced'
-
-  const now = Date.now()
-  const diffMs = now - timestamp
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffSeconds < 60) return 'Just now'
-  if (diffMinutes < 60)
-    return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-}
-
-/**
  * Get tooltip label based on sync status
  */
-function getTooltipLabel(
-  status: SyncStatus,
-  lastSyncTime: number | null,
-  isConnected: boolean
-): string {
+function getTooltipLabel(status: SyncStatus, isConnected: boolean): string {
   if (!isConnected) return 'Not connected to cloud storage'
 
   switch (status) {
+    case 'offline':
+      return 'Not connected to cloud storage'
     case 'syncing':
       return 'Syncing...'
     case 'synced':
-      return `Synced successfully\n${formatRelativeTime(lastSyncTime)}`
+      return 'Synced successfully'
     case 'error':
       return 'Sync failed - Click to retry'
     case 'idle':
     default:
-      return `Last synced ${formatRelativeTime(lastSyncTime)}\nClick to sync now`
+      return 'Click to sync now'
   }
 }
 
@@ -60,6 +38,8 @@ function getStatusIcon(status: SyncStatus, isConnected: boolean) {
   if (!isConnected) return <IconCloudOff size={20} />
 
   switch (status) {
+    case 'offline':
+      return <IconCloudOff size={20} />
     case 'syncing':
       return <Loader size={20} />
     case 'synced':
@@ -79,6 +59,8 @@ function getStatusColor(status: SyncStatus, isConnected: boolean): string {
   if (!isConnected) return 'gray'
 
   switch (status) {
+    case 'offline':
+      return 'gray'
     case 'syncing':
       return 'blue'
     case 'synced':
@@ -96,13 +78,12 @@ function getStatusColor(status: SyncStatus, isConnected: boolean): string {
  * Shows current sync state and allows manual sync trigger
  */
 export function SyncStatusIndicator() {
-  const { syncStatus, lastSyncTime, selectedFile, syncNow, isAuthenticated } =
-    useSyncContext()
+  const { status, currentFile, syncNow, provider } = useSyncContext()
 
-  const isConnected = isAuthenticated && selectedFile !== null
+  const isConnected = provider !== null && currentFile !== null
 
   const handleClick = async () => {
-    if (!isConnected || syncStatus === 'syncing') return
+    if (!isConnected || status === 'syncing') return
 
     try {
       await syncNow()
@@ -112,9 +93,9 @@ export function SyncStatusIndicator() {
     }
   }
 
-  const isDisabled = !isConnected || syncStatus === 'syncing'
-  const tooltipLabel = getTooltipLabel(syncStatus, lastSyncTime, isConnected)
-  const statusColor = getStatusColor(syncStatus, isConnected)
+  const isDisabled = !isConnected || status === 'syncing'
+  const tooltipLabel = getTooltipLabel(status, isConnected)
+  const statusColor = getStatusColor(status, isConnected)
 
   return (
     <Tooltip label={tooltipLabel} withArrow multiline w={200}>
@@ -125,10 +106,10 @@ export function SyncStatusIndicator() {
         disabled={isDisabled}
         onClick={handleClick}
         aria-label="Sync status indicator"
-        data-status={!isConnected ? 'offline' : syncStatus}
+        data-status={!isConnected ? 'offline' : status}
         style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
       >
-        {getStatusIcon(syncStatus, isConnected)}
+        {getStatusIcon(status, isConnected)}
       </ActionIcon>
     </Tooltip>
   )

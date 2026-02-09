@@ -19,18 +19,14 @@ export const msalInstance: IPublicClientApplication =
  *
  * Must be called before using MSAL authentication.
  * Safe to call multiple times - will only initialize once.
- *
- * Handles redirect responses when user returns from Microsoft login.
  */
 export async function initializeMsal(): Promise<void> {
   await msalInstance.initialize()
 
-  // Handle redirect response when returning from Microsoft login
-  // This is critical for loginRedirect flow to work properly
+  // Handle redirect response after login
   try {
     const response = await msalInstance.handleRedirectPromise()
     if (response) {
-      // User just logged in via redirect
       console.log(
         '[MSAL] Redirect authentication successful:',
         response.account?.username
@@ -38,6 +34,5 @@ export async function initializeMsal(): Promise<void> {
     }
   } catch (error) {
     console.error('[MSAL] Redirect authentication failed:', error)
-    // Don't throw - allow app to load even if redirect handling fails
   }
 }

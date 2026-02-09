@@ -48,8 +48,7 @@ function App() {
   } = useAppContext()
 
   // Get business logic from SyncContext
-  const { currentProvider, connect, selectFile, disconnectAndReset } =
-    useSyncContext()
+  const { provider, connect, selectFile, disconnectAndReset } = useSyncContext()
 
   // Detect if we're on mobile (< 768px)
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -101,12 +100,15 @@ function App() {
 
   // Handler for reconnect button
   const handleReconnect = async () => {
+    if (!provider) {
+      console.error('No provider to reconnect to')
+      return
+    }
+
     try {
-      // Re-authenticate with OneDrive
-      if (currentProvider) {
-        await connect(currentProvider)
-      }
-      // Modal will auto-close when connection succeeds
+      // Re-authenticate with current provider
+      await provider.authenticate()
+      // Modal will auto-close after redirect completes
       setShowReconnectModal(false)
     } catch (error) {
       console.error('Reconnect failed:', error)

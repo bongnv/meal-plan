@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { SyncProvider } from '@/contexts/SyncContext'
 import { createMockMsalInstance } from '@/test/mockMsal'
-import { CloudProvider } from '@/utils/storage/CloudProvider'
 
 import { CloudSyncSettings } from './CloudSyncSettings'
 
@@ -62,29 +61,19 @@ const mockSelectFile = vi.fn()
 const mockDisconnectAndReset = vi.fn()
 const mockSyncNow = vi.fn()
 const mockConnect = vi.fn()
-const mockDisconnect = vi.fn()
 const mockGetAccountInfo = vi
   .fn()
   .mockReturnValue({ name: 'John Doe', email: 'john@example.com' })
 
 const mockSyncContextValue = {
-  currentProvider: null as CloudProvider | null,
-  isAuthenticated: false,
-  syncStatus: 'idle' as 'idle' | 'syncing' | 'success' | 'error',
-  lastSyncTime: null as number | null,
-  selectedFile: null as FileInfo | null,
-  isInitializing: false,
-  needsReconnect: false,
+  provider: null as any,
+  currentFile: null as FileInfo | null,
+  status: 'idle' as 'offline' | 'idle' | 'syncing' | 'synced' | 'error',
   connect: mockConnect,
-  disconnect: mockDisconnect,
   getAccountInfo: mockGetAccountInfo,
-  uploadFile: vi.fn().mockResolvedValue(undefined),
-  downloadFile: vi.fn().mockResolvedValue('{}'),
-  listFoldersAndFiles: vi.fn().mockResolvedValue({ folders: [], files: [] }),
   selectFile: mockSelectFile,
   disconnectAndReset: mockDisconnectAndReset,
   syncNow: mockSyncNow,
-  clearReconnectFlag: vi.fn(),
 }
 
 vi.mock('../../contexts/SyncContext', async () => {
@@ -99,11 +88,9 @@ describe('CloudSyncSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset to disconnected state
-    mockSyncContextValue.isAuthenticated = false
-    mockSyncContextValue.currentProvider = null
-    mockSyncContextValue.syncStatus = 'idle'
-    mockSyncContextValue.lastSyncTime = null
-    mockSyncContextValue.selectedFile = null
+    mockSyncContextValue.provider = null
+    mockSyncContextValue.status = 'idle'
+    mockSyncContextValue.currentFile = null
   })
 
   it('should render connect button when not connected', () => {
@@ -142,11 +129,16 @@ describe('CloudSyncSettings - Connected State', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Set to connected state
-    mockSyncContextValue.isAuthenticated = true
-    mockSyncContextValue.currentProvider = CloudProvider.ONEDRIVE
-    mockSyncContextValue.syncStatus = 'idle'
-    mockSyncContextValue.lastSyncTime = Date.now() - 60000
-    mockSyncContextValue.selectedFile = mockFileInfo
+    mockSyncContextValue.provider = {
+      isAuthenticated: () => true,
+      authenticate: vi.fn(),
+      getAccountInfo: () => ({ name: 'John Doe', email: 'john@example.com' }),
+      listFoldersAndFiles: vi.fn(),
+      uploadFile: vi.fn(),
+      downloadFile: vi.fn(),
+    } as any
+    mockSyncContextValue.status = 'idle'
+    mockSyncContextValue.currentFile = mockFileInfo
   })
 
   it('should display account information when connected', () => {
@@ -214,7 +206,7 @@ describe('CloudSyncSettings - Connected State', () => {
   })
 
   it('should disable controls when syncing', () => {
-    mockSyncContextValue.syncStatus = 'syncing'
+    mockSyncContextValue.status = 'syncing'
 
     render(
       <AllProviders>

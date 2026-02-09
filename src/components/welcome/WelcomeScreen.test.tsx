@@ -11,17 +11,19 @@ import type { ReactNode } from 'react'
 const mockConnect = vi.fn()
 const mockSelectFile = vi.fn()
 const mockDisconnectAndReset = vi.fn()
-let mockIsAuthenticated = false
-let mockSelectedFile: { id: string; name: string; path: string } | null = null
+let mockProvider: any = null
+let mockCurrentFile: { id: string; name: string; path: string } | null = null
 
 vi.mock('../../contexts/SyncContext', () => ({
   useSyncContext: () => ({
-    selectedFile: mockSelectedFile,
-    selectFile: mockSelectFile,
-    isInitializing: false,
-    isAuthenticated: mockIsAuthenticated,
+    provider: mockProvider,
+    currentFile: mockCurrentFile,
+    status: 'idle' as const,
     connect: mockConnect,
+    getAccountInfo: vi.fn(),
+    selectFile: mockSelectFile,
     disconnectAndReset: mockDisconnectAndReset,
+    syncNow: vi.fn(),
   }),
 }))
 
@@ -69,8 +71,8 @@ describe('WelcomeScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    mockIsAuthenticated = false
-    mockSelectedFile = null
+    mockProvider = null
+    mockCurrentFile = null
   })
 
   describe('Display Logic', () => {
@@ -107,16 +109,16 @@ describe('WelcomeScreen', () => {
 
     it('should show welcome screen again after disconnect', async () => {
       // Start connected - welcome screen should not be rendered by parent
-      mockIsAuthenticated = true
-      mockSelectedFile = { id: '1', name: 'test.json.gz', path: '/test' }
+      mockProvider = { isAuthenticated: () => true }
+      mockCurrentFile = { id: '1', name: 'test.json.gz', path: '/test' }
 
       // When connected, parent doesn't render WelcomeScreen at all
       renderWithProviders(<div />)
       expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument()
 
       // Simulate disconnect - user disconnects completely, not just file
-      mockIsAuthenticated = false
-      mockSelectedFile = null
+      mockProvider = null
+      mockCurrentFile = null
 
       // After disconnect, parent renders WelcomeScreen
       renderWithProviders(<WelcomeScreen {...defaultProps} />)

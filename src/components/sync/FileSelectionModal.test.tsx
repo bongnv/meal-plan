@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as SyncContext from '@/contexts/SyncContext'
-import { CloudProvider } from '@/utils/storage/CloudProvider'
 
 import { FileSelectionModal } from './FileSelectionModal'
 
@@ -37,26 +36,27 @@ const mockListFoldersAndFiles = vi.fn().mockResolvedValue({
 } as FolderListResult)
 
 const createMockSyncContext = () => ({
-  currentProvider: CloudProvider.ONEDRIVE,
-  isAuthenticated: true,
-  syncStatus: 'idle' as const,
-  lastSyncTime: null,
-  selectedFile: null,
-  isInitializing: false,
-  needsReconnect: false,
+  provider: {
+    isAuthenticated: () => true,
+    authenticate: vi.fn().mockResolvedValue(undefined),
+    getAccountInfo: () => ({
+      name: 'Test User',
+      email: 'test@example.com',
+    }),
+    listFoldersAndFiles: mockListFoldersAndFiles,
+    uploadFile: vi.fn().mockResolvedValue(undefined),
+    downloadFile: vi.fn().mockResolvedValue('{}'),
+  },
+  currentFile: null,
+  status: 'idle' as const,
   connect: vi.fn().mockResolvedValue(undefined),
-  disconnect: vi.fn().mockResolvedValue(undefined),
   getAccountInfo: vi.fn().mockReturnValue({
     name: 'Test User',
     email: 'test@example.com',
   }),
-  uploadFile: vi.fn().mockResolvedValue(undefined),
-  downloadFile: vi.fn().mockResolvedValue('{}'),
-  listFoldersAndFiles: mockListFoldersAndFiles,
   selectFile: vi.fn().mockResolvedValue(undefined),
   disconnectAndReset: vi.fn().mockResolvedValue(undefined),
   syncNow: vi.fn().mockResolvedValue(undefined),
-  clearReconnectFlag: vi.fn(),
 })
 
 describe('FileSelectionModal', () => {
@@ -89,7 +89,9 @@ describe('FileSelectionModal', () => {
         expect(mockListFoldersAndFiles).toHaveBeenCalledWith(undefined)
       })
 
-      expect(screen.getByText('Documents')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Documents')).toBeInTheDocument()
+      })
       expect(screen.getByText('Shared Folder')).toBeInTheDocument()
       expect(screen.getByText('meal-plan-data.json.gz')).toBeInTheDocument()
     })

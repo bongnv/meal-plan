@@ -14,7 +14,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { useSyncContext } from '@/contexts/SyncContext'
 import { CloudProvider } from '@/utils/storage/CloudProvider'
-import { formatRelativeTime } from '@/utils/timeFormatter'
 
 /**
  * Cloud Storage Sync Settings component
@@ -26,18 +25,12 @@ import { formatRelativeTime } from '@/utils/timeFormatter'
  * - Change selected file (switches to different dataset)
  */
 export function CloudSyncSettings() {
-  const {
-    selectedFile,
-    lastSyncTime,
-    syncStatus,
-    disconnectAndReset,
-    getAccountInfo,
-    connect,
-  } = useSyncContext()
+  const { currentFile, status, disconnectAndReset, getAccountInfo, connect } =
+    useSyncContext()
 
   const navigate = useNavigate()
 
-  const isSyncing = syncStatus === 'syncing'
+  const isSyncing = status === 'syncing'
 
   // Get account info (returns null if not authenticated)
   const accountInfo = getAccountInfo()
@@ -83,7 +76,7 @@ export function CloudSyncSettings() {
       <Stack gap="lg">
         <Title order={2}>Cloud Storage Sync</Title>
 
-        {selectedFile === null && (
+        {currentFile === null && (
           <Alert
             icon={<IconCloudOff size={16} />}
             title="Not Connected"
@@ -93,7 +86,7 @@ export function CloudSyncSettings() {
           </Alert>
         )}
 
-        {selectedFile === null ? (
+        {currentFile === null ? (
           <Paper p="md" withBorder>
             <Stack gap="md">
               <Text size="sm" c="dimmed">
@@ -136,7 +129,7 @@ export function CloudSyncSettings() {
               </Stack>
             </Paper>
 
-            {selectedFile && (
+            {currentFile && (
               <Paper p="md" withBorder>
                 <Stack gap="sm">
                   <Text fw={500} size="sm">
@@ -145,15 +138,11 @@ export function CloudSyncSettings() {
 
                   <Stack gap={4}>
                     <Group gap="xs">
-                      <Text size="sm">{selectedFile.name}</Text>
+                      <Text size="sm">{currentFile.name}</Text>
                     </Group>
 
                     <Text size="xs" c="dimmed">
-                      Folder: {getFolderPath(selectedFile.path)}
-                    </Text>
-
-                    <Text size="xs" c="dimmed">
-                      Last synced: {formatRelativeTime(lastSyncTime)}
+                      Folder: {getFolderPath(currentFile.path)}
                     </Text>
                   </Stack>
 
@@ -178,14 +167,14 @@ export function CloudSyncSettings() {
           </Alert>
         )}
 
-        {selectedFile !== null && (
+        {currentFile !== null && (
           <Text size="xs" c="dimmed">
             Note: Auto-sync is enabled. Your changes are automatically synced to
             the cloud.
           </Text>
         )}
 
-        {selectedFile === null && (
+        {currentFile === null && (
           <Text size="xs" c="dimmed">
             Connect to OneDrive to sync your data across devices and prevent
             data loss.

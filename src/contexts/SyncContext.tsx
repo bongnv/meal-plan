@@ -8,6 +8,7 @@ import {
   useState,
   useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from 'react'
 
@@ -19,8 +20,6 @@ import { CloudProvider } from '@/utils/storage/CloudProvider'
 import {
   isExistingFile,
   type FileInfo,
-  type FolderInfo,
-  type FolderListResult,
   type ICloudStorageProvider,
 } from '@/utils/storage/ICloudStorageProvider'
 import { OneDriveProvider } from '@/utils/storage/providers/OneDriveProvider'
@@ -34,31 +33,44 @@ const SELECTED_FILE_KEY = 'mealplan_selected_file'
 const CONNECTED_PROVIDER_KEY = 'mealplan_connected_provider'
 
 /**
- * Sync status states
+ * Sync status states.
+ * idle: connected but not currently synced (unsaved changes or just connected)
+ * syncing: currently performing sync
+ * synced: successfully synced with no unsaved changes
+ * error: last sync attempt failed (shows error state until next attempt)
+ * offline: not connected to any provider or file isn't selected
  */
-export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error'
+export type SyncStatus = 'offline' | 'idle' | 'syncing' | 'synced' | 'error'
 
-interface SyncContextType {
-  // Cloud provider state
-  currentProvider: CloudProvider | null
-  isAuthenticated: boolean
+/**
+ * State-only interface
+ */
+export interface SyncState {
+  provider: ICloudStorageProvider | null
+  currentFile: FileInfo | null
+  status: SyncStatus
+}
 
-  // Sync state
-  syncStatus: SyncStatus
-  lastSyncTime: number | null
-  selectedFile: FileInfo | null
-  isInitializing: boolean
-
-  // Cloud provider actions
+/**
+ * Operations-only interface
+ */
+export interface SyncOperations {
+  // Connection lifecycle
   connect: (provider: CloudProvider) => Promise<void>
   getAccountInfo: () => { name: string; email: string } | null
-  listFoldersAndFiles: (folder?: FolderInfo) => Promise<FolderListResult>
-
-  // Sync actions
-  selectFile: (fileInfo: FileInfo) => Promise<void>
   disconnectAndReset: () => Promise<void>
+
+  // File operations
+  selectFile: (fileInfo: FileInfo) => Promise<void>
+
+  // Sync
   syncNow: () => Promise<void>
 }
+
+/**
+ * Combined context interface
+ */
+interface SyncContextType extends SyncState, SyncOperations {}
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined)
 
@@ -68,110 +80,117 @@ interface SyncProviderProps {
 }
 
 export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
-  // Cloud provider state
-  const [currentProvider, setCurrentProvider] = useState<CloudProvider | null>(
-    () => {
-      // Restore from localStorage
-      const saved = localStorage.getItem(
-        CONNECTED_PROVIDER_KEY
-      ) as CloudProvider | null
-      return saved
-    }
+  // Single state object for SyncState
+  const [syncState, setSyncState] = useState<SyncState>(() => ({
+    provider: null,
+    currentFile: null,
+    status: 'offline',
+  }))
+
+  // Track additional internal state (not exposed via context)
+  // Use refs to avoid unnecessary re-renders
+  const internalState = useRef({
+    isSyncInProgress: false, // Synchronous guard against concurrent syncs
+    remoteLastModified: null as number | null,
+  })
+
+  // Helper to create provider instance from enum
+  const createProvider = useCallback(
+    (providerType: CloudProvider): ICloudStorageProvider => {
+      switch (providerType) {
+        case CloudProvider.ONEDRIVE:
+          return new OneDriveProvider(msalInstance)
+        // Future: Add other providers here
+        // case CloudProvider.GOOGLE_DRIVE:
+        //   return new GoogleDriveProvider()
+        // case CloudProvider.DROPBOX:
+        //   return new DropboxProvider()
+        default:
+          throw new Error(`Provider ${providerType} is not supported`)
+      }
+    },
+    [msalInstance]
   )
-
-  // Sync state
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
-  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
-  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
-  const [isInitializing, setIsInitializing] = useState(true)
-
-  // Create all available providers once
-  const providers = useMemo(() => {
-    const map = new Map<CloudProvider, ICloudStorageProvider>()
-
-    // Register OneDrive provider with shared MSAL instance
-    map.set(CloudProvider.ONEDRIVE, new OneDriveProvider(msalInstance))
-
-    // Future: Add other providers here
-    // map.set(CloudProvider.GOOGLE_DRIVE, new GoogleDriveProvider())
-    // map.set(CloudProvider.DROPBOX, new DropboxProvider())
-
-    return map
-  }, [msalInstance])
 
   // Compute isAuthenticated from active provider
   const isAuthenticated = useMemo(() => {
-    if (!currentProvider) {
-      return false
-    }
-
-    const provider = providers.get(currentProvider)
-    const providerAuth = provider?.isAuthenticated() ?? false
-    return providerAuth
-  }, [currentProvider, providers])
-
-  // Get the current provider instance
-  const activeProvider = useMemo(() => {
-    return currentProvider ? (providers.get(currentProvider) ?? null) : null
-  }, [currentProvider, providers])
+    return syncState.provider?.isAuthenticated() ?? false
+  }, [syncState.provider])
 
   // Create SyncService instance with injected dependencies
   // Re-create when provider changes
   const syncService = useMemo(() => {
-    if (!activeProvider) {
+    if (!syncState.provider) {
       return null
     }
-    return new SyncService(activeProvider, db)
-  }, [activeProvider])
+    return new SyncService(syncState.provider, db)
+  }, [syncState.provider])
 
   // Get modal control functions from AppContext
   const { setShowWelcome, setShowFileSelection, setShowReconnectModal } =
     useAppContext()
 
-  // Initialize on mount: restore file and show appropriate modal
+  // Initialize on mount: restore provider and file, show appropriate modals
   useEffect(() => {
-    // Check auth state synchronously (don't add to dependencies)
-    const authenticated = activeProvider?.isAuthenticated() ?? false
-    let savedFile = localStorage.getItem(SELECTED_FILE_KEY)
-
-    if (savedFile && authenticated) {
-      try {
-        const fileInfo = JSON.parse(savedFile) as FileInfo
-        queueMicrotask(() => setSelectedFile(fileInfo))
-      } catch (error) {
-        console.error('Failed to restore selected file:', error)
-        localStorage.removeItem(SELECTED_FILE_KEY)
-        savedFile = null // Treat as no file selected
-
-        // Notify user about corrupted file info
-        notifications.show({
-          title: 'File Info Corrupted',
-          message:
-            'Could not restore your last selected file. Please select a file to sync.',
-          color: 'yellow',
-          autoClose: 5000,
-        })
-      }
-    }
-
     queueMicrotask(() => {
-      setIsInitializing(false)
+      // Step 1: Load stored provider, show welcome if not stored
+      const savedProviderType = localStorage.getItem(
+        CONNECTED_PROVIDER_KEY
+      ) as CloudProvider | null
 
-      // Show appropriate modal based on auth state
-      if (!authenticated && savedFile !== null) {
-        // Was previously authenticated (has saved file) but auth failed
-        setShowReconnectModal(true)
-      } else if (!authenticated) {
-        // Never authenticated before
+      if (!savedProviderType) {
         setShowWelcome(true)
-      } else if (savedFile === null) {
-        // Authenticated but no file selected
-        setShowFileSelection(true)
+        return
       }
-      // else: authenticated and has file → all good, no modal
+
+      // Create provider instance
+      const provider = createProvider(savedProviderType)
+
+      // Step 2: Load cached file (independent of authentication)
+      const savedFileStr = localStorage.getItem(SELECTED_FILE_KEY)
+      let fileInfo: FileInfo | null = null
+
+      if (savedFileStr) {
+        try {
+          fileInfo = JSON.parse(savedFileStr) as FileInfo
+        } catch (error) {
+          console.error('Failed to restore selected file:', error)
+          localStorage.removeItem(SELECTED_FILE_KEY)
+
+          notifications.show({
+            title: 'File Info Corrupted',
+            message:
+              'Could not restore your last selected file. Please select a file to sync.',
+            color: 'yellow',
+            autoClose: 5000,
+          })
+        }
+      }
+
+      // Step 3: Check authentication, show reconnect if not authenticated
+      const authenticated = provider.isAuthenticated()
+      if (!authenticated) {
+        setSyncState({ provider, currentFile: fileInfo, status: 'offline' })
+        setShowReconnectModal(true)
+        return
+      }
+
+      // Step 4: If authenticated but no file, show file selection
+      if (!fileInfo) {
+        setSyncState({ provider, currentFile: null, status: 'offline' })
+        setShowFileSelection(true)
+        return
+      }
+
+      // Step 5: All good - set state to trigger syncing
+      setSyncState({
+        provider,
+        currentFile: fileInfo,
+        status: 'idle',
+      })
     })
   }, [
-    activeProvider,
+    createProvider,
     setShowWelcome,
     setShowFileSelection,
     setShowReconnectModal,
@@ -182,57 +201,53 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
    * Automatically resolves conflicts based on updatedAt timestamps
    */
   const syncNow = useCallback(async (): Promise<void> => {
-    if (!syncService || !selectedFile) {
-      throw new Error('Not connected')
+    if (!syncService || !syncState.currentFile) {
+      console.warn('Sync not available - provider or file not selected')
+      return
+    }
+
+    // Prevent concurrent syncs (synchronous guard)
+    if (internalState.current.isSyncInProgress) {
+      console.warn('Sync already in progress, skipping')
+      return
     }
 
     try {
-      setSyncStatus('syncing')
+      internalState.current.isSyncInProgress = true
+      setSyncState(prev => ({ ...prev, status: 'syncing' }))
 
       // Perform sync via service
-      const result = await syncService.performSync(selectedFile)
+      const result = await syncService.performSync(syncState.currentFile)
 
-      // Update selectedFile if ID was generated (new file)
-      if (result.updatedFileInfo && !isExistingFile(selectedFile)) {
-        setSelectedFile(result.updatedFileInfo)
+      // Update currentFile if ID was generated (new file)
+      if (result.updatedFileInfo && !isExistingFile(syncState.currentFile)) {
         localStorage.setItem(
           SELECTED_FILE_KEY,
           JSON.stringify(result.updatedFileInfo)
         )
+        setSyncState(prev => ({
+          ...prev,
+          currentFile: result.updatedFileInfo!,
+          status: 'synced',
+        }))
+      } else {
+        setSyncState(prev => ({ ...prev, status: 'synced' }))
       }
 
-      setSyncStatus('synced')
-      setLastSyncTime(result.merged.lastModified)
+      internalState.current.isSyncInProgress = false
+      internalState.current.remoteLastModified = result.merged.lastModified
     } catch (error) {
       console.error('Sync failed:', error)
 
+      internalState.current.isSyncInProgress = false
+
       if (isTokenExpiredError(error)) {
         setShowReconnectModal(true)
-        setSyncStatus('idle')
+        setSyncState(prev => ({ ...prev, status: 'idle' }))
         return
       }
 
-      setSyncStatus('error')
-      throw error
-    }
-  }, [syncService, selectedFile, setShowReconnectModal])
-
-  // Debounced auto-sync function (waits 15 seconds after last change)
-  const debouncedSync = useDebouncedCallback(async () => {
-    console.log('Auto-syncing...')
-    try {
-      await syncNow()
-    } catch (error) {
-      console.error('Auto-sync failed:', error)
-
-      // Check if token expired - if so, show reconnect modal instead of error notification
-      if (isTokenExpiredError(error)) {
-        setShowReconnectModal(true)
-        setSyncStatus('idle')
-        return
-      }
-
-      // For other errors, show notification
+      setSyncState(prev => ({ ...prev, status: 'error' }))
       notifications.show({
         title: 'Sync Failed',
         message:
@@ -242,8 +257,13 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
         color: 'red',
         autoClose: 5000,
       })
-      // Don't throw - let user continue with local data
     }
+  }, [syncService, syncState.currentFile, setShowReconnectModal])
+
+  // Debounced auto-sync function (waits 15 seconds after last change)
+  const debouncedSync = useDebouncedCallback(async () => {
+    console.log('Auto-syncing...')
+    await syncNow()
   }, 15000) // 15 seconds
 
   // Track lastModified timestamp for auto-sync trigger
@@ -253,17 +273,16 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
   // Auto-sync: immediate first sync, then debounced sync with status updates
   useEffect(() => {
     // Only run if we're connected and have data
-    if (!isAuthenticated || !selectedFile || lastModified === undefined) {
-      return
-    }
-
-    // Don't interrupt ongoing sync
-    if (syncStatus === 'syncing') {
+    if (
+      !isAuthenticated ||
+      !syncState.currentFile ||
+      lastModified === undefined
+    ) {
       return
     }
 
     // First sync: execute immediately
-    if (lastSyncTime === null) {
+    if (internalState.current.remoteLastModified === null) {
       console.log('First sync - executing immediately')
       setTimeout(() => {
         void syncNow().catch(error => {
@@ -274,11 +293,13 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
     }
 
     // Subsequent syncs: only trigger when there are unsaved changes
-    if (lastModified > lastSyncTime) {
-      // Update UI state to show unsaved changes
-      if (syncStatus === 'synced') {
-        queueMicrotask(() => setSyncStatus('idle'))
-      }
+    if (lastModified > internalState.current.remoteLastModified) {
+      // Update UI state to show unsaved changes (only re-renders if status changed)
+      queueMicrotask(() =>
+        setSyncState(prev =>
+          prev.status === 'synced' ? { ...prev, status: 'idle' } : prev
+        )
+      )
 
       // Trigger debounced sync (waits 15s after last change)
       debouncedSync()
@@ -286,58 +307,33 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
   }, [
     lastModified,
     isAuthenticated,
-    selectedFile,
+    syncState.currentFile,
     debouncedSync,
-    syncStatus,
-    lastSyncTime,
     syncNow,
   ])
 
   // Connect to a specific provider (triggers authentication)
   const connect = async (provider: CloudProvider): Promise<void> => {
-    const providerInstance = providers.get(provider)
-    if (!providerInstance) {
-      throw new Error(`Provider ${provider} is not registered`)
-    }
+    const providerInstance = createProvider(provider)
 
-    // Save provider and set state
-    setCurrentProvider(provider)
+    // Save provider type to localStorage
     localStorage.setItem(CONNECTED_PROVIDER_KEY, provider)
 
     // Trigger authentication (may redirect page)
     await providerInstance.authenticate()
     // Note: Code after this may not execute if provider redirects (like OneDrive)
-  }
 
-  // Disconnect from current provider
-  const disconnect = async (): Promise<void> => {
-    if (!currentProvider) {
-      return
-    }
-    // Don't call logoutPopup - let token expire naturally on browser close
-    setCurrentProvider(null)
-    localStorage.removeItem(CONNECTED_PROVIDER_KEY)
-    // Show welcome modal when disconnected
-    setShowWelcome(true)
+    // Update state with authenticated provider
+    setSyncState(prev => ({ ...prev, provider: providerInstance }))
   }
 
   // Get account info from active provider (synchronous)
   // Returns null if not authenticated
   const getAccountInfo = (): { name: string; email: string } | null => {
-    if (!activeProvider || !isAuthenticated) {
+    if (!syncState.provider || !isAuthenticated) {
       return null
     }
-    return activeProvider.getAccountInfo()
-  }
-
-  // List folders and files using active provider
-  const listFoldersAndFiles = async (
-    folder?: FolderInfo
-  ): Promise<FolderListResult> => {
-    if (!activeProvider) {
-      throw new Error('Not authenticated')
-    }
-    return activeProvider.listFoldersAndFiles(folder)
+    return syncState.provider.getAccountInfo()
   }
 
   /**
@@ -359,7 +355,7 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
     }
 
     // Update file selection
-    setSelectedFile(fileInfo)
+    setSyncState(prev => ({ ...prev, currentFile: fileInfo }))
     localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(fileInfo))
     // Hide file selection modal when file is selected
     setShowFileSelection(false)
@@ -372,31 +368,34 @@ export function SyncProvider({ children, msalInstance }: SyncProviderProps) {
    * Used when disconnecting or switching to a different file
    */
   const disconnectAndReset = async (): Promise<void> => {
-    // Disconnect from provider (clears provider state, but keeps MSAL auth)
-    await disconnect()
+    if (!syncState.provider) {
+      return
+    }
 
-    // Clear all local storage (local data is just a cache)
+    // Clear all local data (local data is just a cache)
+    await db.clearAllData()
     localStorage.clear()
 
-    // Reset sync state
-    setSyncStatus('idle')
-    setLastSyncTime(null)
+    // Reset sync state (clear provider, file, and status)
+    setSyncState({ provider: null, currentFile: null, status: 'offline' })
+    internalState.current.remoteLastModified = null
+
+    // Show welcome modal when disconnected
+    setShowWelcome(true)
   }
 
   return (
     <SyncContext.Provider
       value={{
-        currentProvider,
-        isAuthenticated,
-        syncStatus,
-        lastSyncTime,
-        selectedFile,
-        isInitializing,
+        // State
+        provider: syncState.provider,
+        currentFile: syncState.currentFile,
+        status: syncState.status,
+        // Operations
         connect,
         getAccountInfo,
-        listFoldersAndFiles,
-        selectFile,
         disconnectAndReset,
+        selectFile,
         syncNow,
       }}
     >

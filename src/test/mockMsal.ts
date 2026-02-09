@@ -15,6 +15,7 @@ export function createMockMsalInstance(): IPublicClientApplication {
     getAccountByLocalId: vi.fn(() => null),
     getAccountByUsername: vi.fn(() => null),
     handleRedirectPromise: vi.fn().mockResolvedValue(null),
+    loginRedirect: vi.fn().mockResolvedValue(undefined),
     loginPopup: vi.fn().mockResolvedValue({
       account: null,
       idToken: '',
@@ -25,7 +26,6 @@ export function createMockMsalInstance(): IPublicClientApplication {
       uniqueId: '',
       tenantId: '',
     }),
-    loginRedirect: vi.fn().mockResolvedValue(undefined),
     logoutPopup: vi.fn().mockResolvedValue(undefined),
     logoutRedirect: vi.fn().mockResolvedValue(undefined),
     acquireTokenSilent: vi.fn().mockResolvedValue({

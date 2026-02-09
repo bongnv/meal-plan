@@ -6,21 +6,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SyncStatusIndicator } from './SyncStatusIndicator'
 
 import type { SyncStatus } from '@/contexts/SyncContext'
-import type { CloudProvider } from '@/utils/storage/CloudProvider'
 
 // Mock contexts
 const mockSyncNow = vi.fn()
 const mockSyncContext = {
-  currentProvider: 'onedrive' as CloudProvider | null,
-  isAuthenticated: true,
-  syncStatus: 'idle' as SyncStatus,
-  lastSyncTime: (Date.now() - 5 * 60 * 1000) as number | null, // 5 minutes ago
-  selectedFile: { id: '1', name: 'meal-plan-data.json.gz', path: '/data' } as {
+  provider: {
+    isAuthenticated: () => true,
+    authenticate: vi.fn(),
+    getAccountInfo: () => ({ name: 'Test', email: 'test@example.com' }),
+    listFoldersAndFiles: vi.fn(),
+    uploadFile: vi.fn(),
+    downloadFile: vi.fn(),
+  } as any,
+  status: 'idle' as SyncStatus,
+  currentFile: { id: '1', name: 'meal-plan-data.json.gz', path: '/data' } as {
     id: string
     name: string
     path: string
   } | null,
   syncNow: mockSyncNow,
+  connect: vi.fn(),
+  getAccountInfo: vi.fn(),
+  selectFile: vi.fn(),
+  disconnectAndReset: vi.fn(),
 }
 
 vi.mock('../../contexts/SyncContext', () => ({
@@ -40,11 +48,16 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('SyncStatusIndicator', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockSyncContext.isAuthenticated = true
-    mockSyncContext.currentProvider = 'onedrive' as CloudProvider
-    mockSyncContext.syncStatus = 'idle'
-    mockSyncContext.lastSyncTime = Date.now() - 5 * 60 * 1000
-    mockSyncContext.selectedFile = {
+    mockSyncContext.provider = {
+      isAuthenticated: () => true,
+      authenticate: vi.fn(),
+      getAccountInfo: () => ({ name: 'Test', email: 'test@example.com' }),
+      listFoldersAndFiles: vi.fn(),
+      uploadFile: vi.fn(),
+      downloadFile: vi.fn(),
+    } as any
+    mockSyncContext.status = 'idle'
+    mockSyncContext.currentFile = {
       id: '1',
       name: 'meal-plan-data.json.gz',
       path: '/data',
@@ -53,8 +66,8 @@ describe('SyncStatusIndicator', () => {
 
   describe('when not connected', () => {
     it('should show offline indicator', () => {
-      mockSyncContext.isAuthenticated = false
-      mockSyncContext.selectedFile = null
+      mockSyncContext.provider = null
+      mockSyncContext.currentFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -64,8 +77,8 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should show "Not connected" tooltip', async () => {
-      mockSyncContext.isAuthenticated = false
-      mockSyncContext.selectedFile = null
+      mockSyncContext.provider = null
+      mockSyncContext.currentFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -78,8 +91,8 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should be disabled when not connected', () => {
-      mockSyncContext.isAuthenticated = false
-      mockSyncContext.selectedFile = null
+      mockSyncContext.provider = null
+      mockSyncContext.currentFile = null
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -104,7 +117,7 @@ describe('SyncStatusIndicator', () => {
       await userEvent.hover(indicator)
 
       await waitFor(() => {
-        expect(screen.getByText(/last synced.*ago/i)).toBeInTheDocument()
+        expect(screen.getByText(/click to sync now/i)).toBeInTheDocument()
       })
     })
 
@@ -139,7 +152,7 @@ describe('SyncStatusIndicator', () => {
 
   describe('when syncing', () => {
     it('should show syncing animation', () => {
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -148,7 +161,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should show "Syncing..." tooltip', async () => {
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -161,7 +174,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should be disabled when syncing', () => {
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -170,7 +183,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should not trigger sync when clicked during sync', async () => {
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
       const user = userEvent.setup()
 
       renderWithProviders(<SyncStatusIndicator />)
@@ -184,7 +197,7 @@ describe('SyncStatusIndicator', () => {
 
   describe('when sync succeeds', () => {
     it('should show success indicator with checkmark', () => {
-      mockSyncContext.syncStatus = 'synced'
+      mockSyncContext.status = 'synced'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -193,7 +206,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should show success tooltip', async () => {
-      mockSyncContext.syncStatus = 'synced'
+      mockSyncContext.status = 'synced'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -208,7 +221,7 @@ describe('SyncStatusIndicator', () => {
 
   describe('when sync fails', () => {
     it('should show error indicator', () => {
-      mockSyncContext.syncStatus = 'error'
+      mockSyncContext.status = 'error'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -217,7 +230,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should show error tooltip', async () => {
-      mockSyncContext.syncStatus = 'error'
+      mockSyncContext.status = 'error'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -230,7 +243,7 @@ describe('SyncStatusIndicator', () => {
     })
 
     it('should allow retry by clicking', async () => {
-      mockSyncContext.syncStatus = 'error'
+      mockSyncContext.status = 'error'
       const user = userEvent.setup()
 
       renderWithProviders(<SyncStatusIndicator />)
@@ -243,21 +256,20 @@ describe('SyncStatusIndicator', () => {
   })
 
   describe('when offline', () => {
-    it('should show offline indicator when no network', () => {
-      mockSyncContext.isAuthenticated = true
-      mockSyncContext.syncStatus = 'error'
-      // Simulate offline by setting navigator.onLine to false (would need actual implementation)
+    it('should show offline indicator when disconnected', () => {
+      mockSyncContext.provider = null
+      mockSyncContext.status = 'offline'
 
       renderWithProviders(<SyncStatusIndicator />)
 
       const indicator = screen.getByRole('button', { name: /sync/i })
-      expect(indicator).toHaveAttribute('data-status', 'error')
+      expect(indicator).toHaveAttribute('data-status', 'offline')
     })
   })
 
   describe('tooltip content', () => {
-    it('should format relative time correctly for recent sync', async () => {
-      mockSyncContext.lastSyncTime = Date.now() - 2 * 60 * 1000 // 2 minutes ago
+    it('should show appropriate tooltip based on status', async () => {
+      mockSyncContext.status = 'idle'
 
       renderWithProviders(<SyncStatusIndicator />)
 
@@ -265,35 +277,7 @@ describe('SyncStatusIndicator', () => {
       await userEvent.hover(indicator)
 
       await waitFor(() => {
-        expect(screen.getByText(/2 minutes ago/i)).toBeInTheDocument()
-      })
-    })
-
-    it('should handle "just now" for very recent sync', async () => {
-      mockSyncContext.lastSyncTime = Date.now() - 30 * 1000 // 30 seconds ago
-
-      renderWithProviders(<SyncStatusIndicator />)
-
-      const indicator = screen.getByRole('button', { name: /sync/i })
-      await userEvent.hover(indicator)
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/just now|seconds ago|1 minute ago/i)
-        ).toBeInTheDocument()
-      })
-    })
-
-    it('should show "Never synced" when no lastSyncTime', async () => {
-      mockSyncContext.lastSyncTime = null
-
-      renderWithProviders(<SyncStatusIndicator />)
-
-      const indicator = screen.getByRole('button', { name: /sync/i })
-      await userEvent.hover(indicator)
-
-      await waitFor(() => {
-        expect(screen.getByText(/never synced/i)).toBeInTheDocument()
+        expect(screen.getByText(/click to sync now/i)).toBeInTheDocument()
       })
     })
   })
@@ -307,7 +291,7 @@ describe('SyncStatusIndicator', () => {
       expect(indicator).toHaveAttribute('data-status', 'idle')
 
       // Transition to syncing
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
       rerender(
         <MantineProvider>
           <SyncStatusIndicator />
@@ -317,8 +301,7 @@ describe('SyncStatusIndicator', () => {
       expect(indicator).toHaveAttribute('data-status', 'syncing')
 
       // Transition to success
-      mockSyncContext.syncStatus = 'synced'
-      mockSyncContext.lastSyncTime = Date.now()
+      mockSyncContext.status = 'synced'
       rerender(
         <MantineProvider>
           <SyncStatusIndicator />
@@ -336,7 +319,7 @@ describe('SyncStatusIndicator', () => {
       expect(indicator).toHaveAttribute('data-status', 'idle')
 
       // Transition to syncing
-      mockSyncContext.syncStatus = 'syncing'
+      mockSyncContext.status = 'syncing'
       rerender(
         <MantineProvider>
           <SyncStatusIndicator />
@@ -346,7 +329,7 @@ describe('SyncStatusIndicator', () => {
       expect(indicator).toHaveAttribute('data-status', 'syncing')
 
       // Transition to error
-      mockSyncContext.syncStatus = 'error'
+      mockSyncContext.status = 'error'
       rerender(
         <MantineProvider>
           <SyncStatusIndicator />
